@@ -92,8 +92,7 @@ else # PLATFORM
 #
 # Other extra flags needed for compiling.
 #
-CPPFLAGS += -I$(OPENWIN_HOME)/include \
-	    -I$(SHARE_SRC)/native/$(PKGDIR)/debug \
+CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/debug \
             -I$(SHARE_SRC)/native/$(PKGDIR)/image \
 	    -I$(SHARE_SRC)/native/$(PKGDIR)/image/cvutils \
 	    -I$(SHARE_SRC)/native/$(PKGDIR)/alphacomposite \
@@ -107,6 +106,8 @@ CPPFLAGS += -I$(OPENWIN_HOME)/include \
 	    -I$(SHARE_SRC)/native/$(PKGDIR)/../dc/doe \
 	    -I$(SHARE_SRC)/native/$(PKGDIR)/../dc/path \
             -I$(PLATFORM_SRC)/native/$(PKGDIR)/../jdga \
+	    -I$(OPENWIN_HOME)/include \
+	    -I$(MOTIF_DIR)/include \
 	    $(EVENT_MODEL)
 #
 # Libraries to link in.
@@ -115,7 +116,7 @@ ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -L$(OPENWIN_LIB) -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt
 endif # PLATFORM
 
-ifeq ($(PLATFORM), linux)
+ifneq (,$(findstring $(PLATFORM), linux bsd))
 OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -lawt -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt
 endif # PLATFORM
 

@@ -25,7 +25,11 @@
 
 #ifndef HEADLESS
 
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include <math.h>
 #include <jlong.h>
 

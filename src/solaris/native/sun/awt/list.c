@@ -66,7 +66,11 @@ from the X Consortium.
   ----------------------------------------------------------------------- **/
 
 #include <stdio.h>
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include "list.h"
 
 

@@ -35,7 +35,7 @@
 
 #if defined(unix) && !defined(PRODUCT)
 #include "pthread.h"
-#define THREAD_SELF ((int)pthread_self())
+#define THREAD_SELF ((intptr_t) pthread_self())
 #endif
 
 #include "defines.h"
@@ -58,9 +58,9 @@ int main(int argc, char **argv) {
 // Single-threaded, implementation, not reentrant.
 // Includes a weak error check against MT access.
 #ifndef THREAD_SELF
-#define THREAD_SELF (0)
+#define THREAD_SELF ((intptr_t) 0)
 #endif
-NOT_PRODUCT(static int uThread = -1;)
+NOT_PRODUCT(static intptr_t uThread = -1;)
 
 unpacker* unpacker::non_mt_current = null;
 unpacker* unpacker::current() {
@@ -69,7 +69,7 @@ unpacker* unpacker::current() {
 }
 static void set_current_unpacker(unpacker* u) {
   unpacker::non_mt_current = u;
-  assert(((uThread = (u == null) ? -1 : THREAD_SELF),
+  assert(((uThread = (u == null) ? ((intptr_t) -1) : THREAD_SELF),
           true));
 }
 

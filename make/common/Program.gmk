@@ -67,11 +67,24 @@ endif
 # Create a dependency on libjli (Java Launcher Infrastructure)
 #
 # On UNIX, this is a relative dependency using $ORIGIN. Unfortunately, to
-# do this reliably on Linux takes a different syntax than Solaris.
+# do this reliably on Linux takes a different syntax than Solaris. BSD's
+# don't support $ORIGIN so build an archive instead.
 #
 # On Windows, this is done by using the same directory as the executable
 # itself, as with all the Windows libraries.
 #
+ifeq ($(PLATFORM), bsd)
+  ifeq ($(OS_VENDOR), Apple)
+    LDFLAGS += -Wl,-all_load
+    LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
+  else
+    LDFLAGS += -Wl,--whole-archive
+    LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
+    LDFLAGS += -Wl,--no-whole-archive
+# Work-around an dlsym(RTLD_DEFAULT) bug in at least FreeBSD & OpenBSD
+    LDFLAGS += -Wl,--export-dynamic
+  endif
+endif
 ifneq (,$(findstring $(PLATFORM), linux solaris))	# UNIX systems
     LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
     OTHER_LDLIBS += -ljli
@@ -174,6 +187,10 @@ else # USE_PTHREADS
   THREADLIBS = $(LIBTHREAD)
 endif # USE_PTHREADS
 
+ifeq ($(PLATFORM), bsd)
+THREADLIBS = -pthread
+endif
+
 #
 # This rule only applies on unix.  It supports quantify and its ilk.
 #
@@ -242,7 +259,9 @@ endif
 
 
 ifneq ($(PLATFORM), windows)
+ifneq ($(PLATFORM), bsd)
 HAVE_GETHRTIME=true
+endif
 endif
 
 ifeq ($(HAVE_GETHRTIME),true)

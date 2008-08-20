@@ -58,7 +58,7 @@ condvarDestroy(condvar_t *condvar)
 {
     int err;
 
-#ifdef __linux__
+#ifdef USE_PTHREADS
     err = pthread_cond_destroy((cond_t *) &condvar->cond);
 #else
     err = cond_destroy((cond_t *) condvar);

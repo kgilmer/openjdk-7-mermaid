@@ -96,10 +96,12 @@ OTHER_CPPFLAGS += $(LIBARCH_DEFINES)
 
 ifneq ($(PLATFORM), windows)	# UNIX systems
 	LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/jli
+ifneq ($(PLATFORM), bsd)	# other UNIX systems
 	# Note: its important to keep this order meaning -lc is the
 	# last library otherwise it could cause compatibility issues
 	# by pulling in SUNW_private symbols from libc
 	LDLIBS = -ldl -lc
+endif # !bsd
 ifeq ($(USE_PTHREADS),true)
 	LDLIBS += -lpthread
 endif # USE_PTHREADS 
@@ -156,6 +158,24 @@ $(STATIC_LIBRARY): $(STATIC_LIBRARY_DIR)
 library:: $(STATIC_LIBRARY)
 
 endif	# PLATFORM
+
+ifeq ($(PLATFORM), bsd)
+
+STATIC_LIBRARY_DIR = $(OBJDIR)/static
+STATIC_LIBRARY_NAME = lib$(LIBRARY).a
+STATIC_LIBRARY = $(STATIC_LIBRARY_DIR)/$(STATIC_LIBRARY_NAME)
+
+$(STATIC_LIBRARY_DIR): $(OBJDIR)
+	@$(prep-target)
+	@$(MKDIR) $(STATIC_LIBRARY_DIR)
+
+$(STATIC_LIBRARY): $(STATIC_LIBRARY_DIR)
+	@$(prep-target)
+	$(AR) -r $@ $(FILES_o)
+
+library:: $(STATIC_LIBRARY)
+
+endif  # PLATFORM
 
 #
 # Add to ambient vpath so we pick up the library files

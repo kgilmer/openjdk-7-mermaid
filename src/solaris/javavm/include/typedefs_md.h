@@ -39,7 +39,21 @@
 #define _UINT64_T
 #endif
 
+#if defined(_ALLBSD_SOURCE)
+# ifdef __APPLE__
+#  include <stdint.h>
+# endif
+# ifdef __OpenBSD__
+#  include <inttypes.h>
+# endif
+# define HAVE_INTPTR_T
+# define _UINT64_T
+# define _INT64_T
+#endif
+
+#if !defined(_ALLBSD_SOURCE)
 #define int8_t char
+#endif
 
 /* Fix for varargs differences on PowerPC */
 #if defined(__powerpc__)

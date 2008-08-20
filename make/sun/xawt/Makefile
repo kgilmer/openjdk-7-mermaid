@@ -53,6 +53,11 @@ LDFLAGS += -lpthread
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
 
+ifeq ($(PLATFORM), bsd)
+LDFLAGS += -pthread
+dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
+endif
+
 # Since this library will be living in a subdirectory below the other libraries
 #   we need to add an extra runpath so that libraries in the upper directory
 #   are found at runtime.
@@ -86,15 +91,18 @@ vpath %.c   $(SHARE_SRC)/native/sun/java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/sun/java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/sun/java2d/x11
 
-OTHER_LDLIBS = $(LIBM) -lawt -lXext -lX11 -ldl \
+ifeq ($(PLATFORM), bsd)
+LIBDL=
+else
+LIBDL=-ldl
+endif
+OTHER_LDLIBS = $(LIBM) -lawt -lXext -lX11 $(LIBDL) \
                    $(LDFLAGS_COMMON) $(AWT_RUNPATH) $(OTHER_LDFLAGS) -lXtst -lXi
 
 ifeq  ($(PLATFORM), solaris)
 CPPFLAGS += -DFUNCPROTO=15
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
-
-CPPFLAGS += -I$(CUPS_HEADERS_PATH)
 
 CPPFLAGS += -DXAWT -DXAWT_HACK \
         -I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders \
@@ -122,6 +130,8 @@ CPPFLAGS += -DXAWT -DXAWT_HACK \
         -I$(SHARE_SRC)/native/sun/awt \
         -I$(PLATFORM_SRC)/native/sun/awt 
 
+CPPFLAGS += -I$(CUPS_HEADERS_PATH)
+
 ifeq ($(PLATFORM), linux)
 # Allows for builds on Debian GNU Linux, X11 is in a different place 
   CPPFLAGS += -I/usr/X11R6/include/X11/extensions \
@@ -131,6 +141,10 @@ endif
 
 ifeq ($(PLATFORM), solaris)
   CPPFLAGS += -I$(OPENWIN_HOME)/include/X11/extensions
+endif
+
+ifeq ($(PLATFORM), bsd)
+  CPPFLAGS += -I$(OPENWIN_HOME)/include/X11/extensions -I$(OPENWIN_HOME)/include
 endif
 
 ifeq ($(MILESTONE), internal)

@@ -65,6 +65,13 @@ ifeq ($(PLATFORM), windows)
   OTHER_LCF += -export:nptInitialize -export:nptTerminate
 endif
 
+# Add location of iconv headers
+ifeq ($(PLATFORM), bsd)
+  ICONV_DIR = /usr/local
+  CPPFLAGS += -I$(ICONV_DIR)/include
+  OTHER_LDLIBS += -L$(ICONV_DIR)/lib -liconv
+endif
+
 #
 # Add to ambient vpath so we pick up the library files
 #

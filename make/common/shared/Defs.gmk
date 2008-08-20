@@ -146,7 +146,7 @@ $(shell \
         echo older; \
       else \
 	if [ $(call MajorVersion,$1) -eq $(call MajorVersion,$2) -a \
-	     $(call MinorVersion,$1) -lt $(call MinorVersion,$2) ]; then \
+	     `echo $(call MinorVersion,$1) | sed -e 's/\([0-9]*\)\(.*\)/\1/'` -lt $(call MinorVersion,$2) ]; then \
           echo older; \
         else \
           echo newer; \

@@ -32,8 +32,12 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <sys/uio.h>
+#include <unistd.h>
 #include "nio_util.h"
 
+#if defined(_ALLBSD_SOURCE)
+#include "largefile_bsd.h"
+#endif
 
 static int preCloseFD = -1;     /* File descriptor to which we dup other fd's
                                    before closing them for real */

@@ -39,7 +39,11 @@
 #include "GraphicsPrimitiveMgr.h"
 #include "glyphblitting.h"
 #include "sunfontids.h"
+#if defined(_ALLBSD_SOURCE)
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 
 
 JNIEXPORT void JNICALL AWTDrawGlyphList

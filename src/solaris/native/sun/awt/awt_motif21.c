@@ -33,9 +33,13 @@
 #include "awt_p.h"
 #include "awt_Component.h"
 
+#if (XmVersion >= 2001)
+#include <Xm/XmIm.h>
+#else
 #define XmPER_SHELL 0
 extern int32_t _XmImGetGeo(
                         Widget vw) ;
+#endif
 
 #define MAXARGS 10
 static Arg xic_vlist[MAXARGS];
@@ -102,9 +106,12 @@ awt_motif_getIMStatusHeight(Widget w, jobject tc)
         }
     }
 
+/* XXXBSD: resolve missing symbol? */
+#if !defined(_ALLBSD_SOURCE)
     if (im_height == 0) {
         im_height = _XmImGetGeo(w);
     }
+#endif
 
 #if defined(DEBUG)
     jio_fprintf(stderr,"awt_motif_getIMStatusHeight: Height = %d",im_height);

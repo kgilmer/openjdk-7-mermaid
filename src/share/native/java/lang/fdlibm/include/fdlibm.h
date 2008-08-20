@@ -24,6 +24,10 @@
  * have any questions.
  */
 
+#ifdef __OpenBSD__
+#include <sys/types.h>
+#endif
+#include <machine/endian.h>
 #include "jfdlibm.h"
 
 #ifdef __NEWVALID       /* special setup for Sun test regime */

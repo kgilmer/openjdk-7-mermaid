@@ -43,6 +43,10 @@ ifeq ($(PLATFORM), linux)
     FILES_c += linux_close.c
 endif
 
+ifeq ($(OS_VENDOR), FreeBSD)
+    FILES_c += $(CTARGDIR)bsd_close.c
+endif
+
 ifeq ($(PLATFORM), windows)
     FILES_c += TwoStacksPlainSocketImpl.c
     FILES_c += DualStackPlainSocketImpl.c

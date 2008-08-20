@@ -61,10 +61,22 @@ JAVALIB=
 
 CFLAGS += -DSPLASHSCREEN
 
+CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
+CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+
 ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
-  CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
-  OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread
+  ifeq ($(PLATFORM), bsd)
+    CFLAGS += -DPNG_NO_MMX_CODE
+    ICONV_DIR=/usr/local
+    CPPFLAGS += -I$(OPENWIN_HOME)/include \
+                -I$(OPENWIN_HOME)/include/X11/extensions \
+                -I$(ICONV_DIR)/include
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext -L$(ICONV_DIR)/lib -liconv $(LIBM) -pthread
+  else
+    CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread
+  endif
 else # PLATFORM
   CFLAGS += -DWITH_WIN32
   OTHER_LDLIBS += kernel32.lib user32.lib gdi32.lib 
@@ -81,9 +93,6 @@ vpath %.c   $(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/libpng
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen
-
-CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
 
 ifeq ($(PLATFORM), linux)
   ifeq ($(ARCH_DATA_MODEL), 64)

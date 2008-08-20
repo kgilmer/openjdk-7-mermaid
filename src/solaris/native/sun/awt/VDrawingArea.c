@@ -31,7 +31,11 @@
 #endif /* !HEADLESS */
 
 #include <stdio.h>
+#if defined(_ALLBSD_SOURCE)
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 
 #ifdef __linux__
 /* XXX: Shouldn't be necessary. */

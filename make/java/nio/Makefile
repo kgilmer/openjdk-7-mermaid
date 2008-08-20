@@ -82,7 +82,7 @@ FILES_export += \
 	sun/nio/ch/WindowsSelectorImpl.java
 endif # PLATFORM = windows
 
-ifeq ($(PLATFORM), linux)
+ifneq (,$(findstring $(PLATFORM), linux bsd))
 FILES_java += \
         sun/nio/ch/AbstractPollSelectorImpl.java \
 	sun/nio/ch/EPollArrayWrapper.java \
@@ -126,6 +126,11 @@ OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/native/java/net \
   -I$(CLASSHDRDIR)/../../../java.lang/java/CClassHeaders
 
+ifeq ($(PLATFORM), bsd)
+OTHER_INCLUDES += \
+  -I$(PLATFORM_SRC)/hpi/include
+endif
+
 ifeq ($(PLATFORM),windows)
   OTHER_LDLIBS += $(JVMLIB) ws2_32.lib \
      -libpath:$(LIBDIR) java.lib \
@@ -135,6 +140,9 @@ ifeq ($(PLATFORM),windows)
 endif
 ifeq ($(PLATFORM), linux)
 OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread -ldl
+endif
+ifeq ($(PLATFORM), bsd)
+OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -pthread
 endif
 ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 -ldl \
@@ -157,6 +165,9 @@ FILES_m = mapfile-solaris
 endif
 ifeq ($(PLATFORM), linux)
 FILES_m = mapfile-linux
+endif
+ifeq ($(PLATFORM), bsd)
+FILES_m = mapfile-bsd
 endif
 include $(BUILDDIR)/common/Mapfile-vers.gmk
 include $(BUILDDIR)/common/Library.gmk

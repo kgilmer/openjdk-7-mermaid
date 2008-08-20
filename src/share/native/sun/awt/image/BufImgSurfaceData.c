@@ -24,7 +24,11 @@
  */
 
 #include "BufImgSurfaceData.h"
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include "malloc.h"
+#endif
 
 #include "sun_awt_image_BufImgSurfaceData.h"
 

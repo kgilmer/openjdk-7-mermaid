@@ -32,6 +32,10 @@
 #include <unistd.h>
 #endif
 
+#ifndef NO_ZLIB
+#      include <zconf.h>
+#endif
+
 #ifndef FULL
 #define FULL 1 /* Adds <500 bytes to the zipped final product. */
 #endif
@@ -87,10 +91,12 @@ extern void assert_failed(const char*);
 // bytes and byte arrays
 
 typedef unsigned int uint;
+#ifdef NO_ZLIB
 #ifdef _LP64
 typedef unsigned int uLong; // Historical zlib, should be 32-bit.
 #else
 typedef unsigned long uLong;
+#endif
 #endif
 #ifdef _MSC_VER
 typedef LONGLONG        jlong;

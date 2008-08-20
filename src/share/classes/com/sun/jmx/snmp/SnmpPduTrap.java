@@ -78,6 +78,9 @@ public class SnmpPduTrap extends SnmpPduPacket {
      */
     public long            timeStamp ;
 
+    // TODO: IcedTea: I am a stub.
+    static public int trapAuthenticationFailure = 0;
+
 
 
     /**

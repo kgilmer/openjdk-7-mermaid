@@ -32,6 +32,9 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <ctype.h>
+#ifdef _ALLBSD_SOURCE
+#include <unistd.h> /* gethostname */
+#endif
 
 #include "jvm.h"
 #include "jni_util.h"
@@ -48,7 +51,7 @@
 #define NI_MAXHOST 1025
 #endif
 
-#ifndef __GLIBC__
+#if !defined(__GLIBC__) && !defined(_ALLBSD_SOURCE)
 /* gethostname() is in libc.so but I can't find a header file for it */
 extern int gethostname(char *buf, int buf_len);
 #endif
@@ -71,9 +74,17 @@ Java_java_net_Inet6AddressImpl_getLocalHostName(JNIEnv *env, jobject this) {
         /* Something went wrong, maybe networking is not setup? */
         strcpy(hostname, "localhost");
     } else {
-#ifdef __linux__
-        /* On Linux gethostname() says "host.domain.sun.com".  On
+#if defined(__linux__) && defined(_ALLBSD_SOURCE)
+	/* On Linux/FreeBSD gethostname() says "host.domain.sun.com".  On
          * Solaris gethostname() says "host", so extra work is needed.
+         */
+        /*
+         * XXXBSD: Though on FreeBSD it's possible case then hostname does
+         * not contain '.' (depends on previous sethostname() call).  Maybe
+         * we need to proceed with Solaris way, but using getnameinfo()
+         * in conjunction with gethostby*() breaks thread-safeness, so
+         * we need to protect all calls to gethostby*() and getnameinfo()
+         * using same mutex.
          */
 #else
         /* Solaris doesn't want to give us a fully qualified domain name.
@@ -110,7 +121,7 @@ Java_java_net_Inet6AddressImpl_getLocalHostName(JNIEnv *env, jobject this) {
             }
         }
 #endif /* AF_INET6 */
-#endif /* __linux__ */
+#endif /* __linux__ || _ALLBSD_SOURCE */
     }
     return (*env)->NewStringUTF(env, hostname);
 }

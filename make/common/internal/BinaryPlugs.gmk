@@ -51,8 +51,6 @@ PLUG_JMF_CLASS_NAMES = \
 com/sun/jmx/snmp/SnmpDataTypeEnums.class \
 com/sun/jmx/snmp/SnmpDefinitions.class \
 com/sun/jmx/snmp/SnmpOid.class \
-com/sun/jmx/snmp/SnmpOidDatabase.class \
-com/sun/jmx/snmp/SnmpOidDatabaseSupport.class \
 com/sun/jmx/snmp/SnmpOidRecord.class \
 com/sun/jmx/snmp/SnmpOidTable.class \
 com/sun/jmx/snmp/SnmpOidTableSupport.class \
@@ -62,17 +60,9 @@ com/sun/jmx/snmp/SnmpPeer.class \
 com/sun/jmx/snmp/SnmpTimeticks.class \
 com/sun/jmx/snmp/SnmpVarBind.class \
 com/sun/jmx/snmp/SnmpVarBindList.class \
-com/sun/jmx/snmp/Timestamp.class \
 com/sun/jmx/snmp/daemon/SendQ.class \
 com/sun/jmx/snmp/daemon/SnmpInformRequest.class \
-com/sun/jmx/snmp/daemon/SnmpQManager.class \
-com/sun/jmx/snmp/daemon/SnmpRequestCounter.class \
-com/sun/jmx/snmp/daemon/SnmpResponseHandler.class \
-com/sun/jmx/snmp/daemon/SnmpSendServer.class \
-com/sun/jmx/snmp/daemon/SnmpSession.class \
-com/sun/jmx/snmp/daemon/SnmpSocket.class \
-com/sun/jmx/snmp/daemon/SnmpTimerServer.class \
-com/sun/jmx/snmp/daemon/WaitQ.class
+com/sun/jmx/snmp/daemon/SnmpSession.class
 
 PLUG_SOUND_CLASS_NAMES = \
 com/sun/media/sound/AbstractPlayer.class \
@@ -126,10 +116,12 @@ com/sun/media/sound/SimpleInputDeviceProvider\$$1.class \
 com/sun/media/sound/SimpleInputDeviceProvider\$$InputDeviceInfo.class \
 com/sun/media/sound/SimpleInputDeviceProvider.class
 
+PLUG_GNU_CLASS_NAMES = gnu
+
 # Class list temp files (used by both import and export of plugs)
 
 PLUG_TEMPDIR=$(ABS_TEMPDIR)/plugs
-PLUG_CLASS_AREAS = jmf sound
+PLUG_CLASS_AREAS = jmf sound gnu
 PLUG_CLISTS = $(PLUG_CLASS_AREAS:%=$(PLUG_TEMPDIR)/%.clist)
 
 # Create jargs file command
@@ -152,12 +144,19 @@ $(PLUG_TEMPDIR)/sound.clist:
 	@for i in $(PLUG_SOUND_CLASS_NAMES) ; do \
 	  $(ECHO) "$$i" >> $@ ; \
 	done
+$(PLUG_TEMPDIR)/gnu.clist:
+	@$(prep-target)
+	@for i in $(PLUG_GNU_CLASS_NAMES) ; do \
+	  $(ECHO) "$$i" >> $@ ; \
+	done
 $(PLUG_TEMPDIR)/all.clist: $(PLUG_CLISTS)
 	@$(prep-target)
 	$(CAT) $(PLUG_CLISTS) > $@
 $(PLUG_TEMPDIR)/jmf.jargs: $(PLUG_TEMPDIR)/jmf.clist
 	$(plug-create-jargs)
 $(PLUG_TEMPDIR)/sound.jargs: $(PLUG_TEMPDIR)/sound.clist
+	$(plug-create-jargs)
+$(PLUG_TEMPDIR)/gnu.jargs: $(PLUG_TEMPDIR)/gnu.clist
 	$(plug-create-jargs)
 $(PLUG_TEMPDIR)/all.jargs: $(PLUG_TEMPDIR)/all.clist
 	$(plug-create-jargs)
@@ -195,12 +194,15 @@ import-binary-plug-jmf-classes: $(PLUG_IMPORT_JARFILE) $(PLUG_TEMPDIR)/jmf.clist
 	$(call import-binary-plug-classes,$(PLUG_TEMPDIR)/jmf.clist)
 import-binary-plug-sound-classes: $(PLUG_IMPORT_JARFILE) $(PLUG_TEMPDIR)/sound.clist
 	$(call import-binary-plug-classes,$(PLUG_TEMPDIR)/sound.clist)
+import-binary-plug-gnu-classes: $(PLUG_IMPORT_JARFILE) $(PLUG_TEMPDIR)/gnu.clist
+	$(call import-binary-plug-classes,$(PLUG_TEMPDIR)/gnu.clist)
 
 # Import all classes from the jar file
 
 import-binary-plug-jar: \
 	     import-binary-plug-jmf-classes \
-	     import-binary-plug-sound-classes
+	     import-binary-plug-sound-classes \
+	     import-binary-plug-gnu-classes
 
 # Import native libraries
 
@@ -223,14 +225,12 @@ import-binary-plugs-completed:
 
 # Import lib files (only if they don't exist already)
 
-import-binary-plugs-libs: \
-    $(PLUG_LIBRARY_NAMES:%=$(LIB_LOCATION)/%)
+import-binary-plugs-libs:
 
 # Import everything
 
 import-binary-plugs: \
     import-binary-plugs-started \
-    import-binary-plugs-libs \
     import-binary-plug-jar \
     import-binary-plugs-completed
 

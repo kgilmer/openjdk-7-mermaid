@@ -36,7 +36,7 @@ fileOpen(JNIEnv *env, jobject this, jstring path, jfieldID fid, int flags)
     WITH_PLATFORM_STRING(env, path, ps) {
         FD fd;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
         /* Remove trailing slashes, since the kernel won't */
         char *p = (char *)ps + strlen(ps) - 1;
         while ((p > ps) && (*p == '/'))

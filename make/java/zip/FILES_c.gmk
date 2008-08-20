@@ -30,6 +30,10 @@ FILES_c = \
 	Inflater.c \
 	ZipFile.c \
 	ZipEntry.c \
+	zip_util.c
+
+ifneq ($(SYSTEM_ZLIB),true)
+FILES_c += \
 	zadler32.c \
 	zcrc32.c \
 	deflate.c \
@@ -40,5 +44,5 @@ FILES_c = \
 	inftrees.c \
 	infcodes.c \
 	infutil.c \
-	inffast.c \
-	zip_util.c
+	inffast.c
+endif

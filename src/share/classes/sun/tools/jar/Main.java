@@ -49,6 +49,7 @@ class Main {
     Hashtable filesTable = new Hashtable();
     Vector paths = new Vector();
     Vector v;
+    String cwd;
     CRC32 crc32 = new CRC32();
     /*
      * cflag: create
@@ -770,6 +771,19 @@ class Main {
      * Extracts specified entries from JAR file.
      */
     void extract(InputStream in, String files[]) throws IOException {
+        // Current working directory
+
+        cwd = System.getProperty("user.dir");
+        if (cwd == null) {
+            fatalError(getMsg("error.no.cwd"));
+        }
+        cwd = (new File(cwd)).getCanonicalPath();
+        if (!cwd.endsWith(File.separator)) {
+            cwd += File.separator;
+        }
+
+        // Extract the files
+
         ZipInputStream zis = new ZipInputStream(in);
         ZipEntry e;
         // Set of all directory entries specified in archive.  Dissallows
@@ -817,6 +831,10 @@ class Main {
         ZipEntry rc = null;
         String name = e.getName();
         File f = new File(e.getName().replace('/', File.separatorChar));
+        if (!f.getCanonicalPath().startsWith(cwd)) {
+            output(formatMsg("out.ignore.entry", name));
+            return null;
+        }
         if (e.isDirectory()) {
             if (f.exists()) {
                 if (!f.isDirectory()) {
@@ -838,6 +856,10 @@ class Main {
         } else {
             if (f.getParent() != null) {
                 File d = new File(f.getParent());
+                if (!d.getCanonicalPath().startsWith(cwd)) {
+                    output(formatMsg("out.ignore.entry", name));
+                    return null;
+                }
                 if (!d.exists() && !d.mkdirs() || !d.isDirectory()) {
                     throw new IOException(formatMsg(
                         "error.create.dir", d.getPath()));

@@ -147,7 +147,7 @@ sysMonitorEnter(sys_thread_t *self, sys_mon_t *mid)
         mid->monitor_owner = self;
         mid->entry_count = 1;
         return SYS_OK;
-    } else if (err == EBUSY) { /* it's already locked */
+    } else if (err == EBUSY || err == EDEADLK) { /* it's already locked */
         if (mid->monitor_owner == self) {
             mid->entry_count++;
             return SYS_OK;

@@ -23,7 +23,7 @@
  * have any questions.
  */
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
 #include <string.h>
 #endif /* __linux__ */
 #include <stdio.h>
@@ -58,10 +58,24 @@
 extern Display *awt_display;
 #endif /* !HEADLESS */
 
+#ifdef __APPLE__
+// XXXDARWIN: Hard-code the path to Apple's freetype, as it is
+// not included in the dyld search path by default, and 10.4
+// does not support -rpath.
+//
+// This ignores the build time setting of ALT_FREETYPE_LIB_PATH,
+// and should be replaced with -rpath/@rpath support on 10.5 or later,
+// or via support for a the FREETYPE_LIB_PATH define.
+#define FONTCONFIG_DLL_VERSIONED "/usr/X11R6/lib/libfontconfig.1.dylib"
+#define FONTCONFIG_DLL "/usr/X11R6/lib/libfontconfig.dylib"
+#else
+#define FONTCONFIG_DLL_VERSIONED "libfontconfig.so.1"
+#define FONTCONFIG_DLL "libfontconfig.so"
+#endif
 
 #define MAXFDIRS 512    /* Max number of directories that contain fonts */
 
-#ifndef __linux__
+#if !defined(__linux__) && !defined(_ALLBSD_SOURCE)
 /*
  * This can be set in the makefile to "/usr/X11" if so desired.
  */
@@ -351,7 +365,7 @@ static char **getX11FontPath ()
 
 #endif /* !HEADLESS */
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
 /* from awt_LoadLibrary.c */
 JNIEXPORT jboolean JNICALL AWTIsHeadless();
 #endif
@@ -476,7 +490,7 @@ static char *getPlatformFontPathChars(JNIEnv *env, jboolean noType1) {
      */
     fcdirs = getFontConfigLocations();
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
     knowndirs = fullLinuxFontPath;
 #else /* IF SOLARIS */
     knowndirs = fullSolarisFontPath;
@@ -488,7 +502,8 @@ static char *getPlatformFontPathChars(JNIEnv *env, jboolean noType1) {
      * be initialised.
      */
 #ifndef HEADLESS
-#ifdef __linux__        /* There's no headless build on linux ... */
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
+    /* There's no headless build on linux ... */
     if (!AWTIsHeadless()) { /* .. so need to call a function to check */
 #endif
     AWT_LOCK();
@@ -496,7 +511,7 @@ static char *getPlatformFontPathChars(JNIEnv *env, jboolean noType1) {
         x11dirs = getX11FontPath();
     }
     AWT_UNLOCK();
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
     }
 #endif
 #endif /* !HEADLESS */
@@ -608,7 +623,7 @@ Java_sun_font_FontManager_populateFontFileNameMap
 }
 
 #include <dlfcn.h>
-#ifndef __linux__ /* i.e. is solaris */
+#if !(defined(__linux__) || defined(__APPLE__))
 #include <link.h>
 #endif
 
@@ -654,9 +669,9 @@ static void* openFontConfig() {
      * certain symbols - and functionality - to be available.
      * Also add explicit search for .so.1 in case .so symlink doesn't exist.
      */
-    libfontconfig = dlopen("libfontconfig.so.1", RTLD_LOCAL|RTLD_LAZY);
+    libfontconfig = dlopen(FONTCONFIG_DLL_VERSIONED, RTLD_LOCAL|RTLD_LAZY);
     if (libfontconfig == NULL) {
-        libfontconfig = dlopen("libfontconfig.so", RTLD_LOCAL|RTLD_LAZY);
+        libfontconfig = dlopen(FONTCONFIG_DLL, RTLD_LOCAL|RTLD_LAZY);
         if (libfontconfig == NULL) {
             return NULL;
         }

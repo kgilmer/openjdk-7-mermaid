@@ -26,7 +26,11 @@
 #include "jlong.h"
 #include "math.h"
 #include "string.h"
+#ifdef _ALLBSD_SOURCE
+#include "stdlib.h"
+#else
 #include "malloc.h"
+#endif
 #include "sunfontids.h"
 #include "fontscalerdefs.h"
 #include "glyphblitting.h"

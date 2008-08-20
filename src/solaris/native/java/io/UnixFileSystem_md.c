@@ -27,7 +27,8 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/statvfs.h>
+#include <sys/param.h>
+#include <sys/mount.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -41,6 +42,11 @@
 #include "java_io_FileSystem.h"
 #include "java_io_UnixFileSystem.h"
 
+#if defined(_ALLBSD_SOURCE)
+#define dirent64 dirent
+#define readdir64 readdir
+#define stat64 stat
+#endif
 
 /* -- Field IDs -- */
 
@@ -139,7 +145,6 @@ Java_java_io_UnixFileSystem_checkAccess(JNIEnv *env, jobject this,
     } END_PLATFORM_STRING(env, path);
     return rv;
 }
-
 
 JNIEXPORT jboolean JNICALL
 Java_java_io_UnixFileSystem_setPermission(JNIEnv *env, jobject this,
@@ -292,6 +297,9 @@ Java_java_io_UnixFileSystem_list(JNIEnv *env, jobject this,
     if (rv == NULL) goto error;
 
     /* Scan the directory */
+#ifdef _ALLBSD_SOURCE
+#define readdir64_r readdir_r
+#endif
     while ((readdir64_r(dir, ptr, &result) == 0)  && (result != NULL)) {
         jstring name;
         if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
@@ -414,20 +422,20 @@ Java_java_io_UnixFileSystem_getSpace(JNIEnv *env, jobject this,
     jlong rv = 0L;
 
     WITH_FIELD_PLATFORM_STRING(env, file, ids.path, path) {
-        struct statvfs fsstat;
-        memset(&fsstat, 0, sizeof(struct statvfs));
-        if (statvfs(path, &fsstat) == 0) {
+        struct statfs fsstat;
+        memset(&fsstat, 0, sizeof(struct statfs));
+        if (statfs(path, &fsstat) == 0) {
             switch(t) {
             case java_io_FileSystem_SPACE_TOTAL:
-                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
                                long_to_jlong(fsstat.f_blocks));
                 break;
             case java_io_FileSystem_SPACE_FREE:
-                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
                                long_to_jlong(fsstat.f_bfree));
                 break;
             case java_io_FileSystem_SPACE_USABLE:
-                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
                                long_to_jlong(fsstat.f_bavail));
                 break;
             default:

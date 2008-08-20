@@ -201,3 +201,7 @@ ifeq ($(PLATFORM),solaris)
   ECHO           = /usr/bin/echo
 endif
 
+# BSD specific
+ifeq ($(SYSTEM_UNAME),Darwin)
+  NAWK = $(USRBIN_PATH)awk
+endif

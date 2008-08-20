@@ -75,7 +75,7 @@ void intrDispatch(int interrupt, void *siginfo, void *context);
  *      N_INTERRUPTS  - The number of interrupt channels.  These
  *                      are numbered from 0 to (N_INTERRUPTS - 1).
  */
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 #define       N_INTERRUPTS    NSIG    /* 0 to NSIG - 1*/
 #else
 #define N_INTERRUPTS    32      /* 0 to 31 */
@@ -108,6 +108,10 @@ void intrUnlock(void);
 void intrInitMD(void);
 
 #if defined(__solaris__) && !defined(SA_SIGINFO)
+#error signal.h has not been included?
+#endif
+
+#if defined(__FreeBSD__) && !defined(SA_SIGINFO)
 #error signal.h has not been included?
 #endif
 

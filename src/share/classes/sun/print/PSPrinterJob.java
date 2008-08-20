@@ -1532,7 +1532,9 @@ public class PSPrinterJob extends RasterPrinterJob {
             pFlags |= NOSHEET;
             ncomps+=1;
         }
-       if (System.getProperty("os.name").equals("Linux")) {
+
+       String osname = System.getProperty("os.name");
+       if (osname.equals("Linux") || osname.equals("FreeBSD") || osname.equals("NetBSD") || osname.equals("OpenBSD") || osname.equals("Darwin")) {
             execCmd = new String[ncomps];
             execCmd[n++] = "/usr/bin/lpr";
             if ((pFlags & PRINTER) != 0) {

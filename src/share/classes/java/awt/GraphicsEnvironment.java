@@ -148,7 +148,12 @@ public abstract class GraphicsEnvironment {
                         } else {
                             String osName = System.getProperty("os.name");
                             headless = defaultHeadless =
-                                Boolean.valueOf(("Linux".equals(osName) || "SunOS".equals(osName)) &&
+                                Boolean.valueOf(("Linux".equals(osName) ||
+                                                "SunOS".equals(osName) ||
+                                                "FreeBSD".equals(osName) ||
+                                                "NetBSD".equals(osName) ||
+                                                "OpenBSD".equals(osName) ||
+                                                "Darwin".equals(osName)) &&
                                                 (System.getenv("DISPLAY") == null));
                         }
                     } else if (nm.equals("true")) {

@@ -40,6 +40,11 @@ ifeq ($(PLATFORM), linux)
   OTHER_LDLIBS += -lnsl $(LIBSOCKET) -lpthread
 endif
 
+ifeq ($(PLATFORM), bsd)
+  LIBSOCKET =
+  OTHER_LDLIBS += -pthread
+endif
+
 ifeq ($(PLATFORM), solaris)
   OTHER_LDLIBS += -lnsl $(LIBSOCKET)
 endif

@@ -36,3 +36,9 @@
 #include <stdint.h>
 #include <malloc.h>
 #endif /* __linux__ */
+
+#if defined(__OpenBSD__)
+#include <inttypes.h>
+#elif _ALLBSD_SOURCE
+#include <stdint.h>
+#endif /* _ALLBSD_SOURCE */

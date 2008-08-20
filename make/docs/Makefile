@@ -210,7 +210,7 @@ JDI_HEADER      = "Java Debug Interface"
 #       you get "No packages or classes specified." due to $(CLASSPATH_SEPARATOR)
 #       being interpreted as an end of command (newline)
 
-JAAS_SOURCEPATH  = "$(TOPDIR)/src/share/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/solaris/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/windows/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/linux/classes"
+JAAS_SOURCEPATH  = "$(TOPDIR)/src/share/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/solaris/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/windows/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/linux/classes$(CLASSPATH_SEPARATOR)$(TOPDIR)/src/bsd/classes"
 JAAS_DOCDIR	 = $(DOCSDIR)/jre/api/security/jaas/spec
 JAAS_JAVADOCFLAGS = $(COMMON_JAVADOCFLAGS)			 \
 		   -encoding ascii			         \

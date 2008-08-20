@@ -24,7 +24,9 @@
  */
 
 #include "stdlib.h"
+#ifndef _ALLBSD_SOURCE
 #include "malloc.h"
+#endif
 #include "string.h"
 #include "gdefs.h"
 #include "jlong.h"

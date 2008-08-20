@@ -85,6 +85,11 @@ ifeq ($(SA_EXISTS), false)
   INCLUDE_SA := false
 endif
 
+# FIXME: Remove when the build of libsaproc is fixed.
+ifeq ($(PLATFORM), bsd)
+  INCLUDE_SA := false
+endif
+
 ifeq ($(INCLUDE_SA), true)
   IMPORT_LIST += $(LIBDIR)/sa-jdi.jar \
                  $(LIB_LOCATION)/$(SALIB_NAME)
@@ -309,7 +314,7 @@ $(LIBDIR)/fonts/%.ttf: $(CLOSED_SRC)/share/lib/fonts/%.ttf
 $(FONTSDIRFILE): $(PLATFORM_SRC)/classes/sun/awt/motif/java.fonts.dir
 	$(install-file)
 
-ifeq ($(PLATFORM), linux)
+ifneq (,$(findstring $(PLATFORM), linux bsd))
 
 # The oblique fonts are only needed/wanted on Linux.
 
@@ -323,7 +328,7 @@ $(LIBDIR)/oblique-fonts/%.ttf: $(CLOSED_SRC)/share/lib/fonts/oblique/%.ttf
 $(OBLFONTSDIRFILE): $(PLATFORM_SRC)/classes/sun/awt/motif/java.oblique-fonts.dir
 	$(install-file)
 
-endif # linux
+endif # linux || bsd
 endif # !OPENJDK
 
 # Import internal files (ones that are stashed in this source tree)

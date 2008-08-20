@@ -26,6 +26,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if defined(_ALLBSD_SOURCE)
+#include "largefile_bsd.h"
+#endif
+
 #include "jni.h"
 #include "jni_util.h"
 #include "sun_management_FileSystemImpl.h"

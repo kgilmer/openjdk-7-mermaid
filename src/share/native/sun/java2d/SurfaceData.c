@@ -28,7 +28,11 @@
 #include "jni_util.h"
 #include "Disposer.h"
 
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include "malloc.h"
+#endif
 #include "string.h"
 
 /**

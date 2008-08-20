@@ -32,9 +32,15 @@
 #include <string.h>
 #include <errno.h>
 #include <dlfcn.h>
+#ifndef __APPLE__
 #include <link.h>
+#endif
 
+#ifdef __APPLE__
+#define NPT_LIBNAME "libnpt.dylib"
+#else
 #define NPT_LIBNAME "libnpt.so"
+#endif
 
 #define NPT_INITIALIZE(pnpt,version,options)                            \
     {                                                                   \

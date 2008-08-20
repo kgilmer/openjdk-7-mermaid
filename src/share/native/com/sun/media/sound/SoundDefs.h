@@ -31,6 +31,7 @@
 #define X_WINDOWS       1
 #define X_SOLARIS       2
 #define X_LINUX         3
+#define X_BSD           4
 
 // types for X_ARCH
 #define X_I586          1
@@ -49,7 +50,7 @@
 
 
 // following is needed for _LP64
-#if ((X_PLATFORM == X_SOLARIS) || (X_PLATFORM == X_LINUX))
+#if ((X_PLATFORM == X_SOLARIS) || (X_PLATFORM == X_LINUX) || (X_PLATFORM == X_BSD))
 #include <sys/types.h>
 #endif
 
@@ -125,6 +126,11 @@ typedef char            SBYTE;
 
 
 #if X_PLATFORM == X_LINUX
+#define INLINE          inline
+#endif
+
+
+#if X_PLATFORM == X_BSD
 #define INLINE          inline
 #endif
 

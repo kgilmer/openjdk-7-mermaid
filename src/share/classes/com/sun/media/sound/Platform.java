@@ -160,7 +160,8 @@ class Platform {
         try {
             // load the main libraries
             JSSecurityManager.loadLibrary(libNameMain);
-            JSSecurityManager.loadLibrary(libNameMain2);
+			// BSDMERGE: What is this?
+            // JSSecurityManager.loadLibrary(libNameMain2);
             // just for the heck of it...
             loadedLibs |= LIB_MAIN;
         } catch (SecurityException e) {
