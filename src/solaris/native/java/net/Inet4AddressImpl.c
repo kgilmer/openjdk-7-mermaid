@@ -77,7 +77,7 @@ Java_java_net_Inet4AddressImpl_getLocalHostName(JNIEnv *env, jobject this) {
 	 hints.ai_flags = AI_CANONNAME;
 	 hints.ai_family = AF_UNSPEC;
 
-	 error = getaddrinfo(hostname, "domain", &hints, &res);
+	 error = getaddrinfo(hostname, NULL, &hints, &res);
 
 	 if (error == 0) {
 	     /* host is known to name service */
@@ -162,7 +162,7 @@ Java_java_net_Inet4AddressImpl_lookupAllHostAddr(JNIEnv *env, jobject this,
 	return NULL;
     }
 	
-    error = getaddrinfo(hostname, "domain", &hints, &res);
+    error = getaddrinfo(hostname, NULL, &hints, &res);
 	
     if (error) {
 	/* report error */
