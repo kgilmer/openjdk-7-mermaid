@@ -234,6 +234,24 @@ DEVTOOLS_FT_DIR_EXISTS = $(shell \
   endif
 endif
 
+ifneq ($(PLATFORM), windows)
+  ifdef ALT_X11_PATH
+    X11_PATH = $(ALT_X11_PATH)
+  else
+    X11_PATH = /usr/X11R6
+  endif 
+
+  ifdef ALT_PKG_PATH
+    PKG_PATH = $(ALT_PKG_PATH)
+  else
+    ifeq ($(PLATFORM), linux)
+      PKG_PATH = /usr
+    else
+      PKG_PATH = /usr/local
+    endif
+  endif
+endif
+
 #
 # Localizations for the different parts of the product beyond English
 #

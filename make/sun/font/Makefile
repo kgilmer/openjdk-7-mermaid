@@ -171,7 +171,7 @@ else # PLATFORM
 #
 
 ifeq ($(PLATFORM), bsd)
-OTHER_INCLUDES += -I/usr/X11R6/include
+OTHER_INCLUDES += -I$(X11_PATH)/include
 OTHER_LDLIBS  += -lawt $(LIBM) $(LIBCXX)
  ifeq ($(OS_VENDOR),Apple)
    # XXXDARWIN Match BSD/Linux behavior -- the mawt.dylib symbols will

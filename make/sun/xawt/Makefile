@@ -134,7 +134,7 @@ CPPFLAGS += -I$(CUPS_HEADERS_PATH)
 
 ifeq ($(PLATFORM), linux)
 # Allows for builds on Debian GNU Linux, X11 is in a different place 
-  CPPFLAGS += -I/usr/X11R6/include/X11/extensions \
+  CPPFLAGS += -I$(OPENWIN_HOME)/include/X11/extensions \
               -I/usr/include/X11/extensions \
               -I$(OPENWIN_HOME)/include 
 endif
@@ -145,6 +145,10 @@ endif
 
 ifeq ($(PLATFORM), bsd)
   CPPFLAGS += -I$(OPENWIN_HOME)/include/X11/extensions -I$(OPENWIN_HOME)/include
+endif
+
+ifneq ($(PLATFORM), windows)
+  CPPFLAGS += -DX11_PATH=\"$(X11_PATH)\" -DPKG_PATH=\"$(PKG_PATH)\"
 endif
 
 ifeq ($(MILESTONE), internal)

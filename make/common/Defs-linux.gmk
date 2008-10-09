@@ -286,7 +286,7 @@ override LIBSOCKET               =
 override LIBTHREAD               =
 override MOOT_PRIORITIES         = true
 override NO_INTERRUPTIBLE_IO     = true
-override OPENWIN_HOME            = /usr/X11R6
+override OPENWIN_HOME            = $(X11_PATH)
 ifeq ($(ARCH), amd64)
 override OPENWIN_LIB             = $(OPENWIN_HOME)/lib64
 else

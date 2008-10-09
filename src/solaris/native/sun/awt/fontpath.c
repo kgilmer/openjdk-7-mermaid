@@ -66,8 +66,8 @@ extern Display *awt_display;
 // This ignores the build time setting of ALT_FREETYPE_LIB_PATH,
 // and should be replaced with -rpath/@rpath support on 10.5 or later,
 // or via support for a the FREETYPE_LIB_PATH define.
-#define FONTCONFIG_DLL_VERSIONED "/usr/X11R6/lib/libfontconfig.1.dylib"
-#define FONTCONFIG_DLL "/usr/X11R6/lib/libfontconfig.dylib"
+#define FONTCONFIG_DLL_VERSIONED X11_PATH "/lib/libfontconfig.1.dylib"
+#define FONTCONFIG_DLL X11_PATH "/lib/libfontconfig.dylib"
 #else
 #define FONTCONFIG_DLL_VERSIONED "libfontconfig.so.1"
 #define FONTCONFIG_DLL "libfontconfig.so"
@@ -125,24 +125,41 @@ static char *fullSolarisFontPath[] = {
     NULL, /* terminates the list */
 };
 
+#elif _ALLBSD_SOURCE
+static char *fullBSDFontPath[] = {
+    X11_PATH "/lib/X11/fonts/TrueType",
+    X11_PATH "/lib/X11/fonts/TrueType",
+    X11_PATH "/lib/X11/fonts/truetype",
+    X11_PATH "/lib/X11/fonts/tt",
+    X11_PATH "/lib/X11/fonts/TTF",
+    X11_PATH "/lib/X11/fonts/OTF",
+    PKG_PATH "/share/fonts/TrueType",
+    PKG_PATH "/share/fonts/truetype",
+    PKG_PATH "/share/fonts/tt",
+    PKG_PATH "/share/fonts/TTF",
+    PKG_PATH "/share/fonts/OTF",
+    X11_PATH "/lib/X11/fonts/Type1",
+    PKG_PATH "/share/fonts/Type1",
+    NULL, /* terminates the list */
+};
 #else /* __linux */
 /* All the known interesting locations we have discovered on
  * various flavors of Linux
  */
 static char *fullLinuxFontPath[] = {
-    "/usr/X11R6/lib/X11/fonts/TrueType",  /* RH 7.1+ */
-    "/usr/X11R6/lib/X11/fonts/truetype",  /* SuSE */
-    "/usr/X11R6/lib/X11/fonts/tt",
-    "/usr/X11R6/lib/X11/fonts/TTF",
-    "/usr/X11R6/lib/X11/fonts/OTF",       /* RH 9.0 (but empty!) */
-    "/usr/share/fonts/ja/TrueType",       /* RH 7.2+ */
-    "/usr/share/fonts/truetype",
-    "/usr/share/fonts/ko/TrueType",       /* RH 9.0 */
-    "/usr/share/fonts/zh_CN/TrueType",    /* RH 9.0 */
-    "/usr/share/fonts/zh_TW/TrueType",    /* RH 9.0 */
+    X11_PATH "/lib/X11/fonts/TrueType",  /* RH 7.1+ */
+    X11_PATH "/lib/X11/fonts/truetype",  /* SuSE */
+    X11_PATH "/lib/X11/fonts/tt",
+    X11_PATH "/lib/X11/fonts/TTF",
+    X11_PATH "/lib/X11/fonts/OTF",       /* RH 9.0 (but empty!) */
+    PKG_PATH "/share/fonts/ja/TrueType",       /* RH 7.2+ */
+    PKG_PATH "/share/fonts/truetype",
+    PKG_PATH "/share/fonts/ko/TrueType",       /* RH 9.0 */
+    PKG_PATH "/share/fonts/zh_CN/TrueType",    /* RH 9.0 */
+    PKG_PATH "/share/fonts/zh_TW/TrueType",    /* RH 9.0 */
     "/var/lib/defoma/x-ttcidfont-conf.d/dirs/TrueType", /* Debian */
-    "/usr/X11R6/lib/X11/fonts/Type1",
-    "/usr/share/fonts/default/Type1",     /* RH 9.0 */
+    X11_PATH "/lib/X11/fonts/Type1",
+    PKG_PATH "/share/fonts/default/Type1",     /* RH 9.0 */
     NULL, /* terminates the list */
 };
 #endif
@@ -490,8 +507,10 @@ static char *getPlatformFontPathChars(JNIEnv *env, jboolean noType1) {
      */
     fcdirs = getFontConfigLocations();
 
-#if defined(__linux__) || defined(_ALLBSD_SOURCE)
+#if defined(__linux__)
     knowndirs = fullLinuxFontPath;
+#elif defined(_ALLBSD_SOURCE)
+    knowndirs = fullBSDFontPath;
 #else /* IF SOLARIS */
     knowndirs = fullSolarisFontPath;
 #endif
