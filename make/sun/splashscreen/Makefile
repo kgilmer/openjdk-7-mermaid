@@ -68,11 +68,11 @@ ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
   ifeq ($(PLATFORM), bsd)
     CFLAGS += -DPNG_NO_MMX_CODE
-    ICONV_DIR=/usr/local
+    ICONV_PATH = $(PKG_PATH)
     CPPFLAGS += -I$(OPENWIN_HOME)/include \
                 -I$(OPENWIN_HOME)/include/X11/extensions \
-                -I$(ICONV_DIR)/include
-    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext -L$(ICONV_DIR)/lib -liconv $(LIBM) -pthread
+                -I$(ICONV_PATH)/include
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext -L$(ICONV_PATH)/lib -liconv $(LIBM) -pthread
   else
     CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
     OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread

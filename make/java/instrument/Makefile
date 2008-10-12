@@ -112,10 +112,10 @@ ifeq ($(PLATFORM), bsd)
     LDFLAGS += -Wl,--no-whole-archive
   endif
 
-  ICONV_DIR = /usr/local
+  ICONV_PATH = $(PKG_PATH)
 # Use CPPFLAGS instead of OTHER_INCLUDES to force this last
-  CPPFLAGS += -I$(ICONV_DIR)/include
-  OTHER_LDLIBS += -L$(ICONV_DIR)/lib -liconv
+  CPPFLAGS += -I$(ICONV_PATH)/include
+  OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
 else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
   OTHER_LDLIBS += -ljli

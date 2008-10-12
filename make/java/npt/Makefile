@@ -67,9 +67,9 @@ endif
 
 # Add location of iconv headers
 ifeq ($(PLATFORM), bsd)
-  ICONV_DIR = /usr/local
-  CPPFLAGS += -I$(ICONV_DIR)/include
-  OTHER_LDLIBS += -L$(ICONV_DIR)/lib -liconv
+  ICONV_PATH = $(PKG_PATH)
+  CPPFLAGS += -I$(ICONV_PATH)/include
+  OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
 endif
 
 #

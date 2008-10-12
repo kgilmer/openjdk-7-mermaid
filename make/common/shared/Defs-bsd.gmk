@@ -54,7 +54,7 @@ $(shell if [ "$1" != "" -a -d "$1" ]; then (cd $1 && pwd); else echo "$1"; fi)
 endef
 
 # Location on system where jdk installs might be
-USRJDKINSTANCES_PATH =/usr/local
+USRJDKINSTANCES_PATH = $(PKG_PATH)
 
 # UNIXCOMMAND_PATH: path to where the most common Unix commands are.
 #  NOTE: Must end with / so that it could be empty, allowing PATH usage.
@@ -121,7 +121,7 @@ endif
 BUILD_HEADLESS = true
 LIBM=-lm
 
-_CUPS_HEADERS_PATH=/usr/local/include
+_CUPS_HEADERS_PATH=$(PKG_PATH)/include
 
 # Import JDK images allow for partial builds, components not built are
 #    imported (or copied from) these import areas when needed.
