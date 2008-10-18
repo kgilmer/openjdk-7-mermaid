@@ -128,7 +128,7 @@ Java_sun_java2d_x11_X11SurfaceData_initIDs(JNIEnv *env, jclass xsd,
 
     if (tryDGA && (getenv("NO_J2D_DGA") == NULL)) {
     /* we use RTLD_NOW because of bug 4032715 */
-        lib = dlopen("libsunwjdga.so", RTLD_NOW);
+        lib = dlopen(JNI_LIB_NAME("sunwjdga"), RTLD_NOW);
     }
     dgaAvailable = JNI_FALSE;
     if (lib != NULL) {

@@ -84,10 +84,10 @@ Drawable GetVirtualDrawableStub(Display *display, Drawable drawable) {
 static GetVirtualDrawableFunc * GetVirtualDrawable = GetVirtualDrawableStub;
 
 static void Solaris_DGA_XineramaInit(Display *display) {
-    void * handle = 0;
+    void * handle = NULL;
     if (IsXineramaOn == NULL) {
-        handle = dlopen("libxinerama.so", RTLD_NOW);
-        if (handle != 0) {
+        handle = dlopen(JNI_LIB_NAME("xinerama"), RTLD_NOW);
+        if (handle != NULL) {
             void *sym = dlsym(handle, "IsXineramaOn");
             IsXineramaOn = (IsXineramaOnFunc *)sym;
             if (IsXineramaOn != 0 && (*IsXineramaOn)(display)) {

@@ -1255,7 +1255,7 @@ CounterGet()
 
 /* --- Splash Screen shared library support --- */
 
-static const char* SPLASHSCREEN_SO = "libsplashscreen.so";
+static const char* SPLASHSCREEN_SO = JNI_LIB_NAME("splashscreen");
 
 static void* hSplashLib = NULL;
 

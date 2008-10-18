@@ -51,6 +51,8 @@
 #include <dlfcn.h>
 #include "Trace.h"
 
+#include "jvm_md.h"
+
 #ifdef NETSCAPE
 #include <signal.h>
 extern int awt_init_xt;
@@ -634,16 +636,19 @@ void checkNewXineramaScreen(JNIEnv* env, jobject peer, struct FrameData* wdata,
 #if defined(__linux__) || defined(_ALLBSD_SOURCE)
 static void xinerama_init_linux()
 {
-    void* libHandle = 0;
-    char* XineramaLibName= "libXinerama.so.1";
+    void* libHandle = NULL;
     int32_t locNumScr = 0;
     XineramaScreenInfo *xinInfo;
     char* XineramaQueryScreensName = "XineramaQueryScreens";
     XineramaQueryScreensFunc* XineramaQueryScreens = NULL;
 
     /* load library */
-    libHandle = dlopen(XineramaLibName, RTLD_LAZY | RTLD_GLOBAL);
-    if (libHandle != 0) {
+    libHandle = dlopen(VERSIONED_JNI_LIB_NAME("Xinerama", "1"),
+                       RTLD_LAZY | RTLD_GLOBAL);
+    if (libHandle == NULL) {
+        libHandle = dlopen(JNI_LIB_NAME("Xinerama"), RTLD_LAZY | RTLD_GLOBAL);
+    }
+    if (libHandle != NULL) {
         XineramaQueryScreens = (XineramaQueryScreensFunc*)
             dlsym(libHandle, XineramaQueryScreensName);
 
@@ -682,8 +687,7 @@ static void xinerama_init_linux()
 #if !defined(__linux__) && !defined(_ALLBSD_SOURCE) /* Solaris */
 static void xinerama_init_solaris()
 {
-    void* libHandle = 0;
-    char* XineramaLibName= "libXext.so";
+    void* libHandle = NULL;
     unsigned char fbhints[MAXFRAMEBUFFERS];
     int32_t locNumScr = 0;
     /* load and run XineramaGetInfo */
@@ -692,8 +696,8 @@ static void xinerama_init_solaris()
     XineramaGetInfoFunc* XineramaSolarisFunc = NULL;
 
     /* load library */
-    libHandle = dlopen(XineramaLibName, RTLD_LAZY | RTLD_GLOBAL);
-    if (libHandle != 0) {
+    libHandle = dlopen(JNI_LIB_NAME("Xext"), RTLD_LAZY | RTLD_GLOBAL);
+    if (libHandle != NULL) {
         XineramaSolarisFunc = (XineramaGetInfoFunc*)dlsym(libHandle, XineramaGetInfoName);
         XineramaSolarisCenterFunc =
             (XineramaGetCenterHintFunc*)dlsym(libHandle, XineramaGetCenterHintName);
@@ -1678,7 +1682,11 @@ X11GD_InitXrandrFuncs(JNIEnv *env)
 {
     int rr_maj_ver = 0, rr_min_ver = 0;
 
-    void *pLibRandR = dlopen("libXrandr.so.2", RTLD_LAZY | RTLD_LOCAL);
+    void *pLibRandR = dlopen(VERSIONED_JNI_LIB_NAME("Xrandr", "2"),
+                             RTLD_LAZY | RTLD_LOCAL);
+    if (pLibRandR == NULL) {
+        pLibRandR = dlopen(JNI_LIB_NAME("Xrandr"), RTLD_LAZY | RTLD_LOCAL);
+    }
     if (pLibRandR == NULL) {
         J2dRlsTraceLn(J2D_TRACE_ERROR,
                       "X11GD_InitXrandrFuncs: Could not open libXrandr.so.2");

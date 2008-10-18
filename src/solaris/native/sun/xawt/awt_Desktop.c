@@ -36,7 +36,7 @@ int init(){
     gboolean (*gnome_vfs_init) (void);
     const char *errmsg;
 
-    vfs_handle = dlopen("libgnomevfs-2.so.0", RTLD_LAZY);
+    vfs_handle = dlopen(VERSIONED_JNI_LIB_NAME("gnomevfs-2", "0"), RTLD_LAZY);
     if (vfs_handle == NULL) {
 #ifdef INTERNAL_BUILD
         fprintf(stderr, "can not load libgnomevfs-2.so\n");
@@ -54,7 +54,7 @@ int init(){
     // call gonme_vfs_init()
     (*gnome_vfs_init)();
 
-    gnome_handle = dlopen("libgnome-2.so.0", RTLD_LAZY);
+    gnome_handle = dlopen(VERSIONED_JNI_LIB_NAME("gnome-2", "0"), RTLD_LAZY);
     if (gnome_handle == NULL) {
 #ifdef INTERNAL_BUILD
         fprintf(stderr, "can not load libgnome-2.so\n");

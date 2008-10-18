@@ -109,8 +109,9 @@ Java_sun_net_spi_DefaultProxySelector_init(JNIEnv *env, jclass clazz) {
   /**
    * Let's try to load le GConf-2 library
    */
-  if (dlopen("libgconf-2.so", RTLD_GLOBAL | RTLD_LAZY) != NULL ||
-      dlopen("libgconf-2.so.4", RTLD_GLOBAL | RTLD_LAZY) != NULL) {
+  if (dlopen(JNI_LIB_NAME("gconf-2"), RTLD_GLOBAL | RTLD_LAZY) != NULL ||
+      dlopen(VERSIONED_JNI_LIB_NAME("gconf-2", "4"),
+             RTLD_GLOBAL | RTLD_LAZY) != NULL) {
     gconf_ver = 2;
   }
   if (gconf_ver > 0) {

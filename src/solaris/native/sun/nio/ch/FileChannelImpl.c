@@ -78,7 +78,8 @@ Java_sun_nio_ch_FileChannelImpl_initIDs(JNIEnv *env, jclass clazz)
     chan_fd = (*env)->GetFieldID(env, clazz, "fd", "Ljava/io/FileDescriptor;");
 
 #ifdef __solaris__
-    if (dlopen("/usr/lib/libsendfile.so.1", RTLD_GLOBAL | RTLD_LAZY) != NULL) {
+    if (dlopen("/usr/lib/" VERSIONED_JNI_LIB_NAME("sendfile", "1"),
+               RTLD_GLOBAL | RTLD_LAZY) != NULL) {
         my_sendfile_func = (sendfile_func*) dlsym(RTLD_DEFAULT, "sendfilev64");
     }
 #endif

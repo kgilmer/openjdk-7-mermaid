@@ -66,11 +66,11 @@ extern Display *awt_display;
 // This ignores the build time setting of ALT_FREETYPE_LIB_PATH,
 // and should be replaced with -rpath/@rpath support on 10.5 or later,
 // or via support for a the FREETYPE_LIB_PATH define.
-#define FONTCONFIG_DLL_VERSIONED X11_PATH "/lib/libfontconfig.1.dylib"
-#define FONTCONFIG_DLL X11_PATH "/lib/libfontconfig.dylib"
+#define FONTCONFIG_DLL_VERSIONED X11_PATH "/lib/" VERSIONED_JNI_LIB_NAME("fontconfig", "1")
+#define FONTCONFIG_DLL X11_PATH "/lib/" JNI_LIB_NAME("fontconfig")
 #else
-#define FONTCONFIG_DLL_VERSIONED "libfontconfig.so.1"
-#define FONTCONFIG_DLL "libfontconfig.so"
+#define FONTCONFIG_DLL_VERSIONED VERSIONED_JNI_LIB_NAME("fontconfig", "1")
+#define FONTCONFIG_DLL JNI_LIB_NAME("fontconfig")
 #endif
 
 #define MAXFDIRS 512    /* Max number of directories that contain fonts */
