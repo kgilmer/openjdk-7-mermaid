@@ -44,6 +44,7 @@
 #include <X11/Xlib.h>
 
 #include "jni.h"
+#include "jvm_md.h"
 #include "jdga.h"
 #include "jdgadevice.h"
 

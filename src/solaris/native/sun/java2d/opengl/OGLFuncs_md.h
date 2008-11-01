@@ -30,6 +30,7 @@
 #ifndef __APPLE__
 #include <link.h>
 #endif
+#include "jvm_md.h"
 #include "J2D_GL/glx.h"
 #include "OGLFuncMacros.h"
 

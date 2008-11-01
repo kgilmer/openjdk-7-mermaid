@@ -32,6 +32,7 @@
 #include "gdefs.h"
 
 #include "jni_util.h"
+#include "jvm_md.h"
 #include "awt_Component.h"
 #include "awt_GraphicsEnv.h"
 

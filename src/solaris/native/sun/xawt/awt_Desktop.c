@@ -24,6 +24,7 @@
  */
 
 #include <jni.h>
+#include <jvm_md.h>
 #include <dlfcn.h>
 
 typedef int gboolean;

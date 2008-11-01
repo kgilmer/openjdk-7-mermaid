@@ -25,6 +25,7 @@
 
 #include <jni.h>
 #include <jni_util.h>
+#include <jvm_md.h>
 #include <dlfcn.h>
 #include <cups/cups.h>
 #include <cups/ppd.h>

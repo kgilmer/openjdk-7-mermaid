@@ -35,6 +35,7 @@
 #ifndef __APPLE__
 #include <link.h>
 #endif
+#include <jvm_md.h>
 
 #define NPT_INITIALIZE(pnpt,version,options)                            \
     {                                                                   \

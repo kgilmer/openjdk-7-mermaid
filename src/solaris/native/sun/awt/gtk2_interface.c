@@ -30,6 +30,7 @@
 #include <string.h>
 #include "gtk2_interface.h"
 #include "java_awt_Transparency.h"
+#include "jvm_md.h"
 
 #define GTK2_LIB VERSIONED_JNI_LIB_NAME("gtk-x11-2.0", "0")
 

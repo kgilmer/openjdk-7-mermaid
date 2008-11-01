@@ -32,6 +32,7 @@
 #include <dlfcn.h>
 #include "jni.h"
 #include <jni_util.h>
+#include "jvm_md.h"
 #include "awt_Mlib.h"
 #include "java_awt_image_BufferedImage.h"
 

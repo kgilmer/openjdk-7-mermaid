@@ -26,6 +26,7 @@
 #include "jni.h"
 #include "jni_util.h"
 #include "jvm.h"
+#include "jvm_md.h"
 #include "jlong.h"
 #include <sys/mman.h>
 #include <sys/stat.h>
