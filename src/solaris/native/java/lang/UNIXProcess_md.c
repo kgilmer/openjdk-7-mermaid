@@ -274,65 +274,6 @@ Java_java_lang_UNIXProcess_waitForProcessExit(JNIEnv* env,
     }
 }
 
-#if defined(__OpenBSD__)
-/*
- * Directly call _thread_sys_closefrom() so the child process
- * doesn't reset the parrent's file descriptors to be blocking.
- * This function is only called from the child process which
- * is single threaded and about to call execvp() so it is
- * safe to bypass the threaded closefrom().
- */
-int _thread_sys_closefrom(int);
-
-static int
-closeDescriptors(void)
-{
-	return _thread_sys_closefrom(3);
-}
-
-#elif defined(_ALLBSD_SOURCE)
-
-/*
- * BSDNOTE: This function was returning 'int' originally.  But it assumed
- * that OS has some intelegent functionality to close opened-only fds
- * associated with current process.  Since we have to close them lineary
- * make it void, until something really new functionality will appear.
- */
-int closeDescriptors()
-{
-    int max_fd, savei, i, ebadf;
-
-    /*
-     * BSDNOTE: There's no known way to find list of all open file descriptors
-     * associated with process in FreeBSD.  Therefore we have to pass from
-     * fd == 3 to maximum fd per process number.  It's possible to retrive
-     * max number of fd's with three ways: sysctl(kern.maxfilesperproc),
-     * getrlimit(RLIMIT_NOFILE) and getdtablesize().  In current implementation
-     * getdtablesize() returns MIN() of first two ways.
-     *
-     * At my current system maxfileperproc > 7300.  And it's unlikely that
-     * all of these descriptors always are allocated.  Let's use some
-     * "heuristics" to avoid thousands of unneccessary calls.
-     */
-
-#define GUESS_FINISHED	51
-
-    max_fd = getdtablesize();
-    ebadf = 0;
-
-    for (i = 3; i < max_fd; i++) {
-	if (close(i) < 0) { ebadf++; } else { ebadf = 0; }
-	/*
-         * GUESS_FINISHED subsequent calls to close() returned EBADF, assume
-         * we don't have open descriptors anymore
-         */
-	if (ebadf > GUESS_FINISHED) {
-	    return (0);
-        }
-    }
-    return (0);
-}
-
 #if defined(__FreeBSD__)
 
 extern pid_t   __sys_fork(void);
@@ -385,13 +326,37 @@ jdk_fork_wrapper()
 }
 #endif /* __FreeBSD__ */
 
-#else /* _ALLBSD_SOURCE */
+#if defined(__OpenBSD__)
+/*
+ * Directly call _thread_sys_closefrom() so the child process
+ * doesn't reset the parrent's file descriptors to be blocking.
+ * This function is only called from the child process which
+ * is single threaded and about to call execvp() so it is
+ * safe to bypass the threaded closefrom().
+ */
+int _thread_sys_closefrom(int);
+
+static int
+closeDescriptors(void)
+{
+    return _thread_sys_closefrom(3);
+}
+
+#else
+
+#ifdef _ALLBSD_SOURCE                                                          
+#define FD_DIR "/dev/fd"
+#else
+#define dirent dirent64                                                        
+#define readdir readdir64                                                      
+#define FD_DIR "/proc/self/fd"
+#endif
 
 static int
 closeDescriptors(void)
 {
     DIR *dp;
-    struct dirent64 *dirp;
+    struct dirent *dirp;
     int from_fd = FAIL_FILENO + 1;
 
     /* We're trying to close all file descriptors, but opendir() might
@@ -404,13 +369,13 @@ closeDescriptors(void)
     close(from_fd);             /* for possible use by opendir() */
     close(from_fd + 1);         /* another one for good luck */
 
-    if ((dp = opendir("/proc/self/fd")) == NULL)
+    if ((dp = opendir(FD_DIR)) == NULL)
         return 0;
 
     /* We use readdir64 instead of readdir to work around Solaris bug
      * 6395699: /proc/self/fd fails to report file descriptors >= 1024 on Solaris 9
      */
-    while ((dirp = readdir64(dp)) != NULL) {
+    while ((dirp = readdir(dp)) != NULL) {
         int fd;
         if (isdigit(dirp->d_name[0]) &&
             (fd = strtol(dirp->d_name, NULL, 10)) >= from_fd + 2)
@@ -421,7 +386,7 @@ closeDescriptors(void)
 
     return 1;
 }
-#endif /* !_ALLBSD_SOURCE */
+#endif /* !__OpenBSD__ */
 
 static void
 moveDescriptor(int fd_from, int fd_to)
