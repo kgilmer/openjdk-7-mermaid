@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright 2007-2008 Sun Microsystems, Inc.  All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 
 package com.sun.jmx.remote.util;
 
+import com.sun.jmx.defaults.JmxProperties;
 import com.sun.jmx.event.EventClientFactory;
 
 import java.lang.reflect.InvocationHandler;
@@ -45,6 +46,7 @@ import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import javax.management.event.EventClient;
 import javax.management.event.EventClientDelegate;
+import javax.management.namespace.JMXNamespaces;
 
 /**
  * Class EventClientConnection - a {@link Proxy} that wraps an
@@ -63,12 +65,10 @@ public class EventClientConnection implements InvocationHandler,
     /**
      * A logger for this class.
      **/
-    private static final Logger LOG =
-            Logger.getLogger(EventClientConnection.class.getName());
+    private static final Logger LOG = JmxProperties.NOTIFICATION_LOGGER;
 
-    private static final String NAMESPACE_SEPARATOR = "//";
     private static final int NAMESPACE_SEPARATOR_LENGTH =
-            NAMESPACE_SEPARATOR.length();
+            JMXNamespaces.NAMESPACE_SEPARATOR.length();
 
     /**
      * Creates a new {@code EventClientConnection}.
@@ -138,8 +138,8 @@ public class EventClientConnection implements InvocationHandler,
             Class<T> interfaceClass, Callable<EventClient> eventClientFactory) {
         final InvocationHandler handler =
                 new EventClientConnection(connection,eventClientFactory);
-        final Class[] interfaces =
-                new Class[] {interfaceClass, EventClientFactory.class};
+        final Class<?>[] interfaces =
+                new Class<?>[] {interfaceClass, EventClientFactory.class};
 
         Object proxy =
                 Proxy.newProxyInstance(interfaceClass.getClassLoader(),
@@ -156,7 +156,7 @@ public class EventClientConnection implements InvocationHandler,
         // add/remove notification listener are routed to the EventClient
         if (methodName.equals("addNotificationListener")
             || methodName.equals("removeNotificationListener")) {
-            final Class[] sig = method.getParameterTypes();
+            final Class<?>[] sig = method.getParameterTypes();
             if (sig.length>1 &&
                     NotificationListener.class.isAssignableFrom(sig[1])) {
                 return invokeBroadcasterMethod(proxy,method,args);
@@ -164,7 +164,7 @@ public class EventClientConnection implements InvocationHandler,
         }
 
         // subscribe/unsubscribe are also routed to the EventClient.
-        final Class clazz = method.getDeclaringClass();
+        final Class<?> clazz = method.getDeclaringClass();
         if (clazz.equals(EventClientFactory.class)) {
             return invokeEventClientSubscriberMethod(proxy,method,args);
         }
@@ -212,9 +212,9 @@ public class EventClientConnection implements InvocationHandler,
         }
 
         final ObjectName mbean = (ObjectName) args[0];
-        final EventClient client = getEventClient();
+        final EventClient evtClient = getEventClient();
 
-        // Fails if client is null AND the MBean we try to listen to is
+        // Fails if evtClient is null AND the MBean we try to listen to is
         // in a subnamespace. We fail here because we know this will not
         // work.
         //
@@ -222,15 +222,15 @@ public class EventClientConnection implements InvocationHandler,
         // earlier agent (JDK 1.6 or earlier), then the EventClient will
         // be null (we can't use the event service with earlier JDKs).
         //
-        // In principle a null client indicates that the remote VM is of
+        // In principle a null evtClient indicates that the remote VM is of
         // an earlier version, in which case it shouldn't contain any namespace.
         //
-        // So having a null client AND an MBean contained in a namespace is
+        // So having a null evtClient AND an MBean contained in a namespace is
         // clearly an error case.
         //
-        if (client == null) {
+        if (evtClient == null) {
             final String domain = mbean.getDomain();
-            final int index = domain.indexOf(NAMESPACE_SEPARATOR);
+            final int index = domain.indexOf(JMXNamespaces.NAMESPACE_SEPARATOR);
             if (index > -1 && index <
                     (domain.length()-NAMESPACE_SEPARATOR_LENGTH)) {
                 throw new UnsupportedOperationException(method.getName()+
@@ -256,9 +256,9 @@ public class EventClientConnection implements InvocationHandler,
             final NotificationFilter filter = (NotificationFilter) args[2];
             final Object handback = args[3];
 
-            if (client != null) {
+            if (evtClient != null) {
                 // general case
-                client.addNotificationListener(mbean,listener,filter,handback);
+                evtClient.addNotificationListener(mbean,listener,filter,handback);
             } else {
                 // deprecated case. Only works for mbean in local namespace.
                 connection.addNotificationListener(mbean,listener,filter,
@@ -274,9 +274,9 @@ public class EventClientConnection implements InvocationHandler,
 
             switch (nargs) {
             case 2:
-                if (client != null) {
+                if (evtClient != null) {
                     // general case
-                    client.removeNotificationListener(mbean,listener);
+                    evtClient.removeNotificationListener(mbean,listener);
                 } else {
                     // deprecated case. Only works for mbean in local namespace.
                     connection.removeNotificationListener(mbean, listener);
@@ -286,8 +286,8 @@ public class EventClientConnection implements InvocationHandler,
             case 4:
                 NotificationFilter filter = (NotificationFilter) args[2];
                 Object handback = args[3];
-                if (client != null) {
-                    client.removeNotificationListener(mbean,
+                if (evtClient != null) {
+                    evtClient.removeNotificationListener(mbean,
                                                       listener,
                                                       filter,
                                                       handback);
@@ -319,7 +319,7 @@ public class EventClientConnection implements InvocationHandler,
             return true;
         if (methodName.equals("equals")
             && Arrays.equals(method.getParameterTypes(),
-                new Class[] {Object.class})
+                new Class<?>[] {Object.class})
                 && isLocal(proxy, method))
             return true;
         return false;

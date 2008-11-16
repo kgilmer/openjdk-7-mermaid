@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright 2007-2008 Sun Microsystems, Inc.  All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,7 @@ import com.sun.jmx.event.DaemonThreadFactory;
 import com.sun.jmx.event.LeaseRenewer;
 import com.sun.jmx.event.ReceiverBuffer;
 import com.sun.jmx.event.RepeatedSingletonJob;
+import com.sun.jmx.namespace.JMXNamespaceUtils;
 import com.sun.jmx.mbeanserver.PerThreadGroupPool;
 import com.sun.jmx.remote.util.ClassLogger;
 
@@ -116,12 +117,12 @@ public class EventClient implements EventConsumer, NotificationManager {
     public static final String NONFATAL = "jmx.event.service.nonfatal";
 
     /**
-     * <p>A notification string type used by an {@code EventClient} object to
-     * inform a listener added by {@code #addEventClientListener} that it
-     * has detected that notifications have been lost.  The {@link
-     * Notification#getUserData() userData} of the notification is a Long which
-     * is an upper bound on the number of lost notifications that have just
-     * been detected.</p>
+     * <p>A notification string type used by an {@code EventClient} object
+     * to inform a listener added by {@link #addEventClientListener
+     * addEventClientListener} that it has detected that notifications have
+     * been lost.  The {@link Notification#getUserData() userData} of the
+     * notification is a Long which is an upper bound on the number of lost
+     * notifications that have just been detected.</p>
      *
      * @see #addEventClientListener
      */
@@ -263,12 +264,21 @@ public class EventClient implements EventConsumer, NotificationManager {
                 new PerThreadGroupPool.Create<ScheduledThreadPoolExecutor>() {
             public ScheduledThreadPoolExecutor createThreadPool(ThreadGroup group) {
                 ThreadFactory daemonThreadFactory = new DaemonThreadFactory(
-                        "EventClient lease renewer %d");
-                ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(
-                        20, daemonThreadFactory);
-                exec.setKeepAliveTime(3, TimeUnit.SECONDS);
-                exec.allowCoreThreadTimeOut(true);
-                return exec;
+                        "JMX EventClient lease renewer %d");
+                ScheduledThreadPoolExecutor executor =
+                        new ScheduledThreadPoolExecutor(20, daemonThreadFactory);
+                executor.setKeepAliveTime(1, TimeUnit.SECONDS);
+                executor.allowCoreThreadTimeOut(true);
+                executor.setRemoveOnCancelPolicy(true);
+                // By default, a ScheduledThreadPoolExecutor will keep jobs
+                // in its queue even after they have been cancelled.  They
+                // will only be removed when their scheduled time arrives.
+                // Since the job references the LeaseRenewer which references
+                // this EventClient, this can lead to a moderately large number
+                // of objects remaining referenced until the renewal time
+                // arrives.  Hence the above call, which removes the job from
+                // the queue as soon as it is cancelled.
+                return executor;
             }
         };
         return leaseRenewerThreadPool.getThreadPoolExecutor(create);
@@ -379,7 +389,7 @@ public class EventClient implements EventConsumer, NotificationManager {
             listenerId =
                     eventClientDelegate.addListener(clientId, name, filter);
         } catch (EventClientNotFoundException ecnfe) {
-            final IOException ioe = new IOException();
+            final IOException ioe = new IOException(ecnfe.getMessage());
             ioe.initCause(ecnfe);
             throw ioe;
         }
@@ -486,7 +496,7 @@ public class EventClient implements EventConsumer, NotificationManager {
             listenerId =
                     eventClientDelegate.addSubscriber(clientId, name, filter);
         } catch (EventClientNotFoundException ecnfe) {
-            final IOException ioe = new IOException();
+            final IOException ioe = new IOException(ecnfe.getMessage());
             ioe.initCause(ecnfe);
             throw ioe;
         }
@@ -567,8 +577,13 @@ public class EventClient implements EventConsumer, NotificationManager {
     }
 
     /**
-     * Returns the set of listeners that have been added through
-     * this {@code EventClient} and not subsequently removed.
+     * <p>Returns the collection of listeners that have been added through
+     * this {@code EventClient} and not subsequently removed.  The returned
+     * collection contains one entry for every listener added with
+     * {@link #addNotificationListener addNotificationListener} or
+     * {@link #subscribe subscribe} and not subsequently removed with
+     * {@link #removeNotificationListener removeNotificationListener} or
+     * {@link #unsubscribe unsubscribe}, respectively.</p>
      *
      * @return A collection of listener information. Empty if there are no
      * current listeners or if this {@code EventClient} has been {@linkplain
@@ -917,8 +932,10 @@ public class EventClient implements EventConsumer, NotificationManager {
     private final static MBeanNotificationInfo[] myInfo =
             new MBeanNotificationInfo[] {
         new MBeanNotificationInfo(
-                new String[] {FAILED, NOTIFS_LOST},
-                Notification.class.getName(), "")};
+                new String[] {FAILED, NONFATAL, NOTIFS_LOST},
+                Notification.class.getName(),
+                "Notifications that can be sent to a listener added with " +
+                "EventClient.addEventClientListener")};
 
     private final NotificationBroadcasterSupport broadcaster =
             new NotificationBroadcasterSupport();
@@ -1061,6 +1078,24 @@ public class EventClient implements EventConsumer, NotificationManager {
      */
     public String getClientId() {
         return clientId;
+    }
+
+    /**
+     * Returns a JMX Connector that will use an {@link EventClient}
+     * to subscribe for notifications. If the server doesn't have
+     * an {@link EventClientDelegateMBean}, then the connector will
+     * use the legacy notification mechanism instead.
+     *
+     * @param wrapped The underlying JMX Connector wrapped by the returned
+     *               connector.
+     *
+     * @return A JMX Connector that will uses an {@link EventClient}, if
+     *         available.
+     *
+     * @see EventClient#getEventClientConnection(MBeanServerConnection)
+     */
+    public static JMXConnector withEventClient(final JMXConnector wrapped) {
+        return JMXNamespaceUtils.withEventClient(wrapped);
     }
 
     private static final PerThreadGroupPool<ScheduledThreadPoolExecutor>

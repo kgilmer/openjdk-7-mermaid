@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2007 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright 2002-2008 Sun Microsystems, Inc.  All Rights Reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -76,21 +76,23 @@ public interface MBeanServerConnection extends NotificationManager {
      * <CODE>preRegister</CODE> (<CODE>MBeanRegistration</CODE>
      * interface) method of the MBean has thrown an exception. The
      * MBean will not be registered.
-     * @exception RuntimeMBeanException If the <CODE>postRegister</CODE>
+     * @exception RuntimeMBeanException If the MBean's constructor or its
+     * {@code preRegister} or {@code postRegister} method threw
+     * a {@code RuntimeException}. If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws a
-     * <CODE>RuntimeException</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>RuntimeException</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeMBeanException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception. Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
      * @exception RuntimeErrorException If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws an
-     * <CODE>Error</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>Error</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeErrorException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeErrorException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
@@ -148,21 +150,23 @@ public interface MBeanServerConnection extends NotificationManager {
      * <CODE>preRegister</CODE> (<CODE>MBeanRegistration</CODE>
      * interface) method of the MBean has thrown an exception. The
      * MBean will not be registered.
-     * @exception RuntimeMBeanException If the <CODE>postRegister</CODE>
+     * @exception RuntimeMBeanException If the MBean's constructor or its
+     * {@code preRegister} or {@code postRegister} method threw
+     * a {@code RuntimeException}. If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws a
-     * <CODE>RuntimeException</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>RuntimeException</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeMBeanException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
      * @exception RuntimeErrorException If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws an
-     * <CODE>Error</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>Error</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeErrorException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeErrorException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
@@ -223,21 +227,23 @@ public interface MBeanServerConnection extends NotificationManager {
      * <CODE>preRegister</CODE> (<CODE>MBeanRegistration</CODE>
      * interface) method of the MBean has thrown an exception. The
      * MBean will not be registered.
-     * @exception RuntimeMBeanException If the <CODE>postRegister</CODE>
+     * @exception RuntimeMBeanException If the MBean's constructor or its
+     * {@code preRegister} or {@code postRegister} method threw
+     * a {@code RuntimeException}. If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws a
-     * <CODE>RuntimeException</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>RuntimeException</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeMBeanException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
      * @exception RuntimeErrorException If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws an
-     * <CODE>Error</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>Error</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeErrorException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeErrorException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
@@ -295,21 +301,23 @@ public interface MBeanServerConnection extends NotificationManager {
      * <CODE>preRegister</CODE> (<CODE>MBeanRegistration</CODE>
      * interface) method of the MBean has thrown an exception. The
      * MBean will not be registered.
-     * @exception RuntimeMBeanException If the <CODE>postRegister</CODE>
+     * @exception RuntimeMBeanException The MBean's constructor or its
+     * {@code preRegister} or {@code postRegister} method threw
+     * a {@code RuntimeException}. If the <CODE>postRegister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws a
-     * <CODE>RuntimeException</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>RuntimeException</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeMBeanException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
      * @exception RuntimeErrorException If the <CODE>postRegister</CODE> method
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws an
-     * <CODE>Error</CODE>, the <CODE>createMBean<CODE> method will
+     * <CODE>Error</CODE>, the <CODE>createMBean</CODE> method will
      * throw a <CODE>RuntimeErrorException</CODE>, although the MBean creation
      * and registration succeeded. In such a case, the MBean will be actually
-     * registered even though the <CODE>createMBean<CODE> method
+     * registered even though the <CODE>createMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeErrorException</CODE> can
      * also be thrown by <CODE>preRegister</CODE>, in which case the MBean
      * will not be registered.
@@ -351,19 +359,19 @@ public interface MBeanServerConnection extends NotificationManager {
      * has thrown an exception.
      * @exception RuntimeMBeanException If the <CODE>postDeregister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws a
-     * <CODE>RuntimeException</CODE>, the <CODE>unregisterMBean<CODE> method
+     * <CODE>RuntimeException</CODE>, the <CODE>unregisterMBean</CODE> method
      * will throw a <CODE>RuntimeMBeanException</CODE>, although the MBean
      * unregistration succeeded. In such a case, the MBean will be actually
-     * unregistered even though the <CODE>unregisterMBean<CODE> method
+     * unregistered even though the <CODE>unregisterMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preDeregister</CODE>, in which case the MBean
      * will remain registered.
      * @exception RuntimeErrorException If the <CODE>postDeregister</CODE>
      * (<CODE>MBeanRegistration</CODE> interface) method of the MBean throws an
-     * <CODE>Error</CODE>, the <CODE>unregisterMBean<CODE> method will
+     * <CODE>Error</CODE>, the <CODE>unregisterMBean</CODE> method will
      * throw a <CODE>RuntimeErrorException</CODE>, although the MBean
      * unregistration succeeded. In such a case, the MBean will be actually
-     * unregistered even though the <CODE>unregisterMBean<CODE> method
+     * unregistered even though the <CODE>unregisterMBean</CODE> method
      * threw an exception.  Note that <CODE>RuntimeMBeanException</CODE> can
      * also be thrown by <CODE>preDeregister</CODE>, in which case the MBean
      * will remain registered.

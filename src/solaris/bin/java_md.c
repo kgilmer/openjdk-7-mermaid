@@ -320,13 +320,13 @@ CreateExecutionEnvironment(int *_argcp,
       if (wanted == running) {
         /* Find out where the JRE is that we will be using. */
         if (!GetJREPath(jrepath, so_jrepath, arch, JNI_FALSE) ) {
-          ReportErrorMessage(JRE_ERROR1);
+          JLI_ReportErrorMessage(JRE_ERROR1);
           exit(2);
         }
 
         /* Find the specified JVM type */
         if (ReadKnownVMs(jrepath, arch, JNI_FALSE) < 1) {
-          ReportErrorMessage(CFG_ERROR7);
+          JLI_ReportErrorMessage(CFG_ERROR7);
           exit(1);
         }
 
@@ -334,7 +334,7 @@ CreateExecutionEnvironment(int *_argcp,
         jvmtype = CheckJvmType(_argcp, _argvp, JNI_FALSE);
 
         if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch )) {
-          ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
+          JLI_ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
           exit(4);
         }
       } else {  /* do the same speculatively or exit */
@@ -361,7 +361,7 @@ CreateExecutionEnvironment(int *_argcp,
       EndDataModelSpeculate: /* give up and let other code report error message */
         ;
 #else
-        ReportErrorMessage(JRE_ERROR2, wanted);
+        JLI_ReportErrorMessage(JRE_ERROR2, wanted);
         exit(1);
 #endif
       }
@@ -422,7 +422,7 @@ CreateExecutionEnvironment(int *_argcp,
         break;
 
       default:
-        ReportErrorMessage(JRE_ERROR3, __LINE__);
+        JLI_ReportErrorMessage(JRE_ERROR3, __LINE__);
         exit(1); /* unknown value in wanted */
         break;
       }
@@ -584,17 +584,17 @@ CreateExecutionEnvironment(int *_argcp,
         (void)fflush(stdout);
         (void)fflush(stderr);
         execve(newexec, argv, newenvp);
-        ReportErrorMessageSys(JRE_ERROR4, newexec);
+        JLI_ReportErrorMessageSys(JRE_ERROR4, newexec);
 
 #ifdef DUAL_MODE
         if (running != wanted) {
-          ReportErrorMessage(JRE_ERROR5, wanted, running);
+          JLI_ReportErrorMessage(JRE_ERROR5, wanted, running);
 #  ifdef __solaris__
 
 #    ifdef __sparc
-          ReportErrorMessage(JRE_ERROR6);
+          JLI_ReportErrorMessage(JRE_ERROR6);
 #    else
-          ReportErrorMessage(JRE_ERROR7);
+          JLI_ReportErrorMessage(JRE_ERROR7);
 #    endif
         }
 #  endif
@@ -658,7 +658,7 @@ GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative)
     }
 
     if (!speculative)
-      ReportErrorMessage(JRE_ERROR8 JAVA_DLL);
+      JLI_ReportErrorMessage(JRE_ERROR8 JAVA_DLL);
     return JNI_FALSE;
 
  found:
@@ -711,13 +711,13 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
         if(length > 0) {
           location = JLI_StrStr(buf, "sparcv8plus ");
           if(location == NULL) {
-            ReportErrorMessage(JVM_ERROR3);
+            JLI_ReportErrorMessage(JVM_ERROR3);
             return JNI_FALSE;
           }
         }
       }
 #endif
-      ReportErrorMessage(DLL_ERROR1, __LINE__);
+      JLI_ReportErrorMessage(DLL_ERROR1, __LINE__);
       goto error;
     }
 
@@ -734,7 +734,7 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
     return JNI_TRUE;
 
 error:
-    ReportErrorMessage(DLL_ERROR2, jvmpath, dlerror());
+    JLI_ReportErrorMessage(DLL_ERROR2, jvmpath, dlerror());
     return JNI_FALSE;
 }
 
@@ -879,7 +879,7 @@ SetExecname(char **argv)
 
         fptr = (int (*)())dlsym(RTLD_DEFAULT, "main");
         if (fptr == NULL) {
-            ReportErrorMessage(DLL_ERROR3, dlerror());
+            JLI_ReportErrorMessage(DLL_ERROR3, dlerror());
             return JNI_FALSE;
         }
 
@@ -916,7 +916,7 @@ SetExecname(char **argv)
     return exec_path;
 }
 
-void ReportErrorMessage(const char* fmt, ...) {
+void JLI_ReportErrorMessage(const char* fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
     vfprintf(stderr, fmt, vl);
@@ -924,7 +924,7 @@ void ReportErrorMessage(const char* fmt, ...) {
     va_end(vl);
 }
 
-void ReportErrorMessageSys(const char* fmt, ...) {
+void JLI_ReportErrorMessageSys(const char* fmt, ...) {
     va_list vl;
     char *emsg;
 
@@ -943,7 +943,7 @@ void ReportErrorMessageSys(const char* fmt, ...) {
     va_end(vl);
 }
 
-void  ReportExceptionDescription(JNIEnv * env) {
+void  JLI_ReportExceptionDescription(JNIEnv * env) {
   (*env)->ExceptionDescribe(env);
 }
 
@@ -1109,7 +1109,7 @@ ExecJRE(char *jre, char **argv)
      * Resolve the real path to the directory containing the selected JRE.
      */
     if (realpath(jre, wanted) == NULL) {
-        ReportErrorMessage(JRE_ERROR9, jre);
+        JLI_ReportErrorMessage(JRE_ERROR9, jre);
         exit(1);
     }
 
@@ -1118,7 +1118,7 @@ ExecJRE(char *jre, char **argv)
      */
     SetExecname(argv);
     if (execname == NULL) {
-        ReportErrorMessage(JRE_ERROR10);
+        JLI_ReportErrorMessage(JRE_ERROR10);
         exit(1);
     }
 
@@ -1137,7 +1137,7 @@ ExecJRE(char *jre, char **argv)
      * can be so deadly.
      */
     if (JLI_StrLen(wanted) + JLI_StrLen(progname) + 6 > PATH_MAX) {
-        ReportErrorMessage(JRE_ERROR11);
+        JLI_ReportErrorMessage(JRE_ERROR11);
         exit(1);
     }
 
@@ -1157,7 +1157,7 @@ ExecJRE(char *jre, char **argv)
     (void)fflush(stdout);
     (void)fflush(stderr);
     execv(wanted, argv);
-    ReportErrorMessageSys(JRE_ERROR12, wanted);
+    JLI_ReportErrorMessageSys(JRE_ERROR12, wanted);
     exit(1);
 }
 
@@ -1356,4 +1356,25 @@ void
 InitLauncher(jboolean javaw)
 {
     JLI_SetTraceLauncher();
+}
+
+/*
+ * The implementation for finding classes from the bootstrap
+ * class loader, refer to java.h
+ */
+static FindClassFromBootLoader_t *findBootClass = NULL;
+
+jclass
+FindBootStrapClass(JNIEnv *env, const char* classname)
+{
+   if (findBootClass == NULL) {
+       findBootClass = (FindClassFromBootLoader_t *)dlsym(RTLD_DEFAULT,
+          "JVM_FindClassFromClassLoader");
+       if (findBootClass == NULL) {
+           JLI_ReportErrorMessage(DLL_ERROR4,
+               "JVM_FindClassFromClassLoader");
+           return NULL;
+       }
+   }
+   return findBootClass(env, classname, JNI_FALSE, (jobject)NULL, JNI_FALSE);
 }

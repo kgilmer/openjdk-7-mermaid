@@ -28,6 +28,7 @@ package javax.management.remote.rmi;
 import com.sun.jmx.event.DaemonThreadFactory;
 import com.sun.jmx.event.EventConnection;
 import com.sun.jmx.mbeanserver.PerThreadGroupPool;
+import com.sun.jmx.mbeanserver.Util;
 import com.sun.jmx.remote.internal.ClientCommunicatorAdmin;
 import com.sun.jmx.remote.internal.ClientListenerInfo;
 import com.sun.jmx.remote.internal.ClientNotifForwarder;
@@ -71,9 +72,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -420,13 +420,13 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
                 new PerThreadGroupPool.Create<ThreadPoolExecutor>() {
             public ThreadPoolExecutor createThreadPool(ThreadGroup group) {
                 ThreadFactory daemonThreadFactory = new DaemonThreadFactory(
-                        "RMIConnector listener dispatch %d");
-                ThreadPoolExecutor exec = new ThreadPoolExecutor(
+                        "JMX RMIConnector listener dispatch %d");
+                ThreadPoolExecutor executor = new ThreadPoolExecutor(
                         1, 10, 1, TimeUnit.SECONDS,
-                        new LinkedBlockingDeque<Runnable>(),
+                        new LinkedBlockingQueue<Runnable>(),
                         daemonThreadFactory);
-                exec.allowCoreThreadTimeOut(true);
-                return exec;
+                executor.allowCoreThreadTimeOut(true);
+                return executor;
             }
         };
         return listenerDispatchThreadPool.getThreadPoolExecutor(create);
@@ -585,7 +585,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
 
     // added for re-connection
     private Integer addListenerWithSubject(ObjectName name,
-                                           MarshalledObject filter,
+                                           MarshalledObject<NotificationFilter> filter,
                                            Subject delegationSubject,
                                            boolean reconnect)
         throws InstanceNotFoundException, IOException {
@@ -596,7 +596,8 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
                          "(ObjectName,MarshalledObject,Subject)");
 
         final ObjectName[] names = new ObjectName[] {name};
-        final MarshalledObject[] filters = new MarshalledObject[] {filter};
+        final MarshalledObject<NotificationFilter>[] filters =
+                Util.cast(new MarshalledObject<?>[] {filter});
         final Subject[] delegationSubjects = new Subject[] {
             delegationSubject
         };
@@ -612,7 +613,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
 
     // added for re-connection
     private Integer[] addListenersWithSubjects(ObjectName[]       names,
-                             MarshalledObject[] filters,
+                             MarshalledObject<NotificationFilter>[] filters,
                              Subject[]          delegationSubjects,
                              boolean            reconnect)
         throws InstanceNotFoundException, IOException {
@@ -1363,7 +1364,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
 
     //--------------------------------------------------------------------
     private class RMINotifClient extends ClientNotifForwarder {
-        public RMINotifClient(ClassLoader cl, Map env) {
+        public RMINotifClient(ClassLoader cl, Map<String, ?> env) {
             super(cl, env);
         }
 
@@ -1445,8 +1446,8 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             Integer[] listenerIDs;
             final ObjectName[] names =
                 new ObjectName[] {MBeanServerDelegate.DELEGATE_NAME};
-            final MarshalledObject[] filters =
-                new MarshalledObject[] {sFilter};
+            final MarshalledObject<NotificationFilter>[] filters =
+                Util.cast(new MarshalledObject<?>[] {sFilter});
             final Subject[] subjects = new Subject[] {null};
             try {
                 listenerIDs =
@@ -1503,7 +1504,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             super(period);
         }
 
-        public void gotIOException (IOException ioe) throws IOException {
+        public void gotIOException(IOException ioe) throws IOException {
             if (ioe instanceof NoSuchObjectException) {
                 // need to restart
                 super.gotIOException(ioe);
@@ -1581,7 +1582,8 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             final ObjectName[] names = new ObjectName[len];
             final NotificationListener[] listeners = new NotificationListener[len];
             final NotificationFilter[] filters = new NotificationFilter[len];
-            final MarshalledObject[] mFilters = new MarshalledObject[len];
+            final MarshalledObject<NotificationFilter>[] mFilters =
+                    Util.cast(new MarshalledObject<?>[len]);
             final Object[] handbacks = new Object[len];
 
             for (i=0;i<len;i++) {
@@ -1743,7 +1745,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
      * @exception IOException if the connection to the ORB failed.
      **/
     static RMIServer connectStub(RMIServer rmiServer,
-                                 Map environment)
+                                 Map<String, ?> environment)
         throws IOException {
         if (rmiServer instanceof javax.rmi.CORBA.Stub) {
             javax.rmi.CORBA.Stub stub = (javax.rmi.CORBA.Stub) rmiServer;
@@ -1777,7 +1779,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
      *      does not point to an {@link org.omg.CORBA.ORB ORB}.
      * @exception IOException if the ORB initialization failed.
      **/
-    static ORB resolveOrb(Map environment)
+    static ORB resolveOrb(Map<String, ?> environment)
         throws IOException {
         if (environment != null) {
             final Object orb = environment.get(EnvHelp.DEFAULT_ORB);
@@ -2005,7 +2007,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         }
     }
 
-    private RMIServer findRMIServerIIOP(String ior, Map env, boolean isIiop) {
+    private RMIServer findRMIServerIIOP(String ior, Map<String, ?> env, boolean isIiop) {
         // could forbid "rmi:" URL here -- but do we need to?
         final ORB orb = (ORB)
             env.get(EnvHelp.DEFAULT_ORB);
@@ -2013,7 +2015,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         return (RMIServer) PortableRemoteObject.narrow(stub, RMIServer.class);
     }
 
-    private RMIServer findRMIServerJRMP(String base64, Map env, boolean isIiop)
+    private RMIServer findRMIServerJRMP(String base64, Map<String, ?> env, boolean isIiop)
         throws IOException {
         // could forbid "iiop:" URL here -- but do we need to?
         final byte[] serialized;
@@ -2047,7 +2049,8 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             this.loader = cl;
         }
 
-        protected Class resolveClass(ObjectStreamClass classDesc)
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass classDesc)
                 throws IOException, ClassNotFoundException {
             return Class.forName(classDesc.getName(), false, loader);
         }
@@ -2122,13 +2125,13 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
 
     private static final String rmiServerImplStubClassName =
         RMIServer.class.getName() + "Impl_Stub";
-    private static final Class rmiServerImplStubClass;
+    private static final Class<?> rmiServerImplStubClass;
     private static final String rmiConnectionImplStubClassName =
         RMIConnection.class.getName() + "Impl_Stub";
     private static final Class<?> rmiConnectionImplStubClass;
     private static final String pRefClassName =
         "com.sun.jmx.remote.internal.PRef";
-    private static final Constructor proxyRefConstructor;
+    private static final Constructor<?> proxyRefConstructor;
     static {
         final String pRefByteCodeString =
             "\312\376\272\276\0\0\0.\0\27\12\0\5\0\15\11\0\4\0\16\13\0\17\0"+
@@ -2163,7 +2166,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
             }
         };
 
-        Class serverStubClass;
+        Class<?> serverStubClass;
         try {
             serverStubClass = Class.forName(rmiServerImplStubClassName);
         } catch (Exception e) {
@@ -2176,10 +2179,10 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         rmiServerImplStubClass = serverStubClass;
 
         Class<?> stubClass;
-        Constructor constr;
+        Constructor<?> constr;
         try {
             stubClass = Class.forName(rmiConnectionImplStubClassName);
-            constr = (Constructor) AccessController.doPrivileged(action);
+            constr = (Constructor<?>) AccessController.doPrivileged(action);
         } catch (Exception e) {
             logger.error("<clinit>",
                          "Failed to initialize proxy reference constructor "+
@@ -2199,9 +2202,8 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         RemoteRef ref = stub.getRef();
         RemoteRef proxyRef = (RemoteRef)
             proxyRefConstructor.newInstance(new Object[] {ref});
-        final Class[] constrTypes = {RemoteRef.class};
-        final Constructor rmiConnectionImplStubConstructor =
-            rmiConnectionImplStubClass.getConstructor(constrTypes);
+        final Constructor<?> rmiConnectionImplStubConstructor =
+            rmiConnectionImplStubClass.getConstructor(RemoteRef.class);
         Object[] args = {proxyRef};
         RMIConnection proxyStub = (RMIConnection)
             rmiConnectionImplStubConstructor.newInstance(args);
@@ -2329,7 +2331,7 @@ public class RMIConnector implements JMXConnector, Serializable, JMXAddressable 
         "com.sun.jmx.remote.internal.ProxyStub";
     private static final String pInputStreamClassName =
         "com.sun.jmx.remote.internal.PInputStream";
-    private static final Class proxyStubClass;
+    private static final Class<?> proxyStubClass;
     static {
         final String proxyStubByteCodeString =
             "\312\376\272\276\0\0\0.\0)\12\0\14\0\26\7\0\27\12\0\14\0\30\12"+
