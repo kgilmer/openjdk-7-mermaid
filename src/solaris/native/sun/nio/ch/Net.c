@@ -362,7 +362,8 @@ Java_sun_nio_ch_Net_getIntOption0(JNIEnv *env, jclass clazz, jobject fdo,
     struct linger linger;
     u_char carg;
     void *arg;
-    int arglen, n;
+    socklen_t arglen;
+    int n;
 
     /* Option value is an int except for a few specific cases */
 
@@ -412,7 +413,8 @@ Java_sun_nio_ch_Net_setIntOption0(JNIEnv *env, jclass clazz, jobject fdo,
     struct linger linger;
     u_char carg;
     void *parg;
-    int arglen, n;
+    socklen_t arglen;
+    int n;
 
     /* Option value is an int except for a few specific cases */
 
@@ -565,7 +567,7 @@ JNIEXPORT void JNICALL
 Java_sun_nio_ch_Net_setInterface4(JNIEnv* env, jobject this, jobject fdo, jint interf)
 {
     struct in_addr in;
-    int arglen = sizeof(struct in_addr);
+    socklen_t arglen = sizeof(struct in_addr);
     int n;
 
     in.s_addr = htonl(interf);
@@ -581,7 +583,7 @@ JNIEXPORT jint JNICALL
 Java_sun_nio_ch_Net_getInterface4(JNIEnv* env, jobject this, jobject fdo)
 {
     struct in_addr in;
-    int arglen = sizeof(struct in_addr);
+    socklen_t arglen = sizeof(struct in_addr);
     int n;
 
     n = getsockopt(fdval(env, fdo), IPPROTO_IP, IP_MULTICAST_IF, (void*)&in, &arglen);
@@ -596,7 +598,7 @@ JNIEXPORT void JNICALL
 Java_sun_nio_ch_Net_setInterface6(JNIEnv* env, jobject this, jobject fdo, jint index)
 {
     int value = (jint)index;
-    int arglen = sizeof(value);
+    socklen_t arglen = sizeof(value);
     int n;
 
     n = setsockopt(fdval(env, fdo), IPPROTO_IPV6, IPV6_MULTICAST_IF,
@@ -610,7 +612,7 @@ JNIEXPORT jint JNICALL
 Java_sun_nio_ch_Net_getInterface6(JNIEnv* env, jobject this, jobject fdo)
 {
     int index;
-    int arglen = sizeof(index);
+    socklen_t arglen = sizeof(index);
     int n;
 
     n = getsockopt(fdval(env, fdo), IPPROTO_IPV6, IPV6_MULTICAST_IF, (void*)&index, &arglen);
