@@ -209,8 +209,8 @@ AUTOMATIC_PCH_OPTION =
 #
 ifeq ($(VARIANT), OPT)
   ifneq ($(NO_STRIP), true)
-    # Debug 'strip -g' leaves local function Elf symbols (better stack traces)
-    POST_STRIP_PROCESS = $(STRIP) -g
+    # Debug 'strip -S' leaves local function Elf symbols (better stack traces)
+    POST_STRIP_PROCESS = $(STRIP) -S
   endif
 endif
 
