@@ -62,7 +62,11 @@ JAVALIB=
 CFLAGS += -DSPLASHSCREEN
 
 CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
+ifneq ($(SYSTEM_ZLIB),true)
+  CPPFLAGS += -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+endif
+
 
 ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
@@ -89,7 +93,9 @@ endif # PLATFORM
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/splashscreen
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/giflib
-vpath %.c   $(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+ifneq ($(SYSTEM_ZLIB),true)
+  vpath %.c   $(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+endif
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/libpng
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen

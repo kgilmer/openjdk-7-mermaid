@@ -286,6 +286,14 @@ override USE_EXECNAME            = true
 # DPS (Displayable PostScript) is available on Solaris machines
 HAVE_DPS = no
 
+ifeq ($(OS_VENDOR), FreeBSD)
+  SYSTEM_ZLIB = true
+endif
+
+ifeq ($(OS_VENDOR), OpenBSD)
+  SYSTEM_ZLIB = true
+endif
+
 #
 # Japanese manpages
 #
