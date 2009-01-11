@@ -72,7 +72,7 @@ ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
   ifeq ($(PLATFORM), bsd)
     CFLAGS += -DPNG_NO_MMX_CODE
-    ICONV_PATH = $(PKG_PATH)
+    ICONV_PATH = $(PACKAGE_PATH)
     CPPFLAGS += -I$(OPENWIN_HOME)/include \
                 -I$(OPENWIN_HOME)/include/X11/extensions \
                 -I$(ICONV_PATH)/include

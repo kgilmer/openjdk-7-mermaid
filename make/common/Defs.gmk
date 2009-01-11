@@ -172,6 +172,24 @@ ifdef OPENJDK
   endif
 endif # OPENJDK
 
+ifneq ($(PLATFORM), windows)
+  ifdef ALT_X11_PATH
+    X11_PATH = $(ALT_X11_PATH)
+  else
+    X11_PATH = /usr/X11R6
+  endif 
+
+  ifdef ALT_PACKAGE_PATH
+    PACKAGE_PATH = $(ALT_PACKAGE_PATH)
+  else
+    ifeq ($(PLATFORM), linux)
+      PACKAGE_PATH = /usr
+    else
+      PACKAGE_PATH = /usr/local
+    endif
+  endif
+endif
+
 #
 # Get platform definitions
 #
@@ -230,24 +248,6 @@ DEVTOOLS_FT_DIR_EXISTS = $(shell \
       FREETYPE_HEADERS_PATH = $(DEVTOOLS_FT_DIR)/include
     else
       FREETYPE_HEADERS_PATH = /usr/include
-    endif
-  endif
-endif
-
-ifneq ($(PLATFORM), windows)
-  ifdef ALT_X11_PATH
-    X11_PATH = $(ALT_X11_PATH)
-  else
-    X11_PATH = /usr/X11R6
-  endif 
-
-  ifdef ALT_PKG_PATH
-    PKG_PATH = $(ALT_PKG_PATH)
-  else
-    ifeq ($(PLATFORM), linux)
-      PKG_PATH = /usr
-    else
-      PKG_PATH = /usr/local
     endif
   endif
 endif

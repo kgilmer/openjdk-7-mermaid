@@ -67,7 +67,7 @@ endif
 
 # Add location of iconv headers
 ifeq ($(PLATFORM), bsd)
-  ICONV_PATH = $(PKG_PATH)
+  ICONV_PATH = $(PACKAGE_PATH)
   CPPFLAGS += -I$(ICONV_PATH)/include
   OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
 endif

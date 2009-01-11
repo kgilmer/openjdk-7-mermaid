@@ -97,19 +97,19 @@ extern char **environ;
  *      entries, but actual strings can be more efficient (with many compilers).
  */
 #if defined(__FreeBSD__)
-static const char *system_dir	= PKG_PATH "/openjdk7";
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
 static const char *user_dir	= "/java";
 #elif defined(__NetBSD__)
-static const char *system_dir	= PKG_PATH "/openjdk7";
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
 static const char *user_dir	= "/java";
 #elif defined(__OpenBSD__)
-static const char *system_dir	= PKG_PATH "/openjdk7";
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
 static const char *user_dir	= "/java";
 #elif defined(__APPLE__)
-static const char *system_dir	= PKG_PATH "/openjdk7";
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
 static const char *user_dir	= "/java";
 #elif defined(__linux__)
-static const char *system_dir   = PKG_PATH "/java";
+static const char *system_dir   = PACKAGE_PATH "/java";
 static const char *user_dir     = "/java";
 #else /* Solaris */
 static const char *system_dir   = "/usr/jdk";

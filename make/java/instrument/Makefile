@@ -112,7 +112,7 @@ ifeq ($(PLATFORM), bsd)
     LDFLAGS += -Wl,--no-whole-archive
   endif
 
-  ICONV_PATH = $(PKG_PATH)
+  ICONV_PATH = $(PACKAGE_PATH)
 # Use CPPFLAGS instead of OTHER_INCLUDES to force this last
   CPPFLAGS += -I$(ICONV_PATH)/include
   OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv

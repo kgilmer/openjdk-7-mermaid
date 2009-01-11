@@ -148,7 +148,7 @@ ifeq ($(PLATFORM), bsd)
 endif
 
 ifneq ($(PLATFORM), windows)
-  CPPFLAGS += -DX11_PATH=\"$(X11_PATH)\" -DPKG_PATH=\"$(PKG_PATH)\"
+  CPPFLAGS += -DX11_PATH=\"$(X11_PATH)\" -DPACKAGE_PATH=\"$(PACKAGE_PATH)\"
 endif
 
 ifeq ($(MILESTONE), internal)

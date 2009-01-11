@@ -134,13 +134,13 @@ static char *fullBSDFontPath[] = {
     X11_PATH "/lib/X11/fonts/tt",
     X11_PATH "/lib/X11/fonts/TTF",
     X11_PATH "/lib/X11/fonts/OTF",
-    PKG_PATH "/share/fonts/TrueType",
-    PKG_PATH "/share/fonts/truetype",
-    PKG_PATH "/share/fonts/tt",
-    PKG_PATH "/share/fonts/TTF",
-    PKG_PATH "/share/fonts/OTF",
+    PACKAGE_PATH "/share/fonts/TrueType",
+    PACKAGE_PATH "/share/fonts/truetype",
+    PACKAGE_PATH "/share/fonts/tt",
+    PACKAGE_PATH "/share/fonts/TTF",
+    PACKAGE_PATH "/share/fonts/OTF",
     X11_PATH "/lib/X11/fonts/Type1",
-    PKG_PATH "/share/fonts/Type1",
+    PACKAGE_PATH "/share/fonts/Type1",
     NULL, /* terminates the list */
 };
 #else /* __linux */
@@ -153,14 +153,14 @@ static char *fullLinuxFontPath[] = {
     X11_PATH "/lib/X11/fonts/tt",
     X11_PATH "/lib/X11/fonts/TTF",
     X11_PATH "/lib/X11/fonts/OTF",       /* RH 9.0 (but empty!) */
-    PKG_PATH "/share/fonts/ja/TrueType",       /* RH 7.2+ */
-    PKG_PATH "/share/fonts/truetype",
-    PKG_PATH "/share/fonts/ko/TrueType",       /* RH 9.0 */
-    PKG_PATH "/share/fonts/zh_CN/TrueType",    /* RH 9.0 */
-    PKG_PATH "/share/fonts/zh_TW/TrueType",    /* RH 9.0 */
+    PACKAGE_PATH "/share/fonts/ja/TrueType",       /* RH 7.2+ */
+    PACKAGE_PATH "/share/fonts/truetype",
+    PACKAGE_PATH "/share/fonts/ko/TrueType",       /* RH 9.0 */
+    PACKAGE_PATH "/share/fonts/zh_CN/TrueType",    /* RH 9.0 */
+    PACKAGE_PATH "/share/fonts/zh_TW/TrueType",    /* RH 9.0 */
     "/var/lib/defoma/x-ttcidfont-conf.d/dirs/TrueType", /* Debian */
     X11_PATH "/lib/X11/fonts/Type1",
-    PKG_PATH "/share/fonts/default/Type1",     /* RH 9.0 */
+    PACKAGE_PATH "/share/fonts/default/Type1",     /* RH 9.0 */
     NULL, /* terminates the list */
 };
 #endif
