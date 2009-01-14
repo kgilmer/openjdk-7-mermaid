@@ -107,7 +107,7 @@ endif
 ifneq "$(origin ALT_DEVTOOLS_PATH)" "undefined"
   DEVTOOLS_PATH :=$(call PrefixPath,$(ALT_DEVTOOLS_PATH))
 else
-  DEVTOOLS_PATH =/usr/bin/
+  DEVTOOLS_PATH =$(PACKAGE_PATH)/bin/
 endif
 
 # _BOOTDIR1: First choice for a Bootstrap JDK, previous released JDK.
@@ -121,7 +121,11 @@ endif
 BUILD_HEADLESS = true
 LIBM=-lm
 
-_CUPS_HEADERS_PATH=$(PACKAGE_PATH)/include
+ifeq ($(OS_VENDOR), Apple)
+  _CUPS_HEADERS_PATH=/usr/include
+else
+  _CUPS_HEADERS_PATH=$(PACKAGE_PATH)/include
+endif
 
 # Import JDK images allow for partial builds, components not built are
 #    imported (or copied from) these import areas when needed.
