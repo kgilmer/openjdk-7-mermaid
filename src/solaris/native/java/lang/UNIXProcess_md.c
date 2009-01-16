@@ -339,7 +339,7 @@ int _thread_sys_closefrom(int);
 static int
 closeDescriptors(void)
 {
-    return _thread_sys_closefrom(3);
+    return _thread_sys_closefrom(FAIL_FILENO + 1);
 }
 
 #else
