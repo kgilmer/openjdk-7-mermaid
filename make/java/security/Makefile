@@ -51,7 +51,15 @@ ifeq ($(PLATFORM), windows)
   ifneq ($(ARCH_DATA_MODEL), 64)
     PROPS_SRC   = $(TOPDIR)/src/share/lib/security/java.security-windows
   endif
+
+else # windows
+
+ifeq ($(PLATFORM), bsd)
+  ifeq ($(OS_VENDOR), OpenBSD)
+    PROPS_SRC   = $(TOPDIR)/src/share/lib/security/java.security-openbsd
+  endif
 endif
+endif # windows
 endif # PLATFORM
 
 
