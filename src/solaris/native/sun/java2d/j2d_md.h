@@ -28,12 +28,9 @@
 #include <sys/types.h>
 
 /*
- * Linux version of <sys/types.h> does not define intptr_t
- * NetBSD's doesn't either, so let's do it for everyone.
+ * Linux and BSD's version of <sys/types.h> does not define intptr_t
  */
-#if defined(__OpenBSD__)
-#include <inttypes.h>
-#elif defined(__linux__) || defined(_ALLBSD_SOURCE)
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
 #include <stdint.h>
 #endif /* __linux__ || _ALLBSD_SOURCE */
 

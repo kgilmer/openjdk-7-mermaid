@@ -33,6 +33,11 @@
 #include <limits.h>
 #include <time.h>
 
+/* !PRODUCT needs intptr_t */
+#if defined(_ALLBSD_SOURCE) && !defined(PRODUCT)
+#include <stdint.h>
+#endif
+
 #if defined(unix) && !defined(PRODUCT)
 #include "pthread.h"
 #define THREAD_SELF ((intptr_t) pthread_self())

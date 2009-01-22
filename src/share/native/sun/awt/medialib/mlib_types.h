@@ -61,11 +61,7 @@ typedef double             mlib_d64;
 
 #if defined(_ALLBSD_SOURCE)
 #include <stddef.h>                     /* for ptrdiff_t */
-#if defined(__OpenBSD__)
-#include <inttypes.h>                   /* for uintptr_t */
-#else
 #include <stdint.h>                     /* for uintptr_t */
-#endif
 #elif defined(__linux__)
 #include <stdint.h>                     /* for uintptr_t */
 #include <malloc.h>                     /* for ptrdiff_t */
