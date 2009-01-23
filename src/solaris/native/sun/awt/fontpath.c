@@ -129,7 +129,6 @@ static char *fullSolarisFontPath[] = {
 #elif _ALLBSD_SOURCE
 static char *fullBSDFontPath[] = {
     X11_PATH "/lib/X11/fonts/TrueType",
-    X11_PATH "/lib/X11/fonts/TrueType",
     X11_PATH "/lib/X11/fonts/truetype",
     X11_PATH "/lib/X11/fonts/tt",
     X11_PATH "/lib/X11/fonts/TTF",
