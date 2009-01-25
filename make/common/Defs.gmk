@@ -185,7 +185,11 @@ ifneq ($(PLATFORM), windows)
     ifeq ($(PLATFORM), linux)
       PACKAGE_PATH = /usr
     else
-      PACKAGE_PATH = /usr/local
+      ifeq ($(OS_VENDOR), Apple)
+        PACKAGE_PATH = /opt/local
+      else
+        PACKAGE_PATH = /usr/local
+      endif
     endif
   endif
 endif
