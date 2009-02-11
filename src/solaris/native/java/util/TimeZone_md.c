@@ -268,7 +268,8 @@ getPlatformTimeZoneID()
         return NULL;
     }
 
-    strlcpy(zoneinfo_file, default_zoneinfo_file, PATH_MAX+1);
+    strncpy(zoneinfo_file, default_zoneinfo_file, PATH_MAX);
+    zoneinfo_file[PATH_MAX] = '\0';
 
 #if defined(__linux__) || defined(_ALLBSD_SOURCE)
     /*
