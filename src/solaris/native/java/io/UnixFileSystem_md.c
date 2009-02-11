@@ -27,8 +27,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <sys/param.h>
-#include <sys/mount.h>
+#include <sys/statvfs.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -44,7 +43,7 @@
 
 #if defined(_ALLBSD_SOURCE)
 #define dirent64 dirent
-#define readdir64 readdir
+#define readdir64_r readdir_r
 #define stat64 stat
 #endif
 
@@ -297,9 +296,6 @@ Java_java_io_UnixFileSystem_list(JNIEnv *env, jobject this,
     if (rv == NULL) goto error;
 
     /* Scan the directory */
-#ifdef _ALLBSD_SOURCE
-#define readdir64_r readdir_r
-#endif
     while ((readdir64_r(dir, ptr, &result) == 0)  && (result != NULL)) {
         jstring name;
         if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
@@ -422,20 +418,20 @@ Java_java_io_UnixFileSystem_getSpace(JNIEnv *env, jobject this,
     jlong rv = 0L;
 
     WITH_FIELD_PLATFORM_STRING(env, file, ids.path, path) {
-        struct statfs fsstat;
-        memset(&fsstat, 0, sizeof(struct statfs));
-        if (statfs(path, &fsstat) == 0) {
+        struct statvfs fsstat;
+        memset(&fsstat, 0, sizeof(struct statvfs));
+        if (statvfs(path, &fsstat) == 0) {
             switch(t) {
             case java_io_FileSystem_SPACE_TOTAL:
-                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
                                long_to_jlong(fsstat.f_blocks));
                 break;
             case java_io_FileSystem_SPACE_FREE:
-                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
                                long_to_jlong(fsstat.f_bfree));
                 break;
             case java_io_FileSystem_SPACE_USABLE:
-                rv = jlong_mul(long_to_jlong(fsstat.f_bsize),
+                rv = jlong_mul(long_to_jlong(fsstat.f_frsize),
                                long_to_jlong(fsstat.f_bavail));
                 break;
             default:
