@@ -22,12 +22,20 @@
 # CA 95054 USA or visit www.sun.com if you need additional information or
 # have any questions.
 #
-# List all Sun provided attach providers here. If there
-# are providers that are only available on a particular OS
-# then prefix the line with #[OS] and they will automatically
-# uncommented by the build process.
-#
-#[solaris]sun.tools.attach.SolarisAttachProvider
-#[windows]sun.tools.attach.WindowsAttachProvider
-#[linux]sun.tools.attach.LinuxAttachProvider
-#[bsd]sun.tools.attach.BsdAttachProvider
+
+# Define public interface.
+
+SUNWprivate_1.1 {
+	global:
+	    Java_sun_tools_attach_BsdVirtualMachine_checkPermissions;
+	    Java_sun_tools_attach_BsdVirtualMachine_close;
+	    Java_sun_tools_attach_BsdVirtualMachine_connect;
+	    Java_sun_tools_attach_BsdVirtualMachine_open;
+	    Java_sun_tools_attach_BsdVirtualMachine_sendQuitTo;
+	    Java_sun_tools_attach_BsdVirtualMachine_socket;
+	    Java_sun_tools_attach_BsdVirtualMachine_read;
+	    Java_sun_tools_attach_BsdVirtualMachine_write;
+	    Java_sun_tools_attach_BsdVirtualMachine_createAttachFile;
+	local:
+		*;
+};

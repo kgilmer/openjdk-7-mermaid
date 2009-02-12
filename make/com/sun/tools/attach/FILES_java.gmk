@@ -45,7 +45,7 @@ endif
 
 ifeq ($(PLATFORM), bsd)
 FILES_java += \
-	$(TARGDIR)/sun/tools/attach/BsdAttachProvider.java
+	sun/tools/attach/BsdAttachProvider.java
 endif
 
 #
