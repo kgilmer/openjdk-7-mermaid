@@ -176,7 +176,11 @@ ifneq ($(PLATFORM), windows)
   ifdef ALT_X11_PATH
     X11_PATH = $(ALT_X11_PATH)
   else
-    X11_PATH = /usr/X11R6
+    ifneq ($(OS_VENDOR), NetBSD)
+      X11_PATH = /usr/X11R6
+    else
+      X11_PATH = /usr/X11R7
+    endif
   endif 
 
   ifdef ALT_PACKAGE_PATH
@@ -188,7 +192,11 @@ ifneq ($(PLATFORM), windows)
       ifeq ($(OS_VENDOR), Apple)
         PACKAGE_PATH = /opt/local
       else
-        PACKAGE_PATH = /usr/local
+	ifeq ($(OS_NAME), netbsd)
+	  PACKAGE_PATH = /usr/pkg
+	else
+          PACKAGE_PATH = /usr/local
+	endif
       endif
     endif
   endif

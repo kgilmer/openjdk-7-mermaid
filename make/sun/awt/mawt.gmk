@@ -200,6 +200,9 @@ CPPFLAGS += -I$(CUPS_HEADERS_PATH)
 ifndef HEADLESS
 CPPFLAGS += -I$(OPENWIN_HOME)/include 
 LDFLAGS  += -L$(OPENWIN_LIB)
+ifeq ($(OS_NAME), netbsd)
+LDFLAGS  += -Wl,-R$(OPENWIN_LIB)
+endif
 
 endif # !HEADLESS
 

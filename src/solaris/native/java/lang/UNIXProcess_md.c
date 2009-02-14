@@ -377,7 +377,7 @@ closeDescriptors(void)
      */
     while ((dirp = readdir(dp)) != NULL) {
         int fd;
-        if (isdigit(dirp->d_name[0]) &&
+        if (isdigit((unsigned char)dirp->d_name[0]) &&
             (fd = strtol(dirp->d_name, NULL, 10)) >= from_fd + 2)
             close(fd);
     }

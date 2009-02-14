@@ -236,4 +236,9 @@ ifeq ($(PLATFORM),bsd)
     CPIO       = $(UTILS_USR_BIN_PATH)cpio
     TAR        = $(UTILS_USR_BIN_PATH)tar
   endif
+  ifeq ($(OS_VENDOR), NetBSD)
+    NAWK       = $(UTILS_USR_BIN_PATH)awk
+    ZIPEXE     = $(UTILS_DEVTOOL_PATH)zip
+    UNZIP      = $(UTILS_DEVTOOL_PATH)unzip
+  endif
 endif

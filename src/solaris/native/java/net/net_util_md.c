@@ -1107,15 +1107,11 @@ NET_GetSockOpt(int fd, int level, int opt, void *result,
     }
 #endif
 
-#ifdef __solaris__
-    rv = getsockopt(fd, level, opt, result, len);
-#else
     {
         socklen_t socklen = *len;
         rv = getsockopt(fd, level, opt, result, &socklen);
         *len = socklen;
     }
-#endif
 
     if (rv < 0) {
         return rv;
@@ -1225,7 +1221,8 @@ NET_SetSockOpt(int fd, int level, int  opt, const void *arg,
 #ifdef __solaris__
     if (level == SOL_SOCKET) {
         if (opt == SO_SNDBUF || opt == SO_RCVBUF) {
-            int sotype, arglen;
+            int sotype;
+            socklen_t arglen;
             int *bufsize, maxbuf;
 
             if (!init_max_buf) {
@@ -1313,7 +1310,8 @@ NET_SetSockOpt(int fd, int level, int  opt, const void *arg,
      * SO_REUSEPORT as well for that combination.
      */
     if (level == SOL_SOCKET && opt == SO_REUSEADDR) {
-        int sotype, arglen;
+        int sotype;
+        socklen_t arglen;
 
         arglen = sizeof(sotype);
         if (getsockopt(fd, SOL_SOCKET, SO_TYPE, (void *)&sotype, &arglen) < 0) {
@@ -1391,7 +1389,8 @@ NET_Bind(int fd, struct sockaddr *him, int len)
      * corresponding IPv4 port is in use.
      */
     if (ipv6_available()) {
-        int arg, len;
+        int arg;
+        socklen_t len;
 
         len = sizeof(arg);
         if (getsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&arg,
