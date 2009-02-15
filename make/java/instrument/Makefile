@@ -114,9 +114,12 @@ ifeq ($(PLATFORM), bsd)
     ICONV_PATH = $(PACKAGE_PATH)
   endif
 
+  ifneq ($(OS_NAME), netbsd)
+    ICONV_PATH = $(PACKAGE_PATH)
 # Use CPPFLAGS instead of OTHER_INCLUDES to force this last
-  CPPFLAGS += -I$(ICONV_PATH)/include
-  OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+    CPPFLAGS += -I$(ICONV_PATH)/include
+    OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+  endif
 else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
   OTHER_LDLIBS += -ljli

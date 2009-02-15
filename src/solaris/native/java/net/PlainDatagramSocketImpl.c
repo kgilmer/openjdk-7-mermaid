@@ -1852,7 +1852,7 @@ Java_java_net_PlainDatagramSocketImpl_socketGetOption(JNIEnv *env, jobject this,
     if (opt == java_net_SocketOptions_SO_BINDADDR) {
         /* find out local IP address */
         SOCKADDR him;
-        int len = 0;
+        socklen_t len;
         int port;
         jobject iaObj;
 
@@ -2233,7 +2233,7 @@ static void mcast_join_leave(JNIEnv *env, jobject this,
             {
                 struct in_addr in;
                 struct in_addr *inP = &in;
-                int len = sizeof(struct in_addr);
+                socklen_t len = sizeof(struct in_addr);
 
 #ifdef __linux__
                 struct ip_mreqn mreqn;

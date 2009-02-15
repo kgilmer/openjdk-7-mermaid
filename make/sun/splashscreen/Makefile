@@ -75,12 +75,17 @@ ifneq ($(PLATFORM), windows)
     ifeq ($(OS_VENDOR), Apple)
       ICONV_PATH = /usr
     else
-      ICONV_PATH = $(PACKAGE_PATH)
+      ifneq ($(OS_NAME), netbsd)
+        ICONV_PATH = $(PACKAGE_PATH)
+        CPPFLAGS += -I$(ICONV_PATH)/include
+        OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+      else
+        OTHER_LDLIBS += -Wl,-R$(OPENWIN_LIB)
+      endif
     endif
     CPPFLAGS += -I$(OPENWIN_HOME)/include \
-                -I$(OPENWIN_HOME)/include/X11/extensions \
-                -I$(ICONV_PATH)/include
-    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext -L$(ICONV_PATH)/lib -liconv $(LIBM) -pthread
+                -I$(OPENWIN_HOME)/include/X11/extensions
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -pthread
   else
     CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
     OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread

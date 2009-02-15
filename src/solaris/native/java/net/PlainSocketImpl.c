@@ -987,7 +987,7 @@ Java_java_net_PlainSocketImpl_socketGetOption(JNIEnv *env, jobject this,
      */
     if (cmd == java_net_SocketOptions_SO_BINDADDR) {
         SOCKADDR him;
-        socklen_t len = 0;
+        socklen_t len;
         int port;
         jobject iaObj;
         jclass iaCntrClass;

@@ -47,6 +47,9 @@ AUTO_FILES_JAVA_DIRS = sun/awt/X11
 AUTO_JAVA_PRUNE = WrapperGenerator.java
 
 LDFLAGS += -L$(OPENWIN_LIB)
+ifeq ($(OS_NAME), netbsd)
+LDFLAGS += -Wl,-R$(OPENWIN_LIB)
+endif
 
 ifeq ($(PLATFORM), linux)
 LDFLAGS += -lpthread
