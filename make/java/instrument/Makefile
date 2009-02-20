@@ -106,19 +106,16 @@ ifeq ($(PLATFORM), bsd)
   ifeq ($(OS_VENDOR), Apple)
     LDFLAGS += -Wl,-all_load
     LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
-    ICONV_PATH = /usr
+    OTHER_LDLIBS += -liconv
   else
     LDFLAGS += -Wl,--whole-archive
     LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
     LDFLAGS += -Wl,--no-whole-archive
-    ICONV_PATH = $(PACKAGE_PATH)
-  endif
-
-  ifneq ($(OS_NAME), netbsd)
-    ICONV_PATH = $(PACKAGE_PATH)
+    ifneq ($(OS_NAME), netbsd)
 # Use CPPFLAGS instead of OTHER_INCLUDES to force this last
-    CPPFLAGS += -I$(ICONV_PATH)/include
-    OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+      CPPFLAGS += -I$(PACKAGE_PATH)/include
+      OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
+    endif
   endif
 else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli

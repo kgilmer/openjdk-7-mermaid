@@ -73,12 +73,11 @@ ifneq ($(PLATFORM), windows)
   ifeq ($(PLATFORM), bsd)
     CFLAGS += -DPNG_NO_MMX_CODE
     ifeq ($(OS_VENDOR), Apple)
-      ICONV_PATH = /usr
+      OTHER_LDLIBS += -liconv
     else
       ifneq ($(OS_NAME), netbsd)
-        ICONV_PATH = $(PACKAGE_PATH)
-        CPPFLAGS += -I$(ICONV_PATH)/include
-        OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+        CPPFLAGS += -I$(PACKAGE_PATH)/include
+        OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
       else
         OTHER_LDLIBS += -Wl,-R$(OPENWIN_LIB)
       endif

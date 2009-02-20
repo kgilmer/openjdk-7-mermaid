@@ -68,13 +68,12 @@ endif
 # Add location of iconv headers
 ifeq ($(PLATFORM), bsd)
   ifeq ($(OS_VENDOR), Apple)
-    ICONV_PATH = /usr
+    OTHER_LDLIBS += -liconv
   else
-    ICONV_PATH = $(PACKAGE_PATH)
-  endif
-  ifneq ($(OS_NAME), netbsd)
-    CPPFLAGS += -I$(ICONV_PATH)/include
-    OTHER_LDLIBS += -L$(ICONV_PATH)/lib -liconv
+    ifneq ($(OS_NAME), netbsd)
+      CPPFLAGS += -I$(PACKAGE_PATH)/include
+      OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
+    endif
   endif
 endif
 
