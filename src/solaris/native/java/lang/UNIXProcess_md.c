@@ -353,6 +353,12 @@ closeDescriptors(void)
 #endif
 
 static int
+isAsciiDigit(char c)
+{
+  return c >= '0' && c <= '9';
+}
+
+static int
 closeDescriptors(void)
 {
     DIR *dp;
@@ -377,7 +383,7 @@ closeDescriptors(void)
      */
     while ((dirp = readdir(dp)) != NULL) {
         int fd;
-        if (isdigit((unsigned char)dirp->d_name[0]) &&
+        if (isAsciiDigit(dirp->d_name[0]) &&
             (fd = strtol(dirp->d_name, NULL, 10)) >= from_fd + 2)
             close(fd);
     }
