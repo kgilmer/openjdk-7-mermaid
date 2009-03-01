@@ -34,11 +34,7 @@
 # set platform-dependent variables
 OS=`uname -s`
 case "$OS" in
-  SunOS )
-    PATHSEP=":"
-    FILESEP="/"
-    ;;
-  Linux )
+  SunOS | Linux | *BSD | Darwin )
     PATHSEP=":"
     FILESEP="/"
     ;;

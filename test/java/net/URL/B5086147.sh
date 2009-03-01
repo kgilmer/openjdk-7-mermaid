@@ -26,7 +26,7 @@
 
 OS=`uname -s`
 case "$OS" in
-  SunOS | Linux )
+  SunOS | Linux | *BSD | Darwin )
     exit 0
     ;;
   Windows* )

@@ -53,7 +53,7 @@ pass()
 
 OS=`uname -s`
 case "$OS" in
-   SunOS | Linux )
+   SunOS | Linux | *BSD | Darwin )
       PATHSEP=":"
       ;;
 
