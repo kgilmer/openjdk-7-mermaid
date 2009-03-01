@@ -20,6 +20,22 @@ ifeq ($(OSNAME), Linux)
     ARCH=i586
   endif
 endif
+ifeq ($(OSNAME), Darwin)
+  PLATFORM = bsd
+  JCT_PLATFORM = linux
+  ARCH = $(shell uname -m)
+  ifeq ($(ARCH), i386)
+    ARCH=i586
+  endif
+endif
+ifeq ($(findstring BSD,$(OSNAME)), BSD)
+  PLATFORM = bsd
+  JCT_PLATFORM = linux
+  ARCH = $(shell uname -m)
+  ifeq ($(ARCH), i386)
+    ARCH=i586
+  endif
+endif
 ifeq ($(OSNAME), Windows_NT)
   PLATFORM = windows
   JCT_PLATFORM = win32
@@ -53,15 +69,21 @@ else
   JTREG_KEY_OPTION=-k:\!ignore
 endif
 
+ifdef JPRT_JTREG_HOME
+  JT_HOME = $(JPRT_JTREG_HOME)
+endif
+
 # Default JTREG to run
 JTREG = $(JT_HOME)/$(JCT_PLATFORM)/bin/jtreg
 
 # Default JDK to test
-JAVA_HOME = $(TEST_ROOT)/../build/$(PLATFORM)-$(ARCH)
+JAVA_HOME = $(TEST_ROOT)/../../build/$(PLATFORM)-$(ARCH)
 
 # The test directories to run
 DEFAULT_TESTDIRS = demo/jvmti/gctest demo/jvmti/hprof
-TESTDIRS = $(DEFAULT_TESTDIRS)
+ifndef TESTDIRS
+  TESTDIRS = $(DEFAULT_TESTDIRS)
+endif
 
 # Root of all test results
 JTREG_OUTPUT_DIR = $(TEST_ROOT)/o_$(PLATFORM)-$(ARCH)
