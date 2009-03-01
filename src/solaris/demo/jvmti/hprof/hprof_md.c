@@ -53,6 +53,7 @@
 #include <time.h>
 
 #include "jni.h"
+#include "jvm_md.h"
 #include "hprof.h"
 
 int
@@ -379,9 +380,9 @@ md_build_library_name(char *holder, int holderlen, char *pname, char *fname)
 
     /* Construct path to library */
     if (pnamelen == 0) {
-        (void)snprintf(holder, holderlen, "lib%s.so", fname);
+        (void)snprintf(holder, holderlen, "lib%s" JNI_LIB_SUFFIX, fname);
     } else {
-        (void)snprintf(holder, holderlen, "%s/lib%s.so", pname, fname);
+        (void)snprintf(holder, holderlen, "%s/lib%s" JNI_LIB_SUFFIX, pname, fname);
     }
 }
 
