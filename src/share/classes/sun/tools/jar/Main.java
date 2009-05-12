@@ -845,6 +845,19 @@ class Main {
      * Extracts specified entries from JAR file, via ZipFile.
      */
     void extract(String fname, String files[]) throws IOException {
+        // Current working directory
+
+        cwd = System.getProperty("user.dir");
+        if (cwd == null) {
+             fatalError(getMsg("error.no.cwd"));
+        }
+        cwd = (new File(cwd)).getCanonicalPath();
+        if (!cwd.endsWith(File.separator)) {
+            cwd += File.separator;
+        }
+
+        // Extract the files
+
         ZipFile zf = new ZipFile(fname);
         Set<ZipEntry> dirs = newDirSet();
         Enumeration<? extends ZipEntry> zes = zf.entries();
