@@ -100,8 +100,10 @@ CC_OPT          = $(CC_OPT/$(OPTIMIZATION_LEVEL))
 #    We need this frame pointer to make it easy to walk the stacks.
 #    This should be the default on X86, but ia64 and amd64 may not have this
 #    as the default.
-CFLAGS_REQUIRED_amd64   += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
-CFLAGS_REQUIRED_i586    += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+CFLAGS_REQUIRED_amd64   += -m64 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+LDFLAGS_COMMON_amd64    += -m64
+CFLAGS_REQUIRED_i586    += -m32 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+LDFLAGS_COMMON_i586     += -m32
 ifeq ($(OS_VENDOR),Apple)
   # 16-byte stack re-alignment on 32-bit Darwin
   CFLAGS_REQUIRED_i586 += -mstackrealign
