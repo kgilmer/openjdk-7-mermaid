@@ -260,6 +260,66 @@ FILES_gen += \
 	sun/nio/fs/UnixConstants.java
 endif # PLATFORM = linux
 
+ifeq ($(PLATFORM), bsd)
+FILES_java += \
+        sun/nio/ch/AbstractPollSelectorImpl.java \
+	sun/nio/ch/InheritedChannel.java \
+        sun/nio/ch/PollSelectorProvider.java \
+        sun/nio/ch/PollSelectorImpl.java \
+	sun/nio/ch/Port.java \
+	sun/nio/ch/SimpleAsynchronousFileChannelImpl.java \
+	sun/nio/ch/UnixAsynchronousServerSocketChannelImpl.java \
+	sun/nio/ch/UnixAsynchronousSocketChannelImpl.java \
+	\
+	sun/nio/fs/GnomeFileTypeDetector.java \
+	sun/nio/fs/BsdFileStore.java \
+	sun/nio/fs/BsdFileSystem.java \
+	sun/nio/fs/BsdFileSystemProvider.java \
+	sun/nio/fs/PollingWatchService.java \
+	sun/nio/fs/UnixChannelFactory.java \
+	sun/nio/fs/UnixCopyFile.java \
+	sun/nio/fs/UnixDirectoryStream.java \
+	sun/nio/fs/UnixException.java \
+	sun/nio/fs/UnixFileAttributeViews.java \
+	sun/nio/fs/UnixFileAttributes.java \
+	sun/nio/fs/UnixFileKey.java \
+	sun/nio/fs/UnixFileModeAttribute.java \
+	sun/nio/fs/UnixFileStore.java \
+	sun/nio/fs/UnixFileStoreAttributes.java \
+	sun/nio/fs/UnixFileSystem.java \
+	sun/nio/fs/UnixFileSystemProvider.java \
+	sun/nio/fs/UnixMountEntry.java \
+	sun/nio/fs/UnixNativeDispatcher.java \
+	sun/nio/fs/UnixPath.java \
+	sun/nio/fs/UnixSecureDirectoryStream.java \
+	sun/nio/fs/UnixUriUtils.java \
+	sun/nio/fs/UnixUserPrincipals.java
+
+FILES_c += \
+	InheritedChannel.c \
+	NativeThread.c \
+        PollArrayWrapper.c \
+	UnixAsynchronousServerSocketChannelImpl.c \
+	UnixAsynchronousSocketChannelImpl.c \
+	\
+	GnomeFileTypeDetector.c \
+	UnixCopyFile.c \
+	UnixNativeDispatcher.c
+
+FILES_export += \
+	sun/nio/ch/InheritedChannel.java \
+	sun/nio/ch/NativeThread.java \
+	sun/nio/ch/UnixAsynchronousServerSocketChannelImpl.java \
+	sun/nio/ch/UnixAsynchronousSocketChannelImpl.java \
+	\
+	sun/nio/fs/GnomeFileTypeDetector.java \
+	sun/nio/fs/UnixCopyFile.java \
+	sun/nio/fs/UnixNativeDispatcher.java
+	
+FILES_gen += \
+	sun/nio/fs/UnixConstants.java
+endif # PLATFORM = bsd
+
 #
 # Find platform-specific C source files
 #
@@ -284,6 +344,11 @@ OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/native/java/net \
   -I$(CLASSHDRDIR)/../../../java.lang/java/CClassHeaders
 
+ifeq ($(PLATFORM), bsd)
+OTHER_INCLUDES += \
+  -I$(PLATFORM_SRC)/hpi/include
+endif
+
 ifeq ($(PLATFORM),windows)
   OTHER_LDLIBS += $(JVMLIB) ws2_32.lib \
      -libpath:$(LIBDIR) java.lib \
@@ -293,6 +358,9 @@ ifeq ($(PLATFORM),windows)
 endif
 ifeq ($(PLATFORM), linux)
 OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread -ldl
+endif
+ifeq ($(PLATFORM), bsd)
+OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -pthread
 endif
 ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 -ldl \
@@ -315,6 +383,9 @@ FILES_m = mapfile-solaris
 endif
 ifeq ($(PLATFORM), linux)
 FILES_m = mapfile-linux
+endif
+ifeq ($(PLATFORM), bsd)
+FILES_m = mapfile-bsd
 endif
 include $(BUILDDIR)/common/Mapfile-vers.gmk
 include $(BUILDDIR)/common/Library.gmk

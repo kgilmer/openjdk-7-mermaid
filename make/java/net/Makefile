@@ -92,6 +92,12 @@ include $(BUILDDIR)/common/Mapfile-vers.gmk
 
 include $(BUILDDIR)/common/Library.gmk
 
+ifeq ($(PLATFORM), bsd)
+ifdef DONT_ENABLE_IPV6
+  OTHER_CFLAGS += -DDONT_ENABLE_IPV6
+endif
+  OTHER_LDLIBS = $(JVMLIB) -pthread
+else
 ifeq ($(PLATFORM), windows)
   OTHER_LDLIBS = ws2_32.lib $(JVMLIB)
 else
@@ -100,6 +106,7 @@ endif
 ifeq ($(PLATFORM), linux)
   OTHER_LDLIBS += -lpthread
 endif
+endif # PLATFORM == bsd
 
 CLASSES.export += java.lang.Integer java.io.FileDescriptor java.net.InetAddressImplFactory java.net.Inet4AddressImpl java.net.Inet6AddressImpl
 

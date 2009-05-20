@@ -467,9 +467,11 @@ Java_java_net_PlainSocketImpl_socketConnect(JNIEnv *env, jobject this,
         if (connect_rv == JVM_IO_INTR) {
             JNU_ThrowByName(env, JNU_JAVAIOPKG "InterruptedIOException",
                             "operation interrupted");
+#if defined(EPROTO)
         } else if (errno == EPROTO) {
             NET_ThrowByNameWithLastError(env, JNU_JAVANETPKG "ProtocolException",
                            "Protocol error");
+#endif
         } else if (errno == ECONNREFUSED) {
             NET_ThrowByNameWithLastError(env, JNU_JAVANETPKG "ConnectException",
                            "Connection refused");
@@ -985,7 +987,7 @@ Java_java_net_PlainSocketImpl_socketGetOption(JNIEnv *env, jobject this,
      */
     if (cmd == java_net_SocketOptions_SO_BINDADDR) {
         SOCKADDR him;
-        socklen_t len = 0;
+        socklen_t len;
         int port;
         jobject iaObj;
         jclass iaCntrClass;

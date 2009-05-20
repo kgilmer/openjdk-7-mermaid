@@ -38,6 +38,14 @@ SHARED_FONTFILES =					\
 	$(LIBDIR)/fonts/LucidaSansDemiBold.ttf       	\
 
 ifeq ($(PLATFORM), linux)
+NEED_OBLIQUE_FONTS = true
+endif
+
+ifeq ($(PLATFORM), bsd)
+NEED_OBLIQUE_FONTS = true
+endif
+
+ifeq ($(NEED_OBLIQUE_FONTS), true)
 
 # The oblique versions of the font are derived from the base versions
 # and since 2D can do this derivation on the fly at run time there is no

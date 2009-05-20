@@ -1121,7 +1121,7 @@ public abstract class FontConfiguration {
      */
     HashMap<String, Boolean> existsMap;
     public boolean needToSearchForFile(String fileName) {
-        if (!environment.isLinux) {
+        if (!environment.isLinuxOrBSD) {
             return false;
         } else if (existsMap == null) {
            existsMap = new HashMap<String, Boolean>();
@@ -1361,7 +1361,7 @@ public abstract class FontConfiguration {
                                    + "<filename."
                                    + getString(table_componentFontNameIDs[ii])
                                    + "> entry is missing!!!");
-                if (!osName.contains("Linux")) {
+                if (!osName.contains("Linux") && !osName.contains("BSD") && !osName.contains("Darwin")) {
                     errors++;
                 }
             }

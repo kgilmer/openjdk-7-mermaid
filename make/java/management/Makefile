@@ -85,6 +85,11 @@ vpath %.c $(PLATFORM_SRC)/native/com/sun/management
 OTHER_INCLUDES += \
   -I$(SHARE_SRC)/native/sun/management 
 
+ifeq ($(PLATFORM),bsd)
+OTHER_INCLUDES += \
+  -I$(PLATFORM_SRC)/hpi/include
+endif
+
 ifeq ($(PLATFORM),windows)
   OTHER_LDLIBS += $(JVMLIB)
 endif

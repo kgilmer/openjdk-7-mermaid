@@ -85,7 +85,7 @@ case "$OS" in
     break
     ;;
 
-  Linux )
+  Linux | *BSD | Darwin )
     PackOptions="-J-Xmx512m -J-ea"
     break
     ;;

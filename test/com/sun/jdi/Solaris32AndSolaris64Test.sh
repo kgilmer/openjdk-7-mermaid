@@ -112,7 +112,7 @@ case "$OS" in
       fi
       ;;
 
-   Linux )
+   Linux | *BSD | Darwin )
       pass "This test always passes on $OS"
       ;;
 

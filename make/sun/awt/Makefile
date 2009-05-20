@@ -123,6 +123,13 @@ OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
 OTHER_LDLIBS = $(JVMLIB) $(LIBM) -ldl
 endif
 
+ifeq  ($(PLATFORM), bsd)
+FILES_c = $(FILES_2D_c)
+FILES_c += awt_LoadLibrary.c
+OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
+OTHER_LDLIBS = $(JVMLIB) $(LIBM)
+endif
+
 FILES_c += initIDs.c
 
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS/LINUX
@@ -236,7 +243,7 @@ vpath %.c     $(SHARE_SRC)/native/$(PKGDIR)/../font
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WINDOWS
 endif # PLATFORM
 
-ifeq ($(PLATFORM), linux)
+ifneq (,$(findstring $(PLATFORM), linux bsd))
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv LINUX
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/../java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/../java2d/opengl
@@ -390,6 +397,19 @@ FONTCONFIGS_SRC_PREFIX = $(PLATFORM).
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS
 endif # PLATFORM
 
+ifeq ($(PLATFORM), bsd)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv BSD
+
+FONTCONFIGS_SRC = $(PLATFORM_SRC)/classes/sun/awt/fontconfigs
+_FONTCONFIGS   = \
+       fontconfig.properties
+
+FONTCONFIGS_SRC_PREFIX = $(PLATFORM).
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BSD
+endif # PLATFORM
+
+
 FONTCONFIGS     = $(_FONTCONFIGS:%=$(LIBDIR)/%.src)
 BINARYFONTCONFIGS = $(_FONTCONFIGS:%.properties=$(LIBDIR)/%.bfc)
 
@@ -482,6 +502,9 @@ CPPFLAGS += -I$(OPENWIN_HOME)/include \
             -I$(OPENWIN_HOME)/include/X11/extensions \
             -I$(PLATFORM_SRC)/native/$(PKGDIR)/font 
 endif
+ifeq ($(PLATFORM), bsd)
+CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/font 
+endif
 CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/debug \
             -I$(SHARE_SRC)/native/$(PKGDIR)/../font \
             -I$(PLATFORM_SRC)/native/$(PKGDIR)/../font \
@@ -503,7 +526,13 @@ CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/debug \
             -I$(PLATFORM_SRC)/native/$(PKGDIR) \
 	    $(EVENT_MODEL)
 
-ifeq ($(PLATFORM), linux)
+# include these last so we don't pick up unintentional includes
+ifeq ($(PLATFORM), bsd)
+CPPFLAGS += -I$(OPENWIN_HOME)/include \
+            -I$(OPENWIN_HOME)/include/X11/extensions
+endif
+
+ifneq (,$(findstring $(PLATFORM), linux bsd))
 LDFLAGS += -L$(OPENWIN_LIB)
 endif
 

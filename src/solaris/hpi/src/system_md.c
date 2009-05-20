@@ -41,6 +41,7 @@
 #include <dlfcn.h>
 
 #include "jni_md.h"
+#include "jvm_md.h"
 #include "mutex_md.h"
 
 #include "hpi_init.h"
@@ -49,9 +50,6 @@
 #include "threads_md.h"
 #include "monitor_md.h"
 #include "largefile.h"
-
-
-#define O_DELETE 0x10000
 
 int sysThreadBootstrap(sys_thread_t **tidP, sys_mon_t **lockP, int nb)
 {
@@ -85,7 +83,7 @@ sysGetMilliTicks()
 {
     struct timeval tv;
 
-    (void) gettimeofday(&tv, (void *) 0);
+    (void) gettimeofday(&tv, NULL);
     return((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
@@ -93,7 +91,7 @@ jlong
 sysTimeMillis()
 {
     struct timeval t;
-    gettimeofday(&t, 0);
+    gettimeofday(&t, NULL);
     return ((jlong)t.tv_sec) * 1000 + (jlong)(t.tv_usec/1000);
 }
 
@@ -122,13 +120,13 @@ sysGetLastErrorString(char *buf, int len)
 
 /*
  * Open a file. Unlink the file immediately after open returns
- * if the specified oflag has the O_DELETE flag set.
+ * if the specified oflag has the JVM_O_DELETE flag set.
  */
 int sysOpen(const char *path, int oflag, int mode)
 {
     int fd;
-    int delete = (oflag & O_DELETE);
-    oflag = oflag & ~O_DELETE;
+    int delete = (oflag & JVM_O_DELETE);
+    oflag = oflag & ~JVM_O_DELETE;
     fd = open64_w(path, oflag, mode);
     if (delete != 0) {
         unlink(path);

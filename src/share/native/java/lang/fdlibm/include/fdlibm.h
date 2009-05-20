@@ -24,6 +24,10 @@
  * have any questions.
  */
 
+#ifdef __OpenBSD__
+#include <sys/types.h>
+#endif
+#include <machine/endian.h>
 #include "jfdlibm.h"
 
 #ifdef __NEWVALID       /* special setup for Sun test regime */
@@ -46,10 +50,12 @@
 #define __LOp(x) *(1+(int*)x)
 #endif
 
+#ifndef __P
 #ifdef __STDC__
 #define __P(p)  p
 #else
 #define __P(p)  ()
+#endif
 #endif
 
 /*

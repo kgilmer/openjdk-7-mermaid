@@ -25,7 +25,11 @@
 
 #ifndef HEADLESS
 
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 
 #include "sun_java2d_pipe_BufferedOpCodes.h"
 

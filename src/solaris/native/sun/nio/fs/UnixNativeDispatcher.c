@@ -49,6 +49,11 @@
 #include <mntent.h>
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include <string.h>
+#include "largefile_bsd.h"
+#endif
+
 #include "jni.h"
 #include "jni_util.h"
 #include "jlong.h"
@@ -1006,6 +1011,10 @@ Java_sun_nio_fs_UnixNativeDispatcher_getextmntent(JNIEnv* env, jclass this,
 {
 #ifdef __solaris__
     struct extmnttab ent;
+#elif defined(_ALLBSD_SOURCE)
+    char buf[1024];
+    char *str;
+    char *last;
 #else
     struct mntent ent;
     char buf[1024];
@@ -1034,6 +1043,25 @@ Java_sun_nio_fs_UnixNativeDispatcher_getextmntent(JNIEnv* env, jclass this,
         throwUnixException(env, errno);
         return -1;
     }
+#elif defined(_ALLBSD_SOURCE)
+again:
+    if (!(str = fgets(buf, sizeof(buf), fp)))    
+        return -1;
+
+    name = strtok_r(str, " \t\n", &last);
+    if (name == NULL)
+        return -1;
+ 
+    // skip comments
+    if (*name == '#')
+        goto again;
+
+    dir = strtok_r((char *)NULL, " \t\n", &last);
+    fstype = strtok_r((char *)NULL, " \t\n", &last);
+    options = strtok_r((char *)NULL, " \t\n", &last);
+    if (options == NULL)
+        return -1;
+    dev = 0;
 #else
     m = getmntent_r(fp, &ent, (char*)&buf, buflen);
     if (m == NULL)

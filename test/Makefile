@@ -51,6 +51,22 @@ ifeq ($(OSNAME), Linux)
     ARCH=i586
   endif
 endif
+ifeq ($(OSNAME), Darwin)
+ PLATFORM = bsd
+ JCT_PLATFORM = linux
+ ARCH = $(shell uname -m)
+ ifeq ($(ARCH), i386)
+ ARCH=i586
+ endif
+endif 
+ifeq ($(findstring BSD,$(OSNAME)), BSD)
+ PLATFORM = bsd 
+ JCT_PLATFORM = linux
+ ARCH = $(shell uname -m)
+ ifeq ($(ARCH), i386)
+ ARCH=i586
+ endif
+endif 
 
 # Cannot trust uname output
 ifneq ($(PROCESSOR_IDENTIFIER), )

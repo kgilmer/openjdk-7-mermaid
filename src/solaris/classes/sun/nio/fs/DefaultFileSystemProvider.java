@@ -68,6 +68,8 @@ public class DefaultFileSystemProvider {
             return createProvider("sun.nio.fs.SolarisFileSystemProvider");
         if (osname.equals("Linux"))
             return createProvider("sun.nio.fs.LinuxFileSystemProvider");
+        if (osname.endsWith("BSD") || osname.equals("Darwin"))
+            return createProvider("sun.nio.fs.BsdFileSystemProvider");
         throw new AssertionError("Platform not recognized");
     }
 }

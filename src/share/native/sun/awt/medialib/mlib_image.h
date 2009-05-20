@@ -27,6 +27,11 @@
 #ifndef MLIB_IMAGE_H
 #define MLIB_IMAGE_H
 
+#ifdef __OpenBSD__
+#include <sys/types.h>
+#endif
+#include <machine/endian.h>
+
 #include <mlib_types.h>
 #include <mlib_status.h>
 #include <mlib_sys.h>

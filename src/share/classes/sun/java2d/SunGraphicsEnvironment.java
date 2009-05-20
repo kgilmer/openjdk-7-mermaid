@@ -77,7 +77,7 @@ import sun.font.NativeFont;
 public abstract class SunGraphicsEnvironment extends GraphicsEnvironment
     implements FontSupport, DisplayChangedListener {
 
-    public static boolean isLinux;
+    public static boolean isLinuxOrBSD;
     public static boolean isSolaris;
     public static boolean isOpenSolaris;
     public static boolean isWindows;
@@ -166,7 +166,15 @@ public abstract class SunGraphicsEnvironment extends GraphicsEnvironment
             public Object run() {
                 String osName = System.getProperty("os.name");
                 if ("Linux".equals(osName)) {
-                    isLinux = true;
+                    isLinuxOrBSD = true;
+                } else if ("FreeBSD".equals(osName)) {
+                    isLinuxOrBSD = true;
+                } else if ("Darwin".equals(osName)) {
+                    isLinuxOrBSD = true;
+                } else if ("NetBSD".equals(osName)) {
+                    isLinuxOrBSD = true;
+                } else if ("OpenBSD".equals(osName)) {
+                    isLinuxOrBSD = true;
                 } else if ("SunOS".equals(osName)) {
                     isSolaris = true;
                     String version = System.getProperty("os.version", "0.0");
@@ -242,8 +250,8 @@ public abstract class SunGraphicsEnvironment extends GraphicsEnvironment
                  * Pass "true" to registerFonts method as on-screen these
                  * JRE fonts always go through the T2K rasteriser.
                  */
-                if (isLinux) {
-                    /* Linux font configuration uses these fonts */
+                if (isLinuxOrBSD) {
+                    /* Linux/BSD font configuration uses these fonts */
                     registerFontDir(jreFontDirName);
                 }
                 registerFontsInDir(jreFontDirName, true, Font2D.JRE_RANK,

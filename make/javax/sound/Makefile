@@ -107,6 +107,16 @@ ifeq ($(PLATFORM), linux)
   #MXSPP_ADD = $(PLATFORM)-$(ARCH)/
 endif # PLATFORM linux
 
+# XXXBSD: ???
+ifeq ($(PLATFORM), bsd)
+    # build with empty MIDI i/o
+    INCLUDE_MIDI = TRUE
+    # build with empty ports
+    INCLUDE_PORTS = TRUE
+    # build with empty direct audio
+    INCLUDE_DAUDIO = TRUE
+endif # PLATFORM bsd
+
 ifeq ($(PLATFORM), solaris)
   ifneq ($(ARCH), amd64)
     # build with ports and direct audio

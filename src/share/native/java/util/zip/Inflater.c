@@ -67,6 +67,10 @@ Java_java_util_zip_Inflater_init(JNIEnv *env, jclass cls, jboolean nowrap)
         return jlong_zero;
     } else {
         char *msg;
+// BSDXXX needed for FreeBSD 5.4 and below with system zlib
+#if defined(__FreeBSD__) && __FreeBSD__ < 6
+	strm->adler = 1;
+#endif
         switch (inflateInit2(strm, nowrap ? -MAX_WBITS : MAX_WBITS)) {
           case Z_OK:
             return ptr_to_jlong(strm);
@@ -202,6 +206,10 @@ Java_java_util_zip_Inflater_reset(JNIEnv *env, jclass cls, jlong strm)
     if (inflateReset(jlong_to_ptr(strm)) != Z_OK) {
         JNU_ThrowInternalError(env, 0);
     }
+// BSDXXX needed for FreeBSD 5.4 and below with system zlib
+#if defined(__FreeBSD__) && __FreeBSD__ < 6
+    ((z_stream *)jlong_to_ptr(strm))->adler = 1;
+#endif
 }
 
 JNIEXPORT void JNICALL

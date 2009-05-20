@@ -26,9 +26,15 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef _ALLBSD_SOURCE
+#include <unistd.h>
+#endif
 #include <mlib_types.h>
 #include <mlib_sys_proto.h>
 #include "mlib_SysMath.h"
+#if defined(_ALLBSD_SOURCE)
+#include <sys/param.h>
+#endif
 
 /***************************************************************/
 
@@ -86,7 +92,12 @@ void *__mlib_malloc(mlib_u32 size)
    * alignment. -- from stdlib.h of MS VC++5.0.
    */
   return (void *) malloc(size);
-#else /* _MSC_VER */
+#elif defined(__FreeBSD__) && (__FreeBSD_version >= 700013)
+  void *ret;
+  return posix_memalign(&ret, 8, size) ? NULL : ret;
+#elif defined(_ALLBSD_SOURCE)
+  return valloc(size);
+#else
   return (void *) memalign(8, size);
 #endif /* _MSC_VER */
 }

@@ -33,7 +33,9 @@
 #include <math.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#if !defined(_ALLBSD_SOURCE)
 #include <alloca.h>
+#endif
 #ifndef HEADLESS
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>

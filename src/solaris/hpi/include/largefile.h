@@ -34,6 +34,10 @@
 #include "largefile_linux.h"
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include "largefile_bsd.h"
+#endif
+
 /*
  * Prototypes for wrappers that we define.  These wrapper functions
  * are low-level I/O routines that will use 64 bit versions if

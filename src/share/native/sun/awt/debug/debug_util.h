@@ -50,7 +50,9 @@ typedef void * dmutex_t;
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#if !defined(_ALLBSD_SOURCE)
 #include <malloc.h>
+#endif
 #include <limits.h>
 
 /* keep these after the other headers */

@@ -102,6 +102,22 @@ ifeq ($(PLATFORM), windows)
   # equivalent of strcasecmp is stricmp on Windows
   CPPFLAGS_COMMON += -Dstrcasecmp=stricmp
 else
+ifeq ($(PLATFORM), bsd)
+  ifeq ($(OS_VENDOR), Apple)
+    LDFLAGS += -Wl,-all_load
+    LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
+    OTHER_LDLIBS += -liconv
+  else
+    LDFLAGS += -Wl,--whole-archive
+    LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
+    LDFLAGS += -Wl,--no-whole-archive
+    ifneq ($(OS_NAME), netbsd)
+# Use CPPFLAGS instead of OTHER_INCLUDES to force this last
+      CPPFLAGS += -I$(PACKAGE_PATH)/include
+      OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
+    endif
+  endif
+else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
   OTHER_LDLIBS += -ljli
   OTHER_LDLIBS += -ldl 
@@ -113,6 +129,7 @@ else
     LDFLAGS += -Wl,--allow-shlib-undefined
     LDFLAGS += -Wl,-rpath -Wl,\$$ORIGIN/jli
   endif
+endif
 endif
 
 #

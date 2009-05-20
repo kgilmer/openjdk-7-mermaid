@@ -65,6 +65,18 @@ ifeq ($(PLATFORM), windows)
   OTHER_LCF += -export:nptInitialize -export:nptTerminate
 endif
 
+# Add location of iconv headers
+ifeq ($(PLATFORM), bsd)
+  ifeq ($(OS_VENDOR), Apple)
+    OTHER_LDLIBS += -liconv
+  else
+    ifneq ($(OS_NAME), netbsd)
+      CPPFLAGS += -I$(PACKAGE_PATH)/include
+      OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
+    endif
+  endif
+endif
+
 #
 # Add to ambient vpath so we pick up the library files
 #

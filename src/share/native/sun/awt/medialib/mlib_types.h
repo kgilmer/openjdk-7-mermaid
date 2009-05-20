@@ -59,7 +59,10 @@ typedef double             mlib_d64;
 
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC) || defined(__GNUC__)
 
-#if defined(__linux__)
+#if defined(_ALLBSD_SOURCE)
+#include <stddef.h>                     /* for ptrdiff_t */
+#include <stdint.h>                     /* for uintptr_t */
+#elif defined(__linux__)
 #include <stdint.h>                     /* for uintptr_t */
 #include <malloc.h>                     /* for ptrdiff_t */
 #else

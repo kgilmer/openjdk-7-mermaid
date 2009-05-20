@@ -28,11 +28,11 @@
 #include <sys/types.h>
 
 /*
- * Linux version of <sys/types.h> does not define intptr_t
+ * Linux and BSD's version of <sys/types.h> does not define intptr_t
  */
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
 #include <stdint.h>
-#endif /* __linux__ */
+#endif /* __linux__ || _ALLBSD_SOURCE */
 
 typedef unsigned char   jubyte;
 typedef unsigned short  jushort;

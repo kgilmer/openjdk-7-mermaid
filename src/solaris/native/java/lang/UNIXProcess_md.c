@@ -40,7 +40,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <ctype.h>
+#ifdef _ALLBSD_SOURCE
+#include <sys/wait.h>
+#else
 #include <wait.h>
+#endif
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
@@ -48,6 +52,17 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <limits.h>
+
+#ifdef __FreeBSD__
+#include <dlfcn.h>
+#include <pthread.h>
+#include <pthread_np.h>
+#endif
+
+#ifdef __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#endif
 
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0
@@ -259,6 +274,84 @@ Java_java_lang_UNIXProcess_waitForProcessExit(JNIEnv* env,
     }
 }
 
+#if defined(__FreeBSD__)
+
+extern pid_t   __sys_fork(void);
+
+static pid_t
+jdk_fork_wrapper()
+{
+    pid_t resultPid;
+    typedef void (*void_func)();
+    static void_func func_defer = NULL;
+    static void_func func_undefer = NULL;
+    static int is_libc_r = -1;
+
+    if (is_libc_r == -1) {
+
+	/*
+         * BSDNOTE: Check for loaded symbols.
+         *
+         * If "_thread_kern_sig_defer" symbol is found assume we are
+	 * libc_r
+         *
+         * If libc_r is loaded, use fork system call drectly to avoid
+         * problems with using protected pages. 
+         *
+         * --phantom
+	 */
+	func_defer =
+		(void_func)dlsym(RTLD_DEFAULT, "_thread_kern_sig_defer");
+	func_undefer =
+		(void_func)dlsym(RTLD_DEFAULT, "_thread_kern_sig_undefer");
+	if (func_defer != NULL)
+	    is_libc_r = 1;
+	else {
+	    is_libc_r = 0;
+	}
+    }
+
+    if (is_libc_r == 0) {
+	/* Not a libc_r */
+	resultPid = fork();
+    } else {
+        (*func_defer)();		/* call _thread_kern_sig_defer() */
+        resultPid = __sys_fork();
+        if (resultPid != 0)
+ 	    (*func_undefer)();		/* call _thread_kern_sig_undefer() */
+	/* leave child with signals disabled, but reenable in parent */
+    }
+
+    return resultPid;
+}
+#endif /* __FreeBSD__ */
+
+#if defined(__OpenBSD__)
+/*
+ * Directly call _thread_sys_closefrom() so the child process
+ * doesn't reset the parrent's file descriptors to be blocking.
+ * This function is only called from the child process which
+ * is single threaded and about to call execvp() so it is
+ * safe to bypass the threaded closefrom().
+ */
+int _thread_sys_closefrom(int);
+
+static int
+closeDescriptors(void)
+{
+  return _thread_sys_closefrom(FAIL_FILENO + 1);
+}
+
+#else
+
+#ifdef _ALLBSD_SOURCE
+#define FD_DIR "/dev/fd"
+#define dirent64 dirent
+#define readdir64 readdir
+#else
+#define FD_DIR "/proc/self/fd"
+#endif
+
 static int
 isAsciiDigit(char c)
 {
@@ -282,7 +375,7 @@ closeDescriptors(void)
     close(from_fd);             /* for possible use by opendir() */
     close(from_fd + 1);         /* another one for good luck */
 
-    if ((dp = opendir("/proc/self/fd")) == NULL)
+    if ((dp = opendir(FD_DIR)) == NULL)
         return 0;
 
     /* We use readdir64 instead of readdir to work around Solaris bug
@@ -299,6 +392,7 @@ closeDescriptors(void)
 
     return 1;
 }
+#endif /* !__OpenBSD__ */
 
 static void
 moveDescriptor(int fd_from, int fd_to)
@@ -452,7 +546,9 @@ execvpe(const char *file, const char *const argv[], const char *const envp[])
      * "All identifiers in this volume of IEEE Std 1003.1-2001, except
      * environ, are defined in at least one of the headers" (!)
      */
+#ifndef __APPLE__
     extern char **environ;
+#endif
 
     if (envp != NULL)
         environ = (char **) envp;
@@ -516,9 +612,14 @@ readFully(int fd, void *buf, size_t nbyte)
     }
 }
 
+#if defined(__FreeBSD__)
+#undef fork1
+#define fork1() jdk_fork_wrapper()
+#else
 #ifndef __solaris__
 #undef fork1
 #define fork1() fork()
+#endif
 #endif
 
 JNIEXPORT jint JNICALL
@@ -584,6 +685,28 @@ Java_java_lang_UNIXProcess_forkAndExec(JNIEnv *env,
     if (resultPid == 0) {
         /* Child process */
 
+#ifdef __OpenBSD__
+// XXXBSD: Work-around userland pthread implementation issue.
+// Closing file descriptors will reset them to be blocking.
+// This is problematic for the parent when it attemts to use
+// the blocking fd and deadlocks. Setting them to non-blocking
+// in the child prevents the close/dup2 from resetting them.
+    {
+	int flags;
+	flags = fcntl(STDIN_FILENO, F_GETFL, NULL);
+	if (flags != -1)
+	    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+	flags = fcntl(STDOUT_FILENO, F_GETFL, NULL);
+	if (flags != -1)
+	    fcntl(STDOUT_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+	flags = fcntl(STDERR_FILENO, F_GETFL, NULL);
+	if (flags != -1)
+	    fcntl(STDOUT_FILENO, F_SETFL, flags | O_NONBLOCK);
+    }
+#endif
+ 
         /* Close the parent sides of the pipes.
            Closing pipe fds here is redundant, since closeDescriptors()
            would do it anyways, but a little paranoia is a good thing. */

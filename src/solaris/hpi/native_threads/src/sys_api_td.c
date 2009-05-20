@@ -39,6 +39,10 @@
 #include <sys/ioctl.h>
 #endif
 
+#ifdef __OpenBSD__
+#include <sys/ioctl.h>
+#endif
+
 #include <sys/socket.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -54,6 +58,10 @@
 #include "mutex_md.h"
 
 #if defined(__solaris__) && defined(NO_INTERRUPTIBLE_IO)
+#error If there was no policy change, this could be a makefile error.
+#endif
+
+#if defined(_ALLBSD_SOURCE) && defined(NO_INTERRUPTIBLE_IO)
 #error If there was no policy change, this could be a makefile error.
 #endif
 

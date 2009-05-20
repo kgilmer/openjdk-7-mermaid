@@ -75,7 +75,7 @@ Windows*)
 SunOS)
     DEL=":"
     ;;
-Linux)
+Linux|*BSD|Darwin)
     DEL=":"
     HAS_S=YES
     ;;

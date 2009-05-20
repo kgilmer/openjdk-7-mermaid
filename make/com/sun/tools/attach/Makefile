@@ -36,6 +36,9 @@ endif
 ifeq ($(PLATFORM), linux)
 FILES_m = mapfile-linux
 endif
+ifeq ($(PLATFORM), bsd)
+FILES_m = mapfile-bsd
+endif
 include $(BUILDDIR)/common/Mapfile-vers.gmk
 
 #

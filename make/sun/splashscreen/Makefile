@@ -61,10 +61,33 @@ JAVALIB=
 
 CFLAGS += -DSPLASHSCREEN
 
+CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
+CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
+ifneq ($(SYSTEM_ZLIB),true)
+  CPPFLAGS += -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+endif
+
+
 ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
-  CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
-  OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread
+  ifeq ($(PLATFORM), bsd)
+    ifeq ($(OS_VENDOR), Apple)
+      OTHER_LDLIBS += -liconv
+    else
+      ifneq ($(OS_NAME), netbsd)
+        CPPFLAGS += -I$(PACKAGE_PATH)/include
+        OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
+      else
+        OTHER_LDLIBS += -Wl,-R$(OPENWIN_LIB)
+      endif
+    endif
+    CPPFLAGS += -I$(OPENWIN_HOME)/include \
+                -I$(OPENWIN_HOME)/include/X11/extensions
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -pthread
+  else
+    CPPFLAGS += -I$(OPENWIN_HOME)/include -I$(OPENWIN_HOME)/include/X11/extensions
+    OTHER_LDLIBS += -L$(OPENWIN_LIB) -lX11 -lXext $(LIBM) -lpthread
+  endif
 else # PLATFORM
   CFLAGS += -DWITH_WIN32
   OTHER_LDLIBS += kernel32.lib user32.lib gdi32.lib delayimp.lib /DELAYLOAD:user32.dll
@@ -77,13 +100,12 @@ endif # PLATFORM
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/splashscreen
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/giflib
-vpath %.c   $(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+ifneq ($(SYSTEM_ZLIB),true)
+  vpath %.c   $(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+endif
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/libpng
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen
-
-CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
 
 # Shun the less than portable MMX assembly code in pnggccrd.c,
 # and use alternative implementations in C.

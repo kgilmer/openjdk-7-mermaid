@@ -41,6 +41,11 @@
 #include "java_io_FileSystem.h"
 #include "java_io_UnixFileSystem.h"
 
+#if defined(_ALLBSD_SOURCE)
+#define dirent64 dirent
+#define readdir64_r readdir_r
+#define stat64 stat
+#endif
 
 /* -- Field IDs -- */
 
@@ -139,7 +144,6 @@ Java_java_io_UnixFileSystem_checkAccess(JNIEnv *env, jobject this,
     } END_PLATFORM_STRING(env, path);
     return rv;
 }
-
 
 JNIEXPORT jboolean JNICALL
 Java_java_io_UnixFileSystem_setPermission(JNIEnv *env, jobject this,

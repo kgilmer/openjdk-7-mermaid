@@ -33,7 +33,11 @@
 
 #include <jni.h>
 // for malloc
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include "SoundDefs.h"
 #include "DirectAudio.h"
 #include "Utilities.h"

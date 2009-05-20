@@ -26,14 +26,20 @@
 #include "jni.h"
 #include "jni_util.h"
 #include "jvm.h"
+#include "jvm_md.h"
 #include "jlong.h"
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include "sun_nio_ch_FileChannelImpl.h"
 #include "java_lang_Integer.h"
 #include "nio.h"
 #include "nio_util.h"
 #include <dlfcn.h>
+
+#if defined(_ALLBSD_SOURCE)
+#include "largefile_bsd.h"
+#endif
 
 static jfieldID chan_fd;        /* jobject 'fd' in sun.io.FileChannelImpl */
 
@@ -59,6 +65,10 @@ sendfile_func* my_sendfile_func = NULL;
 typedef ssize_t sendfile64_func(int out_fd, int in_fd, off64_t *offset, size_t count);
 
 sendfile64_func* my_sendfile64_func = NULL;
+#elif defined(_ALLBSD_SOURCE)
+#include <sys/socket.h>
+#include <errno.h>
+#include <stdlib.h>
 #endif
 
 JNIEXPORT jlong JNICALL
@@ -68,7 +78,8 @@ Java_sun_nio_ch_FileChannelImpl_initIDs(JNIEnv *env, jclass clazz)
     chan_fd = (*env)->GetFieldID(env, clazz, "fd", "Ljava/io/FileDescriptor;");
 
 #ifdef __solaris__
-    if (dlopen("/usr/lib/libsendfile.so.1", RTLD_GLOBAL | RTLD_LAZY) != NULL) {
+    if (dlopen("/usr/lib/" VERSIONED_JNI_LIB_NAME("sendfile", "1"),
+               RTLD_GLOBAL | RTLD_LAZY) != NULL) {
         my_sendfile_func = (sendfile_func*) dlsym(RTLD_DEFAULT, "sendfilev64");
     }
 #endif
@@ -242,5 +253,57 @@ Java_sun_nio_ch_FileChannelImpl_transferTo0(JNIEnv *env, jobject this,
         }
         return result;
     }
+#endif
+
+#ifdef _ALLBSD_SOURCE
+    /*
+     * XXXBSD: make sure that we're returning what java class may understand
+     *
+     * XXXBSD: I'd prefer to have it implemented with sendfile(), but since
+     *         FreeBSD's sendfile() is only supposed to be used in file->socket
+     *         schema we need to provide some kind of fall-back operation, if
+     *         sendfile() failed with ENOTSOCK error only.
+     */
+    void *buf;
+    off_t offset = (off_t)position;
+    int r, w = 0;
+
+    buf = malloc(4096);
+    if (buf == NULL) {
+        JNU_ThrowOutOfMemoryError(env, "heap allocation failed");
+        return IOS_THROWN;
+    }
+
+    while ((r = pread(srcFD, buf, 4096, offset)) > 0) {
+        w = write(dstFD, buf, r);
+        if (w == -1)
+	    break;
+        offset += w;
+    }
+    free(buf);
+
+    /*
+     * Similar to solaris if we've transferred any data return
+     * the number of bytes and ignore any error
+    */
+    if (offset - (off_t)position > 0)
+	return (offset - (off_t)position);
+
+    /*
+     * Deal with NBIO EAGAIN & EINTR the same as solaris. 
+     */
+    if (r == -1 || w == -1) {
+        switch (errno) {
+	    case EAGAIN:
+	        return IOS_UNAVAILABLE;
+	    case EINTR:
+	        return IOS_INTERRUPTED;
+	    default:
+		JNU_ThrowIOExceptionWithLastError(env, "Transfer failed");
+		return IOS_THROWN;
+        }
+    }
+
+    return (0);
 #endif
 }

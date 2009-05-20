@@ -61,6 +61,7 @@ vpath %.cpp $(SHARE_SRC)/native/$(PKGDIR)
 
 
 ifeq ($(STANDALONE),true)
+ ifneq ($(SYSTEM_ZLIB),true)
   ZIPOBJDIR = $(OUTPUTDIR)/tmp/sun/java.util.zip/zip/$(OBJDIRNAME)
 
   ZIPOBJS =  $(ZIPOBJDIR)/zcrc32.$(OBJECT_SUFFIX) \
@@ -78,6 +79,10 @@ ifeq ($(STANDALONE),true)
   ZINCLUDE=-I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
   OTHER_CXXFLAGS += $(ZINCLUDE)
   LDDFLAGS += $(ZIPOBJS)
+ else
+  LDDFLAGS += -lz
+  OTHER_CXXFLAGS += -DSYSTEM_ZLIB
+ endif
 else
   OTHER_CXXFLAGS += -DNO_ZLIB -DUNPACK_JNI
   OTHER_LDLIBS += $(JVMLIB)
@@ -99,7 +104,11 @@ ifeq ($(PLATFORM), windows)
   RES = $(OBJDIR)/$(PGRM).res
 else
   LDOUTPUT = -o #Have a space 
+ifeq ($(PLATFORM), bsd)
+  LDDFLAGS += -pthread
+else
   LDDFLAGS += -lc
+endif
   OTHER_LDLIBS  += $(LIBCXX)
 # setup the list of libraries to link in...
 ifeq ($(PLATFORM), linux)

@@ -138,7 +138,11 @@ int sysConnect(int fd, struct sockaddr *him, int len);
 int sysBind(int fd, struct sockaddr *him, int len);
 int sysAccept(int fd, struct sockaddr *him, int *len);
 int sysGetSockName(int fd, struct sockaddr *him, int *len);
-#ifdef _LP64
+#if defined(_LP64) || defined(_ALLBSD_SOURCE)
+// XXXBSD: The implementations all use ssize_t, except on Windows,
+// regardless of _LP64. The resulting mismatch between "int" and "ssize_t"
+// causes gcc on Darwin to report a conflicting types error.
+// Appears to be an upstream issue introduced in 1.7
 ssize_t sysSendTo(int fd, char *buf, int len, int flags, struct sockaddr *to,
               int tolen);
 ssize_t sysRecvFrom(int fd, char *buf, int nbytes, int flags,

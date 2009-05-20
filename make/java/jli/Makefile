@@ -44,8 +44,10 @@ MS_RUNTIME_STATIC = true
 
 include $(BUILDDIR)/common/Defs.gmk
 
+ifneq ($(SYSTEM_ZLIB),true)
 ZLIB_VERSION = 1.1.3
 ZIP_SRC = $(SHARE_SRC)/native/java/util/zip/zlib-$(ZLIB_VERSION)
+endif
 LAUNCHER_SHARE_SRC = $(SHARE_SRC)/bin
 LAUNCHER_PLATFORM_SRC = $(PLATFORM_SRC)/bin
 
@@ -66,7 +68,10 @@ FILES_c = \
 	parse_manifest.c \
 	version_comp.c \
 	wildcard.c \
-	jli_util.c \
+	jli_util.c
+
+ifneq ($(SYSTEM_ZLIB),true)
+FILES_c += \
 	inflate.c \
 	infblock.c \
 	inftrees.c \
@@ -75,6 +80,7 @@ FILES_c = \
 	infutil.c \
 	zadler32.c \
 	zutil.c
+endif
 
 ifneq ($(PLATFORM), windows)
 
@@ -91,15 +97,17 @@ ifeq ($(PLATFORM), solaris)
   LIBARCH_DEFINES += -DLIBARCH64NAME='"$(LIBARCH64)"'
 endif
 
-OTHER_CPPFLAGS += $(LIBARCH_DEFINES)
+OTHER_CPPFLAGS += $(LIBARCH_DEFINES) -DPACKAGE_PATH=\"$(PACKAGE_PATH)\"
 
 
 ifneq ($(PLATFORM), windows)	# UNIX systems
 	LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/jli
+ifneq ($(PLATFORM), bsd)	# other UNIX systems
 	# Note: its important to keep this order meaning -lc is the
 	# last library otherwise it could cause compatibility issues
 	# by pulling in SUNW_private symbols from libc
 	LDLIBS = -ldl -lc
+endif # !bsd
 ifeq ($(USE_PTHREADS),true)
 	LDLIBS += -lpthread
 endif # USE_PTHREADS 
@@ -123,7 +131,11 @@ endif
 
 OTHER_INCLUDES += -I$(LAUNCHER_SHARE_SRC)
 OTHER_INCLUDES += -I$(LAUNCHER_PLATFORM_SRC)
-OTHER_INCLUDES += -I$(ZIP_SRC)
+ifneq ($(SYSTEM_ZLIB),true)
+  OTHER_INCLUDES += -I$(ZIP_SRC)
+else
+  LDLIBS += -lz
+endif
 
 #
 # Library to compile.
@@ -161,7 +173,28 @@ library:: $(STATIC_LIBRARY)
 
 endif	# PLATFORM
 
+ifeq ($(PLATFORM), bsd)
+
+STATIC_LIBRARY_DIR = $(OBJDIR)/static
+STATIC_LIBRARY_NAME = lib$(LIBRARY).a
+STATIC_LIBRARY = $(STATIC_LIBRARY_DIR)/$(STATIC_LIBRARY_NAME)
+
+$(STATIC_LIBRARY_DIR): $(OBJDIR)
+	@$(MKDIR) $(STATIC_LIBRARY_DIR)
+
+$(STATIC_LIBRARY): $(STATIC_LIBRARY_DIR)
+	@$(prep-target)
+	$(AR) -r $@ $(FILES_o)
+
+library:: $(STATIC_LIBRARY)
+
+endif  # PLATFORM
+
 #
 # Add to ambient vpath so we pick up the library files
 #
-vpath %.c $(LAUNCHER_SHARE_SRC) $(ZIP_SRC) $(LAUNCHER_PLATFORM_SRC)
+vpath %.c $(LAUNCHER_SHARE_SRC) $(LAUNCHER_PLATFORM_SRC)
+ifneq ($(SYSTEM_ZLIB),true)
+  vpath %.c $(ZIP_SRC)
+endif
+

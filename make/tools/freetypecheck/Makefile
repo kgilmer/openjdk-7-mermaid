@@ -44,8 +44,15 @@ else
   # Add runtime lib search path to ensure test will be runnable
   ifeq ($(PLATFORM), solaris)
     FT_LD_OPTIONS += -R $(FREETYPE_LIB_PATH) -lfreetype
-  else #linux
+  else 
+    ifeq ($(PLATFORM), bsd)
+      ifeq ($(OS_NAME), netbsd)
+        FT_LD_OPTIONS += -Wl,-R$(FREETYPE_LIB_PATH)
+      endif
+      FT_LD_OPTIONS += -lfreetype -lz
+    else # linux
       FT_LD_OPTIONS += -Wl,-rpath -Wl,$(FREETYPE_LIB_PATH) -lfreetype
+    endif
   endif
 endif
 FT_OPTIONS += -I$(FREETYPE_HEADERS_PATH)

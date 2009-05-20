@@ -65,6 +65,9 @@ static jdwpTransportEnv single_env = (jdwpTransportEnv)&interface;
 #define HEADER_SIZE     11
 #define MAX_DATA_SIZE 1000
 
+static jint recv_fully(int, char *, int);
+static jint send_fully(int, char *, int);
+
 /*
  * Record the last error for this thread.
  */
@@ -154,7 +157,7 @@ handshake(int fd, jlong timeout) {
         }
         buf = b;
         buf += received;
-        n = dbgsysRecv(fd, buf, (int)strlen(hello)-received, 0);
+        n = recv_fully(fd, buf, (int)strlen(hello)-received);
         if (n == 0) {
             setLastError(0, "handshake failed - connection prematurally closed");
             return JDWPTRANSPORT_ERROR_IO_ERROR;
@@ -180,7 +183,7 @@ handshake(int fd, jlong timeout) {
         }
     }
 
-    if (dbgsysSend(fd, hello, (int)strlen(hello), 0) != (int)strlen(hello)) {
+    if (send_fully(fd, hello, (int)strlen(hello)) != (int)strlen(hello)) {
         RETURN_IO_ERROR("send failed during handshake");
     }
     return JDWPTRANSPORT_ERROR_NONE;
@@ -555,19 +558,19 @@ socketTransport_writePacket(jdwpTransportEnv* env, const jdwpPacket *packet)
     /* Do one send for short packets, two for longer ones */
     if (data_len <= MAX_DATA_SIZE) {
         memcpy(header + HEADER_SIZE, data, data_len);
-        if (dbgsysSend(socketFD, (char *)&header, HEADER_SIZE + data_len, 0) !=
+        if (send_fully(socketFD, (char *)&header, HEADER_SIZE + data_len) != 
             HEADER_SIZE + data_len) {
             RETURN_IO_ERROR("send failed");
         }
     } else {
         memcpy(header + HEADER_SIZE, data, MAX_DATA_SIZE);
-        if (dbgsysSend(socketFD, (char *)&header, HEADER_SIZE + MAX_DATA_SIZE, 0) !=
+        if (send_fully(socketFD, (char *)&header, HEADER_SIZE + MAX_DATA_SIZE) != 
             HEADER_SIZE + MAX_DATA_SIZE) {
             RETURN_IO_ERROR("send failed");
         }
         /* Send the remaining data bytes right out of the data area. */
-        if (dbgsysSend(socketFD, (char *)data + MAX_DATA_SIZE,
-                       data_len - MAX_DATA_SIZE, 0) != data_len - MAX_DATA_SIZE) {
+        if (send_fully(socketFD, (char *)data + MAX_DATA_SIZE, 
+                       data_len - MAX_DATA_SIZE) != data_len - MAX_DATA_SIZE) {
             RETURN_IO_ERROR("send failed");
         }
     }
@@ -575,13 +578,33 @@ socketTransport_writePacket(jdwpTransportEnv* env, const jdwpPacket *packet)
     return JDWPTRANSPORT_ERROR_NONE;
 }
 
-static jint
+jint
 recv_fully(int f, char *buf, int len)
 {
     int nbytes = 0;
     while (nbytes < len) {
         int res = dbgsysRecv(f, buf + nbytes, len - nbytes, 0);
         if (res < 0) {
+	    if (errno == EINTR)
+		continue;
+            return res;
+        } else if (res == 0) {
+            break; /* eof, return nbytes which is less than len */
+        }
+        nbytes += res;
+    }
+    return nbytes;
+}
+
+jint
+send_fully(int f, char *buf, int len)
+{
+    int nbytes = 0;
+    while (nbytes < len) {
+        int res = dbgsysSend(f, buf + nbytes, len - nbytes, 0);
+        if (res < 0) {
+	    if (errno == EINTR)
+		continue;
             return res;
         } else if (res == 0) {
             break; /* eof, return nbytes which is less than len */

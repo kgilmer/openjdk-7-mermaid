@@ -24,6 +24,7 @@
  */
 
 #include "java.h"
+#include "jvm_md.h"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -34,17 +35,30 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/types.h>
+#if defined(_ALLBSD_SOURCE)
+#include <sys/time.h>
+#endif
+
 #include "manifest_info.h"
 #include "version_comp.h"
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
 #include <pthread.h>
 #else
 #include <thread.h>
 #endif
 
+#ifdef __APPLE__
+#define JVM_DLL "libjvm.dylib"
+#define JAVA_DLL "libjava.dylib"
+/* FALLBACK avoids naming conflicts with system libraries
+ * (eg, ImageIO's libJPEG.dylib) */
+#define LD_LIBRARY_PATH "DYLD_FALLBACK_LIBRARY_PATH"
+#else
 #define JVM_DLL "libjvm.so"
 #define JAVA_DLL "libjava.so"
+#define LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+#endif
 
 /*
  * If a processor / os combination has the ability to run binaries of
@@ -71,14 +85,31 @@
 #endif
 
 /* pointer to environment */
+#ifdef __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#else
 extern char **environ;
+#endif
 
 /*
  *      A collection of useful strings. One should think of these as #define
  *      entries, but actual strings can be more efficient (with many compilers).
  */
-#ifdef __linux__
-static const char *system_dir   = "/usr/java";
+#if defined(__FreeBSD__)
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
+static const char *user_dir	= "/java";
+#elif defined(__NetBSD__)
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
+static const char *user_dir	= "/java";
+#elif defined(__OpenBSD__)
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
+static const char *user_dir	= "/java";
+#elif defined(__APPLE__)
+static const char *system_dir	= PACKAGE_PATH "/openjdk7";
+static const char *user_dir	= "/java";
+#elif defined(__linux__)
+static const char *system_dir   = PACKAGE_PATH "/java";
 static const char *user_dir     = "/java";
 #else /* Solaris */
 static const char *system_dir   = "/usr/jdk";
@@ -411,10 +442,10 @@ CreateExecutionEnvironment(int *_argcp,
        * If not on Solaris, assume only a single LD_LIBRARY_PATH
        * variable.
        */
-      runpath = getenv("LD_LIBRARY_PATH");
+      runpath = getenv(LD_LIBRARY_PATH);
 #endif /* __solaris__ */
 
-#ifdef __linux
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
       /*
        * On linux, if a binary is running as sgid or suid, glibc sets
        * LD_LIBRARY_PATH to the empty string for security purposes.  (In
@@ -438,7 +469,7 @@ CreateExecutionEnvironment(int *_argcp,
       new_runpath = JLI_MemAlloc( ((runpath!=NULL)?JLI_StrLen(runpath):0) +
                               2*JLI_StrLen(jrepath) + 2*JLI_StrLen(arch) +
                               JLI_StrLen(jvmpath) + 52);
-      newpath = new_runpath + JLI_StrLen("LD_LIBRARY_PATH=");
+      newpath = new_runpath + JLI_StrLen(LD_LIBRARY_PATH "=");
 
 
       /*
@@ -453,7 +484,7 @@ CreateExecutionEnvironment(int *_argcp,
 
         /* jvmpath, ((running != wanted)?((wanted==64)?"/"LIBARCH64NAME:"/.."):""), */
 
-        sprintf(new_runpath, "LD_LIBRARY_PATH="
+        sprintf(new_runpath, LD_LIBRARY_PATH "="
                 "%s:"
                 "%s/lib/%s:"
                 "%s/../lib/%s",
@@ -1209,9 +1240,23 @@ UnsetEnv(char *name)
     return(borrowed_unsetenv(name));
 }
 
+#if defined(_ALLBSD_SOURCE)
+/*
+ * BSD's implementation of CounterGet()
+ */
+int64_t
+CounterGet()
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 1000) + tv.tv_usec;
+}
+#endif
+
+
 /* --- Splash Screen shared library support --- */
 
-static const char* SPLASHSCREEN_SO = "libsplashscreen.so";
+static const char* SPLASHSCREEN_SO = JNI_LIB_NAME("splashscreen");
 
 static void* hSplashLib = NULL;
 
@@ -1247,7 +1292,7 @@ jlong_format_specifier() {
 int
 ContinueInNewThread0(int (JNICALL *continuation)(void *), jlong stack_size, void * args) {
     int rslt;
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
     pthread_t tid;
     pthread_attr_t attr;
     pthread_attr_init(&attr);

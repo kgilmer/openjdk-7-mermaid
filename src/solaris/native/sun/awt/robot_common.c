@@ -27,6 +27,9 @@
     #error This file should not be included in headless library
 #endif
 
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#endif
 #include "robot_common.h"
 
 /*

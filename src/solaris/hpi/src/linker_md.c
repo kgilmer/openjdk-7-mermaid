@@ -44,17 +44,33 @@
 #include "threads_md.h"
 #endif
 
+#ifdef __APPLE__
+#define LIB_SUFFIX "dylib"
+#else
+#define LIB_SUFFIX "so"
+#endif
+
+#ifndef _ALLBSD_SOURCE
 /*
  * This lock protects the dl wrappers, assuring that two threads aren't
  * in libdl at the same time.
  */
 sys_mon_t _dl_lock;
+#endif
 
 /*
  * Solaris green threads needs to lock around libdl.so.
  */
 #if defined(__solaris__) && !defined(NATIVE)
     #define NEED_DL_LOCK
+#endif
+
+#ifdef NEED_DL_LOCK
+/*
+ * This lock protects the dl wrappers, assuring that two threads aren't
+ * in libdl at the same time.
+ */
+sys_mon_t _dl_lock;
 #endif
 
 /*
@@ -86,14 +102,14 @@ sysBuildLibName(char *holder, int holderlen, char *pname, char *fname)
     }
 
     if (pnamelen == 0) {
-        sprintf(holder, "lib%s.so", fname);
+        sprintf(holder, "lib%s." LIB_SUFFIX, fname);
     } else {
-        sprintf(holder, "%s/lib%s.so", pname, fname);
+        sprintf(holder, "%s/lib%s." LIB_SUFFIX, pname, fname);
     }
 }
 
 
-#ifdef __linux__
+#if defined(__linux__) || defined(_ALLBSD_SOURCE)
     static int thr_main(void)
     {
         return -1;
@@ -111,10 +127,10 @@ sysLoadLibrary(const char *name, char *err_buf, int err_buflen)
 
 #ifdef NEED_DL_LOCK
     sysMonitorEnter(sysThreadSelf(), &_dl_lock);
-    result = dlopen(name, RTLD_NOW);
+    result = dlopen(name, RTLD_NOW|RTLD_GLOBAL);
     sysMonitorExit(sysThreadSelf(), &_dl_lock);
 #else
-    result = dlopen(name, RTLD_LAZY);
+    result = dlopen(name, RTLD_LAZY|RTLD_GLOBAL);
 #endif
     /*
      * This is a bit of bulletproofing to catch the commonly occurring

@@ -283,7 +283,7 @@ EOF
          psCmd=ps
          jstack=jstack.exe
          ;;
-       SunOS | Linux)
+       SunOS | Linux | *BSD | Darwin)
          transport=dt_socket
          address=
          devnull=/dev/null

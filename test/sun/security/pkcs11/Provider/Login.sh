@@ -51,13 +51,7 @@ echo ""
 
 OS=`uname -s`
 case "$OS" in
-  SunOS )
-    FS="/"
-    PS=":"
-    CP="${FS}bin${FS}cp"
-    CHMOD="${FS}bin${FS}chmod"
-    ;;
-  Linux )
+  SunOS | Linux | *BSD | Darwin )
     FS="/"
     PS=":"
     CP="${FS}bin${FS}cp"

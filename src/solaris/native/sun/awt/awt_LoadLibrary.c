@@ -143,7 +143,11 @@ AWT_OnLoad(JavaVM *vm, void *reserved)
         (*env)->DeleteLocalRef(env, propname);
     }
 
+#ifdef __APPLE__ 
+    strcat(p, ".dylib");
+#else
     strcat(p, ".so");
+#endif
 
     JNU_CallStaticMethodByName(env, NULL, "java/lang/System", "load",
                                "(Ljava/lang/String;)V",

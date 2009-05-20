@@ -23,7 +23,11 @@
  * have any questions.
  */
 
+#ifdef _ALLBSD_SOURCE
+#include <stdlib.h>
+#else
 #include "malloc.h"
+#endif
 
 #include "SurfaceData.h"
 #include "sun_awt_image_DataBufferNative.h"

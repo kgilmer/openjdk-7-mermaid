@@ -72,11 +72,18 @@ OTHER_CPPFLAGS += -DUSE_PTHREADS
 ifeq ($(MOOT_PRIORITIES),true)
 OTHER_CPPFLAGS += -DMOOT_PRIORITIES
 endif
+ifeq ($(PLATFORM), bsd)
+LIBPOSIX4      =
+OTHER_LDLIBS   += -pthread
+else
 LIBPOSIX4	= -lposix4
 OTHER_LDLIBS   += -lpthread $(LIBPOSIX4)
 endif
+endif
 
+ifneq ($(PLATFORM), bsd)
 HAVE_GETHRVTIME=true
+endif
 ifeq ($(HAVE_GETHRVTIME),true)
 OTHER_CPPFLAGS += -DHAVE_GETHRVTIME
 endif

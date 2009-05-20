@@ -83,6 +83,10 @@ case `uname -s` in
        total_swap=`free -b | grep -i swap | awk '{print $2}'`
        runOne GetTotalSwapSpaceSize $total_swap 
        ;;
+     *BSD )
+       # FIXME: Determine swap space.
+       runOne GetTotalSwapSpaceSize "sanity-only"
+       ;;
     * )
        runOne GetTotalSwapSpaceSize "sanity-only"
        ;;

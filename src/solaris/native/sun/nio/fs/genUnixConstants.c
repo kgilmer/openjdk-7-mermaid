@@ -63,7 +63,12 @@ int main(int argc, const char* argv[]) {
     DEFX(O_EXCL);
     DEFX(O_TRUNC);
     DEFX(O_SYNC);
+#ifndef O_DSYNC
+    // At least FreeBSD doesn't define O_DSYNC
+    emit("O_DSYNC", O_SYNC);
+#else
     DEFX(O_DSYNC);
+#endif
     DEFX(O_NOFOLLOW);
 
     // flags used with openat/unlinkat/etc.
@@ -75,6 +80,20 @@ int main(int argc, const char* argv[]) {
     emitX("AT_SYMLINK_NOFOLLOW", 0x100);        // since 2.6.16
     emitX("AT_REMOVEDIR", 0x200);
 #endif
+#ifdef _ALLBSD_SOURCE
+    // fdopendir() and fstatat() dont exist in FreeBSD and OpenBSD
+    // at least. Use dummy values where needed.
+#ifndef AT_SYMLINK_NOFOLLOW
+    emitX("AT_SYMLINK_NOFOLLOW", 0x100);
+#else
+    DEFX(AT_SYMLINK_NOFOLLOW);
+#endif
+#ifndef AT_REMOVEDIR
+    emitX("AT_REMOVEDIR", 0x200);
+#else
+    DEFX(AT_REMOVEDIR);
+#endif
+#endif // _ALLBSD_SOURCE
 
     // mode masks
     emitX("S_IAMB",
@@ -116,7 +135,12 @@ int main(int argc, const char* argv[]) {
     DEF(ENOSYS);
     DEF(ELOOP);
     DEF(EROFS);
+#ifndef ENODATA
+    // Only used in Linux java source, provide any value so it compiles
+    emit("ENODATA", ELAST);
+#else
     DEF(ENODATA);
+#endif
     DEF(ERANGE);
 
     out("}                                                                              ");

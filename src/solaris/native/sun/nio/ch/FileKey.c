@@ -30,6 +30,10 @@
 #include "nio_util.h"
 #include "sun_nio_ch_FileKey.h"
 
+#if defined(_ALLBSD_SOURCE)
+#include "largefile_bsd.h"
+#endif
+
 static jfieldID key_st_dev;    /* id for FileKey.st_dev */
 static jfieldID key_st_ino;    /* id for FileKey.st_ino */
 

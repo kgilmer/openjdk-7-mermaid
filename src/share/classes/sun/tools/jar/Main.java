@@ -46,6 +46,7 @@ class Main {
     String zname = "";
     String[] files;
     String rootjar = null;
+    String cwd;
 
     // An entryName(path)->File map generated during "expand", it helps to
     // decide whether or not an existing entry in a jar file needs to be
@@ -801,6 +802,19 @@ class Main {
      * Extracts specified entries from JAR file.
      */
     void extract(InputStream in, String files[]) throws IOException {
+        // Current working directory
+
+        cwd = System.getProperty("user.dir");
+        if (cwd == null) {
+            fatalError(getMsg("error.no.cwd"));
+        }
+        cwd = (new File(cwd)).getCanonicalPath();
+        if (!cwd.endsWith(File.separator)) {
+            cwd += File.separator;
+        }
+
+        // Extract the files
+
         ZipInputStream zis = new ZipInputStream(in);
         ZipEntry e;
         // Set of all directory entries specified in archive.  Disallows
@@ -831,6 +845,19 @@ class Main {
      * Extracts specified entries from JAR file, via ZipFile.
      */
     void extract(String fname, String files[]) throws IOException {
+        // Current working directory
+
+        cwd = System.getProperty("user.dir");
+        if (cwd == null) {
+             fatalError(getMsg("error.no.cwd"));
+        }
+        cwd = (new File(cwd)).getCanonicalPath();
+        if (!cwd.endsWith(File.separator)) {
+            cwd += File.separator;
+        }
+
+        // Extract the files
+
         ZipFile zf = new ZipFile(fname);
         Set<ZipEntry> dirs = newDirSet();
         Enumeration<? extends ZipEntry> zes = zf.entries();
@@ -862,6 +889,10 @@ class Main {
         ZipEntry rc = null;
         String name = e.getName();
         File f = new File(e.getName().replace('/', File.separatorChar));
+        if (!f.getCanonicalPath().startsWith(cwd)) {
+            output(formatMsg("out.ignore.entry", name));
+            return null;
+        }
         if (e.isDirectory()) {
             if (f.exists()) {
                 if (!f.isDirectory()) {
@@ -883,6 +914,10 @@ class Main {
         } else {
             if (f.getParent() != null) {
                 File d = new File(f.getParent());
+                if (!d.getCanonicalPath().startsWith(cwd)) {
+                    output(formatMsg("out.ignore.entry", name));
+                    return null;
+                }
                 if (!d.exists() && !d.mkdirs() || !d.isDirectory()) {
                     throw new IOException(formatMsg(
                         "error.create.dir", d.getPath()));

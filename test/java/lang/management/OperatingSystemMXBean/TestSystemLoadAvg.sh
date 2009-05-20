@@ -61,10 +61,7 @@ i=1
 while true; do
   echo "Run $i: TestSystemLoadAvg"
   case `uname -s` in
-       SunOS )
-         runOne GetSystemLoadAverage 
-         ;;
-       Linux )
+       SunOS | Linux | *BSD | Darwin )
          runOne GetSystemLoadAverage
          ;;
       * )
