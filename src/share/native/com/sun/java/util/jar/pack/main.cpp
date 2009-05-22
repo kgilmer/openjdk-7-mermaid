@@ -22,7 +22,11 @@
  * CA 95054 USA or visit www.sun.com if you need additional information or
  * have any questions.
  */
+#ifdef _ALLBSD_SOURCE
+#include <stdint.h>
+#else
 #include <sys/stdint.h>
+#endif
 #include <sys/types.h>
 
 #include <stdio.h>
