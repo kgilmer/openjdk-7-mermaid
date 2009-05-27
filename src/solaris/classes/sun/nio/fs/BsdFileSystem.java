@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.*;
 import java.security.AccessController;
 import sun.security.action.GetPropertyAction;
-import static sun.nio.fs.UnixNativeDispatcher.*;
 
 /**
  * Bsd implementation of FileSystem
@@ -95,24 +94,23 @@ class BsdFileSystem extends UnixFileSystem {
     }
 
     /**
-     * Returns object to iterate over entries in /etc/fstab
+     * Returns object to iterate over mount entries
      */
     @Override
     Iterable<UnixMountEntry> getMountEntries() {
         ArrayList<UnixMountEntry> entries = new ArrayList<UnixMountEntry>();
         try {
-            UnixPath fstab = new UnixPath(this, "/etc/fstab");
-            long fp = fopen(fstab, "r");
+            long iter = BsdNativeDispatcher.getfsstat();
             try {
                 for (;;) {
                     UnixMountEntry entry = new UnixMountEntry();
-                    int res = getextmntent(fp, entry);
+                    int res = BsdNativeDispatcher.fsstatEntry(iter, entry);
                     if (res < 0)
                         break;
                     entries.add(entry);
                 }
             } finally {
-                fclose(fp);
+                BsdNativeDispatcher.endfsstat(iter);
             }
 
         } catch (UnixException x) {
