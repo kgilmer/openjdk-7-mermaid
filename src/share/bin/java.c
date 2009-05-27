@@ -987,6 +987,8 @@ ParseArguments(int *pargc, char ***pargv, char **pjarfile,
 #ifdef __APPLE__
         } else if (JLI_StrCmp(arg, "-XstartOnFirstThread") == 0) {
             continueInSameThread = JNI_TRUE;
+        } else if (JLI_StrCCmp(arg, "-Xdock:") == 0) {
+           // XXXDARWIN: Apple VM supports configuration of Dock icon and name via -Xdock:
 #endif            
 /*
  * The following case provide backward compatibility with old-style
