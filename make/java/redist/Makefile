@@ -85,11 +85,6 @@ ifeq ($(SA_EXISTS), false)
   INCLUDE_SA := false
 endif
 
-# FIXME: Remove when the build of libsaproc is fixed.
-ifeq ($(PLATFORM), bsd)
-  INCLUDE_SA := false
-endif
-
 ifeq ($(INCLUDE_SA), true)
   IMPORT_LIST += $(LIBDIR)/sa-jdi.jar \
                  $(LIB_LOCATION)/$(SALIB_NAME)
