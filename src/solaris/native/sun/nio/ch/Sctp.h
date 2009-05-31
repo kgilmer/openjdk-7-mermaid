@@ -65,7 +65,7 @@ typedef int sctp_freepaddrs_func(void *addrs);
 typedef int sctp_bindx_func(int sock, void *addrs, int addrcnt, int flags);
 
 
-#else /* __linux__ */
+#elif __linux__
 #include <stdint.h>
 #include <linux/types.h>
 #include <sys/socket.h>
@@ -316,13 +316,34 @@ typedef int sctp_getpaddrs_func(int sd, sctp_assoc_t id, struct sockaddr **addrs
 typedef int sctp_freepaddrs_func(struct sockaddr *addrs);
 typedef int sctp_bindx_func(int sd, struct sockaddr *addrs, int addrcnt, int flags);
 
+#elif defined(__FreeBSD__) && __FreeBSD__ >= 7
+
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/sctp.h>
+#include <netinet/sctp_uio.h>
+#include "jni.h"
+
 #endif /* __linux__ */
+
+#if !defined(__FreeBSD__) || __FreeBSD__ < 7
 
 sctp_getladdrs_func* nio_sctp_getladdrs;
 sctp_freeladdrs_func* nio_sctp_freeladdrs;
 sctp_getpaddrs_func* nio_sctp_getpaddrs;
 sctp_freepaddrs_func* nio_sctp_freepaddrs;
 sctp_bindx_func* nio_sctp_bindx;
+
+#else
+
+#define nio_sctp_getladdrs	sctp_getladdrs
+#define nio_sctp_freeladdrs	sctp_freeladdrs
+#define nio_sctp_getpaddrs	sctp_getpaddrs
+#define nio_sctp_freepaddrs	sctp_freepaddrs
+#define nio_sctp_bindx		sctp_bindx
+
+#endif
 
 jboolean loadSocketExtensionFuncs(JNIEnv* env);
 
