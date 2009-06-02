@@ -39,10 +39,6 @@
 #include <sys/ioctl.h>
 #endif
 
-#ifdef __OpenBSD__
-#include <sys/ioctl.h>
-#endif
-
 #include <sys/socket.h>
 #include <setjmp.h>
 #include <signal.h>

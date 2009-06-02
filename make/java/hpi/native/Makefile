@@ -88,7 +88,9 @@ ifeq ($(HAVE_GETHRVTIME),true)
 OTHER_CPPFLAGS += -DHAVE_GETHRVTIME
 endif
 
+ifneq ($(OS_VENDOR), OpenBSD)
 HAVE_FILIOH=true
+endif
 ifeq ($(HAVE_FILIOH),true)
 OTHER_CPPFLAGS += -DHAVE_FILIOH
 endif
