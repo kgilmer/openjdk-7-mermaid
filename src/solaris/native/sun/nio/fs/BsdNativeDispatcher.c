@@ -30,6 +30,14 @@
 
 #include <sys/param.h>
 #include <sys/mount.h>
+#ifdef ST_RDONLY
+#define statfs statvfs
+#define getfsstat getvfsstat
+#define f_flags f_flag
+#define ISREADONLY ST_RDONLY
+#else
+#define ISREADONLY MNT_RDONLY
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +47,7 @@ static jfieldID entry_dir;
 static jfieldID entry_fstype;
 static jfieldID entry_options;
 static jfieldID entry_dev;
+
 
 struct fsstat_iter {
     struct statfs *buf;
@@ -80,11 +89,11 @@ Java_sun_nio_fs_BsdNativeDispatcher_getfsstat(JNIEnv* env, jclass this)
 {
     int nentries;
     size_t bufsize;
-    struct fsstat_iter *iter = (struct fsstat_iter *)malloc(sizeof(*iter));
+    struct fsstat_iter *iter = malloc(sizeof(*iter));
 
     if (iter == NULL) {
         JNU_ThrowOutOfMemoryError(env, "native heap");
-        return NULL;
+        return 0;
     }
 
     iter->pos = 0;
@@ -96,7 +105,7 @@ Java_sun_nio_fs_BsdNativeDispatcher_getfsstat(JNIEnv* env, jclass this)
     if (nentries <= 0) {
         free(iter);
         throwUnixException(env, errno);
-        return NULL;
+        return 0;
     }
 
     // It's possible that a new filesystem gets mounted between
@@ -109,11 +118,11 @@ Java_sun_nio_fs_BsdNativeDispatcher_getfsstat(JNIEnv* env, jclass this)
         bufsize = nentries * sizeof(struct statfs);
         iter->nentries = nentries;
 
-        iter->buf = (struct statfs *)malloc(bufsize);
+        iter->buf = malloc(bufsize);
         if (iter->buf == NULL) {
             free(iter);
             JNU_ThrowOutOfMemoryError(env, "native heap");
-            return NULL;
+            return 0;
         }
 
         nentries = getfsstat(iter->buf, bufsize, MNT_WAIT);
@@ -121,7 +130,7 @@ Java_sun_nio_fs_BsdNativeDispatcher_getfsstat(JNIEnv* env, jclass this)
             free(iter->buf);
             free(iter);
             throwUnixException(env, errno);
-            return NULL;
+            return 0;
         }
     }
 
@@ -147,7 +156,7 @@ Java_sun_nio_fs_BsdNativeDispatcher_fsstatEntry(JNIEnv* env, jclass this,
     name = iter->buf[iter->pos].f_mntfromname;
     dir = iter->buf[iter->pos].f_mntonname;
     fstype = iter->buf[iter->pos].f_fstypename;
-    if (iter->buf[iter->pos].f_flags & MNT_RDONLY)
+    if (iter->buf[iter->pos].f_flags & ISREADONLY)
         options="ro";
     else
         options="";
