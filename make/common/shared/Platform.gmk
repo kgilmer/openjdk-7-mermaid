@@ -287,7 +287,11 @@ ifeq ($(PLATFORM), bsd)
   #    a fully built workspace.
   REQUIRED_FREE_SPACE=1500000
   # How much RAM does this machine have:
-  MB_OF_MEMORY=$(shell sysctl -n hw.physmem | awk '{print int($$NF / 1048576); }' )
+  ifeq ($(OS_VENDOR), OpenBSD)
+    MB_OF_MEMORY=$(shell sysctl -n hw.physmem | awk '{print int($$NF / 1048576); }' )
+  else
+    MB_OF_MEMORY=$(shell (sysctl -n hw.physmem64 2> /dev/null || sysctl -n hw.physmem) | awk '{print int($$NF / 1048576); }' )
+  endif
 endif
 
 # Windows with and without CYGWIN will be slightly different
