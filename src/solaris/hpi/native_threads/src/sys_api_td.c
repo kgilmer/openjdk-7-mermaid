@@ -57,10 +57,6 @@
 #error If there was no policy change, this could be a makefile error.
 #endif
 
-#if defined(_ALLBSD_SOURCE) && defined(NO_INTERRUPTIBLE_IO)
-#error If there was no policy change, this could be a makefile error.
-#endif
-
 #ifdef NO_INTERRUPTIBLE_IO
 #undef CLOSEIO
 #else
