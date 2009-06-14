@@ -68,6 +68,9 @@ ifeq ($(PLATFORM), solaris)
 #LIBSCTP = -lsctp
 OTHER_LDLIBS += $(LIBSOCKET) -L$(LIBDIR)/$(LIBARCH) -lnet -lnio
 endif # PLATFORM
+ifeq ($(PLATFORM), bsd)
+OTHER_LDLIBS += $(LIBSOCKET) -L$(LIBDIR)/$(LIBARCH) -lnet -lnio
+endif
 
 else # windows
 include $(BUILDDIR)/common/Classes.gmk
