@@ -63,6 +63,8 @@ typedef int sctp_freeladdrs_func(void* addrs);
 typedef int sctp_getpaddrs_func(int sock, sctp_assoc_t id, void **addrs);
 typedef int sctp_freepaddrs_func(void *addrs);
 typedef int sctp_bindx_func(int sock, void *addrs, int addrcnt, int flags);
+typedef int sctp_peeloff_func(int sock, sctp_assoc_t id);
+
 
 
 #elif __linux__
@@ -315,6 +317,8 @@ typedef int sctp_freeladdrs_func(struct sockaddr *addrs);
 typedef int sctp_getpaddrs_func(int sd, sctp_assoc_t id, struct sockaddr **addrs);
 typedef int sctp_freepaddrs_func(struct sockaddr *addrs);
 typedef int sctp_bindx_func(int sd, struct sockaddr *addrs, int addrcnt, int flags);
+typedef int sctp_peeloff_func(int sock, sctp_assoc_t id);
+
 
 #elif defined(__FreeBSD__) && __FreeBSD__ >= 7
 
@@ -334,6 +338,7 @@ sctp_freeladdrs_func* nio_sctp_freeladdrs;
 sctp_getpaddrs_func* nio_sctp_getpaddrs;
 sctp_freepaddrs_func* nio_sctp_freepaddrs;
 sctp_bindx_func* nio_sctp_bindx;
+sctp_peeloff_func* nio_sctp_peeloff;
 
 #else
 

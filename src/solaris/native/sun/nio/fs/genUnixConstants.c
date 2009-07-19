@@ -71,30 +71,6 @@ int main(int argc, const char* argv[]) {
 #endif
     DEFX(O_NOFOLLOW);
 
-    // flags used with openat/unlinkat/etc.
-#ifdef __solaris__
-    DEFX(AT_SYMLINK_NOFOLLOW);
-    DEFX(AT_REMOVEDIR);
-#endif
-#ifdef __linux__
-    emitX("AT_SYMLINK_NOFOLLOW", 0x100);        // since 2.6.16
-    emitX("AT_REMOVEDIR", 0x200);
-#endif
-#ifdef _ALLBSD_SOURCE
-    // fdopendir() and fstatat() dont exist in FreeBSD and OpenBSD
-    // at least. Use dummy values where needed.
-#ifndef AT_SYMLINK_NOFOLLOW
-    emitX("AT_SYMLINK_NOFOLLOW", 0x100);
-#else
-    DEFX(AT_SYMLINK_NOFOLLOW);
-#endif
-#ifndef AT_REMOVEDIR
-    emitX("AT_REMOVEDIR", 0x200);
-#else
-    DEFX(AT_REMOVEDIR);
-#endif
-#endif // _ALLBSD_SOURCE
-
     // mode masks
     emitX("S_IAMB",
          (S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH));
@@ -142,6 +118,16 @@ int main(int argc, const char* argv[]) {
     DEF(ENODATA);
 #endif
     DEF(ERANGE);
+
+    // flags used with openat/unlinkat/etc.
+#if defined(AT_SYMLINK_NOFOLLOW) && defined(AT_REMOVEDIR)
+    DEFX(AT_SYMLINK_NOFOLLOW)
+    DEFX(AT_REMOVEDIR);
+#else
+    // not supported (dummy values will not be used at runtime).
+    emitX("AT_SYMLINK_NOFOLLOW", 0x0);
+    emitX("AT_REMOVEDIR", 0x0);
+#endif
 
     out("}                                                                              ");
 
