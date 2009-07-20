@@ -61,9 +61,9 @@ class BsdFileSystem extends UnixFileSystem {
 
     @Override
     @SuppressWarnings("unchecked")
-    public FileAttributeView newFileAttributeView(String name,
-                                                  UnixPath file,
-                                                  LinkOption... options)
+    public DynamicFileAttributeView newFileAttributeView(String name,
+                                                         UnixPath file,
+                                                         LinkOption... options)
     {
         return super.newFileAttributeView(name, file, options);
     }
@@ -86,11 +86,6 @@ class BsdFileSystem extends UnixFileSystem {
 
     @Override
     void copyNonPosixAttributes(int ofd, int nfd) {
-    }
-
-    @Override
-    boolean supportsSecureDirectoryStreams() {
-        return false;
     }
 
     /**
