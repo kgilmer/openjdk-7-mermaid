@@ -326,6 +326,7 @@ typedef int sctp_peeloff_func(int sock, sctp_assoc_t id);
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/sctp.h>
+#include <netinet/sctp_peeloff.h>
 #include <netinet/sctp_uio.h>
 #include "jni.h"
 
@@ -347,6 +348,7 @@ sctp_peeloff_func* nio_sctp_peeloff;
 #define nio_sctp_getpaddrs	sctp_getpaddrs
 #define nio_sctp_freepaddrs	sctp_freepaddrs
 #define nio_sctp_bindx		sctp_bindx
+#define nio_sctp_peeloff	sctp_peeloff
 
 #endif
 

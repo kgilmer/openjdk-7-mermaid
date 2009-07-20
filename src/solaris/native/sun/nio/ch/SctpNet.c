@@ -96,7 +96,6 @@ jboolean loadSocketExtensionFuncs
               dlerror());
         return JNI_FALSE;
     }
-#endif /* __FreeBSD__ */
 
     if ((nio_sctp_peeloff = (sctp_peeloff_func*)
             dlsym(RTLD_DEFAULT, "sctp_peeloff")) == NULL) {
@@ -104,6 +103,7 @@ jboolean loadSocketExtensionFuncs
               dlerror());
         return JNI_FALSE;
     }
+#endif /* __FreeBSD__ */
 
     funcsLoaded = JNI_TRUE;
     return JNI_TRUE;
