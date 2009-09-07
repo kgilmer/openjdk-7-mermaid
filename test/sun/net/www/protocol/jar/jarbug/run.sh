@@ -31,11 +31,7 @@ DEST=`pwd`
 
 OS=`uname -s`
 case "$OS" in
-  SunOS )
-    PS=":"
-    FS="/"
-    ;;
-  Linux )
+  SunOS | Linux | *BSD | Darwin )
     PS=":"
     FS="/"
     ;;
