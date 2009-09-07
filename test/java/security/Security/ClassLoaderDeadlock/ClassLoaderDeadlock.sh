@@ -50,6 +50,10 @@ case "$OS" in
     PATHSEP=":"
     FILESEP="/"
     ;;
+  CYGWIN* )
+    PATHSEP=";"
+    FILESEP="/"
+    ;;
   Windows* )
     PATHSEP=";"
     FILESEP="\\"
@@ -77,7 +81,7 @@ ${TESTJAVA}${FILESEP}bin${FILESEP}javac \
 
 # run the test
 ${TESTJAVA}${FILESEP}bin${FILESEP}java \
-	-classpath ${TESTCLASSES}${PATHSEP}${TESTSRC}${FILESEP}Deadlock.jar \
+	-classpath "${TESTCLASSES}${PATHSEP}${TESTSRC}${FILESEP}Deadlock.jar" \
 	ClassLoaderDeadlock
 
 exit $?

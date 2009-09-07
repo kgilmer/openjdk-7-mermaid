@@ -38,6 +38,11 @@ case "$OS" in
     FS="/"
     RM="/bin/rm -f"
     ;;
+  CYGWIN* )
+    PS=";"
+    FS="/"
+    RM="rm"
+    ;;
   Windows* )
     PS=";"
     FS="\\"
