@@ -79,6 +79,7 @@ typedef enum { B_FALSE, B_TRUE } boolean_t;
 #endif /* __linux__ */
 
 #ifdef _ALLBSD_SOURCE
+#include <stdint.h>
 #define B_FALSE FALSE
 #define B_TRUE TRUE
 typedef unsigned long ulong_t;
