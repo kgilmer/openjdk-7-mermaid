@@ -184,7 +184,11 @@ ifeq ($(NATIVE_ECC_AVAILABLE), true)
   ifeq ($(PLATFORM), windows)
     OTHER_LDLIBS += $(JVMLIB)
   else
-    OTHER_LDLIBS = -ldl $(JVMLIB) $(LIBCXX)
+    ifeq ($(PLATFORM), bsd)
+      OTHER_LDLIBS = $(JVMLIB) $(LIBCXX)
+    else
+      OTHER_LDLIBS = -ldl $(JVMLIB) $(LIBCXX)
+    endif
   endif
 
   include $(BUILDDIR)/common/Mapfile-vers.gmk
