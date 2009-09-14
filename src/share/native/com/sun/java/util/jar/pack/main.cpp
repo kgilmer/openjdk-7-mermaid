@@ -24,8 +24,6 @@
  */
 #ifdef _ALLBSD_SOURCE
 #include <stdint.h>
-#else
-#include <sys/stdint.h>
 #endif
 #include <sys/types.h>
 
