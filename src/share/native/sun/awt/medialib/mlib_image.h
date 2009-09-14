@@ -30,7 +30,12 @@
 #ifdef __OpenBSD__
 #include <sys/types.h>
 #endif
+#ifdef _ALLBSD_SOURCE
 #include <machine/endian.h>
+#elif __linux__
+#define __USE_BSD 1
+#include <endian.h>
+#endif
 
 #include <mlib_types.h>
 #include <mlib_status.h>

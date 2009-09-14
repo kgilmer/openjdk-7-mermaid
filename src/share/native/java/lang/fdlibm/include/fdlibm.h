@@ -27,7 +27,12 @@
 #ifdef __OpenBSD__
 #include <sys/types.h>
 #endif
+#ifdef _ALLBSD_SOURCE
 #include <machine/endian.h>
+#elif __linux__
+#define __USE_BSD 1
+#include <endian.h>
+#endif
 #include "jfdlibm.h"
 
 #ifdef __NEWVALID       /* special setup for Sun test regime */
@@ -38,7 +43,8 @@
 #endif
 #endif
 
-#ifdef _LITTLE_ENDIAN
+#if (defined(__solaris__) && defined(_LITTLE_ENDIAN)) || \
+    BYTE_ORDER == LITTLE_ENDIAN
 #define __HI(x) *(1+(int*)&x)
 #define __LO(x) *(int*)&x
 #define __HIp(x) *(1+(int*)x)
