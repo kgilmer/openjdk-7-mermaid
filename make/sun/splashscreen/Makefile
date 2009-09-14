@@ -65,6 +65,8 @@ CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/nativ
 CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
 ifneq ($(SYSTEM_ZLIB),true)
   CPPFLAGS += -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
+else
+  OTHER_LDLIBS += -lz
 endif
 
 

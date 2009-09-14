@@ -117,6 +117,10 @@ ifeq ($(PLATFORM), bsd)
       OTHER_LDLIBS += -L$(PACKAGE_PATH)/lib -liconv
     endif
   endif
+
+  ifeq ($(SYSTEM_ZLIB), true)
+    OTHER_LDLIBS += -lz
+  endif
 else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
   OTHER_LDLIBS += -ljli
