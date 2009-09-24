@@ -112,7 +112,6 @@ vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen
 CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
 CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-$(ZLIB_VERSION)
 
->>>>>>> other
 # Shun the less than portable MMX assembly code in pnggccrd.c,
 # and use alternative implementations in C.
 CPPFLAGS += -DPNG_NO_MMX_CODE
