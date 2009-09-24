@@ -33,15 +33,16 @@ FILES_c = \
 
 ifneq ($(SYSTEM_ZLIB),true)
 FILES_c += \
+	compress.c \
+	deflate.c \
+	gzio.c \
+	infback.c \
+	inffast.c \
+	inflate.c \
+	inftrees.c \
+	trees.c \
+	uncompr.c \
 	zadler32.c \
 	zcrc32.c \
-	deflate.c \
-	trees.c \
-	zutil.c \
-	inflate.c \
-	infblock.c \
-	inftrees.c \
-	infcodes.c \
-	infutil.c \
-	inffast.c
+	zutil.c
 endif

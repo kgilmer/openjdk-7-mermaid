@@ -45,7 +45,6 @@ MS_RUNTIME_STATIC = true
 include $(BUILDDIR)/common/Defs.gmk
 
 ifneq ($(SYSTEM_ZLIB),true)
-ZLIB_VERSION = 1.1.3
 ZIP_SRC = $(SHARE_SRC)/native/java/util/zip/zlib-$(ZLIB_VERSION)
 endif
 LAUNCHER_SHARE_SRC = $(SHARE_SRC)/bin
@@ -73,12 +72,10 @@ FILES_c = \
 ifneq ($(SYSTEM_ZLIB),true)
 FILES_c += \
 	inflate.c \
-	infblock.c \
 	inftrees.c \
-	infcodes.c \
 	inffast.c \
-	infutil.c \
 	zadler32.c \
+	zcrc32.c \
 	zutil.c
 endif
 
