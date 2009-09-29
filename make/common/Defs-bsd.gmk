@@ -1,5 +1,5 @@
 #
-# Copyright 1999-2008 Sun Microsystems, Inc.  All Rights Reserved.
+# Copyright 1999-2009 Sun Microsystems, Inc.  All Rights Reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -229,7 +229,8 @@ AUTOMATIC_PCH_OPTION =
 ifeq ($(VARIANT), OPT)
   ifneq ($(NO_STRIP), true)
     ifneq ($(DEBUG_BINARIES), true)
-      # Debug 'strip -S' leaves local function Elf symbols (better stack traces)
+      # Debug 'strip -S' leaves local function Elf symbols (better stack
+      # traces)
       POST_STRIP_PROCESS = $(STRIP) -S
     endif
   endif
