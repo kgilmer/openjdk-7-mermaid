@@ -183,7 +183,7 @@ handshake(int fd, jlong timeout) {
         return JDWPTRANSPORT_ERROR_IO_ERROR;
     }
 
-    if (send_fully(fd, (char*)hello, helloLen) != (int)strlen(hello)) {
+    if (send_fully(fd, (char*)hello, helloLen) != helloLen) {
         RETURN_IO_ERROR("send failed during handshake");
     }
     return JDWPTRANSPORT_ERROR_NONE;
