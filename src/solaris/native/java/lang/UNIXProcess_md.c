@@ -364,33 +364,6 @@ Java_java_lang_UNIXProcess_waitForProcessExit(JNIEnv* env,
     }
 }
 
-#if defined(__OpenBSD__)
-/*
- * Directly call _thread_sys_closefrom() so the child process
- * doesn't reset the parrent's file descriptors to be blocking.
- * This function is only called from the child process which
- * is single threaded and about to call execvp() so it is
- * safe to bypass the threaded closefrom().
- */
-int _thread_sys_closefrom(int);
-
-static int
-closeDescriptors(void)
-{
-  return _thread_sys_closefrom(FAIL_FILENO + 1);
-}
-
-#else
-
-#ifdef _ALLBSD_SOURCE
-#define FD_DIR "/dev/fd"
-#define dirent64 dirent
-#define readdir64 readdir
-#else
-#define FD_DIR "/proc/self/fd"
-#endif
-
-static ssize_t
 restartableWrite(int fd, const void *buf, size_t count)
 {
     ssize_t result;
@@ -426,6 +399,33 @@ isAsciiDigit(char c)
   return c >= '0' && c <= '9';
 }
 
+#if defined(__OpenBSD__)
+/*
+ * Directly call _thread_sys_closefrom() so the child process
+ * doesn't reset the parrent's file descriptors to be blocking.
+ * This function is only called from the child process which
+ * is single threaded and about to call execvp() so it is
+ * safe to bypass the threaded closefrom().
+ */
+int _thread_sys_closefrom(int);
+
+static int
+closeDescriptors(void)
+{
+  return _thread_sys_closefrom(FAIL_FILENO + 1);
+}
+
+#else
+
+#ifdef _ALLBSD_SOURCE
+#define FD_DIR "/dev/fd"
+#define dirent64 dirent
+#define readdir64 readdir
+#else
+#define FD_DIR "/proc/self/fd"
+#endif
+
+static ssize_t
 static int
 closeDescriptors(void)
 {
