@@ -61,15 +61,6 @@ JAVALIB=
 
 CFLAGS += -DSPLASHSCREEN
 
-CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
-ifneq ($(SYSTEM_ZLIB),true)
-  CPPFLAGS += -I$(SHARE_SRC)/native/java/util/zip/zlib-1.1.3
-else
-  OTHER_LDLIBS += -lz
-endif
-
-
 ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
   ifeq ($(PLATFORM), bsd)
@@ -110,7 +101,12 @@ vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen
 
 CPPFLAGS += -I$(PLATFORM_SRC)/native/$(PKGDIR)/splashscreen -I$(SHARE_SRC)/native/$(PKGDIR)/splashscreen
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg -I$(SHARE_SRC)/native/java/util/zip/zlib-$(ZLIB_VERSION)
+CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/image/jpeg
+ifneq ($(SYSTEM_ZLIB),true)
+  CPPFLAGS += -I$(SHARE_SRC)/native/java/util/zip/zlib-$(ZLIB_VERSION)
+else
+  OTHER_LDLIBS += -lz
+endif
 
 # Shun the less than portable MMX assembly code in pnggccrd.c,
 # and use alternative implementations in C.
