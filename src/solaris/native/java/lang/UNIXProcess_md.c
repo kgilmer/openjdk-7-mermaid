@@ -364,6 +364,7 @@ Java_java_lang_UNIXProcess_waitForProcessExit(JNIEnv* env,
     }
 }
 
+static ssize_t
 restartableWrite(int fd, const void *buf, size_t count)
 {
     ssize_t result;
@@ -425,7 +426,6 @@ closeDescriptors(void)
 #define FD_DIR "/proc/self/fd"
 #endif
 
-static ssize_t
 static int
 closeDescriptors(void)
 {
