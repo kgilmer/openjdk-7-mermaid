@@ -32,7 +32,8 @@
 #include "java_awt_Transparency.h"
 #include "jvm_md.h"
 
-#define GTK2_LIB VERSIONED_JNI_LIB_NAME("gtk-x11-2.0", "0")
+#define GTK2_LIB_VERSIONED VERSIONED_JNI_LIB_NAME("gtk-x11-2.0", "0")
+#define GTK2_LIB JNI_LIB_NAME("gtk-x11-2.0")
 
 #define G_TYPE_INVALID                  G_TYPE_MAKE_FUNDAMENTAL (0)
 #define G_TYPE_NONE                     G_TYPE_MAKE_FUNDAMENTAL (1)
@@ -398,9 +399,12 @@ gboolean gtk2_check_version()
         void *lib = NULL;
         gboolean result = FALSE;
 
-        lib = dlopen(GTK2_LIB, RTLD_LAZY | RTLD_LOCAL);
+        lib = dlopen(GTK2_LIB_VERSIONED, RTLD_LAZY | RTLD_LOCAL);
         if (lib == NULL) {
-            return FALSE;
+            lib = dlopen(GTK2_LIB, RTLD_LAZY | RTLD_LOCAL);
+            if (lib == NULL) {
+                return FALSE;
+            }
         }
 
         fp_gtk_check_version = dlsym(lib, "gtk_check_version");
@@ -423,9 +427,12 @@ gboolean gtk2_load()
     int (*io_handler)();
     char *gtk_modules_env;
 
-    gtk2_libhandle = dlopen(GTK2_LIB, RTLD_LAZY | RTLD_LOCAL);
-    if (gtk2_libhandle == NULL)
-        return FALSE;
+    gtk2_libhandle = dlopen(GTK2_LIB_VERSIONED, RTLD_LAZY | RTLD_LOCAL);
+    if (gtk2_libhandle == NULL) {
+        gtk2_libhandle = dlopen(GTK2_LIB, RTLD_LAZY | RTLD_LOCAL);
+        if (gtk2_libhandle == NULL)
+            return FALSE;
+    }
 
     if (setjmp(j) == 0)
     {
