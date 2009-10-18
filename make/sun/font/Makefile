@@ -209,3 +209,7 @@ ifeq ($(PLATFORM), windows)
 CPPFLAGS += -I$(PLATFORM_SRC)/native/sun/windows
 endif
 
+# Make the Layout Engine build standalone
+CPPFLAGS += -DLE_STANDALONE
+
+
