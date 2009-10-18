@@ -46,6 +46,8 @@ public final class FontUtilities {
 
     public static final boolean isLinux;
 
+    public static final boolean isBSD;
+
     public static final boolean isSolaris8;
 
     public static final boolean isSolaris9;
@@ -68,6 +70,11 @@ public final class FontUtilities {
         isSolaris = osName.startsWith("SunOS");
 
         isLinux = osName.startsWith("Linux");
+
+	isBSD = (osName.startsWith("FreeBSD") ||
+	         osName.startsWith("NetBSD") ||
+	         osName.startsWith("OpenBSD") ||
+	         osName.startsWith("Darwin"));
 
         String t2kStr = AccessController.doPrivileged(
                               new GetPropertyAction("sun.java2d.font.scaler"));
