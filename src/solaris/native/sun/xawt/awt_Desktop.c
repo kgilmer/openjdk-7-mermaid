@@ -39,10 +39,13 @@ int init(){
 
     vfs_handle = dlopen(VERSIONED_JNI_LIB_NAME("gnomevfs-2", "0"), RTLD_LAZY);
     if (vfs_handle == NULL) {
+        vfs_handle = dlopen(JNI_LIB_NAME("gnomevfs-2"), RTLD_LAZY);
+        if (vfs_handle == NULL) {
 #ifdef INTERNAL_BUILD
-        fprintf(stderr, "can not load libgnomevfs-2.so\n");
+            fprintf(stderr, "can not load libgnomevfs-2.so\n");
 #endif
-        return 0;
+            return 0;
+        }
     }
     dlerror(); /* Clear errors */
     gnome_vfs_init = dlsym(vfs_handle, "gnome_vfs_init");
@@ -57,10 +60,13 @@ int init(){
 
     gnome_handle = dlopen(VERSIONED_JNI_LIB_NAME("gnome-2", "0"), RTLD_LAZY);
     if (gnome_handle == NULL) {
+        gnome_handle = dlopen(JNI_LIB_NAME("gnome-2"), RTLD_LAZY);
+        if (gnome_handle == NULL) {
 #ifdef INTERNAL_BUILD
-        fprintf(stderr, "can not load libgnome-2.so\n");
+            fprintf(stderr, "can not load libgnome-2.so\n");
 #endif
-        return 0;
+            return 0;
+        }
     }
     dlerror(); /* Clear errors */
     gnome_url_show = dlsym(gnome_handle, "gnome_url_show");
