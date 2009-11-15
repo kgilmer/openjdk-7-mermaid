@@ -25,7 +25,7 @@
 
 #
 # Makefile to specify compiler flags for programs and libraries
-# targeted to Bsd.  Should not contain any rules.
+# targeted to BSD.  Should not contain any rules.
 #
 # WARNING: This file is shared with other workspaces. 
 #          So when it includes other files, it must use JDK_TOPDIR.
@@ -42,6 +42,12 @@
 
 # Get shared JDK settings
 include $(JDK_MAKE_SHARED_DIR)/Defs.gmk
+
+# Part of INCREMENTAL_BUILD mechanism.
+#   Compiler emits things like:  path/file.o: file.h
+#   We want something like: relative_path/file.o relative_path/file.d: file.h
+CC_DEPEND	 = -MM
+CC_DEPEND_FILTER = $(SED) -e 's!$*\.$(OBJECT_SUFFIX)!$(dir $@)& $(dir $@)$*.$(DEPEND_SUFFIX)!g'
 
 ifndef PLATFORM_SRC
   PLATFORM_SRC = $(BUILDDIR)/../src/solaris
@@ -107,20 +113,28 @@ CFLAGS_REQUIRED_amd64   += -m64 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
 LDFLAGS_COMMON_amd64    += -m64
 CFLAGS_REQUIRED_i586    += -m32 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
 LDFLAGS_COMMON_i586     += -m32
-ifeq ($(OS_VENDOR),Apple)
-  # 16-byte stack re-alignment on 32-bit Darwin
-  CFLAGS_REQUIRED_i586 += -mstackrealign
-endif
-CFLAGS_REQUIRED_ia64    += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+CFLAGS_REQUIRED_ia64    += -m64 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
 CFLAGS_REQUIRED_sparcv9 += -m64 -mcpu=v9
 LDFLAGS_COMMON_sparcv9  += -m64 -mcpu=v9
 CFLAGS_REQUIRED_sparc   += -m32 -mcpu=v9
 LDFLAGS_COMMON_sparc    += -m32 -mcpu=v9
-CFLAGS_REQUIRED         =  $(CFLAGS_REQUIRED_$(ARCH))
-LDFLAGS_COMMON          += $(LDFLAGS_COMMON_$(ARCH))
+ifeq ($(ZERO_BUILD), true)
+  CFLAGS_REQUIRED       =  $(ZERO_ARCHFLAG)
+  ifeq ($(ZERO_ENDIANNESS), little)
+    CFLAGS_REQUIRED     += -D_LITTLE_ENDIAN
+  endif
+  LDFLAGS_COMMON        += $(ZERO_ARCHFLAG)
+else
+  CFLAGS_REQUIRED       =  $(CFLAGS_REQUIRED_$(ARCH))
+  LDFLAGS_COMMON        += $(LDFLAGS_COMMON_$(ARCH))
+endif
+ifeq ($(OS_VENDOR),Apple)
+  # 16-byte stack re-alignment on 32-bit Darwin
+  CFLAGS_REQUIRED_i586 += -mstackrealign
+endif
 
 # If this is a --hash-style=gnu system, use --hash-style=both
-#   The gnu .hash section won't work on some Bsd systems like SuSE 10.
+#   The gnu .hash section won't work on some Linux systems like SuSE 10.
 _HAS_HASH_STYLE_GNU:=$(shell $(CC) -dumpspecs | $(GREP) -- '--hash-style=gnu')
 ifneq ($(_HAS_HASH_STYLE_GNU),)
   LDFLAGS_HASH_STYLE = -Wl,--hash-style=both
@@ -157,7 +171,7 @@ ifeq ($(ARCH), amd64)
  CFLAGS_COMMON += -pipe
 endif
 
-# Bsd 64bit machines use Dwarf2, which can be HUGE, have fastdebug use -g1
+# BSD 64bit machines use Dwarf2, which can be HUGE, have fastdebug use -g1
 DEBUG_FLAG = -g
 ifeq ($(FASTDEBUG), true)
   ifeq ($(ARCH_DATA_MODEL), 64)
@@ -240,6 +254,15 @@ endif
 # Use: ld $(LD_MAPFILE_FLAG) mapfile *.o
 #
 LD_MAPFILE_FLAG = -Xlinker --version-script -Xlinker
+
+#
+# Support for Quantify.
+#
+ifdef QUANTIFY
+QUANTIFY_CMD = quantify
+QUANTIFY_OPTIONS = -cache-dir=/tmp/quantify -always-use-cache-dir=yes
+LINK_PRE_CMD = $(QUANTIFY_CMD) $(QUANTIFY_OPTIONS)
+endif
 
 # Darwin does not support linker map files.
 ifeq ($(OS_VENDOR), Apple)
@@ -327,7 +350,7 @@ HOTSPOT_SALIB_PATH   = $(HOTSPOT_IMPORT_PATH)/jre/lib/$(LIBARCH)
 SALIB_NAME = $(LIB_PREFIX)saproc.$(LIBRARY_SUFFIX)
 
 # The JDI - Serviceability Agent binding is not currently supported
-# on Bsd-ia64.
+# on ia64.
 ifeq ($(ARCH), ia64)
   INCLUDE_SA = false
 else
