@@ -248,6 +248,15 @@ ifeq ($(PLATFORM), bsd)
                 i[3-9]86) \
                     echo i586 \
                     ;; \
+                sparc64) \
+                    echo sparcv9 \
+                    ;; \
+                sparc*) \
+                    echo sparc \
+                    ;; \
+                x86_64) \
+                    echo amd64 \
+                    ;; \
                 *) \
                     echo $(mach) \
                     ;; \
