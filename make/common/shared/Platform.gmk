@@ -257,6 +257,9 @@ ifeq ($(PLATFORM), bsd)
                 x86_64) \
                     echo amd64 \
                     ;; \
+                "Power Macintosh") \
+                    echo ppc \
+                    ;; \
                 *) \
                     echo $(mach) \
                     ;; \
@@ -273,8 +276,8 @@ ifeq ($(PLATFORM), bsd)
     endif
   endif
 
-  # i586 and sparc are 32 bit, amd64 and sparc64 are 64
-  ifneq (,$(findstring $(ARCH), i586 sparc))
+  # i586, sparc, and ppc are 32 bit, amd64 and sparc64 are 64
+  ifneq (,$(findstring $(ARCH), i586 sparc ppc))
     ARCH_DATA_MODEL=32
   else
     ARCH_DATA_MODEL=64
