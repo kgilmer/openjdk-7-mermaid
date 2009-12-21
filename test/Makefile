@@ -78,6 +78,16 @@ ifeq ($(UNAME_S), Linux)
   OS_ARCH    := $(shell $(UNAME) -m)
   OS_VERSION := $(shell $(UNAME) -r)
 endif
+ifeq ($(UNAME_S), Darwin)
+  OS_NAME     = bsd
+  OS_ARCH    := $(shell $(UNAME) -m)
+  OS_VERSION := $(shell $(UNAME) -r)
+endif 
+ifeq ($(findstring BSD,$(UNAME_S)), BSD)
+  OS_NAME     = bsd
+  OS_ARCH    := $(shell $(UNAME) -m)
+  OS_VERSION := $(shell $(UNAME) -r)
+endif 
 ifndef OS_NAME
   ifneq ($(PROCESSOR_IDENTIFIER), )
     OS_NAME = windows
@@ -95,22 +105,6 @@ ifndef OS_NAME
     endif
   endif
 endif
-ifeq ($(OSNAME), Darwin)
- PLATFORM = bsd
- JCT_PLATFORM = linux
- ARCH = $(shell uname -m)
- ifeq ($(ARCH), i386)
- ARCH=i586
- endif
-endif 
-ifeq ($(findstring BSD,$(OSNAME)), BSD)
- PLATFORM = bsd 
- JCT_PLATFORM = linux
- ARCH = $(shell uname -m)
- ifeq ($(ARCH), i386)
- ARCH=i586
- endif
-endif 
 
 # Only want major and minor numbers from os version
 OS_VERSION := $(shell $(ECHO) "$(OS_VERSION)" | $(CUT) -d'.' -f1,2)
