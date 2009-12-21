@@ -1662,6 +1662,7 @@ Java_sun_awt_X11GraphicsEnvironment_getXineramaCenterPoint(JNIEnv *env,
 #ifndef HEADLESS
 
 #define BIT_DEPTH_MULTI java_awt_DisplayMode_BIT_DEPTH_MULTI
+#define REFRESH_RATE_UNKNOWN java_awt_DisplayMode_REFRESH_RATE_UNKNOWN
 
 typedef Status
     (*XRRQueryVersionType) (Display *dpy, int *major_versionp, int *minor_versionp);
@@ -1688,6 +1689,9 @@ typedef Status
                                      Rotation rotation,
                                      short rate,
                                      Time timestamp);
+typedef Rotation
+    (*XRRConfigRotationsType)(XRRScreenConfiguration *config,
+                              Rotation *current_rotation);
 
 static XRRQueryVersionType               awt_XRRQueryVersion;
 static XRRGetScreenInfoType              awt_XRRGetScreenInfo;
@@ -1697,6 +1701,7 @@ static XRRConfigCurrentRateType          awt_XRRConfigCurrentRate;
 static XRRConfigSizesType                awt_XRRConfigSizes;
 static XRRConfigCurrentConfigurationType awt_XRRConfigCurrentConfiguration;
 static XRRSetScreenConfigAndRateType     awt_XRRSetScreenConfigAndRate;
+static XRRConfigRotationsType            awt_XRRConfigRotations;
 
 #define LOAD_XRANDR_FUNC(f) \
     do { \
@@ -1767,6 +1772,7 @@ X11GD_InitXrandrFuncs(JNIEnv *env)
     LOAD_XRANDR_FUNC(XRRConfigSizes);
     LOAD_XRANDR_FUNC(XRRConfigCurrentConfiguration);
     LOAD_XRANDR_FUNC(XRRSetScreenConfigAndRate);
+    LOAD_XRANDR_FUNC(XRRConfigRotations);
 
     return JNI_TRUE;
 }
@@ -1777,6 +1783,7 @@ X11GD_CreateDisplayMode(JNIEnv *env, jint width, jint height,
 {
     jclass displayModeClass;
     jmethodID cid;
+    jint validRefreshRate = refreshRate;
 
     displayModeClass = (*env)->FindClass(env, "java/awt/DisplayMode");
     if (JNU_IsNull(env, displayModeClass)) {
@@ -1792,8 +1799,13 @@ X11GD_CreateDisplayMode(JNIEnv *env, jint width, jint height,
         return NULL;
     }
 
+    // early versions of xrandr may report "empty" rates (6880694)
+    if (validRefreshRate <= 0) {
+        validRefreshRate = REFRESH_RATE_UNKNOWN;
+    }
+
     return (*env)->NewObject(env, displayModeClass, cid,
-                             width, height, bitDepth, refreshRate);
+                             width, height, bitDepth, validRefreshRate);
 }
 
 static void
@@ -1938,8 +1950,7 @@ Java_sun_awt_X11GraphicsDevice_getCurrentDisplayMode
         curRate = awt_XRRConfigCurrentRate(config);
 
         if ((sizes != NULL) &&
-            (curSizeIndex < nsizes) &&
-            (curRate > 0))
+            (curSizeIndex < nsizes))
         {
             XRRScreenSize curSize = sizes[curSizeIndex];
             displayMode = X11GD_CreateDisplayMode(env,
@@ -2016,6 +2027,7 @@ Java_sun_awt_X11GraphicsDevice_configDisplayMode
     jboolean success = JNI_FALSE;
     XRRScreenConfiguration *config;
     Drawable root;
+    Rotation currentRotation = RR_Rotate_0;
 
     AWT_LOCK();
 
@@ -2027,6 +2039,7 @@ Java_sun_awt_X11GraphicsDevice_configDisplayMode
         short chosenRate = -1;
         int nsizes;
         XRRScreenSize *sizes = awt_XRRConfigSizes(config, &nsizes);
+        awt_XRRConfigRotations(config, &currentRotation);
 
         if (sizes != NULL) {
             int i, j;
@@ -2060,7 +2073,7 @@ Java_sun_awt_X11GraphicsDevice_configDisplayMode
             Status status =
                 awt_XRRSetScreenConfigAndRate(awt_display, config, root,
                                               chosenSizeIndex,
-                                              RR_Rotate_0,
+                                              currentRotation,
                                               chosenRate,
                                               CurrentTime);
 

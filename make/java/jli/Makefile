@@ -102,6 +102,7 @@ OTHER_CPPFLAGS += $(LIBARCH_DEFINES) -DPACKAGE_PATH=\"$(PACKAGE_PATH)\"
 
 
 ifneq ($(PLATFORM), windows)	# UNIX systems
+        LD_RUNPATH_EXTRAS += ..
 	LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/jli
 ifneq ($(PLATFORM), bsd)	# other UNIX systems
 	# Note: its important to keep this order meaning -lc is the
