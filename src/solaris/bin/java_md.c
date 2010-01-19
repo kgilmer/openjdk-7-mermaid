@@ -51,7 +51,9 @@
 #ifdef __APPLE__
 #define JVM_DLL "libjvm.dylib"
 #define JAVA_DLL "libjava.dylib"
-#define LD_LIBRARY_PATH "DYLD_LIBRARY_PATH"
+/* FALLBACK avoids naming conflicts with system libraries
+ * (eg, ImageIO's libJPEG.dylib) */
+#define LD_LIBRARY_PATH "DYLD_FALLBACK_LIBRARY_PATH"
 #else
 #define JVM_DLL "libjvm.so"
 #define JAVA_DLL "libjava.so"
