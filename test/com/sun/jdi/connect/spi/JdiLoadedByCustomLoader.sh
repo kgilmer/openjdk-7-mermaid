@@ -48,7 +48,7 @@ case "$OS" in
   SunOS | Linux | *BSD | Darwin )
     PS=":"
     ;;
-  Windows* )
+  Windows* | CYGWIN*)
     PS=";"
     ;;
   * )
@@ -68,7 +68,7 @@ SOMEOTHERDIR="${TESTCLASSES}"/someotherdir
 $JAVAC -d "${TESTCLASSES}" "${TESTSRC}"/JdiLoadedByCustomLoader.java
 
 mkdir "${SOMEOTHERDIR}"
-$JAVAC -d "${SOMEOTHERDIR}" -classpath ${TESTSRC}${PS}${TESTJAVA}/lib/tools.jar \
+$JAVAC -d "${SOMEOTHERDIR}" -classpath "${TESTSRC}${PS}${TESTJAVA}/lib/tools.jar" \
     "${TESTSRC}"/ListConnectors.java
 
 # Run the test 

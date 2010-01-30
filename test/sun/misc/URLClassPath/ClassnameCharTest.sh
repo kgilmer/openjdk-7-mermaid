@@ -40,7 +40,7 @@ case "$OS" in
     PS=":"
     FS="/"
     ;;
-  Windows* )
+  Windows* | CYGWIN* )
     PS=";"
     FS="\\"
     ;;
@@ -55,6 +55,6 @@ cd ${TESTCLASSES}
 ${TESTJAVA}${FS}bin${FS}jar xvf testclasses.jar "fo o.class"
 ${TESTJAVA}${FS}bin${FS}javac -d ${TESTCLASSES} ${TESTSRC}${FS}ClassnameCharTest.java
 
-${TESTJAVA}${FS}bin${FS}java -classpath ${TESTCLASSES}${PS}${TESTCLASSES}${FS}sun${FS}misc${FS}URLClassPath ClassnameCharTest
+${TESTJAVA}${FS}bin${FS}java -classpath "${TESTCLASSES}${PS}${TESTCLASSES}${FS}sun${FS}misc${FS}URLClassPath" ClassnameCharTest
 
 rm -rf "fo o.class" testclasses.jar

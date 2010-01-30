@@ -24,6 +24,7 @@
 #
 
 BUILDDIR = ../..
+MODULE  = base
 PACKAGE = java.net
 LIBRARY = net
 PRODUCT = sun
@@ -118,8 +119,7 @@ LOCALE_SET_DEFINITION = jre
 MISC_FILES = $(LIBDIR) $(LIBDIR)/net.properties
 
 $(LIBDIR)/net.properties: $(SHARE_SRC)/lib/net.properties
-	@$(RM) $@
-	$(CP) $< $@
+	$(install-file)
 
 # 
 # SDP configuration template

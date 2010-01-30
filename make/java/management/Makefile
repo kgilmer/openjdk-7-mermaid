@@ -24,6 +24,7 @@
 #
 
 BUILDDIR = ../..
+MODULE  = management
 PACKAGE = java.lang.management
 LIBRARY = management
 PRODUCT = java
@@ -104,7 +105,7 @@ $(AGENTJAR): $(LIBDIR) $(TEMPDIR)/manifest
 	@$(java-vm-cleanup)
 
 $(TEMPDIR)/manifest: $(MANIFEST)
-	$(install-file)
+	$(install-manifest-file)
 
 build: $(AGENTJAR)
 

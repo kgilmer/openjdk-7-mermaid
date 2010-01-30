@@ -28,6 +28,7 @@
 #
 
 BUILDDIR = ../..
+MODULE  = nio
 PACKAGE = java.nio
 LIBRARY = nio
 PRODUCT = java
@@ -890,7 +891,7 @@ SOR_COPYRIGHT_YEARS = $(shell $(CAT) $(GENSOR_SRC) | \
 	$(NAWK) '/^.*Copyright.*Sun/ { print $$3 }') 
 
 $(TEMPDIR)/$(GENSOR_SRC) : $(GENSOR_SRC)
-	$(install-file)
+	$(install-non-module-file)
 
 $(GENSOR_EXE) : $(TEMPDIR)/$(GENSOR_SRC)
 	$(prep-target)
