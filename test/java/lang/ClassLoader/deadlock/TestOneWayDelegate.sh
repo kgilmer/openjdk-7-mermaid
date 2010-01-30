@@ -49,10 +49,7 @@ echo ""
 # set platform-specific variables
 OS=`uname -s`
 case "$OS" in
-  SunOS )
-    FS="/"
-    ;;
-  Linux )
+  SunOS | Linux | *BSD | Darwin )
     FS="/"
     ;;
   Windows* | CYGWIN* )
