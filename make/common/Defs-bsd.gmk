@@ -213,6 +213,28 @@ ifneq ($(PRODUCT), java)
   CPPFLAGS_DBG    += -DLOGGING 
 endif
 
+# Libraries need to locate other libraries at runtime, and you can tell
+#   a library where to look by way of the dynamic runpaths (RPATH or RUNPATH)
+#   buried inside the .{so,dylib}. The {$ORIGIN,@loader_path/} says to look
+#   relative to where the library itself is and it can be followed
+#   with relative paths from that. By default we always look in
+#   {$ORIGIN,@loader_path/}, optionally we add relative paths if the Makefile
+#   sets LD_RUNPATH_EXTRAS to those relative paths.
+#   Except on MacOS X we add a flag -z origin, not sure if this is necessary,
+#   but doesn't seem to hurt.
+#   The environment variable LD_LIBRARY_PATH will over-ride these runpaths.
+#   See 'man {dyld,rtld}' for more information.
+#   Try: 'readelf -d lib*.so' to see these settings in a library.
+#
+ifeq ($(OS_VENDOR), Apple)
+  LDFLAGS_COMMON += -Xlinker -rpath -Xlinker @loader_path/.
+  LDFLAGS_COMMON += $(LD_RUNPATH_EXTRAS:%=-Xlinker -rpath -Xlinker @loader_path/%)
+  LDFLAGS_COMMON += -Xlinker -install_name -Xlinker @rpath/$(@F)
+else
+  LDFLAGS_COMMON += -Xlinker -z -Xlinker origin -Xlinker -rpath -Xlinker \$$ORIGIN
+  LDFLAGS_COMMON += $(LD_RUNPATH_EXTRAS:%=-Xlinker -z -Xlinker origin -Xlinker -rpath -Xlinker \$$ORIGIN/%)
+endif
+
 #
 # -L paths for finding and -ljava
 #
