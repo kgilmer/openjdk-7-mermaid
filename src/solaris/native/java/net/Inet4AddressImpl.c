@@ -322,11 +322,6 @@ Java_java_net_Inet4AddressImpl_getHostByAddr(JNIEnv *env, jobject this,
 #define HENT_BUF_SIZE 1024
 #define BIG_HENT_BUF_SIZE 10240  /* a jumbo-sized one */
 
-#if !defined(__GLIBC__) && !defined(_ALLBSD_SOURCE)
-/* gethostname() is in libc.so but I can't find a header file for it */
-extern int gethostname(char *buf, int buf_len);
-#endif
-
 /************************************************************************
  * Inet4AddressImpl
  */

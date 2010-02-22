@@ -336,8 +336,6 @@ jint  IPv6_supported()
 
 #endif /* __solaris */
 
-#endif /* AF_INET6 */
-
     /*
      *  OK we may have the stack available in the kernel,
      *  we should also check if the APIs are available.
@@ -371,6 +369,7 @@ jint  IPv6_supported()
 
     close(fd);
     return JNI_TRUE;
+#endif /* AF_INET6 */
 }
 #endif /* DONT_ENABLE_IPV6 */
 

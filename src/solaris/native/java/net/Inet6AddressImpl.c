@@ -52,10 +52,6 @@
 #define NI_MAXHOST 1025
 #endif
 
-#if !defined(__GLIBC__) && !defined(_ALLBSD_SOURCE)
-/* gethostname() is in libc.so but I can't find a header file for it */
-extern int gethostname(char *buf, int buf_len);
-#endif
 
 /************************************************************************
  * Inet6AddressImpl
@@ -371,8 +367,6 @@ Java_java_net_Inet6AddressImpl_lookupAllHostAddr(JNIEnv *env, jobject this,
         }
     }
 
-#endif /* AF_INET6 */
-
 cleanupAndReturn:
     {
         struct addrinfo *iterator, *tmp;
@@ -385,7 +379,6 @@ cleanupAndReturn:
         JNU_ReleaseStringPlatformChars(env, host, hostname);
     }
 
-#ifdef AF_INET6
     if (NET_addrtransAvailable())
         (*freeaddrinfo_ptr)(res);
 #endif /* AF_INET6 */
