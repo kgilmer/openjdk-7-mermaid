@@ -30,16 +30,9 @@
 BUILDDIR = ../../..
 include $(BUILDDIR)/common/Defs.gmk
 
-ifneq ($(PLATFORM), bsd)
 SUBDIRS = sctp
-else
-ifeq ($(OS_VENDOR), FreeBSD)
-# FreeBSD 5.x and lower are unsupported, 6.x has no sctp support.
-ifneq ($(call MajorVersion,$(shell uname -r)), 6)
-SUBDIRS = sctp
-endif
-endif
-endif
+include $(BUILDDIR)/common/Subdirs.gmk
+
 all build clean clobber::
 	$(SUBDIRS-loop)
 

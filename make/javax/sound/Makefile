@@ -169,6 +169,7 @@ vpath %.cpp $(PLATFORM_SRC)/native/com/sun/media/sound
 # Include rules
 #
 include $(BUILDDIR)/common/Library.gmk
+include $(BUILDDIR)/common/Subdirs.gmk
 
 #
 # Rules that copy files.

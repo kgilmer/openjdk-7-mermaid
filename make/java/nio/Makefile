@@ -375,7 +375,11 @@ endif # PLATFORM
 # Rules
 #
 
+SUBDIRS_management = mxbean
+include $(BUILDDIR)/common/Subdirs.gmk
+
 build: sources
+	$(SUBDIRS-loop)
 
 clean clobber::
 	$(RM) -r $(NIO_GEN) $(SNIO_GEN)
