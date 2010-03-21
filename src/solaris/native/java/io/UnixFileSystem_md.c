@@ -45,6 +45,7 @@
 #define dirent64 dirent
 #define readdir64_r readdir_r
 #define stat64 stat
+#define statvfs64 statvfs
 #endif
 
 /* -- Field IDs -- */
