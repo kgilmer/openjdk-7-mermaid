@@ -66,9 +66,23 @@ typedef ssize_t sendfile64_func(int out_fd, int in_fd, off64_t *offset, size_t c
 
 sendfile64_func* my_sendfile64_func = NULL;
 #elif defined(_ALLBSD_SOURCE)
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <errno.h>
 #include <stdlib.h>
+
+#ifdef __APPLE__
+typedef int sendfile_func(int fd, int s, off_t offset, off_t *len,
+                          struct sf_hdtr *hdtr, int flags);
+#elif defined(__FreeBSD__)
+typedef int sendfile_func(int fd, int s, off_t offset, size_t nbytes,
+                          struct sf_hdtr *hdtr, off_t *sbytes, int flags);
+#endif
+
+#if defined(__APPLE__) || defined(__FreeBSD__)
+sendfile_func* my_sendfile_func = NULL;
+#endif
 #endif
 
 JNIEXPORT jlong JNICALL
@@ -86,6 +100,10 @@ Java_sun_nio_ch_FileChannelImpl_initIDs(JNIEnv *env, jclass clazz)
 
 #ifdef __linux__
     my_sendfile64_func = (sendfile64_func*) dlsym(RTLD_DEFAULT, "sendfile64");
+#endif
+
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    my_sendfile_func = (sendfile_func*) dlsym(RTLD_DEFAULT, "sendfile");
 #endif
 
     return pageSize;
@@ -256,54 +274,44 @@ Java_sun_nio_ch_FileChannelImpl_transferTo0(JNIEnv *env, jobject this,
 #endif
 
 #ifdef _ALLBSD_SOURCE
-    /*
-     * XXXBSD: make sure that we're returning what java class may understand
-     *
-     * XXXBSD: I'd prefer to have it implemented with sendfile(), but since
-     *         FreeBSD's sendfile() is only supposed to be used in file->socket
-     *         schema we need to provide some kind of fall-back operation, if
-     *         sendfile() failed with ENOTSOCK error only.
-     */
-    void *buf;
-    off_t offset = (off_t)position;
-    int r, w = 0;
+#if defined(__APPLE__) || defined(__FreeBSD__)
+    if (my_sendfile_func == NULL)
+        return IOS_UNSUPPORTED;
 
-    buf = malloc(4096);
-    if (buf == NULL) {
-        JNU_ThrowOutOfMemoryError(env, "heap allocation failed");
+    off_t numBytes;
+    int result;
+
+    numBytes = count;
+
+#ifdef __APPLE__
+    result = (*my_sendfile_func)(srcFD, dstFD, position,
+                                     &numBytes, NULL, 0);
+#elif defined(__FreeBSD__)
+    result = (*my_sendfile_func)(srcFD, dstFD, position,
+                                     count, NULL, &numBytes, 0);
+#else
+    Add an #elif for your BSD flavor
+#endif
+
+    if (numBytes > 0)
+        return numBytes;
+
+    if (result == -1) {
+        if (errno == EAGAIN)
+            return IOS_UNAVAILABLE;
+        if (errno == EOPNOTSUPP || errno == ENOTSOCK || errno == ENOTCONN)
+            return IOS_UNSUPPORTED_CASE;
+        if ((errno == EINVAL) && ((ssize_t)count >= 0))
+            return IOS_UNSUPPORTED_CASE;
+        if (errno == EINTR)
+            return IOS_INTERRUPTED;
+        JNU_ThrowIOExceptionWithLastError(env, "Transfer failed");
         return IOS_THROWN;
     }
 
-    while ((r = pread(srcFD, buf, 4096, offset)) > 0) {
-        w = write(dstFD, buf, r);
-        if (w == -1)
-	    break;
-        offset += w;
-    }
-    free(buf);
-
-    /*
-     * Similar to solaris if we've transferred any data return
-     * the number of bytes and ignore any error
-    */
-    if (offset - (off_t)position > 0)
-	return (offset - (off_t)position);
-
-    /*
-     * Deal with NBIO EAGAIN & EINTR the same as solaris. 
-     */
-    if (r == -1 || w == -1) {
-        switch (errno) {
-	    case EAGAIN:
-	        return IOS_UNAVAILABLE;
-	    case EINTR:
-	        return IOS_INTERRUPTED;
-	    default:
-		JNU_ThrowIOExceptionWithLastError(env, "Transfer failed");
-		return IOS_THROWN;
-        }
-    }
-
-    return (0);
+    return result;
+#else
+    return IOS_UNSUPPORTED;
+#endif
 #endif
 }
