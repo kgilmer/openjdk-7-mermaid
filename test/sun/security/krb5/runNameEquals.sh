@@ -58,6 +58,11 @@ case "$OS" in
     FILESEP="/"
     NATIVE=true
     ;;
+  Darwin | *BSD )
+    PATHSEP=":"
+    FILESEP="/"
+    NATIVE=true
+    ;;
   CYGWIN* )
     PATHSEP=";"
     FILESEP="/"
