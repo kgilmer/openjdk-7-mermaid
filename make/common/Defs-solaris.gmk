@@ -648,6 +648,9 @@ LIBSOCKET = -lsocket
 # Network Services library
 LIBNSL = -lnsl
 
+# Dynamic Loading library
+LIBDL = -ldl
+
 # GLOBAL_KPIC: If set means all libraries are PIC, position independent code
 #    EXCEPT for select compiles
 #    If a .o file is compiled non-PIC then it should be forced

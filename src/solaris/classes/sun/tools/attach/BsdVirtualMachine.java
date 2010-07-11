@@ -37,6 +37,8 @@ import java.util.Properties;
  * Bsd implementation of HotSpotVirtualMachine
  */
 public class BsdVirtualMachine extends HotSpotVirtualMachine {
+    // temp directory for socket file
+    private static final String tmpdir = System.getProperty("java.io.tmpdir");
 
     // The patch to the socket file created by the target VM
     String path;
@@ -62,7 +64,7 @@ public class BsdVirtualMachine extends HotSpotVirtualMachine {
         // Then we attempt to find the socket file again.
         path = findSocketFile(pid);
         if (path == null) {
-            File f = new File("/tmp/.attach_pid" + pid);
+            File f = new File(tmpdir, ".attach_pid" + pid);
 	    createAttachFile(f.getPath());
             try {
                 sendQuitTo(pid);
@@ -242,17 +244,13 @@ public class BsdVirtualMachine extends HotSpotVirtualMachine {
 
     // Return the socket file for the given process.
     // Checks working directory of process for .java_pid<pid>. If not
-    // found it looks in /tmp.
+    // found it looks in temp directory.
     private String findSocketFile(int pid) {
         // First check for a .java_pid<pid> file in the working directory
         // of the target process
         String fn = ".java_pid" + pid;
-        String path = "/tmp/" + fn;
-        File f = new File(path);
-        if (!f.exists()) {
-            return null;            // not found
-        }
-        return path;
+        File f = new File(tmpdir, path);
+	return f.exists() ? f.getPath() : null;
     }
 
     /*

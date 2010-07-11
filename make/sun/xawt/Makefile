@@ -101,11 +101,6 @@ vpath %.c   $(SHARE_SRC)/native/sun/java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/sun/java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/sun/java2d/x11
 
-ifeq ($(PLATFORM), bsd)
-LIBDL=
-else
-LIBDL=-ldl
-endif
 OTHER_LDLIBS = $(LIBM) -lawt -lXext -lX11 -lXrender $(LIBDL) \
                    $(LDFLAGS_COMMON) $(AWT_RUNPATH) $(OTHER_LDFLAGS) -lXtst -lXi
 
