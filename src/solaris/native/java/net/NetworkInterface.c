@@ -1822,6 +1822,7 @@ static netif *enumIPv6Interfaces(JNIEnv *env, int sock, netif *ifs) {
 #endif
 
 static int getIndex(int sock, const char *name){
+#ifdef __FreeBSD__
      /*
       * Try to get the interface index
       * (Not supported on Solaris 2.6 or 7)
@@ -1834,6 +1835,13 @@ static int getIndex(int sock, const char *name){
     }
 
     return if2.ifr_index;
+#else
+    /*
+     * Try to get the interface index using BSD specific if_nametoindex
+     */
+    int index = if_nametoindex(name);
+    return (index == 0) ? -1 : index;
+#endif
 }
 
 /**
