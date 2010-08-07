@@ -60,17 +60,10 @@ OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/native/java/net \
   -I$(CLASSHDRDIR)/../../../../java/java.nio/nio/CClassHeaders
 
+OTHER_LDLIBS += $(LIBSOCKET) -L$(LIBDIR)/$(LIBARCH) -lnet -lnio
 ifeq ($(PLATFORM), linux)
 COMPILER_WARNINGS_FATAL=true
-#OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread -ldl
-OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -lnio -lnet -lpthread -ldl
-endif
-ifeq ($(PLATFORM), solaris)
-#LIBSCTP = -lsctp
-OTHER_LDLIBS += $(LIBSOCKET) -L$(LIBDIR)/$(LIBARCH) -lnet -lnio
-endif # PLATFORM
-ifeq ($(PLATFORM), bsd)
-OTHER_LDLIBS += $(LIBSOCKET) -L$(LIBDIR)/$(LIBARCH) -lnet -lnio
+OTHER_LDLIBS += -lpthread $(LIBDL)
 endif
 
 else # windows

@@ -72,10 +72,6 @@ include $(BUILDDIR)/common/Library.gmk
 #
 # Libraries to link
 #
-ifneq (,$(findstring $(PLATFORM), linux solaris))
-  OTHER_LDLIBS = -ldl $(JVMLIB)
-endif
-
-ifeq ($(PLATFORM), bsd)
-  OTHER_LDLIBS = $(JVMLIB)
+ifeq ($(PLATFORM), windows)
+OTHER_LDLIBS = $(LIBDL) $(JVMLIB)
 endif

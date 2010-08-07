@@ -94,7 +94,7 @@ AUTO_JAVA_PRUNE += X11 AWTCharset.java
 ifeq  ($(PLATFORM), solaris)
 FILES_c = $(FILES_2D_c)
 FILES_c += awt_LoadLibrary.c
-OTHER_LDLIBS = $(JVMLIB) $(LIBM) -ldl
+OTHER_LDLIBS = $(JVMLIB) $(LIBM) $(LIBDL)
 ifeq ($(CC_VER), 5.8)
   ifndef REMOVE_ALL_WORKAROUNDS
     ifeq ($(ARCH_FAMILY), i586)
@@ -121,7 +121,7 @@ ifeq  ($(PLATFORM), linux)
 FILES_c = $(FILES_2D_c)
 FILES_c += awt_LoadLibrary.c
 OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
-OTHER_LDLIBS = $(JVMLIB) $(LIBM) -ldl
+OTHER_LDLIBS = $(JVMLIB) $(LIBM) $(LIBDL)
 endif
 
 ifeq  ($(PLATFORM), bsd)

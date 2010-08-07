@@ -125,7 +125,7 @@ ifeq ($(PLATFORM), bsd)
 else
   LDFLAGS += -L $(LIBDIR)/$(LIBARCH)/jli
   OTHER_LDLIBS += -ljli
-  OTHER_LDLIBS += -ldl 
+  OTHER_LDLIBS += $(LIBDL)
   ifeq ($(PLATFORM), solaris)
     LDFLAGS += -R \$$ORIGIN/jli
   endif

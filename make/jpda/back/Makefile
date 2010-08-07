@@ -50,9 +50,7 @@ OTHER_INCLUDES = -I$(SHARE_SRC)/transport/export \
                  -I$(GENNATIVESRCDIR)/jdwp
 
 ifneq ($(PLATFORM), windows)
-ifneq ($(PLATFORM), bsd)
-  OTHER_LDLIBS += -ldl
-endif # PLATFORM
+  OTHER_LDLIBS += $(LIBDL)
 endif # PLATFORM
 
 #

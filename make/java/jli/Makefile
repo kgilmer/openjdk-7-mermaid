@@ -105,12 +105,10 @@ OTHER_CPPFLAGS += $(LIBARCH_DEFINES) -DPACKAGE_PATH=\"$(PACKAGE_PATH)\"
 ifneq ($(PLATFORM), windows)	# UNIX systems
         LD_RUNPATH_EXTRAS += ..
 	LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/jli
-ifneq ($(PLATFORM), bsd)	# other UNIX systems
 	# Note: its important to keep this order meaning -lc is the
 	# last library otherwise it could cause compatibility issues
 	# by pulling in SUNW_private symbols from libc
-	LDLIBS = -ldl -lc
-endif # !bsd
+	LDLIBS = $(LIBDL) -lc
 ifeq ($(USE_PTHREADS),true)
 	LDLIBS += -lpthread
 endif # USE_PTHREADS 

@@ -180,11 +180,7 @@ endif
 # !HEADLESS
 
 OTHER_LDLIBS += $(JVMLIB) $(LIBCXX) \
-                -lawt $(LIBM)
-
-ifneq ($(PLATFORM), bsd)
-OTHER_LDLIBS += -ldl
-endif
+                -lawt $(LIBM) $(LIBDL)
 
 #
 # Sun CC with -Xa misdefines __STDC__ to 0 (zero).

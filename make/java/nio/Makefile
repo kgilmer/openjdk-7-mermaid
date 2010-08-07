@@ -359,16 +359,17 @@ ifeq ($(PLATFORM),windows)
      $(OBJDIR)/../../../../sun/java.net/net/$(OBJDIRNAME)/net.lib \
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/io_util.obj \
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/FileDescriptor_md.obj
-endif
+else
+ifeq ($(PLATFORM), solaris)
+OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 $(LIBDL)
+endif # solaris
+OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet
 ifeq ($(PLATFORM), linux)
-OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread -ldl
+OTHER_LDLIBS += -lpthread $(LIBDL)
 endif
 ifeq ($(PLATFORM), bsd)
-OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -pthread
+OTHER_LDLIBS += -pthread
 endif
-ifeq ($(PLATFORM), solaris)
-OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 -ldl \
-		-L$(LIBDIR)/$(LIBARCH) -ljava -lnet
 endif # PLATFORM
 
 #

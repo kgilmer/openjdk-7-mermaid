@@ -102,7 +102,7 @@ else
 ifeq ($(PLATFORM), windows)
   OTHER_LDLIBS = ws2_32.lib $(JVMLIB)
 else
-  OTHER_LDLIBS = $(LIBSOCKET) $(LIBNSL) -ldl $(JVMLIB)
+  OTHER_LDLIBS = $(LIBSOCKET) $(LIBNSL) $(LIBDL) $(JVMLIB)
 endif
 ifeq ($(PLATFORM), linux)
   OTHER_LDLIBS += -lpthread
