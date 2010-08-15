@@ -1955,7 +1955,7 @@ static int getMTU(JNIEnv *env, int sock,  const char *ifname) {
     return  if2.ifr_mtu;
 }
 
-static int getFlags(JNIEnv *env, int sock, const char *ifname) {
+static int getFlags(int sock, const char *ifname) {
   struct ifreq if2;
   int ret = -1;
 
