@@ -26,6 +26,9 @@
 
 #include <errno.h>
 #include <strings.h>
+#if defined(_ALLBSD_SOURCE) && defined(__OpenBSD__)
+#include <sys/types.h>
+#endif
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
