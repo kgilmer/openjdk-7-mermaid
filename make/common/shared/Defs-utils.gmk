@@ -234,7 +234,9 @@ ifeq ($(PLATFORM),bsd)
   else
     UNZIP      = $(UTILS_DEVTOOL_PATH)unzip
   endif
-  ifneq ($(OS_VENDOR), OpenBSD)
+  ifeq ($(OS_VENDOR), OpenBSD)
+    NAWK       = $(UTILS_USR_BIN_PATH)awk
+  else
     CPIO       = $(UTILS_USR_BIN_PATH)cpio
     TAR        = $(UTILS_USR_BIN_PATH)tar
   endif
