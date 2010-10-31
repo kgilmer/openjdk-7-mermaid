@@ -70,6 +70,7 @@
 
 getaddrinfo_f getaddrinfo_ptr = NULL;
 freeaddrinfo_f freeaddrinfo_ptr = NULL;
+gai_strerror_f gai_strerror_ptr = NULL;
 getnameinfo_f getnameinfo_ptr = NULL;
 
 /*
@@ -359,11 +360,14 @@ jint  IPv6_supported()
     freeaddrinfo_ptr = (freeaddrinfo_f)
         JVM_FindLibraryEntry(RTLD_DEFAULT, "freeaddrinfo");
 
+    gai_strerror_ptr = (gai_strerror_f)
+        JVM_FindLibraryEntry(RTLD_DEFAULT, "gai_strerror");
+
     getnameinfo_ptr = (getnameinfo_f)
         JVM_FindLibraryEntry(RTLD_DEFAULT, "getnameinfo");
 
     if (freeaddrinfo_ptr == NULL || getnameinfo_ptr == NULL) {
-        /* Wee need all 3 of them */
+        /* We need all 3 of them */
         getaddrinfo_ptr = NULL;
     }
 
@@ -372,6 +376,35 @@ jint  IPv6_supported()
 #endif /* AF_INET6 */
 }
 #endif /* DONT_ENABLE_IPV6 */
+
+void ThrowUnknownHostExceptionWithGaiError(JNIEnv *env,
+                                           const char* hostname,
+                                           int gai_error)
+{
+    int size;
+    char *buf;
+    const char *format = "%s: %s";
+    const char *error_string =
+        (gai_strerror_ptr == NULL) ? NULL : (*gai_strerror_ptr)(gai_error);
+    if (error_string == NULL)
+        error_string = "unknown error";
+
+    size = strlen(format) + strlen(hostname) + strlen(error_string) + 2;
+    buf = (char *) malloc(size);
+    if (buf) {
+        jstring s;
+        sprintf(buf, format, hostname, error_string);
+        s = JNU_NewStringPlatform(env, buf);
+        if (s != NULL) {
+            jobject x = JNU_NewObjectByName(env,
+                                            "java/net/UnknownHostException",
+                                            "(Ljava/lang/String;)V", s);
+            if (x != NULL)
+                (*env)->Throw(env, x);
+        }
+        free(buf);
+    }
+}
 
 void
 NET_AllocSockaddr(struct sockaddr **him, int *len) {
@@ -1216,9 +1249,8 @@ NET_SetSockOpt(int fd, int level, int  opt, const void *arg,
 #endif
 
     /*
-     * SOL_SOCKET/{SO_SNDBUF,SO_RCVBUF} - On Solaris need to
-     * ensure that value is <= max_buf as otherwise we get
-     * an invalid argument.
+     * SOL_SOCKET/{SO_SNDBUF,SO_RCVBUF} - On Solaris we may need to clamp
+     * the value when it exceeds the system limit.
      */
 #ifdef __solaris__
     if (level == SOL_SOCKET) {
@@ -1226,10 +1258,18 @@ NET_SetSockOpt(int fd, int level, int  opt, const void *arg,
             int sotype;
             socklen_t arglen;
             int *bufsize, maxbuf;
+            int ret;
+
+            /* Attempt with the original size */
+            ret = setsockopt(fd, level, opt, arg, len);
+            if ((ret == 0) || (ret == -1 && errno != ENOBUFS))
+                return ret;
+
+            /* Exceeded system limit so clamp and retry */
 
             if (!init_max_buf) {
-                tcp_max_buf = getParam("/dev/tcp", "tcp_max_buf", 64*1024);
-                udp_max_buf = getParam("/dev/udp", "udp_max_buf", 64*1024);
+                tcp_max_buf = getParam("/dev/tcp", "tcp_max_buf", 1024*1024);
+                udp_max_buf = getParam("/dev/udp", "udp_max_buf", 2048*1024);
                 init_max_buf = 1;
             }
 
