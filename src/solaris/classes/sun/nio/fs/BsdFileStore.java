@@ -157,9 +157,4 @@ class BsdFileStore
 */
         return super.supportsFileAttributeView(name);
     }
-
-    @Override
-    boolean isLoopback() {
-        return false;
-    }
 }
