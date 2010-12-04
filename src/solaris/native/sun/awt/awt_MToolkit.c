@@ -2774,11 +2774,6 @@ Java_sun_awt_motif_MToolkit_init(JNIEnv *env, jobject this,
         }
     }
 
-    /*
-    scrollBugWorkAround =
-        (strcmp(XServerVendor(awt_display), "Sun Microsystems, Inc.") == 0
-         && XVendorRelease(awt_display) == 3400);
-    */
     scrollBugWorkAround = TRUE;
 
     /*
