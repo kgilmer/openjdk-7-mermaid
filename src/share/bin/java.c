@@ -65,6 +65,7 @@ static jboolean printVersion = JNI_FALSE; /* print and exit */
 static jboolean showVersion = JNI_FALSE;  /* print but continue */
 static jboolean printUsage = JNI_FALSE;   /* print and exit*/
 static jboolean printXUsage = JNI_FALSE;  /* print and exit*/
+static char     *showSettings = NULL;      /* print but continue */
 
 #ifdef __APPLE__
 static jboolean continueInSameThread = JNI_FALSE; /* start VM in current thread */
@@ -113,6 +114,7 @@ static void SetApplicationClassPath(const char**);
 
 static void PrintJavaVersion(JNIEnv *env, jboolean extraLF);
 static void PrintUsage(JNIEnv* env, jboolean doXUsage);
+static void ShowSettings(JNIEnv* env, char *optString);
 
 static void SetPaths(int argc, char **argv);
 
@@ -165,6 +167,7 @@ static jboolean IsWildCardEnabled();
  * create a new thread to invoke JVM. See 6316197 for more information.
  */
 static jlong threadStackSize = 0;  /* stack size of the new thread */
+static jlong heapSize        = 0;  /* heap size */
 
 int JNICALL JavaMain(void * args); /* entry point                  */
 
@@ -391,6 +394,10 @@ JavaMain(void * _args)
         }
     }
 
+    if (showSettings != NULL) {
+        ShowSettings(env, showSettings);
+        CHECK_EXCEPTION_LEAVE(0);
+    }
     /* If the user specified neither a class name nor a JAR file */
     if (printXUsage || printUsage || (jarfile == 0 && classname == 0)) {
         PrintUsage(env, printXUsage);
@@ -626,7 +633,7 @@ CheckJvmType(int *pargc, char ***argv, jboolean speculative) {
 
 /* copied from HotSpot function "atomll()" */
 static int
-parse_stack_size(const char *s, jlong *result) {
+parse_size(const char *s, jlong *result) {
   jlong n = 0;
   int args_read = sscanf(s, jlong_format_specifier(), &n);
   if (args_read != 1) {
@@ -688,10 +695,17 @@ AddOption(char *str, void *info)
     options[numOptions++].extraInfo = info;
 
     if (JLI_StrCCmp(str, "-Xss") == 0) {
-      jlong tmp;
-      if (parse_stack_size(str + 4, &tmp)) {
-        threadStackSize = tmp;
-      }
+        jlong tmp;
+        if (parse_size(str + 4, &tmp)) {
+            threadStackSize = tmp;
+        }
+    }
+
+    if (JLI_StrCCmp(str, "-Xmx") == 0) {
+        jlong tmp;
+        if (parse_size(str + 4, &tmp)) {
+            heapSize = tmp;
+        }
     }
 }
 
@@ -1035,6 +1049,13 @@ ParseArguments(int *pargc, char ***pargv, char **pjarfile,
         } else if (JLI_StrCCmp(arg, "-Xdock:") == 0) {
            // XXXDARWIN: Apple VM supports configuration of Dock icon and name via -Xdock:
 #endif            
+/*
+ * The following case checks for -XshowSettings OR -XshowSetting:SUBOPT.
+ * In the latter case, any SUBOPT value not recognized will default to "all"
+ */
+        } else if (JLI_StrCmp(arg, "-XshowSettings") == 0 ||
+                JLI_StrCCmp(arg, "-XshowSettings:") == 0) {
+            showSettings = arg;
 /*
  * The following case provide backward compatibility with old-style
  * command line options.
@@ -1493,6 +1514,27 @@ PrintJavaVersion(JNIEnv *env, jboolean extraLF)
               );
 
     (*env)->CallStaticVoidMethod(env, ver, print);
+}
+
+/*
+ * Prints all the Java settings, see the java implementation for more details.
+ */
+static void
+ShowSettings(JNIEnv *env, char *optString)
+{
+    jclass cls;
+    jmethodID showSettingsID;
+    jstring joptString;
+    NULL_CHECK(cls = FindBootStrapClass(env, "sun/launcher/LauncherHelper"));
+    NULL_CHECK(showSettingsID = (*env)->GetStaticMethodID(env, cls,
+            "showSettings", "(ZLjava/lang/String;JJZ)V"));
+    joptString = (*env)->NewStringUTF(env, optString);
+    (*env)->CallStaticVoidMethod(env, cls, showSettingsID,
+                                 JNI_TRUE,
+                                 joptString,
+                                 (jlong)heapSize,
+                                 (jlong)threadStackSize,
+                                 ServerClassMachine());
 }
 
 /*
