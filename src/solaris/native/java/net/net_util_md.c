@@ -33,7 +33,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include <values.h>
+#include <limits.h>
 
 #ifdef _ALLBSD_SOURCE
 #include <sys/param.h>
@@ -136,7 +136,7 @@ getParam(char *driver, char *param)
 
 static int findMaxBuf(int fd, int opt, int sotype) {
     int a = 0;
-    int b = MAXINT;
+    int b = INT_MAX;
     int initial_guess;
     int limit = -1;
 
