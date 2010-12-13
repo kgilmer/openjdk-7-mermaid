@@ -292,7 +292,7 @@ Java_com_sun_management_UnixOperatingSystem_getTotalPhysicalMemorySize
 #ifdef _ALLBSD_SOURCE
     jlong result;
     int mib[2];
-    int rlen;
+    size_t rlen;
 
     mib[0] = CTL_HW;
     mib[1] = HW_PHYSMEM;
