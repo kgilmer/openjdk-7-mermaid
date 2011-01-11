@@ -120,6 +120,10 @@ ifneq (,$(findstring $(PLATFORM), linux bsd))
 OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -lawt -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt
 endif # PLATFORM
 
+ifeq ($(PLATFORM), macosx)
+OTHER_LDLIBS = -L$(LIBDIR) -lawt -L$(LIBDIR)/xawt -lmawt
+endif # PLATFORM
+
 endif # PLATFORM
 
 

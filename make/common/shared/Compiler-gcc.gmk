@@ -48,6 +48,7 @@ ifeq ($(PLATFORM), windows)
   endif
   _LINK_VER :=$(shell $(LINK) 2>&1 | $(HEAD) -n 1)
   LINK_VER  :=$(call GetVersion,"$(_LINK_VER)")
+  ARFLAGS = -r
 
 endif
 
@@ -69,25 +70,30 @@ ifeq ($(PLATFORM), linux)
   # Option used to create a shared library
   SHARED_LIBRARY_FLAG = -shared -mimpure-text
   SUN_COMP_VER := $(shell $(CC) --verbose 2>&1 )
+  ARFLAGS = -r
 
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 
-  # Settings specific to BSD
-  CC             = $(COMPILER_PATH)gcc
-  CPP            = $(COMPILER_PATH)gcc -E
-  CXX            = $(COMPILER_PATH)g++
+  # Settings specific to BSD / Mac OS X
+  CC             ?= $(COMPILER_PATH)gcc
+  CPP            ?= $(COMPILER_PATH)gcc -E
+  CXX            ?= $(COMPILER_PATH)g++
   REQUIRED_CC_VER = 3.2
 
   # Option used to create a shared library
-  # Option used to create a shared library
   ifeq ($(OS_VENDOR), Apple)
-    SHARED_LIBRARY_FLAG = -dynamiclib 
+    SHARED_LIBRARY_FLAG = -Wl,-install_name,@rpath/$(@F) -dynamiclib -compatibility_version 1.0.0 -current_version 1.0.0
   else
     SHARED_LIBRARY_FLAG = -shared
   endif
   SUN_COMP_VER := $(shell $(CC) --verbose 2>&1 )
+
+  ifeq ($(ARCH), universal)
+    AR = $(CC)
+    ARFLAGS = -nostdlib -r -arch i386 -arch x86_64 -o
+  endif
 endif
 
 ifeq ($(PLATFORM), solaris)
@@ -100,6 +106,8 @@ ifeq ($(PLATFORM), solaris)
   # Option used to create a shared library
   SHARED_LIBRARY_FLAG = -G
   
+  ARFLAGS = -r
+
 endif
 
 # Get gcc version

@@ -210,7 +210,7 @@ ifeq ($(PLATFORM),solaris)
 endif
 
 # BSD specific
-ifeq ($(PLATFORM),bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx)) 
   BASENAME     = $(UTILS_USR_BIN_PATH)basename
   EGREP        = $(UTILS_USR_BIN_PATH)egrep
   EXPR         = $(UTILS_COMMAND_PATH)expr

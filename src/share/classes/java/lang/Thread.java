@@ -1162,6 +1162,9 @@ class Thread implements Runnable {
     public final void setName(String name) {
         checkAccess();
         this.name = name.toCharArray();
+        if (threadStatus != 0) {
+            setNativeName(name);
+        }
     }
 
     /**
@@ -2059,4 +2062,5 @@ class Thread implements Runnable {
     private native void suspend0();
     private native void resume0();
     private native void interrupt0();
+    private native void setNativeName(String name);
 }

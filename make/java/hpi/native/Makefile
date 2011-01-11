@@ -32,7 +32,11 @@ MODULE       = base
 LIBRARY      = hpi
 PRODUCT      = java
 THREADDIR    = native_threads
+ifeq ($(PLATFORM), macosx)
+LIB_LOCATION = $(LIBDIR)/$(THREADDIR)
+else
 LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/$(THREADDIR)
+endif
 include $(BUILDDIR)/common/Defs.gmk
 
 #
@@ -44,8 +48,13 @@ FILES_c = \
 	condvar_md.c \
 	interrupt_md.c \
 	mutex_md.c \
-	sys_api_td.c \
-	threads_$(PLATFORM).c
+	sys_api_td.c
+
+ifeq ($(PLATFORM), macosx)
+FILES_c += threads_bsd.c
+else
+FILES_c += threads_$(PLATFORM).c
+endif
 
 #
 # Other files/flags shared between the HPIs.
@@ -73,7 +82,7 @@ OTHER_CPPFLAGS += -DUSE_PTHREADS
 ifeq ($(MOOT_PRIORITIES),true)
 OTHER_CPPFLAGS += -DMOOT_PRIORITIES
 endif
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 LIBPOSIX4      =
 OTHER_LDLIBS   += -pthread
 else
@@ -83,7 +92,9 @@ endif
 endif
 
 ifneq ($(PLATFORM), bsd)
+ifneq ($(PLATFORM), macosx)
 HAVE_GETHRVTIME=true
+endif
 endif
 ifeq ($(HAVE_GETHRVTIME),true)
 OTHER_CPPFLAGS += -DHAVE_GETHRVTIME

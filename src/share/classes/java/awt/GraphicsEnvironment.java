@@ -177,7 +177,7 @@ public abstract class GraphicsEnvironment {
                                                 "FreeBSD".equals(osName) ||
                                                 "NetBSD".equals(osName) ||
                                                 "OpenBSD".equals(osName) ||
-                                                "Darwin".equals(osName)) &&
+                                                "Mac OS X".equals(osName)) &&
                                                 (System.getenv("DISPLAY") == null));
                         }
                     } else if (nm.equals("true")) {

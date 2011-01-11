@@ -58,6 +58,12 @@ com/sun/jmx/snmp/SnmpPeer.class \
 com/sun/jmx/snmp/SnmpTimeticks.class \
 com/sun/jmx/snmp/SnmpVarBind.class \
 com/sun/jmx/snmp/SnmpVarBindList.class \
+com/sun/jmx/snmp/Timestamp.class \
+com/sun/jmx/snmp/daemon/SnmpRequestCounter.class \
+com/sun/jmx/snmp/daemon/SnmpSocket.class \
+com/sun/jmx/snmp/daemon/SnmpQManager.class \
+com/sun/jmx/snmp/daemon/WaitQ.class \
+com/sun/jmx/snmp/daemon/SnmpResponseHandler.class \
 com/sun/jmx/snmp/daemon/SendQ.class \
 com/sun/jmx/snmp/daemon/SnmpInformRequest.class \
 com/sun/jmx/snmp/daemon/SnmpSession.class

@@ -68,7 +68,6 @@ FILES_c = \
 	jdk_util.c \
 	jdk_util_md.c \
 	check_version.c \
-	java_props_md.c \
 	DriverManager.c \
 	ConstantPool.c \
 	MessageUtils.c \

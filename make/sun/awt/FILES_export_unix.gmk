@@ -74,6 +74,7 @@ FILES_export = \
 	sun/awt/X11GraphicsConfig.java \
 	sun/awt/CharsetString.java \
 	sun/awt/UNIXToolkit.java \
+	sun/awt/SunHints.java \
 	sun/java2d/pipe/BufferedContext.java \
 	sun/java2d/pipe/BufferedMaskBlit.java \
 	sun/java2d/pipe/BufferedOpCodes.java \

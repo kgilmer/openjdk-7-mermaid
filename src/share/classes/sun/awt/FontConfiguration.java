@@ -1362,7 +1362,7 @@ public abstract class FontConfiguration {
                                    + "<filename."
                                    + getString(table_componentFontNameIDs[ii])
                                    + "> entry is missing!!!");
-                if (!osName.contains("Linux") && !osName.contains("BSD") && !osName.contains("Darwin")) {
+                if (!osName.contains("Linux") && !osName.contains("BSD") && !osName.contains("Mac OS X")) {
                     errors++;
                 }
             }

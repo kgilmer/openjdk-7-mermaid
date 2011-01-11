@@ -174,13 +174,13 @@ else # PLATFORM
 # Libraries to link, and other C flags.
 #
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 OTHER_INCLUDES += -I$(X11_PATH)/include
 OTHER_LDLIBS  += -lawt $(LIBM) $(LIBCXX)
  ifeq ($(OS_VENDOR),Apple)
    # XXXDARWIN Match BSD/Linux behavior -- the mawt.dylib symbols will
    # be available at runtime.
-   OTHER_LDLIBS += -flat_namespace -undefined suppress
+   OTHER_LDLIBS += -undefined dynamic_lookup
  endif
 else
 ifeq ($(PLATFORM), solaris)

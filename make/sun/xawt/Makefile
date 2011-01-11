@@ -28,8 +28,13 @@ MODULE  = awt
 PACKAGE = sun.awt.X11
 LIBRARY = mawt
 LIBRARY_OUTPUT = xawt
-LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/xawt
 PRODUCT = sun
+
+ifeq ($(PLATFORM), macosx)
+LIB_LOCATION = $(LIBDIR)/xawt
+else
+LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/xawt
+endif
 
 include $(BUILDDIR)/common/Defs.gmk
 
@@ -62,7 +67,7 @@ LDFLAGS += -lpthread
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 LDFLAGS += -pthread
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
