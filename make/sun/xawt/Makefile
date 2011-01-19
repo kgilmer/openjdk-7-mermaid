@@ -205,6 +205,13 @@ endif # sparcv9
 
 else # !solaris
 
+ifeq ($(PLATFORM), macosx)
+CFLAGS_32=-arch i386
+SIZERS = $(SIZER).32 $(SIZER).64
+SIZERS_C = $(SIZER_32_C) $(SIZER_64_C)
+SIZES = $(WRAPPER_GENERATOR_DIR)/sizes.32 $(WRAPPER_GENERATOR_DIR)/sizes.64
+CFLAGS_64=-arch x86_64
+else # !macosx
 ifeq ($(ARCH_DATA_MODEL), 32)
 SIZERS = $(SIZER).32
 SIZERS_C = $(SIZER_32_C)
@@ -214,7 +221,7 @@ SIZERS = $(SIZER).64
 SIZERS_C = $(SIZER_64_C)
 SIZES = $(WRAPPER_GENERATOR_DIR)/sizes.64
 endif # 32
-
+endif # !macosx
 endif # solaris
 
 # XXX Hack for 6185483 - use hard-coded sizes.
