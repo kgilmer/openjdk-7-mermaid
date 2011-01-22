@@ -44,6 +44,11 @@ ifeq ($(PLATFORM), linux)
   override CC_VERSION = gcc
 endif
 
+# BSD uses GNU compilers by default
+ifeq ($(PLATFORM), bsd)
+  override CC_VERSION = gcc
+endif
+
 ##########################################################################
 #
 # List of JDK official minimum, expected, or required versions:
