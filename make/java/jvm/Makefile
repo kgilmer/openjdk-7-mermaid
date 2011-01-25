@@ -44,7 +44,11 @@ $(INCLUDEDIR)/%.h: $(SHARE_SRC)/javavm/export/%.h
 $(PLATFORM_INCLUDE)/%.h: $(PLATFORM_SRC)/javavm/export/%.h
 	$(install-non-module-file)
 
-JVMCFG = $(LIBDIR)/$(LIBARCH)/jvm.cfg
+ifeq ($(PLATFORM),macosx)
+  JVMCFG = $(LIBDIR)/jvm.cfg
+else
+  JVMCFG = $(LIBDIR)/$(LIBARCH)/jvm.cfg
+endif
 
 #
 # How to install jvm.cfg.

@@ -40,6 +40,9 @@ endif
 ifeq ($(PLATFORM), bsd)
 FILES_m = mapfile-bsd
 endif
+ifeq ($(PLATFORM), macosx)
+FILES_m = mapfile-bsd 
+endif
 include $(BUILDDIR)/common/Mapfile-vers.gmk
 
 #
@@ -53,7 +56,7 @@ ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS += -ldoor
 endif
 
-vpath %.c $(PLATFORM_SRC)/native/sun/tools/attach
+vpath %.c $(call NativeSrcDirList,,native/sun/tools/attach)
 
 all: classes copy-files
 

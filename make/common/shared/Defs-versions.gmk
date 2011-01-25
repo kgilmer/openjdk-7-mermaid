@@ -39,13 +39,8 @@ ifeq ($(PLATFORM), solaris)
   override CC_VERSION = sun
 endif
 
-# Linux uses GNU compilers by default
-ifeq ($(PLATFORM), linux)
-  override CC_VERSION = gcc
-endif
-
-# BSD uses GNU compilers by default
-ifeq ($(PLATFORM), bsd)
+# Linux/BSD/Mac OS X use GNU compilers by default
+ifneq (,$(findstring $(PLATFORM), linux bsd macosx))
   override CC_VERSION = gcc
 endif
 

@@ -39,7 +39,7 @@ FILES_c = \
 	LinuxVirtualMachine.c
 endif
 
-ifeq ($(PLATFORM),bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 FILES_c = \
 	BsdVirtualMachine.c
 endif

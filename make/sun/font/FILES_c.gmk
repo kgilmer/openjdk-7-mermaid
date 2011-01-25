@@ -120,5 +120,6 @@ FILES_c_platform = X11FontScaler.c \
 FILES_cpp_platform =
 endif
 
-FILES_c = $(FILES_c_shared)  $(FILES_c_platform)
 FILES_cpp = $(FILES_cpp_shared) $(FILES_cpp_platform)
+FILES_c = $(FILES_c_shared)  $(FILES_c_platform)
+

@@ -261,7 +261,7 @@ FILES_gen += \
 	sun/nio/fs/UnixConstants.java
 endif # PLATFORM = linux
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 FILES_java += \
         sun/nio/ch/AbstractPollSelectorImpl.java \
 	sun/nio/ch/InheritedChannel.java \
@@ -322,7 +322,7 @@ FILES_export += \
 	
 FILES_gen += \
 	sun/nio/fs/UnixConstants.java
-endif # PLATFORM = bsd
+endif # PLATFORM = bsd, macosx
 
 #
 # Find platform-specific C source files
@@ -348,7 +348,7 @@ OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/native/java/net \
   -I$(CLASSHDRDIR)/../../../java.lang/java/CClassHeaders
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/hpi/include
 endif
@@ -366,6 +366,9 @@ endif # solaris
 OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet
 ifeq ($(PLATFORM), linux)
 OTHER_LDLIBS += -lpthread $(LIBDL)
+endif
+ifeq ($(PLATFORM), macosx)
+OTHER_LDLIBS += -L$(LIBDIR) -ljava -lnet -pthread
 endif
 ifeq ($(PLATFORM), bsd)
 OTHER_LDLIBS += -pthread
@@ -393,7 +396,7 @@ endif
 ifeq ($(PLATFORM), linux)
 FILES_m = mapfile-linux
 endif
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 FILES_m = mapfile-bsd
 endif
 include $(BUILDDIR)/common/Mapfile-vers.gmk

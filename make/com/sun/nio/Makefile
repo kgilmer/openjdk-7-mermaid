@@ -29,8 +29,9 @@
 
 BUILDDIR = ../../..
 include $(BUILDDIR)/common/Defs.gmk
-
-ifneq ($(PLATFORM), bsd)
+###(dav)!macosx && !bsd (one edition is still should build sctp): 
+###ifneq ($(PLATFORM), macosx)
+ifneq (,$(findstring $(PLATFORM), linux windows bsd))
 SUBDIRS = sctp
 else
 ifeq ($(OS_VENDOR), FreeBSD)
