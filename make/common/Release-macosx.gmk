@@ -1,0 +1,54 @@
+#
+# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+# Defines the release targets for Mac OS X build products
+
+JDK_BUNDLE_DIR = $(ABS_OUTPUTDIR)/j2sdk-bundle/$(jdkversion).jdk/Contents
+
+MACOSX_SRC     = $(JDK_TOPDIR)/src/macosx
+AQUA_PROPERTIES= $(MACOSX_SRC)/classes/com/apple/laf/resources/aqua.properties
+
+jre-bundle-dir:
+	$(MKDIR) -p $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
+	$(CP) $(MACOSX_SRC)/bundle/Info.plist $(JRE_IMAGE_DIR)/bundle
+	$(CP) $(AQUA_PROPERTIES) $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
+
+jdk-bundle-setup:
+	$(RM) -r $(JDK_BUNDLE_DIR)
+	$(MKDIR) -p $(JDK_BUNDLE_DIR)/MacOS
+
+jdk-bundle-files:
+	ditto $(JDK_IMAGE_DIR) $(JDK_BUNDLE_DIR)/Home
+	$(MV) $(JDK_BUNDLE_DIR)/Home/jre/bundle/* $(JDK_BUNDLE_DIR)
+	$(RM) -r $(JDK_BUNDLE_DIR)/Home/jre/bundle
+	ln -s ../.. $(JDK_BUNDLE_DIR)/Home/jre/bundle
+	ln -s ../Home/jre/lib/libjava.dylib $(JDK_BUNDLE_DIR)/MacOS/
+
+trim-jdk-bundle:
+
+EXTRA_JRE_TARGETS   += jre-bundle-dir
+EXTRA_IMAGE_TARGETS += jdk-bundle-setup jdk-bundle-files trim-jdk-bundle
+
+.PHONY: $(EXTRA_JRE_TARGETS) $(EXTRA_IMAGE_TARGETS)

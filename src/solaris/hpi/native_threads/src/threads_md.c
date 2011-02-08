@@ -101,7 +101,7 @@ static thread_key_t tid_key = (thread_key_t) -1;
 #ifdef __linux__
 thread_key_t intrJmpbufkey;
 static sigset_t squm = {{sigmask(SIGUSR1), 0, 0, 0}};
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__APPLE__)
 thread_key_t sigusr1Jmpbufkey;
 sigset_t sigusr1Mask = sigmask(SIGUSR1);
 static sigset_t squm = sigmask(SIGUSR1);

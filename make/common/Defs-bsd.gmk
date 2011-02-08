@@ -53,6 +53,9 @@ ifndef PLATFORM_SRC
   PLATFORM_SRC = $(BUILDDIR)/../src/solaris
 endif # PLATFORM_SRC
 
+# BSD build pulls its platform sources from the solaris tree.
+SRCDIR_LIST = src/solaris src/share
+
 # Platform specific closed sources
 ifndef OPENJDK
   ifndef CLOSED_PLATFORM_SRC

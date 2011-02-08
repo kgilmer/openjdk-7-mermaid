@@ -124,7 +124,7 @@ OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
 OTHER_LDLIBS = $(JVMLIB) $(LIBM) $(LIBDL)
 endif
 
-ifeq  ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 FILES_c = $(FILES_2D_c)
 FILES_c += awt_LoadLibrary.c
 OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH

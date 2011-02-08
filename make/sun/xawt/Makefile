@@ -28,8 +28,13 @@ MODULE  = awt
 PACKAGE = sun.awt.X11
 LIBRARY = mawt
 LIBRARY_OUTPUT = xawt
-LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/xawt
 PRODUCT = sun
+
+ifeq ($(PLATFORM), macosx)
+LIB_LOCATION = $(LIBDIR)/xawt
+else
+LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/xawt
+endif
 
 include $(BUILDDIR)/common/Defs.gmk
 
@@ -62,7 +67,7 @@ LDFLAGS += -lpthread
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 LDFLAGS += -pthread
 dummy := $(shell $(MKDIR) -p $(LIB_LOCATION))
 endif
@@ -200,6 +205,13 @@ endif # sparcv9
 
 else # !solaris
 
+ifeq ($(PLATFORM), macosx)
+CFLAGS_32=-arch i386
+SIZERS = $(SIZER).32 $(SIZER).64
+SIZERS_C = $(SIZER_32_C) $(SIZER_64_C)
+SIZES = $(WRAPPER_GENERATOR_DIR)/sizes.32 $(WRAPPER_GENERATOR_DIR)/sizes.64
+CFLAGS_64=-arch x86_64
+else # !macosx
 ifeq ($(ARCH_DATA_MODEL), 32)
 SIZERS = $(SIZER).32
 SIZERS_C = $(SIZER_32_C)
@@ -209,7 +221,7 @@ SIZERS = $(SIZER).64
 SIZERS_C = $(SIZER_64_C)
 SIZES = $(WRAPPER_GENERATOR_DIR)/sizes.64
 endif # 32
-
+endif # !macosx
 endif # solaris
 
 # XXX Hack for 6185483 - use hard-coded sizes.

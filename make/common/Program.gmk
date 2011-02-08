@@ -82,6 +82,13 @@ ifeq ($(PLATFORM), bsd)
 # Work-around an dlsym(RTLD_DEFAULT) bug in at least FreeBSD & OpenBSD
     LDFLAGS += -Wl,--export-dynamic
   endif
+endif
+  ifeq ($(PLATFORM), macosx)
+    ifneq ($(ARCH), universal)
+    LDFLAGS += -Wl,-all_load
+    endif
+    LDFLAGS += $(OUTPUTDIR)/tmp/java/jli/$(OBJDIRNAME)/static/libjli.a
+
   ifeq ($(SYSTEM_ZLIB),true)
       OTHER_LDLIBS += -lz
   endif
@@ -187,6 +194,12 @@ endif # USE_PTHREADS
 
 ifeq ($(PLATFORM), bsd)
 THREADLIBS = -pthread
+endif
+
+ifeq ($(PLATFORM), macosx)
+THREADLIBS = -pthread
+# Needed for linking the various launchers
+LDFLAGS += -framework Cocoa -framework Security -framework ApplicationServices
 endif
 
 #

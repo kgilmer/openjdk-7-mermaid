@@ -744,6 +744,14 @@ OGLBlitLoops_SurfaceToSwBlit(JNIEnv *env, OGLContext *oglc,
                               dstInfo.scanStride / dstInfo.pixelStride);
             j2d_glPixelStorei(GL_PACK_ALIGNMENT, pf.alignment);
 
+            if (srcOps->isOpaque) {
+                // For some reason Apple's OpenGL implementation will
+                // read back zero values from the alpha channel of an
+                // opaque surface when using glReadPixels(), so here we
+                // force the resulting pixels to be fully opaque.
+                j2d_glPixelTransferf(GL_ALPHA_BIAS, 1.0);
+            }
+
             J2dTraceLn4(J2D_TRACE_VERBOSE, "  sx=%d sy=%d w=%d h=%d",
                         srcx, srcy, width, height);
             J2dTraceLn2(J2D_TRACE_VERBOSE, "  dx=%d dy=%d",
@@ -762,6 +770,10 @@ OGLBlitLoops_SurfaceToSwBlit(JNIEnv *env, OGLContext *oglc,
                 srcy--;
                 dsty++;
                 height--;
+            }
+
+            if (srcOps->isOpaque) {
+                j2d_glPixelTransferf(GL_ALPHA_BIAS, 0.0);
             }
 
             j2d_glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
@@ -814,11 +826,24 @@ OGLBlitLoops_CopyArea(JNIEnv *env,
     SurfaceData_IntersectBlitBounds(&dstBounds, &srcBounds, -dx, -dy);
 
     if (dstBounds.x1 < dstBounds.x2 && dstBounds.y1 < dstBounds.y2) {
+        if (dstOps->isOpaque) {
+            // For some reason Apple's OpenGL implementation will fail
+            // to render glCopyPixels() when the src/dst rectangles are
+            // overlapping and glColorMask() has disabled writes to the
+            // alpha channel.  The workaround is to temporarily re-enable
+            // the alpha channel during the glCopyPixels() operation.
+            j2d_glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        }
+
         OGLBlitSurfaceToSurface(oglc, dstOps, dstOps,
                                 srcBounds.x1, srcBounds.y1,
                                 srcBounds.x2, srcBounds.y2,
                                 dstBounds.x1, dstBounds.y1,
                                 dstBounds.x2, dstBounds.y2);
+
+        if (dstOps->isOpaque) {
+            j2d_glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+        }
     }
 }
 
