@@ -348,11 +348,6 @@ OTHER_INCLUDES += \
   -I$(PLATFORM_SRC)/native/java/net \
   -I$(CLASSHDRDIR)/../../../java.lang/java/CClassHeaders
 
-ifeq ($(PLATFORM), bsd)
-OTHER_INCLUDES += \
-  -I$(PLATFORM_SRC)/hpi/include
-endif
-
 ifeq ($(PLATFORM),windows)
   OTHER_LDLIBS += $(JVMLIB) ws2_32.lib \
      -libpath:$(LIBDIR) java.lib \
@@ -360,16 +355,15 @@ ifeq ($(PLATFORM),windows)
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/io_util.obj \
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/FileDescriptor_md.obj
 else
-ifeq ($(PLATFORM), solaris)
-OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 $(LIBDL)
-endif # solaris
-OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet
 ifeq ($(PLATFORM), linux)
-OTHER_LDLIBS += -lpthread $(LIBDL)
+OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread $(LIBDL)
 endif
 ifeq ($(PLATFORM), bsd)
-OTHER_LDLIBS += -pthread
+OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -pthread
 endif
+ifeq ($(PLATFORM), solaris)
+OTHER_LDLIBS += $(JVMLIB) $(LIBSOCKET) -lposix4 $(LIBDL) -lsendfile \
+		-L$(LIBDIR)/$(LIBARCH) -ljava -lnet
 endif # PLATFORM
 
 #

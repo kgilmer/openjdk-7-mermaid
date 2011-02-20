@@ -37,10 +37,6 @@
 #include "nio.h"
 #include "nio_util.h"
 
-#if defined(_ALLBSD_SOURCE)
-#include "largefile_bsd.h"
-#endif
-
 static int preCloseFD = -1;     /* File descriptor to which we dup other fd's
                                    before closing them for real */
 
