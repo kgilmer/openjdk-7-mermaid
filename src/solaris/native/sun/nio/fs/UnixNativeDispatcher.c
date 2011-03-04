@@ -51,6 +51,15 @@
 
 #ifdef _ALLBSD_SOURCE
 #include <string.h>
+
+#define stat64 stat
+#define statvfs64 statvfs
+
+#define open64 open
+#define fstat64 fstat
+#define lstat64 lstat
+#define dirent64 dirent
+#define readdir64_r readdir_r
 #endif
 
 #include "jni.h"
@@ -202,7 +211,7 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
 
     /* system calls that might not be available at run time */
 
-#if defined(__solaris__) && defined(_LP64)
+#if (defined(__solaris__) && defined(_LP64)) || defined(_ALLBSD_SOURCE)
     /* Solaris 64-bit does not have openat64/fstatat64 */
     my_openat64_func = (openat64_func*)dlsym(RTLD_DEFAULT, "openat");
     my_fstatat64_func = (fstatat64_func*)dlsym(RTLD_DEFAULT, "fstatat");
