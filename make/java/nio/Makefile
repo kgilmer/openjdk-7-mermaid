@@ -354,7 +354,7 @@ ifeq ($(PLATFORM),windows)
      $(OBJDIR)/../../../../sun/java.net/net/$(OBJDIRNAME)/net.lib \
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/io_util.obj \
      $(OBJDIR)/../../../java.lang/java/$(OBJDIRNAME)/FileDescriptor_md.obj
-else
+endif
 ifeq ($(PLATFORM), linux)
 OTHER_LDLIBS += -L$(LIBDIR)/$(LIBARCH) -ljava -lnet -lpthread $(LIBDL)
 endif
