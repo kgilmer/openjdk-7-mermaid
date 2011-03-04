@@ -26,7 +26,6 @@
 package sun.nio.fs;
 
 import java.nio.file.*;
-import java.nio.file.attribute.*;
 import java.io.IOException;
 import java.util.*;
 import java.security.AccessController;
@@ -50,31 +49,13 @@ class BsdFileSystem extends UnixFileSystem {
         return new PollingWatchService();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <V extends FileAttributeView> V newFileAttributeView(Class<V> view,
-                                                                UnixPath file,
-                                                                LinkOption... options)
-    {
-        return super.newFileAttributeView(view, file, options);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public DynamicFileAttributeView newFileAttributeView(String name,
-                                                         UnixPath file,
-                                                         LinkOption... options)
-    {
-        return super.newFileAttributeView(name, file, options);
-    }
-
     // lazy initialization of the list of supported attribute views
     private static class SupportedFileFileAttributeViewsHolder {
         static final Set<String> supportedFileAttributeViews =
             supportedFileAttributeViews();
         private static Set<String> supportedFileAttributeViews() {
             Set<String> result = new HashSet<String>();
-            result.addAll(UnixFileSystem.standardFileAttributeViews());
+            result.addAll(standardFileAttributeViews());
             return Collections.unmodifiableSet(result);
         }
     }
@@ -114,10 +95,7 @@ class BsdFileSystem extends UnixFileSystem {
         return entries;
     }
 
-    @Override
-    FileStore getFileStore(UnixPath path) throws IOException {
-        return new BsdFileStore(path);
-    }
+
 
     @Override
     FileStore getFileStore(UnixMountEntry entry) throws IOException {

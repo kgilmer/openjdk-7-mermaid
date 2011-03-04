@@ -25,6 +25,10 @@
 
 package sun.nio.fs;
 
+import java.nio.file.*;
+import java.nio.file.attribute.*;
+import java.io.IOException;
+
 /**
  * Bsd implementation of FileSystemProvider
  */
@@ -37,5 +41,43 @@ public class BsdFileSystemProvider extends UnixFileSystemProvider {
     @Override
     BsdFileSystem newFileSystem(String dir) {
         return new BsdFileSystem(this, dir);
+    }
+
+    @Override
+    BsdFileStore getFileStore(UnixPath path) throws IOException {
+        return new BsdFileStore(path);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <V extends FileAttributeView> V getFileAttributeView(Path obj,
+                                                                Class<V> type,
+                                                                LinkOption... options)
+    {
+        return super.getFileAttributeView(obj, type, options);
+    }
+
+    @Override
+    public DynamicFileAttributeView getFileAttributeView(Path obj,
+                                                         String name,
+                                                         LinkOption... options)
+    {
+        return super.getFileAttributeView(obj, name, options);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <A extends BasicFileAttributes> A readAttributes(Path file,
+                                                            Class<A> type,
+                                                            LinkOption... options)
+        throws IOException
+    {
+        if (type == DosFileAttributes.class) {
+            DosFileAttributeView view =
+                getFileAttributeView(file, DosFileAttributeView.class, options);
+            return (A) view.readAttributes();
+        } else {
+            return super.readAttributes(file, type, options);
+        }
     }
 }
