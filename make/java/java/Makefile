@@ -95,6 +95,12 @@ INIT += $(GENSRCDIR)/java/lang/UNIXProcess.java
 
 endif # PLATFORM
 
+ifeq ($(PLATFORM),macosx)
+FILES_objc +=   java_props_md.m
+else
+FILES_c    +=   java_props_md.c
+endif
+
 #
 # Make sure first rule does 'all'
 #
@@ -128,6 +134,9 @@ rbcontrolsrc: $(GENSRCDIR)/sun/util/CoreResourceBundleControl.java
 #
 # Add to the default C file search paths
 #
+ifeq ($(PLATFORM), macosx)
+vpath %.m $(call NativeSrcDirList,,native/java/lang)
+endif
 vpath %.c $(PLATFORM_SRC)/native/java/lang:$(SHARE_SRC)/native/java/lang
 vpath %.c $(SHARE_SRC)/native/java/lang/ref
 vpath %.c $(SHARE_SRC)/native/java/lang/reflect
@@ -167,7 +176,9 @@ OTHER_INCLUDES += -I$(PLATFORM_SRC)/native/java/util
 #
 ifneq ($(PLATFORM), windows)
 ifneq ($(PLATFORM), bsd)
+ifneq ($(PLATFORM), macosx)
 HAVE_ALTZONE=true
+endif
 endif
 endif
 
@@ -208,6 +219,9 @@ OTHER_LDLIBS += $(JVMLIB) -libpath:$(OBJDIR)/../../../fdlibm/$(OBJDIRNAME) fdlib
 else
 OTHER_LDLIBS += $(JVMLIB) -lverify $(LIBSOCKET) $(LIBNSL) $(LIBDL) \
 		-L$(OBJDIR)/../../../fdlibm/$(OBJDIRNAME) -lfdlibm.$(ARCH)
+ifeq ($(PLATFORM), macosx)
+OTHER_LDLIBS += -framework CoreFoundation -framework SystemConfiguration -framework JavaRuntimeSupport
+endif
 endif
 
 #
@@ -244,8 +258,15 @@ ifneq ($(PLATFORM),windows)
 # UNIXProcess.java is different for solaris and linux. We need to copy
 # the correct UNIXProcess.java over to $(GENSRCDIR)/java/lang/.
 
-$(GENSRCDIR)/java/lang/UNIXProcess.java: \
+ifeq ($(PLATFORM), macosx)
+PLATFORM_UNIX_PROCESS = \
+    $(PLATFORM_SRC)/classes/java/lang/UNIXProcess.java.bsd
+else
+PLATFORM_UNIX_PROCESS = \
     $(PLATFORM_SRC)/classes/java/lang/UNIXProcess.java.$(PLATFORM)
+endif
+
+$(GENSRCDIR)/java/lang/UNIXProcess.java: $(PLATFORM_UNIX_PROCESS)
 	$(install-non-module-file)
 
 clean:: 

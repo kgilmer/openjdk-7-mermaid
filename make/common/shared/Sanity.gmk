@@ -146,7 +146,7 @@ ifeq ($(PLATFORM), windows)
     $(EGREP) "\#define" | $(NAWK) '{print $$3}')
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
   FREE_SPACE := $(shell BLOCKSIZE=512 $(DF) $(OUTPUTDIR) | $(TAIL) -1 | $(NAWK) '{print $$2;}')
   TEMP_FREE_SPACE := $(shell BLOCKSIZE=512 $(DF) $(TEMP_DISK) | $(TAIL) -1 | $(NAWK) '{print $$2;}')
 endif

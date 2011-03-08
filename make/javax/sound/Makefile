@@ -107,7 +107,7 @@ ifeq ($(PLATFORM), linux)
 endif # PLATFORM linux
 
 # XXXBSD: ???
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
     # build with empty MIDI i/o
     INCLUDE_MIDI = TRUE
     # build with empty ports

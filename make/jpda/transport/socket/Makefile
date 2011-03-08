@@ -41,7 +41,7 @@ ifeq ($(PLATFORM), linux)
   OTHER_LDLIBS += $(LIBNSL) $(LIBSOCKET) -lpthread
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
   LIBSOCKET =
   OTHER_LDLIBS += -pthread
 endif

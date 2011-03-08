@@ -36,6 +36,8 @@ FILES_linux =
 
 FILES_bsd =
 
+FILES_macosx =
+
 FILES_windows = \
 	PLATFORM_API_WinOS_MidiIn.c \
 	PLATFORM_API_WinOS_MidiOut.c \

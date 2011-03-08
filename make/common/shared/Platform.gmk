@@ -226,7 +226,14 @@ ifeq ($(SYSTEM_UNAME), FreeBSD)
 endif
 
 ifeq ($(SYSTEM_UNAME), Darwin)
-  PLATFORM = bsd
+  # By default, Darwin will get special treatment as a macosx build,
+  # but we allow the user to override this behavior and treat Darwin
+  # as a BSD variant instead.
+  ifdef DARWIN_AS_BSD
+    PLATFORM = bsd
+  else
+    PLATFORM = macosx
+  endif
   OS_NAME = darwin
   OS_VENDOR = Apple
   REQUIRED_OS_VERSION = 8.0
@@ -246,8 +253,8 @@ ifeq ($(SYSTEM_UNAME), OpenBSD)
   REQUIRED_OS_VERSION = 4.2
 endif
 
-# Platform settings specific to BSD
-ifeq ($(PLATFORM), bsd)
+# Platform settings specific to BSD/Mac OS X
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
   OS_VERSION := $(shell uname -r)
   # Arch and OS name/version
   mach := $(shell uname -m)
@@ -274,17 +281,17 @@ ifeq ($(PLATFORM), bsd)
   ARCH        := $(shell $(archExpr) )
   ARCH_FAMILY := $(ARCH)
 
-  # Darwin builds may be 32-bit or 64-bit data model.
-  ifeq ($(SYSTEM_UNAME), Darwin)
-    ifeq ($(ARCH), i586)
-      ifeq ($(ARCH_DATA_MODEL), 64)
-        ARCH=amd64
+  # Darwin x86 builds are i386/amd64 universal.
+  ifeq ($(PLATFORM), macosx)
+      ifneq ($(ARCH), ppc)
+          ARCH=universal
       endif
-    endif
   endif
 
   # i586, sparc, and ppc are 32 bit, amd64 and sparc64 are 64
-  ifneq (,$(findstring $(ARCH), i586 sparc ppc))
+  # ARCH_DATA_MODEL does not exactly mean anything in universal
+  # but it has to be one or the other, so pick 32
+  ifneq (,$(findstring $(ARCH), i586 sparc ppc universal))
     ARCH_DATA_MODEL=32
   else
     ARCH_DATA_MODEL=64
@@ -519,7 +526,15 @@ ifeq ($(SYSTEM_UNAME),Darwin)
   # The suffix applied to runtime libraries
   LIBRARY_SUFFIX = dylib
   # The suffix applied to link libraries
-  LIB_SUFFIX = dylib
+  ifeq ($(ARCH), universal)
+    LIB_SUFFIX = o
+  else
+    LIB_SUFFIX = a
+  endif
+
+  ifeq ($(PLATFORM), macosx)
+  	ARCH_VM_SUBDIR=jre/lib
+  endif
 endif
 
 # Machines with 512Mb or less of real memory are considered low memory

@@ -119,6 +119,7 @@ MSGFMT         = $(UTILS_USR_BIN_PATH)msgfmt
 MV             = $(UTILS_COMMAND_PATH)mv
 NAWK           = $(UTILS_USR_BIN_PATH)nawk
 NM             = $(UTILS_CCS_BIN_PATH)nm
+OTOOL          = $(UTILS_USR_BIN_PATH)otool
 PKGMK          = $(UTILS_COMMAND_PATH)pkgmk
 PRINTF         = $(UTILS_USR_BIN_PATH)printf
 PWD            = $(UTILS_COMMAND_PATH)pwd
@@ -213,7 +214,7 @@ ifeq ($(PLATFORM),solaris)
 endif
 
 # BSD specific
-ifeq ($(PLATFORM),bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx)) 
   BASENAME     = $(UTILS_USR_BIN_PATH)basename
   EGREP        = $(UTILS_USR_BIN_PATH)egrep
   EXPR         = $(UTILS_COMMAND_PATH)expr

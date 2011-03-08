@@ -58,6 +58,12 @@ FILES_o   = $(patsubst %.c,   %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notd
 FILES_o  += $(patsubst %.s,   %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_s))))
 FILES_o  += $(patsubst %.cpp, %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_cpp))))
 
+ifeq ($(PLATFORM), macosx)
+FILES_o  += $(patsubst %.m,   %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_objc))))
+endif # PLATFORM
+
+INCREMENTAL_BUILD=false
+
 ifeq ($(INCREMENTAL_BUILD),true)
 FILES_d   = $(patsubst %.c,   %.$(DEPEND_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_c))))
 FILES_d  += $(patsubst %.cpp, %.$(DEPEND_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_cpp))))
@@ -231,7 +237,7 @@ $(ACTUAL_LIBRARY):: $(COMPILE_FILES_o) $(FILES_m) $(FILES_reorder)
 	@$(ECHO) "STATS: LIBRARY=$(LIBRARY), PRODUCT=$(PRODUCT), OPTIMIZATION_LEVEL=$(OPTIMIZATION_LEVEL)"
 	@$(ECHO) "Rebuilding $@ because of $?"
 ifeq ($(LIBRARY), fdlibm)
-	$(AR) -r $@ $(FILES_o)
+	$(AR) $(ARFLAGS) $@ $(FILES_o)
 else # LIBRARY
 	$(LINKER) $(SHARED_LIBRARY_FLAG) -o $@ $(FILES_o) $(LDLIBS)
 	@$(call binary_file_verification,$@)
