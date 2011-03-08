@@ -122,7 +122,7 @@ static void DumpState();
 static jboolean RemovableOption(char *option);
 
 #ifdef __APPLE__
-static int ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv, char *jarfile, char *classname, int ret);
+static int ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv, int mode, char *what, int ret);
 #endif
 
 /* Maximum supported entries from jvm.cfg. */
@@ -1944,8 +1944,8 @@ ContinueInNewThread(InvocationFunctions* ifn, int argc, char **argv,
 
 #ifdef __APPLE__
 static int
-ContinueInSameThread(InvocationFunctions* ifn, int argc,
-                    char **argv, char *jarfile, char *classname, int ret)
+ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv,
+		     int mode, char *what, int ret)
 {
         
     /*
@@ -1969,8 +1969,8 @@ ContinueInSameThread(InvocationFunctions* ifn, int argc,
         
         args.argc = argc;
         args.argv = argv;
-        args.jarfile = jarfile;
-        args.classname = classname;
+        args.mode = mode;
+        args.what = what;
         args.ifn = *ifn;
         
         rslt = JavaMain((void*)&args);
