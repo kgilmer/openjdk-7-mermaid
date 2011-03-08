@@ -183,5 +183,5 @@ define binary_file_verification # binary_file
   $(OTOOL) -L $1 && \
   $(ECHO) "RUNPATH for: $1" && \
   ( $(OTOOL) -l $1 | $(EGREP) 'path ' ) \
-)
+) || true
 endef
