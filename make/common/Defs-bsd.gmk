@@ -297,7 +297,11 @@ endif
 # the library itself should not.
 #
 VM_NAME         = server
+ifeq ($(OS_VENDOR),Apple)
+JVMLIB          = -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+else
 JVMLIB          = -Xlinker -rpath -Xlinker $(LIBDIR)/$(LIBARCH)/$(VM_NAME) -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+endif
 JAVALIB         = -ljava $(JVMLIB)
 
 #
