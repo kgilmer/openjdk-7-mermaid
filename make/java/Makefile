@@ -57,6 +57,10 @@ ifneq (,$(findstring $(PLATFORM), linux bsd))
   SUBDIRS += jexec
 endif # PLATFORM
 
+ifeq ($(PLATFORM), macosx)
+  SUBDIRS += jobjc
+endif # PLATFORM
+
 include $(BUILDDIR)/common/Subdirs.gmk
 
 all build clean clobber::
