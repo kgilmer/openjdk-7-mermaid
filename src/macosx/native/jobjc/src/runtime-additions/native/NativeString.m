@@ -21,10 +21,6 @@
  * questions.
  *
  */
-//
-//  NativeString.m
-//  Copyright 2007 Apple Inc. All rights reserved.
-//
 
 #include "com_apple_jobjc_Utils_Strings.h"
 

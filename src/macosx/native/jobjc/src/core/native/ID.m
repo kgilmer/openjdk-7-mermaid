@@ -21,10 +21,6 @@
  * questions.
  *
  */
-//
-//  ID.m
-//  Copyright 2007 Apple Inc. All rights reserved.
-//
 
 #include "com_apple_jobjc_ID.h"
 
