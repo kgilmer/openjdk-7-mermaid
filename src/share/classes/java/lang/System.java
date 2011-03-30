@@ -1186,7 +1186,8 @@ public final class System {
         // Cache systemUsesJnilib, which needs to be set after initProperties
         // is called. This is done to avoid slowing down mapLegacyLibraryNames
         // for the uncommon case of it having to return something.
-        systemUsesJnilib = System.getProperty("os.name").startsWith("Mac OS X");
+	String osName = System.getProperty("os.name");
+        systemUsesJnilib = osName.startsWith("Mac OS X") || osName.startsWith("Darwin");
 
         // register shared secrets
         setJavaLangAccess();
