@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -337,7 +337,9 @@ GetJavaProperties(JNIEnv *env)
 
     /* Java 2D properties */
     sprops.graphics_env = "sun.awt.X11GraphicsEnvironment";
-    sprops.awt_toolkit = NULL;
+
+    /* AWT properties */
+    sprops.awt_toolkit = "sun.awt.X11.XToolkit";
 
     /* This is used only for debugging of font problems. */
     v = getenv("JAVA2D_FONTPATH");

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -95,11 +95,7 @@ INIT += $(GENSRCDIR)/java/lang/UNIXProcess.java
 
 endif # PLATFORM
 
-ifeq ($(PLATFORM),macosx)
-FILES_objc +=   java_props_md.m
-else
 FILES_c    +=   java_props_md.c
-endif
 
 #
 # Make sure first rule does 'all'
@@ -134,9 +130,6 @@ rbcontrolsrc: $(GENSRCDIR)/sun/util/CoreResourceBundleControl.java
 #
 # Add to the default C file search paths
 #
-ifeq ($(PLATFORM), macosx)
-vpath %.m $(call NativeSrcDirList,,native/java/lang)
-endif
 vpath %.c $(PLATFORM_SRC)/native/java/lang:$(SHARE_SRC)/native/java/lang
 vpath %.c $(SHARE_SRC)/native/java/lang/ref
 vpath %.c $(SHARE_SRC)/native/java/lang/reflect
@@ -220,9 +213,13 @@ else
 OTHER_LDLIBS += $(JVMLIB) -lverify $(LIBSOCKET) $(LIBNSL) $(LIBDL) \
 		-L$(OBJDIR)/../../../fdlibm/$(OBJDIRNAME) -lfdlibm.$(ARCH)
 ifeq ($(PLATFORM), macosx)
-OTHER_LDLIBS += -framework CoreFoundation -framework SystemConfiguration -framework JavaRuntimeSupport
+OTHER_LDLIBS += \
+	-framework CoreFoundation \
+	-framework SystemConfiguration \
+	-framework JavaRuntimeSupport
 endif
 endif
+
 
 #
 # Rules.

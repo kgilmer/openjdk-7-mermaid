@@ -60,7 +60,9 @@ endif # PLATFORM_SRC
 JAVA_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
 NATIVE_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
 
-OTHER_CFLAGS = -F/System/Library/Frameworks/JavaVM.framework/Frameworks
+OTHER_CFLAGS = \
+        -F/System/Library/Frameworks/JavaVM.framework/Frameworks \
+	-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
 
 # Platform specific closed sources
 ifndef OPENJDK

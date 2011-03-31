@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -199,16 +199,18 @@ endif # PLATFORM
 
 # set up compile flags..
 
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR) \
-            -I$(SHARE_SRC)/native/$(PKGDIR)/layout \
-	    -I$(SHARE_SRC)/native/sun/awt/image/cvutils \
-	    -I$(PLATFORM_SRC)/native/sun/awt \
-	    -I$(SHARE_SRC)/native/sun/awt/debug \
-	    -I$(SHARE_SRC)/native/sun/java2d/loops \
-	    -I$(SHARE_SRC)/native/sun/java2d/pipe \
-            -I$(PLATFORM_SRC)/native/sun/java2d \
-	    -I$(SHARE_SRC)/native/sun/java2d \
-	    -I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders
+CPPFLAGS += \
+        -I$(CLASSHDRDIR) \
+	-I$(SHARE_SRC)/native/$(PKGDIR) \
+        -I$(SHARE_SRC)/native/$(PKGDIR)/layout \
+	-I$(SHARE_SRC)/native/sun/awt/image/cvutils \
+	-I$(PLATFORM_SRC)/native/sun/awt \
+	-I$(SHARE_SRC)/native/sun/awt/debug \
+	-I$(SHARE_SRC)/native/sun/java2d/loops \
+	-I$(SHARE_SRC)/native/sun/java2d/pipe \
+        -I$(PLATFORM_SRC)/native/sun/java2d \
+	-I$(SHARE_SRC)/native/sun/java2d \
+	-I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders
 
 ifeq ($(PLATFORM), windows)
 CPPFLAGS += -I$(PLATFORM_SRC)/native/sun/windows
