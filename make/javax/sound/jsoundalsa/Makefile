@@ -52,6 +52,7 @@ FILES_c = \
 	$(PORTFILES_c)
 
 # platform dependent files
+ifeq ($(PLATFORM), linux)
 FILES_c += \
 	PLATFORM_API_LinuxOS_ALSA_CommonUtils.c   \
 	PLATFORM_API_LinuxOS_ALSA_PCM.c     \
@@ -60,20 +61,33 @@ FILES_c += \
 	PLATFORM_API_LinuxOS_ALSA_MidiOut.c \
 	PLATFORM_API_LinuxOS_ALSA_MidiUtils.c \
 	PLATFORM_API_LinuxOS_ALSA_Ports.c
+endif
+
+ifeq ($(PLATFORM), bsd)
+FILES_c += \
+	PLATFORM_API_BsdOS_ALSA_CommonUtils.c   \
+	PLATFORM_API_BsdOS_ALSA_PCM.c     \
+	PLATFORM_API_BsdOS_ALSA_PCMUtils.c   \
+	PLATFORM_API_BsdOS_ALSA_MidiIn.c  \
+	PLATFORM_API_BsdOS_ALSA_MidiOut.c \
+	PLATFORM_API_BsdOS_ALSA_MidiUtils.c \
+	PLATFORM_API_BsdOS_ALSA_Ports.c
+endif
 
 FILES_export = \
 	$(DAUDIOFILES_export) \
 	$(MIDIFILES_export) \
 	$(PORTFILES_export)
 
-LDFLAGS += -lasound
+LDFLAGS += -L$(ALSA_LIB_PATH) -lasound
 
 CPPFLAGS += \
 	-DUSE_DAUDIO=TRUE \
 	-DUSE_PORTS=TRUE  \
 	-DUSE_PLATFORM_MIDI_OUT=TRUE \
 	-DUSE_PLATFORM_MIDI_IN=TRUE \
-	-I$(SHARE_SRC)/native/com/sun/media/sound
+	-I$(SHARE_SRC)/native/com/sun/media/sound \
+	-I$(ALSA_HEADERS_PATH)
 
 #
 # Add to the ambient VPATH.

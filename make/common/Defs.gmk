@@ -137,6 +137,19 @@ ifneq ($(PLATFORM), windows)
       endif
     endif
   endif
+
+  # ALSA
+  ifdef ALT_ALSA_LIB_PATH
+    ALSA_LIB_PATH = $(ALT_ALSA_LIB_PATH)
+  else
+    ALSA_LIB_PATH = $(PACKAGE_PATH)/lib
+  endif
+
+  ifdef ALT_ALSA_HEADERS_PATH
+    ALSA_HEADERS_PATH = $(ALT_ALSA_HEADERS_PATH)
+  else
+    ALSA_HEADERS_PATH = $(PACKAGE_PATH)/include
+  endif
 endif
 
 #
