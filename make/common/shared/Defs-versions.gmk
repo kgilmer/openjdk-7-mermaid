@@ -39,9 +39,14 @@ ifeq ($(PLATFORM), solaris)
   override CC_VERSION = sun
 endif
 
-# Linux/BSD/Mac OS X use GNU compilers by default
-ifneq (,$(findstring $(PLATFORM), linux bsd macosx))
+# Linux/BSD X use GNU compilers by default
+ifneq (,$(findstring $(PLATFORM), linux bsd))
   override CC_VERSION = gcc
+endif
+
+# Mac OS X uses LLVM by default
+ifeq ($(PLATFORM), macosx)
+  override CC_VERSION = llvm
 endif
 
 ##########################################################################
@@ -164,6 +169,13 @@ ifeq ($(PLATFORM), linux)
   ifeq ($(CC_VERSION),sun)
     REQUIRED_CC_VER           = 5.10
   endif
+endif
+
+# Linux specific
+ifeq ($(PLATFORM), macosx)
+  REQUIRED_OS_NAME            = Darwin
+  REQUIRED_OS_VERSION         = 10.6
+  REQUIRED_FREE_SPACE         = 1460000
 endif
 
 # Windows specific

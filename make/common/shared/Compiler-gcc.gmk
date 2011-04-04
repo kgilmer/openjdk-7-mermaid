@@ -74,26 +74,18 @@ ifeq ($(PLATFORM), linux)
 
 endif
 
-ifneq (,$(findstring $(PLATFORM), bsd macosx))
+ifeq ($(PLATFORM), bsd)
 
-  # Settings specific to BSD / Mac OS X
+  # Settings specific to BSD
   CC             ?= $(COMPILER_PATH)gcc
   CPP            ?= $(COMPILER_PATH)gcc -E
   CXX            ?= $(COMPILER_PATH)g++
   REQUIRED_CC_VER = 3.2
 
   # Option used to create a shared library
-  ifeq ($(OS_VENDOR), Apple)
-    SHARED_LIBRARY_FLAG = -Wl,-install_name,@rpath/$(@F) -dynamiclib -compatibility_version 1.0.0 -current_version 1.0.0
-  else
-    SHARED_LIBRARY_FLAG = -shared
-  endif
-  SUN_COMP_VER := $(shell $(CC) --verbose 2>&1 )
+  SHARED_LIBRARY_FLAG = -shared
 
-  ifeq ($(ARCH), universal)
-    AR = $(CC)
-    ARFLAGS = -nostdlib -r -arch i386 -arch x86_64 -o
-  endif
+  SUN_COMP_VER := $(shell $(CC) --verbose 2>&1 )
 endif
 
 ifeq ($(PLATFORM), solaris)
