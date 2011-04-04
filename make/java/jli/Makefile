@@ -174,7 +174,7 @@ ifneq (,$(findstring $(PLATFORM), bsd macosx))
 
 ifeq ($(PLATFORM), macosx)
 # Some Obj-C code is embedded in java_md.c, so need to inform compiler
-CFLAGS_$(VARIANT)/java_md.o = -O3 -x objective-c
+CFLAGS_$(VARIANT)/java_md.o = -Os -x objective-c
 # Needed for linking the various launchers
 LDFLAGS += -framework Cocoa -framework Security -framework ApplicationServices
 endif

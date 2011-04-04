@@ -109,10 +109,12 @@ ifndef FASTDEBUG_OPTIMIZATION_LEVEL
   FASTDEBUG_OPTIMIZATION_LEVEL = LOWER
 endif
 
+# use -Os by default, unless -O3 can be proved to be worth the cost, as per policy
+# <http://wikis.sun.com/display/OpenJDK/Mac+OS+X+Port+Compilers>
 CC_OPT/NONE     = 
-CC_OPT/LOWER    = -O2
-CC_OPT/HIGHER   = -O3
-CC_OPT/HIGHEST  = -O3
+CC_OPT/LOWER    = -Os
+CC_OPT/HIGHER   = -Os
+CC_OPT/HIGHEST  = -Os
 
 CC_OPT          = $(CC_OPT/$(OPTIMIZATION_LEVEL))
 
