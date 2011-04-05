@@ -31,26 +31,17 @@
 #import "LWCToolkit.h"
 #import "ThreadUtilities.h"
 
-@implementation AWTToolkit
-//A marker method for the native sync queue routine.
-+(void) doNothing {}
 
-+(long) getEventCount{
+static long eventCount;
+
+@implementation AWTToolkit
+
++ (long) getEventCount{
     return eventCount;
 }
 
-+(void) eventCountPlusPlus{
++ (void) eventCountPlusPlus{
     eventCount++;
-}
-
-+(void) setIconImageForApplication:(NSImage *) image{
-  [NSApp performSelectorOnMainThread: @selector(setApplicationIconImage:) withObject: image waitUntilDone: NO];
-}
-
-+(void) installToolkitThreadNameInJava {
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-    JNU_CallStaticMethodByName(env, NULL, "sun/lwawt/macosx/LWCToolkit",
-                        "installToolkitThreadNameInJava", "()V");
 }
 
 @end
@@ -60,16 +51,15 @@ LWCJavaIDs javaIDs;
 
 //used to check if some event has processed by the main loop in syncNativeQueue.
 
-// Cache the JavaVM when this library is loaded; it never
-// changes (only one JVM per process)
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
+    // Cache the JavaVM when this library is loaded; it never changes (only one JVM per process)
+    jvm = vm;
+    
     void *handle = dlopen(0, RTLD_LAZY | RTLD_GLOBAL);
-
     if (handle != NULL) {
-        void (*fptr)();
-        fptr = dlsym(handle, "JLI_NotifyAWTLoaded");
+        void (*fptr)() = dlsym(handle, "JLI_NotifyAWTLoaded");
         if (fptr != NULL) {
             fptr();
         } else {
@@ -78,14 +68,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     } else {
         fprintf(stderr, "dlopen failed\n");
     }
-    jvm = vm;
+    
 
-    AR_POOL(pool);
-    [ThreadUtilities 
-        performOnMainThread:@selector(clearMenuBarExcludingAppleMenu_OnAppKitThread:)
-        onObject:[CMenuBar class]
-        withObject:NO
-        waitUntilDone:NO awtMode:YES];
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    [ThreadUtilities performOnMainThread:@selector(clearMenuBarExcludingAppleMenu_OnAppKitThread:)
+                                onObject:[CMenuBar class]
+                              withObject:NO
+                           waitUntilDone:NO
+                                 awtMode:YES];
 
     // It's recommended to prepare the system for setting the dock image.
     // Although seem it works on available scenarios even without that.
@@ -157,24 +148,27 @@ GetMenuComponentClass(JNIEnv *env)
  * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL Java_sun_lwawt_macosx_LWCToolkit_nativeSyncQueue
-(JNIEnv *env, jobject self, jlong timeout){
-  int currentEventNum =[AWTToolkit getEventCount];
-
-  [AWTToolkit performSelectorOnMainThread: @selector(doNothing) withObject:nil waitUntilDone:YES];
-
-  if (([AWTToolkit getEventCount] - currentEventNum) != 0) {
-    return JNI_TRUE;
-  }
-  return JNI_FALSE;
+(JNIEnv *env, jobject self, jlong timeout)
+{
+    int currentEventNum = [AWTToolkit getEventCount];
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){}];
+    
+    if (([AWTToolkit getEventCount] - currentEventNum) != 0) {
+        return JNI_TRUE;
+    }
+    
+    return JNI_FALSE;
 }
+
 
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_LWCToolkit_nativeSetApplicationIconImage
 (JNIEnv *env, jobject obj, jlong nsImagePtr)
 {
-  AR_POOL(pool);
-  [AWTToolkit  setIconImageForApplication: jlong_to_ptr(nsImagePtr)];
-  [pool drain];
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [NSApp setApplicationIconImage:(NSImage *)jlong_to_ptr(nsImagePtr)];
+    }];
 }
 
 /*
@@ -227,36 +221,9 @@ Java_sun_awt_SunToolkit_setAppContext
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_LWCToolkit_beep
-  (JNIEnv *env, jobject self)
+(JNIEnv *env, jobject self)
 {
-    AudioServicesPlayAlertSound(kUserPreferredAlert);
-}
-
-static jboolean screenUpdatesEnabled = JNI_TRUE;
-static pthread_mutex_t screenUpdateLock;
-
-void
-AWTDisableScreenUpdates()
-{
-    LOCK(&screenUpdateLock);
-    if (screenUpdatesEnabled) {
-        //fprintf(stderr, "=== DISABLING SCREEN UPDATES\n");
-        NSDisableScreenUpdates();
-        screenUpdatesEnabled = JNI_FALSE;
-    }
-    UNLOCK(&screenUpdateLock);
-}
-
-void
-AWTReenableScreenUpdates()
-{
-    LOCK(&screenUpdateLock);
-    if (!screenUpdatesEnabled) {
-        //fprintf(stderr, "=== RE-ENABLING SCREEN UPDATES\n");
-        NSEnableScreenUpdates();
-        screenUpdatesEnabled = JNI_TRUE;
-    }
-    UNLOCK(&screenUpdateLock);
+    NSBeep(); // produces both sound and visual flash, if configured in System Preferences
 }
 
 CGDirectDisplayID
@@ -279,7 +246,7 @@ FindCGDirectDisplayIDForScreenIndex(jint screenIndex)
             screenID = (CGDirectDisplayID)onlineDisplays[screenIndex];
         } else {
             CGDirectDisplayID *onlineDisplays =
-                malloc(displayCount*sizeof(CGDirectDisplayID));
+			malloc(displayCount*sizeof(CGDirectDisplayID));
             if (onlineDisplays != NULL) {
                 CGGetOnlineDisplayList(displayCount, onlineDisplays,
                                        &displayCount);
@@ -299,14 +266,10 @@ FindCGDirectDisplayIDForScreenIndex(jint screenIndex)
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_LWCToolkit_initIDs
-  (JNIEnv *env, jclass klass)
+(JNIEnv *env, jclass klass)
 {
-    if (pthread_mutex_init(&screenUpdateLock, NULL) != 0) {
-        fprintf(stderr, "pthread_mutex_init() failed: %s\n", strerror(errno));
-    }
-
-    [[NSThread mainThread] setName:@"CToolkit NSThread"];
-
+JNF_COCOA_ENTER(env);
+    
     jclass cls = (*env)->FindClass(env, "sun/lwawt/macosx/CPlatformWindow");
     javaIDs.CPlatformWindow.canBecomeKeyWindow = (*env)->GetMethodID(env, cls,
             "canBecomeKeyWindow", "()Z");
@@ -319,33 +282,17 @@ Java_sun_lwawt_macosx_LWCToolkit_initIDs
     javaIDs.CPlatformView.deliverMouseEvent = (*env)->GetMethodID(env, cls,
             "deliverMouseEvent", "(Lsun/lwawt/macosx/event/NSEvent;)V");
     
-    [AWTToolkit performSelectorOnMainThread: @selector(installToolkitThreadNameInJava)
-                                 withObject: nil
-                              waitUntilDone: NO];
-}
-
-/*
- * Class:     sun_lwawt_macosx_LWCToolkit
- * Method:    disableScreenUpdates
- * Signature: ()V
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_LWCToolkit_disableScreenUpdates
-  (JNIEnv *env, jobject self)
-{
-    AWTDisableScreenUpdates();
-}
-
-/*
- * Class:     sun_lwawt_macosx_LWCToolkit
- * Method:    _reenableScreenUpdates
- * Signature: ()V
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_LWCToolkit__1reenableScreenUpdates
-  (JNIEnv *env, jobject self)
-{
-    AWTReenableScreenUpdates();
+    // set thread names
+    dispatch_async(dispatch_get_main_queue(), ^(void){
+        [[NSThread currentThread] setName:@"CToolkit NSThread"];
+        
+        JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+        JNF_CLASS_CACHE(jc_LWCToolkit, "sun/lwawt/macosx/LWCToolkit");
+        JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
+        JNFCallStaticVoidMethod(env, jsm_installToolkitThreadNameInJava);
+    });
+    
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -356,14 +303,10 @@ Java_sun_lwawt_macosx_LWCToolkit__1reenableScreenUpdates
 JNIEXPORT void JNICALL
 Java_sun_awt_SunToolkit_closeSplashScreen(JNIEnv *env, jclass cls)
 {
-    typedef void (*SplashClose_t)();
-    SplashClose_t splashClose;
-    void* hSplashLib = dlopen(0, RTLD_LAZY);
-    if (!hSplashLib) {
-        return;
-    }
-    splashClose = (SplashClose_t)dlsym(hSplashLib,
-        "SplashClose");
+    void *hSplashLib = dlopen(0, RTLD_LAZY);
+    if (!hSplashLib) return;
+    
+    void (*splashClose)() = dlsym(hSplashLib, "SplashClose");
     if (splashClose) {
         splashClose();
     }
@@ -376,16 +319,16 @@ Java_sun_awt_SunToolkit_closeSplashScreen(JNIEnv *env, jclass cls)
 
 JNIEXPORT jstring JNICALL
 Java_sun_font_FontManager_getFontPath
-    (JNIEnv *env, jclass obj, jboolean noType1)
+(JNIEnv *env, jclass obj, jboolean noType1)
 {
-    return (*env)->NewStringUTF(env, "/usr/X11R6/lib/X11/fonts/TrueType");
+    return JNFNSToJavaString(env, @"/Library/Fonts");
 }
 
 // This isn't yet used on unix, the implementation is added since shared
 // code calls this method in preparation for future use.
 JNIEXPORT void JNICALL
 Java_sun_font_FontManager_populateFontFileNameMap
-    (JNIEnv *env, jclass obj, jobject fontToFileMap,
-     jobject fontToFamilyMap, jobject familyToFontListMap, jobject locale)
+(JNIEnv *env, jclass obj, jobject fontToFileMap, jobject fontToFamilyMap, jobject familyToFontListMap, jobject locale)
 {
+    
 }

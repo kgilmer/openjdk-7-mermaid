@@ -51,10 +51,7 @@
            platformWindow:(jobject) cPlatformWindow
               contentView:(NSView *)contentView;
 
-- (id) getLock;
 - (jobject) cPlatformWindow;
-- (void) toFront;
-- (void) toBack;
 - (void) setMinSizeImpl: (NSSize) minSize;
 - (void) setResizable: (BOOL)resizable;
 - (void) setAlwaysOnTop: (BOOL)isAlwaysOnTop;
@@ -63,15 +60,11 @@
  * Methods that make all Cocoa calls on AppKit thread.
  ******************************************************/
 
-- (void) _setVisible_OnAppKitThread:(NSNumber *)visible;
-
 //NSRect:bounds, BOOL:display
 - (void) _setBounds_OnAppKitThread:(NSArray *)args;
 
 //Takes UInteger style, jobject cPlatformWindow, x, y, width, height
 - (void) _createAWTWindow_OnAppKitThread: (NSMutableArray *)argValue;
-
-- (void) _toFront_OnAppKitThread;
 
 - (void) _setResizable_OnAppKitThread: (NSNumber *)mayResize;
 

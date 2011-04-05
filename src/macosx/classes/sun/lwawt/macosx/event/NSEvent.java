@@ -25,10 +25,7 @@
 
 package sun.lwawt.macosx.event;
 
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-
-import sun.lwawt.macosx.CocoaConstants;
+import java.awt.event.*;
 
 /*
  * A class representing Cocoa NSEvent class with
@@ -36,7 +33,6 @@ import sun.lwawt.macosx.CocoaConstants;
  */
 
 public final class NSEvent {
-
     private int type;
     
     /*
@@ -52,9 +48,10 @@ public final class NSEvent {
     private int absX;
     private int absY;
 
-    public NSEvent(int type, int modifiers, int clickCount, int button, int x,
-            int y, int absX, int absY, double scrollDeltaY, double scrollDeltaX)
-    {
+    public NSEvent(int type, int modifiers, int clickCount, int button,
+            int x, int y,
+            int absX, int absY,
+            double scrollDeltaY, double scrollDeltaX) {
         this.type = type;
         this.modifiers = modifiers;
         this.clickCount = clickCount;
@@ -134,11 +131,10 @@ public final class NSEvent {
     // utility methods
 
     public boolean isPopupTrigger() {
-        int modifiers = getModifiers();
-        boolean isRightButtonDown = ((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0);
-        boolean isLeftButtonDown = ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0);
-        boolean isControlDown = ((modifiers & InputEvent.CTRL_DOWN_MASK) != 0);
-        
+        final int mods = getModifiers();
+        final boolean isRightButtonDown = ((mods & InputEvent.BUTTON3_DOWN_MASK) != 0);
+        final boolean isLeftButtonDown = ((mods & InputEvent.BUTTON1_DOWN_MASK) != 0);
+        final boolean isControlDown = ((mods & InputEvent.CTRL_DOWN_MASK) != 0);
         return isRightButtonDown || (isControlDown && isLeftButtonDown);
     }
 }

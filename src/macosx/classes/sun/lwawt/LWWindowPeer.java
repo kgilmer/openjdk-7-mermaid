@@ -844,17 +844,15 @@ public class LWWindowPeer
             }
             screenOn = windowScreen;
         }
+        
         // TODO: DisplayChangedListener stuff
         final GraphicsConfiguration newGC = getScreenGraphicsConfig(windowScreen);
         if (setGraphicsConfig(newGC)) {
-            LWToolkit.executeOnEventHandlerThread(getTarget(),
-                new Runnable() {
-                    public void run() {
-                        AWTAccessor.getComponentAccessor().
-                            setGraphicsConfiguration(getTarget(), newGC);
-                    }
+            LWToolkit.executeOnEventHandlerThread(getTarget(), new Runnable() {
+                public void run() {
+                    AWTAccessor.getComponentAccessor().setGraphicsConfiguration(getTarget(), newGC);
                 }
-            );
+            });
         }
     }
 

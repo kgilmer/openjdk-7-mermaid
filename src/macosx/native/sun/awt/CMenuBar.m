@@ -186,12 +186,6 @@ static BOOL sSetupHelpMenu = NO;
     @synchronized(self) {
         fModallyDisabled = NO;
     }
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
-    // Before Leopard, deactivate always clears the Java menus
-    // from the menubar.
-    [CMenuBar clearMenuBarExcludingAppleMenu_OnAppKitThread:YES];
-#endif
 }
 
 -(void) javaAddMenu: (CMenu *)theMenu {

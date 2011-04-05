@@ -25,55 +25,42 @@
 
 package sun.lwawt.macosx;
 
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.font.TextAttribute;
 import java.awt.im.InputMethodHighlight;
 import java.awt.im.spi.InputMethodDescriptor;
 import java.awt.peer.*;
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import sun.awt.CGraphicsDevice;
-import sun.awt.CGraphicsEnvironment;
-import sun.awt.SunToolkit;
-import sun.lwawt.LWCursorManager;
-import sun.lwawt.LWToolkit;
-import sun.lwawt.PlatformWindow;
-import sun.lwawt.LWPanelPeer;
+import sun.awt.*;
+import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
 
 /**
  * Mac OS X Cocoa-based AWT Toolkit.
  */
-
 public class LWCToolkit extends LWToolkit {
-
-    //Number of available mouse buttons
-    private static final Integer BUTTONS = 3;
+    private static final Integer BUTTONS = 3; // number of available mouse buttons
     
     private static native void initIDs();
     
     static {
-	System.err.println("LWCToolkit.<clinit>");
-	System.err.flush();
-        java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction<Object>() {
-                public Object run() {
-		    System.loadLibrary("awt");
-		    System.loadLibrary("fontmanager");
-                    return null;
-                }
+        System.err.flush();
+        java.security.AccessController.doPrivileged(new java.security.PrivilegedAction<Object>() {
+            public Object run() {
+                System.loadLibrary("awt");
+                System.loadLibrary("fontmanager");
+                return null;
             }
-        );
-
+        });
+        
         initIDs();
         CWrapper.init();
     }
 
     @Override
-    protected PlatformWindow createPlatformWindow(boolean undecorated,
-                                                  PeerType peerType) {
+    protected PlatformWindow createPlatformWindow(boolean undecorated, PeerType peerType) {
         // TODO: window type
         return new CPlatformWindow(undecorated);
     }
@@ -240,8 +227,7 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
-    public InputMethodDescriptor getInputMethodAdapterDescriptor()
-            throws AWTException {
+    public InputMethodDescriptor getInputMethodAdapterDescriptor() throws AWTException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -286,7 +272,7 @@ public class LWCToolkit extends LWToolkit {
         return true;
     }
 
-    //Intended to be called from the LWCToolkit.m only.
+    // Intended to be called from the LWCToolkit.m only.
     private static void installToolkitThreadNameInJava(){
       Thread.currentThread().setName("CToolkit thread");
     }

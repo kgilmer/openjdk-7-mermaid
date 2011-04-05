@@ -25,27 +25,19 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.*;
 import java.awt.BufferCapabilities.FlipContents;
+import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.awt.image.VolatileImage;
 import java.util.List;
 
 import javax.swing.ImageIcon;
 
-import sun.awt.CGraphicsConfig;
-
-import sun.lwawt.LWWindowPeer;
-import sun.lwawt.PlatformWindow;
-import sun.lwawt.macosx.event.NSEvent;
-
 import sun.java2d.SurfaceData;
+import sun.lwawt.*;
 import sun.util.logging.PlatformLogger;
 
 public class CPlatformWindow implements PlatformWindow {
-
-    private static final PlatformLogger log =
-	PlatformLogger.getLogger("sun.lwawt.macosx.CPlatformWindow");
+    private static final PlatformLogger log = PlatformLogger.getLogger("sun.lwawt.macosx.CPlatformWindow");
 
     private CPlatformView contentView = null;
     
@@ -665,5 +657,4 @@ public class CPlatformWindow implements PlatformWindow {
     private boolean windowShouldClose() {
         return peer.getBlocker() == null;
     }
-
 }

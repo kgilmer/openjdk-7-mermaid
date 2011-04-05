@@ -262,7 +262,7 @@ NSUInteger sPerformCount = 0;
 + (JNIEnv*)getAppKitJNIEnv {
     AWT_ASSERT_APPKIT_THREAD;
     if (appKitEnv == NULL) {
-	(*jvm)->AttachCurrentThreadAsDaemon(jvm, (void **)&appKitEnv, NULL);
+        (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void **)&appKitEnv, NULL);
     }
     return appKitEnv;
 }
@@ -285,7 +285,7 @@ NSUInteger sPerformCount = 0;
         sAWTPerformModes = [[NSArray alloc] initWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode, NSEventTrackingRunLoopMode, AWTRunLoopMode, nil];
         
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
-        sAWTThreadAsserts = (getenv("APPLE_AWT_DISABLE_THREAD_ASSERTS") == NULL);
+        sAWTThreadAsserts = (getenv("COCOA_AWT_DISABLE_THREAD_ASSERTS") == NULL);
 #endif /* AWT_THREAD_ASSERTS_ENV_ASSERT */
     }
 }

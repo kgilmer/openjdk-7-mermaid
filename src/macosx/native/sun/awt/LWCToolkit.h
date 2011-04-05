@@ -38,20 +38,14 @@
 
 #define DEBUG 1
 
-static long eventCount;
 
-@interface AWTToolkit : NSObject {}
+@interface AWTToolkit : NSObject { }
 
-+ (void) doNothing;
 + (long) getEventCount;
 + (void) eventCountPlusPlus;
-+ (void) installToolkitThreadNameInJava;
-+ (void) setIconImageForApplication:(NSImage *) image;
 
 @end
 
-void AWTDisableScreenUpdates();
-void AWTReenableScreenUpdates();
 CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);
 
 typedef struct tagLWCJavaIDs {

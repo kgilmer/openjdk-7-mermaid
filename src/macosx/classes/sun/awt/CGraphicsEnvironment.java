@@ -25,79 +25,93 @@
 
 package sun.awt;
 
-import java.awt.Font;
-import java.awt.GraphicsDevice;
-import java.awt.HeadlessException;
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.*;
+import java.util.*;
 
-import sun.awt.FontConfiguration;
-import sun.awt.SunToolkit;
-
-import sun.lwawt.macosx.LWCToolkit;
-
-import sun.font.FontFamily;
-import sun.java2d.MacosxSurfaceManagerFactory;
-import sun.java2d.SunGraphicsEnvironment;
-import sun.java2d.SurfaceManagerFactory;
+import sun.java2d.*;
 
 /**
- * This is an implementation of a GraphicsEnvironment object for the
- * default local GraphicsEnvironment used by the Java Runtime Environment
- * for Mac OS X GUI environments.
- *
+ * This is an implementation of a GraphicsEnvironment object for the default local GraphicsEnvironment used by the Java
+ * Runtime Environment for Mac OS X GUI environments.
+ * 
  * @see GraphicsDevice
  * @see GraphicsConfiguration
  */
 public class CGraphicsEnvironment extends SunGraphicsEnvironment {
-
+    // Global initialization of the Cocoa runtime.
+    private static native void initCocoa();
+    
     /**
-     * Noop function that just acts as an entry point for someone to force
-     * a static initialization of this class.
+     * Fetch an array of all valid CoreGraphics display identifiers.
      */
-    public static void init() {
+    private static native int[] getDisplayIDs();
+    
+    /**
+     * Fetch the CoreGraphics display ID for the 'main' display.
+     */
+    private static native int getMainDisplayID();
+    
+    /**
+     * Noop function that just acts as an entry point for someone to force a static initialization of this class.
+     */
+    public static void init() { }
+    
+    static {
+        java.security.AccessController.doPrivileged(new java.security.PrivilegedAction<Object>() {
+            public Object run() {
+                if (isHeadless()) return null;
+                initCocoa();
+                return null;
+            }
+        });
+        
+        // Install the correct surface manager factory.
+        SurfaceManagerFactory.setInstance(new MacosxSurfaceManagerFactory());
     }
-
+    
+    /**
+     * Register the instance with CGDisplayRegisterReconfigurationCallback()
+     * The registration uses a weak global reference -- if our instance is garbage collected, the reference will be dropped.
+     * 
+     * @return Return the registration context (a pointer).
+     */
+    private native long registerDisplayReconfiguration();
+    
+    /**
+     * Remove the instance's registration with CGDisplayRemoveReconfigurationCallback()
+     */
+    private native void deregisterDisplayReconfiguration(long context);
+    
+    /** Available CoreGraphics displays. */
+    private final Map<Integer, CGraphicsDevice> devices = new HashMap<Integer, CGraphicsDevice>();
+    
+    /** Reference to the display reconfiguration callback context. */
+    private final long displayReconfigContext;
+    
     /**
      * Construct a new instance.
      */
     public CGraphicsEnvironment() {
         if (isHeadless()) {
-            devices = null;
             displayReconfigContext = 0L;
-        } else {
-            /* Populate the device table */
-            devices = new HashMap<Integer,CGraphicsDevice>();
-            initDevices();
-
-            /* Register our display reconfiguration listener */
-            displayReconfigContext = registerDisplayReconfiguration();
-            if (displayReconfigContext == 0L) {
-                throw new RuntimeException(
-                        "Could not register CoreGraphics display " +
-                        "reconfiguration callback");
-            }
+            return;
+        }
+        
+        /* Populate the device table */
+        initDevices();
+        
+        /* Register our display reconfiguration listener */
+        displayReconfigContext = registerDisplayReconfiguration();
+        if (displayReconfigContext == 0L) {
+            throw new RuntimeException("Could not register CoreGraphics display reconfiguration callback");
         }
     }
     
     /**
-     * Register our instance with CGDisplayRegisterReconfigurationCallback()
-     * The registration uses a weak global reference -- if our instance is
-     * garbage collected, the reference will be dropped.
+     * Called by the CoreGraphics Display Reconfiguration Callback.
      * 
-     * @return Return the registration context (a pointer).
-     */
-    private native long registerDisplayReconfiguration();
-
-    /**
-     * Remove our instance's registration with
-     * CGDisplayRemoveReconfigurationCallback().
-     */
-    private native void deregisterDisplayReconfiguration(long context);
-    
-    /**
-     * Called by our CoreGraphics Display Reconfiguration Callback.
-     * @param displayId CoreGraphics displayId
+     * @param displayId
+     *            CoreGraphics displayId
      */
     void _displayReconfiguration(long displayId) {
         displayChanged();
@@ -114,95 +128,40 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
     
     /**
      * (Re)create all CGraphicsDevices
-     * @return 
+     * 
+     * @return
      */
     private synchronized void initDevices() {
-        int[] displayIDs = CGraphicsEnvironment.getDisplayIDs();
-
+        final int[] displayIDs = getDisplayIDs();
+        
         devices.clear();
         for (int displayID : displayIDs) {
             devices.put(displayID, new CGraphicsDevice(displayID));
         }
     }
     
-    /**
-     * Retrieve a CGraphicsDevice for a given CoreGraphics DisplayID
-     */
-    private synchronized CGraphicsDevice getCoreGraphicsDevice(int displayID) {
-        return devices.get(displayID);
+    @Override
+    public synchronized GraphicsDevice getDefaultScreenDevice() throws HeadlessException {
+        return devices.get(getMainDisplayID());
     }
     
-    /**
-     * Retrieve an array of all CGraphicsDevices
-     */
-    private synchronized CGraphicsDevice[] getCoreGraphicsDevices() {
+    @Override
+    public synchronized GraphicsDevice[] getScreenDevices() throws HeadlessException {
         return devices.values().toArray(new CGraphicsDevice[devices.values().size()]);
     }
     
-    /**
-     * Fetch an array of all valid CoreGraphics display identifiers.
-     */
-    private static native int[] getDisplayIDs();
-    
-    /**
-     * Fetch the CoreGraphics display ID for the 'main' display.
-     */
-    private static native int getMainDisplayID();
-    
     @Override
-    public GraphicsDevice getDefaultScreenDevice() throws HeadlessException {
-        return getCoreGraphicsDevice(getMainDisplayID());
-    }
-    
-    @Override
-    public GraphicsDevice[] getScreenDevices() throws HeadlessException {
-        return getCoreGraphicsDevices();
-    }
-        
-    @Override
-    protected int getNumScreens() {
+    protected synchronized int getNumScreens() {
         return devices.size();
     }
     
     @Override
     protected GraphicsDevice makeScreenDevice(int screennum) {
-        throw new UnsupportedOperationException(
-            "This method is unused and " +
-            "should not be called in our implementation");
+        throw new UnsupportedOperationException("This method is unused and should not be called in this implementation");
     }
-        
-    /** Available CoreGraphics displays. */
-    private final Map<Integer,CGraphicsDevice> devices;
-        
-    /** Reference to our display reconfiguration callback context. */
-    private final long displayReconfigContext;
-        
-    /**
-     * Global initialization of the Cocoa runtime.
-     */
-    private static native void initCocoa();
-    static {
-	System.err.println("CGE.<clinit>");
-	System.err.flush();
-        java.security.AccessController.doPrivileged(
-            new java.security.PrivilegedAction<Object>() {
-                public Object run() {
-                    if (!isHeadless()) {
-                        initCocoa();
-                    }
-                    return null;
-                }
-            }
-        );
-
-        // Install the correct surface manager factory.
-        SurfaceManagerFactory.setInstance(new MacosxSurfaceManagerFactory());
-    }
-        
+    
     @Override
     public boolean isDisplayLocal() {
-	// TODO: not implemented
-	return false;
+       return true;
     }
 }
-

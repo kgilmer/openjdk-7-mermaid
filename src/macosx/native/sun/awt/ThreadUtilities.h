@@ -55,10 +55,10 @@
 #ifdef AWT_THREAD_ASSERTS_MESSAGES
 
 #define AWT_THREAD_ASSERTS_NOT_APPKIT_MESSAGE \
-    NSLog(@"Apple AWT: Not running on AppKit Thread when expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
+    NSLog(@"Cocoa AWT: Not running on AppKit thread 0 when expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
 
 #define AWT_THREAD_ASSERTS_ON_APPKIT_MESSAGE \
-    NSLog(@"Apple AWT: Running on AppKit Thread when not expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
+    NSLog(@"Cocoa AWT: Running on AppKit thread 0 when not expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
 
 #define AWT_THREAD_ASSERTS_BUG_REPORT_MESSAGE \
     NSLog(@"\tPlease file a bug report at http://developer.apple.com/java/ with this message and a reproducible test case.")
@@ -69,7 +69,7 @@ extern int sAWTThreadAsserts;
 #define AWT_THREAD_ASSERTS_ENV_ASSERT_CHECK    \
 do {                                           \
     if (sAWTThreadAsserts) {                   \
-        NSLog(@"\tPlease run this java program again with setenv APPLE_AWT_DISABLE_THREAD_ASSERTS to proceed with a warning."); \
+        NSLog(@"\tPlease run this java program again with setenv COCOA_AWT_DISABLE_THREAD_ASSERTS to proceed with a warning."); \
         assert(NO);                            \
     }                                          \
 } while (0)
@@ -125,11 +125,8 @@ do {                                  \
 
 // This is an empty Obj-C object just so that -performSelectorOnMainThread
 // can be used, and to use the Obj-C +initialize feature.
-#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_4
 __attribute__((visibility("default")))
-#endif
-@interface ThreadUtilities : NSObject {
-}
+@interface ThreadUtilities : NSObject { }
 
 + (void)initialize;
 + (void) printStackTrace;
@@ -138,7 +135,6 @@ __attribute__((visibility("default")))
 + (JNIEnv*)getAppKitJNIEnv;
 
 + (void)performOnMainThread:(SEL)aSelector onObject:(id)target withObject:(id)arg waitUntilDone:(BOOL)wait awtMode:(BOOL)inAWT;
-
 + (void)perform:(SEL)aSelector onObject:(id)target withObject:(id)arg afterDelay:(NSTimeInterval)delay awtMode:(BOOL)inAWT;
 
 @end

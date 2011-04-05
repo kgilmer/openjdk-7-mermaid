@@ -33,82 +33,10 @@
 #include "AppKit/NSScreen.h"
 #include "AppKit/NSImage.h"
 
-#ifndef MAXPATHLEN
-#define MAXPATHLEN PATH_MAX
-#endif
 
-static jboolean
-ChopTail(char *buf)
-{
-    if (strrchr(buf, '/') == 0) {
-        //fprintf(stderr, "Could not find slash in %s.\n", buf);
-        buf[0] = '\0';
-        return JNI_FALSE;
-    }
-    *(strrchr(buf, '/')) = '\0';
-    if (strlen(buf) < 4 || strrchr(buf, '/') == 0) {
-        //fprintf(stderr, "Error: failed to chop %s.\n", buf);
-        buf[0] = '\0';
-        return JNI_FALSE;
-    }
-    return JNI_TRUE;
-}
-static jboolean
-GetLibPathFromCurrentBinary(char *buf, jint bufsize)
-{
-    Dl_info dlinfo;
-    dladdr((void *)GetLibPathFromCurrentBinary, &dlinfo);
-    if (realpath(dlinfo.dli_fname, buf) == NULL) {
-        //fprintf(stderr, "Error: realpath(`%s') failed.\n", dlinfo.dli_fname);
-        return JNI_FALSE;
-    }
-    if( ChopTail(buf) == JNI_FALSE) // chop the library name.
-    {
-        return JNI_FALSE;
-    }   
+@implementation CCursorManager
 
-    // Now we must know the layout.
-    // It is either bundle or convenient Unix.
-    // TODO: add lines for the bundle when the structure will be known.
-    //
-    // We have lib/[arch] now.
-    if( ChopTail(buf) == JNI_FALSE) // chop arch name 
-    {
-        return JNI_FALSE;
-    }   
-    return JNI_TRUE;
-}
-
-@implementation CCursorManager 
-
-+ (NSCursor *) getCustomWaitCursor {
-/*
-    static NSCursor *customWaitCursor = nil;
-    // stub for 64-bit
-    if (!customWaitCursor) {
-        char buf[MAXPATHLEN];
-        int buflen = 0;
-        if (GetLibPathFromCurrentBinary(buf, MAXPATHLEN) == JNI_FALSE) {
-            return nil;
-        } else {
-            strcat(buf, "/images/cursors/MacWait_32x32.gif");
-        }
-        buflen = strlen(buf);
-        NSString *imageName = [[[NSString alloc] initWithBytes:(const unichar *)buf length:buflen encoding:NSUTF8StringEncoding]  autorelease];
-        NSImage *customWaitImage = [[NSImage alloc] initWithContentsOfFile:imageName];
-        if (customWaitImage == nil ) {
-            return nil;
-        }
-        NSSize imageSize = [customWaitImage size];
-        customWaitCursor = [[NSCursor allocWithZone:[self zone]] initWithImage:customWaitImage hotSpot:NSMakePoint((imageSize.width / 2.0), (imageSize.height / 2.0))];
-        [customWaitImage release];
-    }
-    return customWaitCursor;
-*/
-    return nil;
-}
-
-+(void) _setCursor: (NSCursor *) cursor {
++ (void) _setCursor: (NSCursor *) cursor {
     // Non-blocking cursor update, otherwise we deadlock with EDT(hold AWTLock)
     // and AppKit thread (try AWTLock). The Wait cursor could be removed in more
     // polite manner but even this should be OK.
@@ -116,11 +44,11 @@ GetLibPathFromCurrentBinary(char *buf, jint bufsize)
     [cursor performSelectorOnMainThread: @selector(set) withObject: nil  waitUntilDone: NO];
 }
 
-+(void) setWaitCursor: (bool) enable {
++ (void) setWaitCursor: (bool) enable {
     [CCursorManager performSelectorOnMainThread: @selector(setWaitCursor_OnAppKitThread:) withObject:[NSNumber numberWithBool: enable] waitUntilDone:NO];
 }
 
-+(void) setWaitCursor_OnAppKitThread: (NSNumber *) enable {
++ (void) setWaitCursor_OnAppKitThread: (NSNumber *) enable {
     // Enable false is just noop
     if( [enable boolValue] ) {
         [[CCursorManager getCustomWaitCursor] set];

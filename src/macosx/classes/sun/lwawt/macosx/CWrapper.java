@@ -28,9 +28,7 @@ package sun.lwawt.macosx;
 import java.awt.Rectangle;
 
 public final class CWrapper {
-
-    private CWrapper() {
-    }
+    private CWrapper() { }
 
     // The init() method must be called before any method of the static
     // inner classes is called. Note that init() call can't be placed into

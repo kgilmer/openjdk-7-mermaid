@@ -37,14 +37,14 @@
 JNIEXPORT jstring JNICALL Java_com_apple_jobjc_ID_getNativeDescription
 (JNIEnv *env, jclass clazz, jlong objPtr)
 {
-	jstring ret;
+	jstring ret = NULL;
 	
-//JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 	
 	NSString *desc = [((id)jlong_to_ptr(objPtr)) description];
 	ret = JNFNSToJavaString(env, desc);
 	
-//JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 	
 	return ret;
 }
