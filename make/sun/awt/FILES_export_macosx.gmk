@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -23,22 +23,7 @@
 # questions.
 #
 
-#
-# Makefile for building all of java
-#
+# FILES_export definitions for Mac OS X
 
-BUILDDIR = ..
-PRODUCT = com
-include $(BUILDDIR)/common/Defs.gmk
-
-SUBDIRS = sun oracle
-
-ifeq ($(PLATFORM), macosx)
-    SUBDIRS += apple
-endif
-
-include $(BUILDDIR)/common/Subdirs.gmk
-
-all build clean clobber::
-	$(SUBDIRS-loop)
-
+FILES_export += \
+	com/apple/resources/MacOSXResourceBundle.java

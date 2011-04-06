@@ -24,21 +24,16 @@
 #
 
 #
-# Makefile for building all of java
+# Makefile for building com/apple
 #
 
-BUILDDIR = ..
-PRODUCT = com
+BUILDDIR = ../..
+PRODUCT = sun
 include $(BUILDDIR)/common/Defs.gmk
 
-SUBDIRS = sun oracle
-
-ifeq ($(PLATFORM), macosx)
-    SUBDIRS += apple
-endif
+SUBDIRS = laf
 
 include $(BUILDDIR)/common/Subdirs.gmk
 
 all build clean clobber::
 	$(SUBDIRS-loop)
-

@@ -134,6 +134,27 @@ endif
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS/LINUX
 endif # PLATFORM 
 
+ifeq ($(PLATFORM), macosx)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv MAC OS X
+
+#
+# Files
+#
+include FILES_c_macosx.gmk
+include FILES_export_macosx.gmk
+
+FILES_objc = $(FILES_AWT_objc)
+OTHER_LDLIBS = -lmlib_image $(JVMLIB) $(LIBM) \
+    -framework Cocoa \
+    -framework OpenGL \
+    -framework JavaNativeFoundation \
+    -framework JavaRuntimeSupport \
+    -framework ApplicationServices \
+    -framework AudioToolbox
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ MAC OS X
+endif # PLATFORM 
+
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv SOLARIS-SPARC
 # solaris-sparc and solaris-sparcv9 both build 'vis'
 ifeq ("$(PLATFORM)-$(ARCH_FAMILY)", "solaris-sparc")
@@ -252,6 +273,12 @@ vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/../java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/../java2d/x11
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/../font
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ LINUX
+endif # PLATFORM
+
+ifeq ($(PLATFORM), macosx)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv MAC OS X
+vpath %.m   $(call NativeSrcDirList,,native/com/apple/resources)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ MAC OS X
 endif # PLATFORM
 
 ifeq ($(PLATFORM), windows)
