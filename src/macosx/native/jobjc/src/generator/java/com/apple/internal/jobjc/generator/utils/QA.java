@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,20 +21,19 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator.utils;
 
 import com.apple.internal.jobjc.generator.Utils;
 
 public class QA {
-	public static void nonNull(Object... os){
-		for(Object o : os) if(o == null) throw new NullPointerException(Utils.joinWComma(os));
-	}
+    public static void nonNull(Object... os){
+        for(Object o : os) if(o == null) throw new NullPointerException(Utils.joinWComma(os));
+    }
 
-	public static boolean bothNullOrEquals(Object a, Object b) {
-		if(a == null && b == null) return true;
-		if(a == null || b == null) return false;
-		return a.equals(b);
-	}
+    public static boolean bothNullOrEquals(Object a, Object b) {
+        if(a == null && b == null) return true;
+        if(a == null || b == null) return false;
+        return a.equals(b);
+    }
 }

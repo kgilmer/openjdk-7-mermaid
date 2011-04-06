@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator;
 
@@ -29,32 +30,32 @@ import java.util.*;
 import com.apple.internal.jobjc.generator.classes.*;
 
 public class FileCopier {
-	public static List<OutputFile> addSourceFilesFrom(final String srcPath) {
-		final List<OutputFile> outputFileList = new ArrayList<OutputFile>();
-		
-		final List<File> fileList = getFileList(srcPath);
-		for (final File file : fileList) {
-			outputFileList.add(new CopiedFile(file, ClassGenerator.JOBJC_PACKAGE, file.getName().replace("\\.java", "")));
-		}
-		
-		return outputFileList;
-	}
-	
-	private static List<File> getFileList(final String srcPath) {
-		final File srcRoot = new File(srcPath);
-		if (!srcRoot.exists()) throw new RuntimeException("Source root " + srcRoot + " does not exist. Nowhere to copy base runtime objects from.");
-		
-		final File targetDir = new File(srcRoot, ClassGenerator.JOBJC_PACKAGE.replaceAll("\\.", "\\/"));
-		if (!targetDir.exists() || !targetDir.isDirectory()) throw new RuntimeException("Base runtime object source directory " + targetDir + " does not exist. No runtime class files to copy.");
-		
-		final List<File> fileList = new ArrayList<File>();
-		final File[] targetDirFileList = targetDir.listFiles();
-		for (final File file : targetDirFileList) {
-			if (!file.isFile()) continue;
-			if (!file.getName().endsWith(".java")) continue;
-			fileList.add(file);
-		}
-		
-		return fileList;
-	}
+    public static List<OutputFile> addSourceFilesFrom(final String srcPath) {
+        final List<OutputFile> outputFileList = new ArrayList<OutputFile>();
+        
+        final List<File> fileList = getFileList(srcPath);
+        for (final File file : fileList) {
+            outputFileList.add(new CopiedFile(file, ClassGenerator.JOBJC_PACKAGE, file.getName().replace("\\.java", "")));
+        }
+        
+        return outputFileList;
+    }
+    
+    private static List<File> getFileList(final String srcPath) {
+        final File srcRoot = new File(srcPath);
+        if (!srcRoot.exists()) throw new RuntimeException("Source root " + srcRoot + " does not exist. Nowhere to copy base runtime objects from.");
+        
+        final File targetDir = new File(srcRoot, ClassGenerator.JOBJC_PACKAGE.replaceAll("\\.", "\\/"));
+        if (!targetDir.exists() || !targetDir.isDirectory()) throw new RuntimeException("Base runtime object source directory " + targetDir + " does not exist. No runtime class files to copy.");
+        
+        final List<File> fileList = new ArrayList<File>();
+        final File[] targetDirFileList = targetDir.listFiles();
+        for (final File file : targetDirFileList) {
+            if (!file.isFile()) continue;
+            if (!file.getName().endsWith(".java")) continue;
+            fileList.add(file);
+        }
+        
+        return fileList;
+    }
 }

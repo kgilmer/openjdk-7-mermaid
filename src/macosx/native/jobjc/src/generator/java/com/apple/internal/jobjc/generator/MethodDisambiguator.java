@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator;
 
@@ -31,35 +32,35 @@ import com.apple.internal.jobjc.generator.model.Function;
 import com.apple.internal.jobjc.generator.model.types.TypeCache;
 
 public class MethodDisambiguator {
-	static void disambiguateMethodNames() {
-		// link all subclassers off their parents
-		for (final Clazz clazz : TypeCache.inst().getAllClasses()) {
-			final Clazz superClazz = clazz.superClass;
-			if (superClazz != null) superClazz.subClassers.add(clazz);
-		}
-		
-		// recursively call all subclassers, starting from NSObject on down
-		disambiguateMethodNamesFor(TypeCache.inst().getClassForName("NSObject"));
-		
-		// NSProxy does not appear to subclass from NSObject, but it is still a real full class...?
-		disambiguateMethodNamesFor(TypeCache.inst().getClassForName("NSProxy"));
-	}
-	
-	static void disambiguateMethodNamesFor(final Clazz clazz) {
-		clazz.disambiguateMethods();
-		for (final Clazz subClazz : clazz.subClassers) {
-			disambiguateMethodNamesFor(subClazz);
-		}
-	}
-	
-	public static void disambiguateFunctionsIn(final List<Framework> frameworks) {
-		for (final Framework framework : frameworks) {
-			disambiguateFunctionsInFramework(framework);
-		}
-	}
-	
-	static void disambiguateFunctionsInFramework(final Framework framework) {
-		for (final Function fxn : framework.functions)
-			fxn.disambiguateArgs();
-	}
+    static void disambiguateMethodNames() {
+        // link all subclassers off their parents
+        for (final Clazz clazz : TypeCache.inst().getAllClasses()) {
+            final Clazz superClazz = clazz.superClass;
+            if (superClazz != null) superClazz.subClassers.add(clazz);
+        }
+        
+        // recursively call all subclassers, starting from NSObject on down
+        disambiguateMethodNamesFor(TypeCache.inst().getClassForName("NSObject"));
+        
+        // NSProxy does not appear to subclass from NSObject, but it is still a real full class...?
+        disambiguateMethodNamesFor(TypeCache.inst().getClassForName("NSProxy"));
+    }
+    
+    static void disambiguateMethodNamesFor(final Clazz clazz) {
+        clazz.disambiguateMethods();
+        for (final Clazz subClazz : clazz.subClassers) {
+            disambiguateMethodNamesFor(subClazz);
+        }
+    }
+    
+    public static void disambiguateFunctionsIn(final List<Framework> frameworks) {
+        for (final Framework framework : frameworks) {
+            disambiguateFunctionsInFramework(framework);
+        }
+    }
+    
+    static void disambiguateFunctionsInFramework(final Framework framework) {
+        for (final Function fxn : framework.functions)
+            fxn.disambiguateArgs();
+    }
 }

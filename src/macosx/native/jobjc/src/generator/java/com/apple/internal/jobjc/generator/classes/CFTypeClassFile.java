@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator.classes;
 
@@ -29,30 +30,30 @@ import com.apple.internal.jobjc.generator.model.CFType;
 import com.apple.jobjc.Pointer;
 
 public class CFTypeClassFile extends GeneratedClassFile {
-	final CFType cftype;
+    final CFType cftype;
 
-	public CFTypeClassFile(final CFType cftype) {
-		super(cftype.parent.pkg, cftype.type.getJType().getJavaClassName(), com.apple.jobjc.CFType.class.getCanonicalName());
-		this.cftype = cftype;
-	}
+    public CFTypeClassFile(final CFType cftype) {
+        super(cftype.parent.pkg, cftype.type.getJType().getJavaClassName(), com.apple.jobjc.CFType.class.getCanonicalName());
+        this.cftype = cftype;
+    }
 
-	@Override public void writeBeginning(PrintStream out){
-		out.println("\tpublic " + className + "(" + Pointer.class.getName() + "<?> ptr){");
-		out.println("\t\tsuper(ptr);");
-		out.println("\t}");
-		out.println("");
-		out.println("\tpublic " + className + "(long ptr){");
-		out.println("\t\tsuper(ptr);");
-		out.println("\t}");
-	}
+    @Override public void writeBeginning(PrintStream out){
+        out.println("\tpublic " + className + "(" + Pointer.class.getName() + "<?> ptr){");
+        out.println("\t\tsuper(ptr);");
+        out.println("\t}");
+        out.println("");
+        out.println("\tpublic " + className + "(long ptr){");
+        out.println("\t\tsuper(ptr);");
+        out.println("\t}");
+    }
 
-	@Override public void writeBody(PrintStream out){
-		if(cftype.getTypeIdFunc != null){
-			out.println("\tpublic static long getTypeId(){");
-			out.println("\t\treturn " + RootJObjCClass.runtimeFrameworkInst(cftype.parent.name) + "." + cftype.getTypeIdFunc + "();");
-			out.println("\t}");
-		}
-		else
-			out.println("\t// getTypeIdFunc not found");
-	}
+    @Override public void writeBody(PrintStream out){
+        if(cftype.getTypeIdFunc != null){
+            out.println("\tpublic static long getTypeId(){");
+            out.println("\t\treturn " + RootJObjCClass.runtimeFrameworkInst(cftype.parent.name) + "." + cftype.getTypeIdFunc + "();");
+            out.println("\t}");
+        }
+        else
+            out.println("\t// getTypeIdFunc not found");
+    }
 }

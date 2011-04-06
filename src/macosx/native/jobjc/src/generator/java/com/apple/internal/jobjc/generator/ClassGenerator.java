@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator;
 
@@ -29,16 +30,16 @@ import com.apple.internal.jobjc.generator.classes.*;
 import com.apple.internal.jobjc.generator.model.Framework;
 
 public class ClassGenerator {
-	public static final String JOBJC_PACKAGE = "com.apple.jobjc";
-	
-	public static List<OutputFile> generateClasses(final List<Framework> frameworks) {
-		final List<OutputFile> generatedClassFiles = new ArrayList<OutputFile>();
-		
-		generatedClassFiles.add(new RootJObjCClass(frameworks));
-		for (final Framework f : frameworks) {
-			f.generateClasses(generatedClassFiles);
-		}
-		
-		return generatedClassFiles;
-	}
+    public static final String JOBJC_PACKAGE = "com.apple.jobjc";
+    
+    public static List<OutputFile> generateClasses(final List<Framework> frameworks) {
+        final List<OutputFile> generatedClassFiles = new ArrayList<OutputFile>();
+        
+        generatedClassFiles.add(new RootJObjCClass(frameworks));
+        for (final Framework f : frameworks) {
+            f.generateClasses(generatedClassFiles);
+        }
+        
+        return generatedClassFiles;
+    }
 }

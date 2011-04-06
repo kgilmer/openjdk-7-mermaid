@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.jobjc;
 
@@ -33,18 +34,18 @@ import com.apple.internal.jobjc.generator.model.Clazz;
  * but it allows the generated output to have a cleaner design.
  */
 public class SuperClassExtractor {
-	public static Clazz getSuperClassFor(final String className, final MacOSXFramework nativeFramework, final Map<String, Clazz> allClasses) throws Throwable {
-		final NSClass<ID> nativeClass = new NSClass<ID>(className, nativeFramework.getRuntime());
-		final NSClass<? extends ID> nativeSuperClass = UnsafeRuntimeAccess.getSuperClass(nativeClass);
-		final String superClassName = UnsafeRuntimeAccess.getClassNameFor(nativeSuperClass);
-		if ("nil".equals(superClassName)) return null;
-		
-		final Clazz superClazz = allClasses.get(superClassName);
-		if (superClazz != null) return superClazz;
-		
-		final Clazz superClazzX = getSuperClassFor(superClassName, nativeFramework, allClasses);
-		System.out.print("[Warning] class \"" + superClassName + "\" not found in bridge support files, ");
-		System.out.println("using \"" + superClazzX.name + "\" as superclass for \"" + className + "\"");
-		return superClazzX;
-	}
+    public static Clazz getSuperClassFor(final String className, final MacOSXFramework nativeFramework, final Map<String, Clazz> allClasses) throws Throwable {
+        final NSClass<ID> nativeClass = new NSClass<ID>(className, nativeFramework.getRuntime());
+        final NSClass<? extends ID> nativeSuperClass = UnsafeRuntimeAccess.getSuperClass(nativeClass);
+        final String superClassName = UnsafeRuntimeAccess.getClassNameFor(nativeSuperClass);
+        if ("nil".equals(superClassName)) return null;
+        
+        final Clazz superClazz = allClasses.get(superClassName);
+        if (superClazz != null) return superClazz;
+        
+        final Clazz superClazzX = getSuperClassFor(superClassName, nativeFramework, allClasses);
+        System.out.print("[Warning] class \"" + superClassName + "\" not found in bridge support files, ");
+        System.out.println("using \"" + superClazzX.name + "\" as superclass for \"" + className + "\"");
+        return superClazzX;
+    }
 }

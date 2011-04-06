@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.jobjc;
 
@@ -28,22 +29,22 @@ import com.apple.jobjc.foundation.NSString;
 import com.apple.jobjc.foundation.NSStringClass;
 
 public class NSClassTest extends PooledTestCase{
-	JObjC JOBJC = JObjC.getInstance();
-	FoundationFramework FND = JOBJC.Foundation();
+    JObjC JOBJC = JObjC.getInstance();
+    FoundationFramework FND = JOBJC.Foundation();
 
-	public void testNSClassName(){
-		NSString s = ((NSString) FND.NSString().alloc()).init();
-		
-		NSString cname = s.className();
-		String jcname = Utils.get().strings().javaString(cname);
-		assertEquals("NSCFString", jcname);
-	}
+    public void testNSClassName(){
+        NSString s = ((NSString) FND.NSString().alloc()).init();
+        
+        NSString cname = s.className();
+        String jcname = Utils.get().strings().javaString(cname);
+        assertEquals("NSCFString", jcname);
+    }
 
-	public void testNSClassPop(){
-		NSString s = ((NSString) FND.NSString().alloc()).init();
-		
-		NSStringClass c = s.classNSClass();
-		String jdescr = Utils.get().strings().javaString(c.description());
-		assertEquals("NSCFString", jdescr);
-	}
+    public void testNSClassPop(){
+        NSString s = ((NSString) FND.NSString().alloc()).init();
+        
+        NSStringClass c = s.classNSClass();
+        String jdescr = Utils.get().strings().javaString(c.description());
+        assertEquals("NSCFString", jdescr);
+    }
 }

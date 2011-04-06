@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator.model;
 
@@ -31,11 +32,11 @@ import com.apple.internal.jobjc.generator.classes.OpaqueClassFile;
 import com.apple.internal.jobjc.generator.classes.OutputFile;
 
 public class Opaque extends TypeElement<Framework> implements OutputFileGenerator {
-	public Opaque(final Node node, final Framework parent) {
-		super(node, getAttr(node, "name"), parent);
-	}
+    public Opaque(final Node node, final Framework parent) {
+        super(node, getAttr(node, "name"), parent);
+    }
 
-	public void generateClasses(final List<OutputFile> generatedClassFiles) {
-		generatedClassFiles.add(new OpaqueClassFile(this));
-	}
+    public void generateClasses(final List<OutputFile> generatedClassFiles) {
+        generatedClassFiles.add(new OpaqueClassFile(this));
+    }
 }

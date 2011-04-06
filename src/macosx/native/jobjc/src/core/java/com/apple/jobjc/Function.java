@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,40 +21,39 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.jobjc;
 
 public class Function {
-	private static native long getFxnPtrForFunctionName(final String functionName);
-	private static native long getFxnPtrForFunctionNameAndLib(final long libPtr, final String functionName);
+    private static native long getFxnPtrForFunctionName(final String functionName);
+    private static native long getFxnPtrForFunctionNameAndLib(final long libPtr, final String functionName);
 
-	final long fxnPtr;
+    final long fxnPtr;
 
-	Function(final long fxnPtr) {
-		this.fxnPtr = fxnPtr;
-	}
+    Function(final long fxnPtr) {
+        this.fxnPtr = fxnPtr;
+    }
 
-	public Function(final String name) {
-		this(getFxnPtr(name));
-	}
+    public Function(final String name) {
+        this(getFxnPtr(name));
+    }
 
-	public Function(final MacOSXFramework framework, final String name) {
-		this(getFxnPtr(name, framework));
-	}
-	
-	static long getFxnPtr(final String name){
-		long fxnPtr = getFxnPtrForFunctionName(name);
-		if(fxnPtr == 0) throw new RuntimeException("Function pointer for " + name + " not found in runtime.");
-		return fxnPtr;
-	}
-	
-	static long getFxnPtr(final String name, final MacOSXFramework framework){
-		long fxnPtr = 0;
-		for(int i = 0; fxnPtr == 0 && i < framework.nativeLibPtrs.length; i++){
-			fxnPtr = getFxnPtrForFunctionNameAndLib(framework.nativeLibPtrs[i], name);
-			if(fxnPtr != 0) return fxnPtr;
-		}
-		throw new RuntimeException("Function pointer for " + name + " not found in framework " + framework + ".");
-	}
+    public Function(final MacOSXFramework framework, final String name) {
+        this(getFxnPtr(name, framework));
+    }
+    
+    static long getFxnPtr(final String name){
+        long fxnPtr = getFxnPtrForFunctionName(name);
+        if(fxnPtr == 0) throw new RuntimeException("Function pointer for " + name + " not found in runtime.");
+        return fxnPtr;
+    }
+    
+    static long getFxnPtr(final String name, final MacOSXFramework framework){
+        long fxnPtr = 0;
+        for(int i = 0; fxnPtr == 0 && i < framework.nativeLibPtrs.length; i++){
+            fxnPtr = getFxnPtrForFunctionNameAndLib(framework.nativeLibPtrs[i], name);
+            if(fxnPtr != 0) return fxnPtr;
+        }
+        throw new RuntimeException("Function pointer for " + name + " not found in framework " + framework + ".");
+    }
 }

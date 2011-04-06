@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
 #include "com_apple_jobjc_NativeObjectLifecycleManager.h"
@@ -35,8 +36,8 @@
 JNIEXPORT void JNICALL Java_com_apple_jobjc_NativeObjectLifecycleManager_retainNativeObject
 (JNIEnv *env, jclass clazz, jlong ptr)
 {
-	if (ptr == 0L) return;
-	CFRetain(jlong_to_ptr(ptr));
+    if (ptr == 0L) return;
+    CFRetain(jlong_to_ptr(ptr));
 }
 
 /*
@@ -47,8 +48,8 @@ JNIEXPORT void JNICALL Java_com_apple_jobjc_NativeObjectLifecycleManager_retainN
 JNIEXPORT void JNICALL Java_com_apple_jobjc_NativeObjectLifecycleManager_releaseNativeObject
 (JNIEnv *env, jclass clazz, jlong ptr)
 {
-	if (ptr == 0L) return;
-	CFRelease(jlong_to_ptr(ptr));
+    if (ptr == 0L) return;
+    CFRelease(jlong_to_ptr(ptr));
 }
 
 /*
@@ -59,6 +60,6 @@ JNIEXPORT void JNICALL Java_com_apple_jobjc_NativeObjectLifecycleManager_release
 JNIEXPORT void JNICALL Java_com_apple_jobjc_NativeObjectLifecycleManager_freeNativeObject
 (JNIEnv *env, jclass clazz, jlong ptr)
 {
-	if (ptr == 0L) return;
-	free(jlong_to_ptr(ptr));
+    if (ptr == 0L) return;
+    free(jlong_to_ptr(ptr));
 }

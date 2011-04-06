@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
 #include "com_apple_jobjc_Subclassing.h"
@@ -102,11 +103,11 @@ JNIEXPORT jlong JNICALL Java_com_apple_jobjc_Subclassing_allocateClassPair
     const Class superClass = (Class)jlong_to_ptr(jSuperClass);
     assert(superClass);
     
-	const char *name = (*env)->GetStringUTFChars(env, jName, JNI_FALSE);
-	const Class newClass = objc_allocateClassPair(superClass, name, 0);
-	(*env)->ReleaseStringUTFChars(env, jName, name);
+    const char *name = (*env)->GetStringUTFChars(env, jName, JNI_FALSE);
+    const Class newClass = objc_allocateClassPair(superClass, name, 0);
+    (*env)->ReleaseStringUTFChars(env, jName, name);
     
-	return ptr_to_jlong(newClass);
+    return ptr_to_jlong(newClass);
 }
 
 JNIEXPORT jboolean JNICALL Java_com_apple_jobjc_Subclassing_addIVarForJObj
@@ -154,18 +155,18 @@ static void addJavaInstance(id obj){
 //    NSLog(@"addJavaInstance %p", obj);
 //    NSLog(@"... calling up to Java");
     
-   	JNF_CLASS_CACHE(jc_Subclassing, "com/apple/jobjc/Subclassing");
-	JNF_STATIC_MEMBER_CACHE(jm_Subclassing_initJObject,
+       JNF_CLASS_CACHE(jc_Subclassing, "com/apple/jobjc/Subclassing");
+    JNF_STATIC_MEMBER_CACHE(jm_Subclassing_initJObject,
         jc_Subclassing,
         "initJObject",
         "(J)V");
-	
+    
     JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
-	JNIEnv *env = JNFObtainEnv(&threadWasAttached);
+    JNIEnv *env = JNFObtainEnv(&threadWasAttached);
     JNFCallStaticVoidMethod(env, jm_Subclassing_initJObject,
         ptr_to_jlong(obj));
     
-	JNFReleaseEnv(env, &threadWasAttached);
+    JNFReleaseEnv(env, &threadWasAttached);
 }
 
 
@@ -228,8 +229,8 @@ JNIEXPORT jboolean JNICALL Java_com_apple_jobjc_Subclassing_addMethod
     
     const Class objcClass = (Class)jlong_to_ptr(jClass);
     
-	const char *selName = (*env)->GetStringUTFChars(env, jSelName, JNI_FALSE);
-	const char *objCEncodedType = (*env)->GetStringUTFChars(env, jObjCEncodedType, JNI_FALSE);
+    const char *selName = (*env)->GetStringUTFChars(env, jSelName, JNI_FALSE);
+    const char *objCEncodedType = (*env)->GetStringUTFChars(env, jObjCEncodedType, JNI_FALSE);
     
 //    NSLog(@"Adding method '%s' :: '%s' to '%s' / %p",
 //        selName,
@@ -239,8 +240,8 @@ JNIEXPORT jboolean JNICALL Java_com_apple_jobjc_Subclassing_addMethod
     
     BOOL ret = class_addMethod(objcClass, sel_registerName(selName), (IMP) closure, objCEncodedType);
     
-	(*env)->ReleaseStringUTFChars(env, jSelName, selName);
-	(*env)->ReleaseStringUTFChars(env, jObjCEncodedType, objCEncodedType);
+    (*env)->ReleaseStringUTFChars(env, jSelName, selName);
+    (*env)->ReleaseStringUTFChars(env, jObjCEncodedType, objCEncodedType);
     
     if(!ret){
         NSLog(@"class_addMethod failed");
@@ -273,15 +274,15 @@ static void sel_closure_call(ffi_cif* cif, void* result, void** args, void* user
     jobject jMethod = [jmeta->jMethod jObject];
     jobject jCIF = [jmeta->jCIF jObject];
     
-	JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
-	JNIEnv *env = JNFObtainEnv(&threadWasAttached);
+    JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
+    JNIEnv *env = JNFObtainEnv(&threadWasAttached);
     
     if((*env)->ExceptionOccurred(env)) goto bail;
     
-   	JNF_CLASS_CACHE(jc, "com/apple/jobjc/Subclassing");
-	JNF_STATIC_MEMBER_CACHE(jm_invokeFromJNI, jc, "invokeFromJNI",
+       JNF_CLASS_CACHE(jc, "com/apple/jobjc/Subclassing");
+    JNF_STATIC_MEMBER_CACHE(jm_invokeFromJNI, jc, "invokeFromJNI",
         "(Lcom/apple/jobjc/ID;Ljava/lang/reflect/Method;Lcom/apple/jobjc/CIF;JJ)V");
-	
+    
     JNFCallStaticVoidMethod(env, jm_invokeFromJNI,
         jObj,
         jMethod,
@@ -290,7 +291,7 @@ static void sel_closure_call(ffi_cif* cif, void* result, void** args, void* user
         ptr_to_jlong(args));
     
 bail:
-	JNFReleaseEnv(env, &threadWasAttached);
+    JNFReleaseEnv(env, &threadWasAttached);
     
     if((*env)->ExceptionOccurred(env)){
         NSLog(@"Exception!");

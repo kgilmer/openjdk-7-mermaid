@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 package com.apple.internal.jobjc.generator.model;
 
@@ -43,107 +44,107 @@ import com.apple.jobjc.NSClass.NSClassNotFoundException;
 import com.apple.jobjc.SEL;
 
 public class Clazz extends Element<Framework> implements OutputFileGenerator {
-	private final Map<String, Method> instanceMethodsByName = new HashMap<String, Method>();
-	private final Map<String, Method> classMethodsByName = new HashMap<String, Method>();
-	
-	public final List<Method> classMethods;
-	public final List<Method> instanceMethods;
-	
-	public final List<Clazz> subClassers = new ArrayList<Clazz>(0);
-	public Clazz superClass;
-	
-	public Clazz(String name, List<Method> classMethods, List<Method> instanceMethods, Clazz superClass, Framework parent){
-		super(name, parent);
-		this.classMethods = classMethods;
-		this.instanceMethods = instanceMethods;
-		this.superClass = superClass;
-	}
+    private final Map<String, Method> instanceMethodsByName = new HashMap<String, Method>();
+    private final Map<String, Method> classMethodsByName = new HashMap<String, Method>();
+    
+    public final List<Method> classMethods;
+    public final List<Method> instanceMethods;
+    
+    public final List<Clazz> subClassers = new ArrayList<Clazz>(0);
+    public Clazz superClass;
+    
+    public Clazz(String name, List<Method> classMethods, List<Method> instanceMethods, Clazz superClass, Framework parent){
+        super(name, parent);
+        this.classMethods = classMethods;
+        this.instanceMethods = instanceMethods;
+        this.superClass = superClass;
+    }
 
-	public Clazz(final Node classNode, final Framework parent) {
-		super(classNode, parent);
-		this.classMethods = new ArrayList<Method>();
-		this.instanceMethods = new ArrayList<Method>();
+    public Clazz(final Node classNode, final Framework parent) {
+        super(classNode, parent);
+        this.classMethods = new ArrayList<Method>();
+        this.instanceMethods = new ArrayList<Method>();
 
-		final NodeList methodNodes = classNode.getChildNodes();
-		for (int i = 0; i < methodNodes.getLength(); i++) {
-			final Node node = methodNodes.item(i);
-			if (!"method".equals(node.getLocalName())) continue;
+        final NodeList methodNodes = classNode.getChildNodes();
+        for (int i = 0; i < methodNodes.getLength(); i++) {
+            final Node node = methodNodes.item(i);
+            if (!"method".equals(node.getLocalName())) continue;
 
-			final String selName = Element.getAttr(node, "selector");
-			if(selName == null || !SEL.validName(selName)){
-				System.err.format("Warning: Discarding method %1$s:%2$s:%3$s"
-						+ " -- Invalid selector name. Verify.\n",
-						parent.name, name, selName);
-				continue;
-			}
+            final String selName = Element.getAttr(node, "selector");
+            if(selName == null || !SEL.validName(selName)){
+                System.err.format("Warning: Discarding method %1$s:%2$s:%3$s"
+                        + " -- Invalid selector name. Verify.\n",
+                        parent.name, name, selName);
+                continue;
+            }
 
-			final Method method = new Method(node, parent);
-			if (method.isClassMethod) {
-				classMethods.add(method);
-			} else {
-				instanceMethods.add(method);
-			}
-		}
-	}
+            final Method method = new Method(node, parent);
+            if (method.isClassMethod) {
+                classMethods.add(method);
+            } else {
+                instanceMethods.add(method);
+            }
+        }
+    }
 
-	public String getPackage() {
-		return parent.pkg;
-	}
-	
-	public String getFullPath(){
-		return parent.pkg + "." + name;
-	}
+    public String getPackage() {
+        return parent.pkg;
+    }
+    
+    public String getFullPath(){
+        return parent.pkg + "." + name;
+    }
 
-	@Override
-	public String toString() {
-		return super.toString() + " " + classMethods + " " + instanceMethods;
-	}
-	
-	public boolean doesActuallyExist(){
-		try{
-			UnsafeRuntimeAccess.getNSClass(parent.load(), name);
-		}catch(NSClassNotFoundException x){
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public String toString() {
+        return super.toString() + " " + classMethods + " " + instanceMethods;
+    }
+    
+    public boolean doesActuallyExist(){
+        try{
+            UnsafeRuntimeAccess.getNSClass(parent.load(), name);
+        }catch(NSClassNotFoundException x){
+            return false;
+        }
+        return true;
+    }
 
-	void resolveSuperClass(final MacOSXFramework nativeFramework, final Map<String, Clazz> allClasses) throws Throwable {
-		superClass = SuperClassExtractor.getSuperClassFor(name, nativeFramework, allClasses);
-	}
+    void resolveSuperClass(final MacOSXFramework nativeFramework, final Map<String, Clazz> allClasses) throws Throwable {
+        superClass = SuperClassExtractor.getSuperClassFor(name, nativeFramework, allClasses);
+    }
 
-	public void disambiguateMethods() {
-		disambiguateMethods(instanceMethods, instanceMethodsByName);
-		disambiguateMethods(classMethods, classMethodsByName);
-	}
+    public void disambiguateMethods() {
+        disambiguateMethods(instanceMethods, instanceMethodsByName);
+        disambiguateMethods(classMethods, classMethodsByName);
+    }
 
-	private void disambiguateMethods(final List<Method> methods, final Map<String, Method> methodMap) {
-		final Set<String> existingMethodNames = RestrictedKeywords.getNewRestrictedSet();
-		for (final Method method : methods) {
-			method.disambiguateNameAndArgs(this, existingMethodNames);
-			methodMap.put(method.javaName, method);
-		}
-	}
+    private void disambiguateMethods(final List<Method> methods, final Map<String, Method> methodMap) {
+        final Set<String> existingMethodNames = RestrictedKeywords.getNewRestrictedSet();
+        for (final Method method : methods) {
+            method.disambiguateNameAndArgs(this, existingMethodNames);
+            methodMap.put(method.javaName, method);
+        }
+    }
 
-	public void generateClasses(final List<OutputFile> generatedClassFiles) {
-		generatedClassFiles.add(new JObjCClassClassFile(this));
-		generatedClassFiles.add(new JObjCClassFile(this));
-	}
+    public void generateClasses(final List<OutputFile> generatedClassFiles) {
+        generatedClassFiles.add(new JObjCClassClassFile(this));
+        generatedClassFiles.add(new JObjCClassFile(this));
+    }
 
-	Method getParentMethodMatchingName(final String methodName) {
-		if(superClass == null) return null;
-		Method m = superClass.getMethodNamed(methodName);
-		if(m != null) return m;
-		return superClass.getParentMethodMatchingName(methodName);
-	}
+    Method getParentMethodMatchingName(final String methodName) {
+        if(superClass == null) return null;
+        Method m = superClass.getMethodNamed(methodName);
+        if(m != null) return m;
+        return superClass.getParentMethodMatchingName(methodName);
+    }
 
-	private Method getMethodNamed(final String methodName) {
-		final Method instanceMethod = instanceMethodsByName.get(methodName);
-		if (instanceMethod != null) return instanceMethod;
+    private Method getMethodNamed(final String methodName) {
+        final Method instanceMethod = instanceMethodsByName.get(methodName);
+        if (instanceMethod != null) return instanceMethod;
 
-		final Method classMethod = classMethodsByName.get(methodName);
-		if (classMethod != null) return classMethod;
+        final Method classMethod = classMethodsByName.get(methodName);
+        if (classMethod != null) return classMethod;
 
-		return null;
-	}
+        return null;
+    }
 }

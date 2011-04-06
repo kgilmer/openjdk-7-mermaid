@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -19,7 +21,6 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
- *
  */
 
 #include "com_apple_jobjc_NSClass.h"
@@ -35,13 +36,13 @@
 JNIEXPORT jlong JNICALL Java_com_apple_jobjc_NSClass_getNativeClassByName
 (JNIEnv *env, jclass clazz, jstring className)
 {
-	if (className == NULL) return ptr_to_jlong(NULL);
-	const char *classNameCStr = (*env)->GetStringUTFChars(env, className, JNI_FALSE);
-	const id obj = objc_getClass(classNameCStr);
-	(*env)->ReleaseStringUTFChars(env, className, classNameCStr);
-	
-	if (obj == nil) return ptr_to_jlong(NULL);
-	return ptr_to_jlong(obj);
+    if (className == NULL) return ptr_to_jlong(NULL);
+    const char *classNameCStr = (*env)->GetStringUTFChars(env, className, JNI_FALSE);
+    const id obj = objc_getClass(classNameCStr);
+    (*env)->ReleaseStringUTFChars(env, className, classNameCStr);
+    
+    if (obj == nil) return ptr_to_jlong(NULL);
+    return ptr_to_jlong(obj);
 }
 
 /*
@@ -52,9 +53,9 @@ JNIEXPORT jlong JNICALL Java_com_apple_jobjc_NSClass_getNativeClassByName
 JNIEXPORT jlong JNICALL Java_com_apple_jobjc_NSClass_getSuperClassOfClass
 (JNIEnv *env, jclass clazz, jlong clazzPtr)
 {
-	if (clazzPtr == 0L) return ptr_to_jlong(NULL);
-	const Class objClazz = (Class)jlong_to_ptr(clazzPtr);
-	return ptr_to_jlong(class_getSuperclass(objClazz));
+    if (clazzPtr == 0L) return ptr_to_jlong(NULL);
+    const Class objClazz = (Class)jlong_to_ptr(clazzPtr);
+    return ptr_to_jlong(class_getSuperclass(objClazz));
 }
 
 /*
@@ -65,13 +66,13 @@ JNIEXPORT jlong JNICALL Java_com_apple_jobjc_NSClass_getSuperClassOfClass
 JNIEXPORT jstring JNICALL Java_com_apple_jobjc_NSClass_getClassNameOfClass
 (JNIEnv *env, jclass clazz, jlong clazzPtr)
 {
-	const char *clazzName = (char *)class_getName((Class)jlong_to_ptr(clazzPtr));
-	return (*env)->NewStringUTF(env, clazzName);
+    const char *clazzName = (char *)class_getName((Class)jlong_to_ptr(clazzPtr));
+    return (*env)->NewStringUTF(env, clazzName);
 }
 
 JNIEXPORT jlong JNICALL Java_com_apple_jobjc_NSClass_getClass
 (JNIEnv *env, jclass clazz, jlong objPtr)
 {
-	id obj = (id)jlong_to_ptr(objPtr);
-	return ptr_to_jlong(object_getClass(obj));
+    id obj = (id)jlong_to_ptr(objPtr);
+    return ptr_to_jlong(object_getClass(obj));
 }
