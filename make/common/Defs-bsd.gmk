@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -109,6 +109,8 @@ CFLAGS_REQUIRED_sparcv9 += -m64 -mcpu=v9
 LDFLAGS_COMMON_sparcv9  += -m64 -mcpu=v9
 CFLAGS_REQUIRED_sparc   += -m32 -mcpu=v9
 LDFLAGS_COMMON_sparc    += -m32 -mcpu=v9
+CFLAGS_REQUIRED_arm     += -fsigned-char -D_LITTLE_ENDIAN
+CFLAGS_REQUIRED_ppc     += -fsigned-char -D_BIG_ENDIAN
 ifeq ($(ZERO_BUILD), true)
   CFLAGS_REQUIRED       =  $(ZERO_ARCHFLAG)
   ifeq ($(ZERO_ENDIANNESS), little)
@@ -149,11 +151,9 @@ endif
 #
 # Misc compiler options
 #
-ifeq ($(ARCH),ppc)
-  CFLAGS_COMMON   = -fsigned-char
-else # ARCH
+ifneq ($(ARCH),ppc)
   CFLAGS_COMMON   = -fno-strict-aliasing
-endif # ARCH
+endif 
 PIC_CODE_LARGE = -fPIC
 PIC_CODE_SMALL = -fpic
 GLOBAL_KPIC = $(PIC_CODE_LARGE)
@@ -384,3 +384,9 @@ else
   INCLUDE_SA = true
 endif
 
+ifdef CROSS_COMPILE_ARCH
+  # X11 headers are not under /usr/include
+  OTHER_CFLAGS += -I$(OPENWIN_HOME)/include
+  OTHER_CXXFLAGS += -I$(OPENWIN_HOME)/include
+  OTHER_CPPFLAGS += -I$(OPENWIN_HOME)/include
+endif
