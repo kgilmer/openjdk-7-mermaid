@@ -87,8 +87,8 @@ JNIEXPORT jobject JNICALL Java_com_apple_jobjc_Utils_00024Threads_performCallabl
 @implementation JObjCRunnable
 
 + (void) performRunnable:(JNFJObjectWrapper *)runnableWrapper {
-    JNF_CLASS_CACHE(jc_Runnable, "java/lang/Runnable");
-    JNF_MEMBER_CACHE(jm_Runnable_run, jc_Runnable, "run", "()V");
+    static JNF_CLASS_CACHE(jc_Runnable, "java/lang/Runnable");
+    static JNF_MEMBER_CACHE(jm_Runnable_run, jc_Runnable, "run", "()V");
     
     JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
     JNIEnv *env = JNFObtainEnv(&threadWasAttached);
@@ -110,8 +110,8 @@ JNIEXPORT jobject JNICALL Java_com_apple_jobjc_Utils_00024Threads_performCallabl
 @synthesize exception;
 
 - (void) performCallable:(JNFJObjectWrapper *)callableWrapper {
-    JNF_CLASS_CACHE(jc_Callable, "java/util/concurrent/Callable");
-    JNF_MEMBER_CACHE(jm_Callable_call, jc_Callable, "call", "()Ljava/lang/Object;");
+    static JNF_CLASS_CACHE(jc_Callable, "java/util/concurrent/Callable");
+    static JNF_MEMBER_CACHE(jm_Callable_call, jc_Callable, "call", "()Ljava/lang/Object;");
     
     JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
     JNIEnv *env = JNFObtainEnv(&threadWasAttached);
@@ -119,8 +119,7 @@ JNIEXPORT jobject JNICALL Java_com_apple_jobjc_Utils_00024Threads_performCallabl
     
     @try{
         self.returnValue = JNFCallObjectMethod(env, callable, jm_Callable_call);
-    }
-    @catch (JNFException *x) {
+    } @catch (JNFException *x) {
         [x raiseToJava:env];
     }
     

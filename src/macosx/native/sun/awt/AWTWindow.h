@@ -36,13 +36,16 @@
 
 @interface AWTWindow : NSWindow {
 @private
-    pthread_mutex_t _lock;
-    NSView * m_view;
-    CMenuBar * _menuBar;
-    AWTWindowDelegate * m_delegate;
+    NSView *m_view;
+    CMenuBar *_menuBar;
     jobject m_cPlatformWindow;
     NSSize _minSize;
 }
+
+@property (nonatomic, retain) NSView *m_view;
+@property (nonatomic, retain) CMenuBar *_menuBar;
+@property (nonatomic) jobject m_cPlatformWindow;
+@property (nonatomic) NSSize _minSize;
 
 - (id)initWithContentRect:(NSRect)contentRect
                 styleMask:(NSUInteger)windowStyle
@@ -52,29 +55,7 @@
               contentView:(NSView *)contentView;
 
 - (jobject) cPlatformWindow;
-- (void) setMinSizeImpl: (NSSize) minSize;
-- (void) setResizable: (BOOL)resizable;
-- (void) setAlwaysOnTop: (BOOL)isAlwaysOnTop;
-
-/*****************************************************
- * Methods that make all Cocoa calls on AppKit thread.
- ******************************************************/
-
-//NSRect:bounds, BOOL:display
-- (void) _setBounds_OnAppKitThread:(NSArray *)args;
-
-//Takes UInteger style, jobject cPlatformWindow, x, y, width, height
-- (void) _createAWTWindow_OnAppKitThread: (NSMutableArray *)argValue;
-
-- (void) _setResizable_OnAppKitThread: (NSNumber *)mayResize;
-
-- (void) _setMinSize_OnAppKitThread: (NSValue *) minSize;
-
-- (void) setMenuBar: (CMenuBar *)menuBar;
-
-- (void) _setMenuBar_OnAppKitThread: (CMenuBar *)menuBar;
-
-- (void) _setAlwaysOnTop_OnAppKitThread: (NSNumber *)isAlwaysOnTop;
 
 @end
+
 #endif _AWTWINDOW_H

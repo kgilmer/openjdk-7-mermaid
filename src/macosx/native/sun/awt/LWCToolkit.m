@@ -287,8 +287,8 @@ JNF_COCOA_ENTER(env);
         [[NSThread currentThread] setName:@"CToolkit NSThread"];
         
         JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-        JNF_CLASS_CACHE(jc_LWCToolkit, "sun/lwawt/macosx/LWCToolkit");
-        JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
+        static JNF_CLASS_CACHE(jc_LWCToolkit, "sun/lwawt/macosx/LWCToolkit");
+        static JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
         JNFCallStaticVoidMethod(env, jsm_installToolkitThreadNameInJava);
     });
     

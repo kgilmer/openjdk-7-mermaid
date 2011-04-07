@@ -155,8 +155,8 @@ static void addJavaInstance(id obj){
 //    NSLog(@"addJavaInstance %p", obj);
 //    NSLog(@"... calling up to Java");
     
-       JNF_CLASS_CACHE(jc_Subclassing, "com/apple/jobjc/Subclassing");
-    JNF_STATIC_MEMBER_CACHE(jm_Subclassing_initJObject,
+    static JNF_CLASS_CACHE(jc_Subclassing, "com/apple/jobjc/Subclassing");
+    static JNF_STATIC_MEMBER_CACHE(jm_Subclassing_initJObject,
         jc_Subclassing,
         "initJObject",
         "(J)V");
@@ -279,8 +279,13 @@ static void sel_closure_call(ffi_cif* cif, void* result, void** args, void* user
     
     if((*env)->ExceptionOccurred(env)) goto bail;
     
+<<<<<<< local
+   	static JNF_CLASS_CACHE(jc, "com/apple/jobjc/Subclassing");
+	static JNF_STATIC_MEMBER_CACHE(jm_invokeFromJNI, jc, "invokeFromJNI",
+=======
        JNF_CLASS_CACHE(jc, "com/apple/jobjc/Subclassing");
     JNF_STATIC_MEMBER_CACHE(jm_invokeFromJNI, jc, "invokeFromJNI",
+>>>>>>> other
         "(Lcom/apple/jobjc/ID;Ljava/lang/reflect/Method;Lcom/apple/jobjc/CIF;JJ)V");
     
     JNFCallStaticVoidMethod(env, jm_invokeFromJNI,

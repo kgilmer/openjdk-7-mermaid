@@ -23,7 +23,6 @@
  * questions.
  */
 
-#import <jni.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "AWTWindowDelegate.h"
@@ -37,7 +36,12 @@
 
 @implementation AWTWindow
 
--(id)initWithContentRect:(NSRect)contentRect 
+@synthesize m_view;
+@synthesize _menuBar;
+@synthesize m_cPlatformWindow;
+@synthesize _minSize;
+
+- (id) initWithContentRect:(NSRect)contentRect 
                styleMask:(NSUInteger)windowStyle
                  backing:(NSBackingStoreType)bufferingType 
                    defer:(BOOL)deferCreation
@@ -46,29 +50,24 @@
 {
 AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-    
     self = [super initWithContentRect:contentRect
                             styleMask:windowStyle
                               backing:bufferingType
                                 defer:deferCreation];
     
-    if (self == nil) {
-        // TODO: not implemented
-        return nil;
-    }
+    if (self == nil) return nil; // no hope
     
     // Init the internal NSView object
-    m_view = contentView;
+    self.m_view = contentView;
     
     // Set the link to Java CPlatformWindow object to perform callbacks.
-    m_cPlatformWindow = cPlatformWindow;
+    self.m_cPlatformWindow = cPlatformWindow;
     AWTWindowDelegate *delegate = [[AWTWindowDelegate alloc] initWithAWTWindow:self];
     [self setDelegate:delegate];
     
     //AWTView is the right component to take responsibility for MouseEvents and KeyEvents.
-    [self setContentView:m_view];
-    [self setInitialFirstResponder:m_view];
+    [self setContentView:self.m_view];
+    [self setInitialFirstResponder:self.m_view];
     [self setReleasedWhenClosed:NO];
     [self setHasShadow:YES];
     
@@ -77,210 +76,38 @@ AWT_ASSERT_APPKIT_THREAD;
     return self;
 }
 
-- (void) setResizable: (BOOL)resizable {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    [self performSelectorOnMainThread: @selector(_setResizable_OnAppKitThread:)
-                           withObject:[NSNumber numberWithBool: resizable] waitUntilDone:YES];
-}
-
-- (void) setMinSizeImpl: (NSSize) minSize {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    _minSize = minSize;
-    if (_minSize.width < 1)  _minSize.width = 1;
-    if (_minSize.height < 1) _minSize.height = 1;
-    
-    //TODO: setMinSize if only isResizable==true
-    [self performSelectorOnMainThread: @selector(_setMinSize_OnAppKitThread:)
-                           withObject: [NSValue valueWithSize: _minSize] waitUntilDone: YES];
-}
-
-- (void) setAlwaysOnTop: (BOOL)isAlwaysOnTop {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    [self performSelectorOnMainThread: @selector(_setAlwaysOnTop_OnAppKitThread:)
-                           withObject: [NSNumber numberWithBool: isAlwaysOnTop] waitUntilDone:YES];
-}
-
-/*
- * Helper methods which must be invoked on the main thread.
- */
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
     
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-    (*env)->DeleteGlobalRef(env, m_cPlatformWindow);
-    m_cPlatformWindow = NULL;
+    (*env)->DeleteGlobalRef(env, self.m_cPlatformWindow);
+    self.m_cPlatformWindow = NULL;
     
     [super dealloc];
 }
 
-
-/******************
- * Accessor methods
- ******************/
-
-- (jobject) cPlatformWindow{
-    return m_cPlatformWindow;
-}
-
-/*****************************************************
- * Methods that make all Cocoa calls on AppKit thread.
- ******************************************************/
-
-- (void) _createAWTWindow_OnAppKitThread: (NSMutableArray *)argValue {
+- (jobject) cPlatformWindow {
 AWT_ASSERT_APPKIT_THREAD;
     
-    NSUInteger style = [[argValue objectAtIndex: 0] intValue];
-    jobject cPlatformWindow = (jobject)[[argValue objectAtIndex: 1] pointerValue];
-    NSView * contentView = OBJC([[argValue objectAtIndex: 2] longValue]);
-    
-    jint x = [[argValue objectAtIndex: 3] intValue];
-    jint y = [[argValue objectAtIndex: 4] intValue];
-    jint w = [[argValue objectAtIndex: 5] intValue];
-    jint h = [[argValue objectAtIndex: 6] intValue];
-    
-    [argValue removeAllObjects];
-    
-    NSRect frameRect = NSMakeRect(x, y, w, h);
-    
-    NSRect contentRect = [NSWindow contentRectForFrameRect: frameRect styleMask: style];
-    
-    if (contentRect.size.width <= 0.0f) {
-        contentRect.size.width = 1.0f;
-    }
-    if (contentRect.size.height <= 0.0f) {
-        contentRect.size.height = 1.0f;
-    }
-    
-    AWTWindow *aWindow = [self initWithContentRect:contentRect
-                                         styleMask:style
-                                           backing:NSBackingStoreBuffered
-                                             defer:NO
-                                    platformWindow:cPlatformWindow
-                                       contentView:contentView];
-    
-    [argValue addObject: aWindow];
+    return self.m_cPlatformWindow;
 }
 
-- (void) _getWindowContentRect_OnAppKitThread: (NSMutableArray *)value {
+// NSWindow overrides
+
+- (BOOL) canBecomeKeyWindow {
 AWT_ASSERT_APPKIT_THREAD;
     
-    AWTWindow * aWindow = (AWTWindow *)[value objectAtIndex: 0];
-    NSRect frame = [aWindow frame];
-    
-    NSRect contentRect =
-    [NSWindow contentRectForFrameRect:frame styleMask:[aWindow styleMask]];
-    
-    [value removeAllObjects];
-    [value addObject: [NSValue valueWithRect:contentRect]];
-    [value addObject: [NSValue valueWithRect:frame]];
-}
-
-- (void) _setBounds_OnAppKitThread:(NSArray *) args { //NSRect: bounds and display: YES
-AWT_ASSERT_APPKIT_THREAD;
-    
-    NSRect rect = [(NSValue *)[args objectAtIndex: 0] rectValue];
-    BOOL show = [(NSNumber *)[args objectAtIndex: 1] boolValue] ;
-    [self setFrame: rect display: show];
-    
-    //only start tracking events if pointer is above the toplevel
-    //TODO: should post an Entered event if YES.
-    NSPoint mLocation = [NSEvent mouseLocation];
-    
-    [self setAcceptsMouseMovedEvents: NSPointInRect(mLocation, rect)];
-}
-
-- (void) _setResizable_OnAppKitThread: (NSNumber *)mayResize {
-AWT_ASSERT_APPKIT_THREAD;
-    
-    BOOL resizable = [mayResize boolValue];
-    
-    if (resizable) {
-        NSSize defaultMaxSize = NSMakeSize(FLT_MAX, FLT_MAX);
-        [self setMaxSize: defaultMaxSize];
-        [self setMinSize: _minSize];
-    } else {
-        NSRect currentFrame = [self frame];
-        [self setMaxSize: currentFrame.size];
-        [self setMinSize: currentFrame.size];
-    }
-    
-    [self setShowsResizeIndicator: resizable];
-    
-    NSButton *zoomButton = [self standardWindowButton:NSWindowZoomButton];
-    [zoomButton setEnabled:resizable];
-}
-
-- (void) _setMinSize_OnAppKitThread: (NSValue *) minSize {
-AWT_ASSERT_APPKIT_THREAD;
-    
-    [self setMinSize: [minSize sizeValue]];
-}
-
-
-- (void) _setMenuBar_OnAppKitThread: (CMenuBar *)menuBar {
-AWT_ASSERT_APPKIT_THREAD;
-    
-    [menuBar retain];
-    
-    if ([self isKeyWindow]) {
-        [_menuBar deactivate];
-    }
-    
-    [_menuBar release];
-    _menuBar = menuBar;
-    
-    // if ([self isKeyWindow]) {
-    [CMenuBar activate:_menuBar modallyDisabled:NO];
-    // }
-}
-
-- (void) _setAlwaysOnTop_OnAppKitThread: (NSNumber *)isAlwaysOnTop {
-AWT_ASSERT_APPKIT_THREAD;
-	
-    BOOL alwaysOnTop = [isAlwaysOnTop boolValue];
-	
-    if (alwaysOnTop) {
-        // Note that always-on-top windows are below modal dialogs
-        // Use (NSModalPanelWindowLevel + 1) level to change this order
-        [self setLevel: NSFloatingWindowLevel];
-    } else {
-        [self setLevel: NSNormalWindowLevel];
-    }
-}
-
-- (void) setMenuBar: (CMenuBar *)menuBar {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    [ThreadUtilities performOnMainThread:@selector(_setMenuBar_OnAppKitThread:) onObject:self withObject:menuBar waitUntilDone:YES awtMode:YES];
-}
-
-- (BOOL) isUnderMouse {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    return [m_view hitTest: [self mouseLocationOutsideOfEventStream]] != nil;
-}
-
-/***************************************************
- * Methods to override NSWindow's default behaviour
- ***************************************************/
-
-- (BOOL)canBecomeKeyWindow {
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-    if (env == NULL) {
-        return YES;
-    }
-    return (BOOL) (*env)->CallBooleanMethod(env, m_cPlatformWindow,
-                                            javaIDs.CPlatformWindow.canBecomeKeyWindow);
+    // TODO: add JNIEnv assert
+    if (env == NULL) return YES;
+    
+    static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
+    static JNF_MEMBER_CACHE(jm_canBecomeKeyWindow, jc_CPlatformWindow, "canBecomeKeyWindow", "()Z");
+    return JNFCallBooleanMethod(env, self.m_cPlatformWindow, jm_canBecomeKeyWindow);
 }
 
-@end //AWTWindow
+@end // AWTWindow
 
-/*
- * JNI methods bodies
- */
 
 /*
  * Class:     sun_lwawt_macosx_CPlatformWindow
@@ -289,14 +116,29 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CPlatformWindow_nativeSetMenuBar
-(JNIEnv *env, jobject obj, jlong awtWindowPtr,  jlong mbPtr)
+(JNIEnv *env, jobject obj, jlong awtWindowPtr, jlong mbPtr)
 {
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
-    AWTWindow *awtWindow = OBJC(awtWindowPtr);
+    AWTWindow *aWindow = OBJC(awtWindowPtr);
     CMenuBar *menuBar = OBJC(mbPtr);
-    [awtWindow setMenuBar: menuBar];
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [menuBar retain];
+        
+        if ([aWindow isKeyWindow]) {
+            [aWindow._menuBar deactivate];
+        }
+        
+        [aWindow._menuBar release];
+        aWindow._menuBar = menuBar;
+        
+        // if ([self isKeyWindow]) {
+        [CMenuBar activate:aWindow._menuBar modallyDisabled:NO];
+        // }
+    }];
     
 JNF_COCOA_EXIT(env);
 }
@@ -308,34 +150,43 @@ JNF_COCOA_EXIT(env);
  */
 JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeCreateWindow
 (JNIEnv *env, jobject obj, jlong contentViewPtr, jboolean withBorder,
- jint originX, jint originY, jint width, jint height)
+ jint x, jint y, jint w, jint h)
 {
-    AWTWindow *aWindow = nil;
+    __block AWTWindow *aWindow = nil;
     
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
-    NSUInteger style;
+    NSUInteger style = NSBorderlessWindowMask;
     if (withBorder) {
         style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
-    } else {
-        style = NSBorderlessWindowMask;
     }
     
     jobject cPlatformWindow = (*env)->NewGlobalRef(env, obj);
+    NSView *contentView = OBJC(contentViewPtr);
+    NSRect frameRect = NSMakeRect(x, y, w, h);
     
-    NSMutableArray * retArray = [NSMutableArray arrayWithCapacity:7];
-    [retArray addObject: [NSNumber numberWithInt: style]];
-    [retArray addObject: [NSValue valueWithBytes:&cPlatformWindow objCType:@encode(jobject)]];
-    [retArray addObject: [NSNumber numberWithLong: contentViewPtr]];
-    
-    [retArray addObject: [NSNumber numberWithInt: originX]];
-    [retArray addObject: [NSNumber numberWithInt: originY]];
-    [retArray addObject: [NSNumber numberWithInt: width]];
-    [retArray addObject: [NSNumber numberWithInt: height]];
-    
-    [ThreadUtilities performOnMainThread: @selector(_createAWTWindow_OnAppKitThread:) onObject:[AWTWindow alloc] withObject:retArray waitUntilDone: YES awtMode: NO];
-    aWindow = (AWTWindow *)[retArray objectAtIndex: 0];
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        NSRect contentRect = [NSWindow contentRectForFrameRect:frameRect styleMask:style];
+        if (contentRect.size.width <= 0.0f) {
+            contentRect.size.width = 1.0f;
+        }
+        if (contentRect.size.height <= 0.0f) {
+            contentRect.size.height = 1.0f;
+        }
+        
+        aWindow = [[AWTWindow alloc] initWithContentRect:contentRect
+                                               styleMask:style
+                                                 backing:NSBackingStoreBuffered
+                                                   defer:NO
+                                          platformWindow:cPlatformWindow
+                                             contentView:contentView];
+        
+        CFRetain(aWindow);
+        [aWindow release]; // GC
+    }];
     
 JNF_COCOA_EXIT(env);
     
@@ -376,23 +227,25 @@ Java_sun_lwawt_macosx_CPlatformWindow_nativeGetInsets
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
-    AWTWindow *awtWindow = OBJC(awtWindowPtr);
-    NSMutableArray * retArray = [NSMutableArray arrayWithCapacity:2];
-    [retArray addObject: awtWindow];
-    [awtWindow performSelectorOnMainThread: @selector(_getWindowContentRect_OnAppKitThread:) withObject: retArray waitUntilDone: YES];
-    NSRect contentRect = [(NSValue *)[retArray objectAtIndex: 0] rectValue];
-    NSRect frame = [(NSValue *)[retArray objectAtIndex: 1] rectValue];
+    AWTWindow *aWindow = OBJC(awtWindowPtr);
+    __block NSRect contentRect = NSZeroRect;
+    __block NSRect frame = NSZeroRect;
     
-    CGFloat scaleFactor = 1.0f;
-    CGFloat l = (contentRect.origin.x - frame.origin.x) / scaleFactor;
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        frame = [aWindow frame];
+        contentRect = [NSWindow contentRectForFrameRect:frame styleMask:[aWindow styleMask]];
+    }];
     
-    jint top = (jint)(frame.size.height / scaleFactor - contentRect.size.height);
-    jint left = (jint)l;
-    jint bottom = (jint)((contentRect.origin.y - frame.origin.y) / scaleFactor);
-    jint right = (jint)(frame.size.width / scaleFactor - (contentRect.size.width + l));
-    ret = JNU_NewObjectByName(env, "java/awt/Insets", "(IIII)V", top, left, bottom, right);
+    jint top = (jint)(frame.size.height - contentRect.size.height);
+    jint left = (jint)(contentRect.origin.x - frame.origin.x);
+    jint bottom = (jint)(contentRect.origin.y - frame.origin.y);
+    jint right = (jint)(frame.size.width - (contentRect.size.width + left));
     
-//    UNLOCK([aWindow getNativeLock]);                                                                                                                                
+    static JNF_CLASS_CACHE(jc_Insets, "java/awt/Insets");
+    static JNF_CTOR_CACHE(jc_Insets_ctor, jc_Insets, "(IIII)V");
+    ret = JNFNewObject(env, jc_Insets_ctor, top, left, bottom, right);                                                                                                                             
     
 JNF_COCOA_EXIT(env);
     return ret;
@@ -410,20 +263,25 @@ Java_sun_lwawt_macosx_CPlatformWindow_nativeSetBounds
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
-    NSRect rect;
-    rect.origin.x = originX;
-    rect.origin.y = originY;
-    rect.size.width = width;
-    rect.size.height = height;
+    NSRect rect = { { originX, originY }, { width, height } };
     
     //TODO: not sure we need displayIfNeeded message in our view
     AWTWindow *awtWindow = OBJC(awtWindowPtr);
-    NSArray * args = [NSArray arrayWithObjects:[NSValue valueWithRect:rect], [NSNumber numberWithBool: YES], nil];
-    [awtWindow performSelectorOnMainThread: @selector(_setBounds_OnAppKitThread:) withObject: args waitUntilDone: YES];
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [awtWindow setFrame:rect display:YES];
+        
+        //only start tracking events if pointer is above the toplevel
+        //TODO: should post an Entered event if YES.
+        NSPoint mLocation = [NSEvent mouseLocation];
+        [awtWindow setAcceptsMouseMovedEvents:NSPointInRect(mLocation, rect)];
+        
+        // ensure we repaint the whole window after the resize operation
+        // (this will also re-enable screen updates, which were disabled above)
+        //TODO: send PaintEvent
+    }];
     
-    // ensure we repaint the whole window after the resize operation
-    // (this will also re-enable screen updates, which were disabled above)
-    //TODO: send PaintEvent
 JNF_COCOA_EXIT(env);
 }
 
@@ -496,7 +354,23 @@ JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
     AWTWindow *aWindow = OBJC(windowPtr);
-    [aWindow setResizable: resizable];
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        if (resizable) {
+            NSSize defaultMaxSize = NSMakeSize(FLT_MAX, FLT_MAX);
+            [aWindow setMaxSize:defaultMaxSize];
+            [aWindow setMinSize:aWindow._minSize];
+        } else {
+            NSRect currentFrame = [aWindow frame];
+            [aWindow setMaxSize:currentFrame.size];
+            [aWindow setMinSize:currentFrame.size];
+        }
+        
+        NSButton *zoomButton = [aWindow standardWindowButton:NSWindowZoomButton];
+        [zoomButton setEnabled:resizable];
+        
+        [aWindow setShowsResizeIndicator:resizable];
+    }];
     
 JNF_COCOA_EXIT(env);
 }
@@ -509,7 +383,15 @@ JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
     AWTWindow *aWindow = OBJC(windowPtr);
-    [aWindow setMinSizeImpl: NSMakeSize(w, h)];
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        NSSize size = NSMakeSize(w, h);
+        if (size.width < 1) size.width = 1;
+        if (size.height < 1) size.height = 1;
+        aWindow._minSize = size;
+        [aWindow setMinSize:size];
+    }];
     
 JNF_COCOA_EXIT(env);
 }
@@ -572,7 +454,8 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^() {
         AWT_ASSERT_APPKIT_THREAD;
         
-        underMouse = [aWindow isUnderMouse];
+        NSPoint pt = [aWindow mouseLocationOutsideOfEventStream];
+        underMouse = [aWindow.m_view hitTest:pt] != nil;
     }];
     
 JNF_COCOA_EXIT(env);

@@ -462,8 +462,8 @@ Java_sun_font_CStrike_getFontMetrics
      * advance:  no need to set yMaxLinearAdvanceWidth - it will be zero.
      */
 	
-    JNF_CLASS_CACHE(sjc_StrikeMetrics, "sun/font/StrikeMetrics");
-    JNF_CTOR_CACHE(strikeMetricsCtr, sjc_StrikeMetrics, "(FFFFFFFFFF)V");
+    static JNF_CLASS_CACHE(sjc_StrikeMetrics, "sun/font/StrikeMetrics");
+    static JNF_CTOR_CACHE(strikeMetricsCtr, sjc_StrikeMetrics, "(FFFFFFFFFF)V");
     metrics = JNFNewObject(env, strikeMetricsCtr,
                            0.0, ay, 0.0, dy, 1.0,
                            0.0, 0.0, ly, mx, 0.0);
