@@ -33,6 +33,7 @@ JOBJC_JAR = ARGV[1]
 LIBPATH = ARGV[2]
 OBJROOT = ARGV[3]
 ARCHS   = ARGV[4]
+STABLE_GEN_DIR = ARGV[5]
 
 ourJavaHome = ENV['JAVA_HOME']
 ourJavaVersion = `java -fullversion 2>&1`
@@ -43,6 +44,7 @@ $stderr.puts "jobjc_jar = #{JOBJC_JAR}"
 $stderr.puts "libpath = #{LIBPATH}"
 $stderr.puts "objroot = #{OBJROOT}"
 $stderr.puts "ARCHS   = #{ARCHS}"
+$stderr.puts "STABLE_GEN_DIR = #{STABLE_GEN_DIR}"
 
 jarch = if ARCHS =~ /x86_64/ then "-d64" else "-d32" end
 
@@ -57,7 +59,7 @@ $stderr.puts bootclasspath
 
 # we run the generator with our newly created JObjC.  The installed version (if available) has been removed from
 # the boot class path, so we are building with everything newly created.
-cmd = "java #{jarch} -Xms128m -Xmx512m -Djava.library.path=#{LIBPATH} -Xbootclasspath:#{bootclasspath.chomp} -classpath #{OBJROOT}/bin/core:#{OBJROOT}/bin/generator -ea com.apple.internal.jobjc.generator.Generator dst=#{OBJROOT}/src/jobjc"
+cmd = "java #{jarch} -Xms128m -Xmx512m -Djava.library.path=#{LIBPATH} -Xbootclasspath:#{bootclasspath.chomp} -classpath #{OBJROOT}/bin/core:#{OBJROOT}/bin/generator -ea com.apple.internal.jobjc.generator.Generator dst=#{OBJROOT}/src/jobjc frameworks=#{STABLE_GEN_DIR}"
 
 $stderr.puts cmd
 puts `#{cmd} 2>&1`

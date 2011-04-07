@@ -186,6 +186,7 @@
       <arg value="${nativelib.dir}"/>
       <arg value="${obj}"/>
       <arg value="${ARCHS}"/>
+      <arg value="${env.STABLE_GEN_DIR}"/>
     </exec>
   </target>
 

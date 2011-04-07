@@ -36,7 +36,7 @@ import com.apple.internal.jobjc.generator.model.Clazz;
 import com.apple.internal.jobjc.generator.model.Framework;
 
 public class ClassConsolidator {
-    private static String[] PREFERRED_FRAMEWORKS = { "Foundation", "QuartzCore", "CoreData", "AppKit" };
+    private static String[] PREFERRED_FRAMEWORKS = { "Foundation", "AppKit" };
     
     static void consolidateClassesForFrameworks(final List<Framework> frameworks) throws Throwable {
         System.out.println("--2-- Resolving duplicate classes:");
