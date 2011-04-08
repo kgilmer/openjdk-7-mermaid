@@ -99,7 +99,7 @@ JNIEXPORT jint JNICALL Java_com_sun_media_sound_Platform_nGetLibraryForFeature
         return com_sun_media_sound_Platform_LIB_ALSA;
     }
 #endif
-#if (X_PLATFORM == X_BSD)
+#if (X_PLATFORM == X_BSD) || (X_PLATFORM == X_MACOSX)
     switch (feature) {
 #ifdef __FreeBSD__
     case com_sun_media_sound_Platform_FEATURE_MIDIIO:

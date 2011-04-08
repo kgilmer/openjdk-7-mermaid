@@ -70,7 +70,7 @@ typedef double             mlib_d64;
 #include <stddef.h>                     /* for ptrdiff_t */
 #endif  /* __linux__ */
 
-#ifdef MLIB_OS64BIT
+#if defined(MLIB_OS64BIT) || defined(_LP64)
 
 typedef long               mlib_s64;
 typedef unsigned long      mlib_u64;

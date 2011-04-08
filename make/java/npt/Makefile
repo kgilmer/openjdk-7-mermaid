@@ -67,8 +67,8 @@ ifeq ($(PLATFORM), windows)
   OTHER_LCF += -export:nptInitialize -export:nptTerminate
 endif
 
-# Add location of iconv headers
-ifeq ($(PLATFORM), bsd)
+# Add location of iconv header
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
   ifeq ($(OS_VENDOR), Apple)
     OTHER_LDLIBS += -liconv
   else
