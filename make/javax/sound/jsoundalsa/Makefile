@@ -60,6 +60,10 @@ FILES_c += \
 	PLATFORM_API_LinuxOS_ALSA_MidiOut.c \
 	PLATFORM_API_LinuxOS_ALSA_MidiUtils.c \
 	PLATFORM_API_LinuxOS_ALSA_Ports.c
+
+MIDI_CPPFLAGS= \
+	-DUSE_PLATFORM_MIDI_OUT=TRUE \
+	-DUSE_PLATFORM_MIDI_IN=TRUE
 endif
 
 ifeq ($(PLATFORM), bsd)
@@ -71,6 +75,8 @@ FILES_c += \
 	PLATFORM_API_BsdOS_ALSA_MidiOut.c \
 	PLATFORM_API_BsdOS_ALSA_MidiUtils.c \
 	PLATFORM_API_BsdOS_ALSA_Ports.c
+
+MIDI_CPPFLAGS=
 endif
 
 FILES_export = \
@@ -83,8 +89,7 @@ LDFLAGS += -L$(ALSA_LIB_PATH) -lasound
 CPPFLAGS += \
 	-DUSE_DAUDIO=TRUE \
 	-DUSE_PORTS=TRUE  \
-	-DUSE_PLATFORM_MIDI_OUT=TRUE \
-	-DUSE_PLATFORM_MIDI_IN=TRUE \
+	$(MIDI_CPPFLAGS) \
 	-I$(SHARE_SRC)/native/com/sun/media/sound \
 	-I$(ALSA_HEADERS_PATH)
 
