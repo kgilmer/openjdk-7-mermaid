@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,22 +44,16 @@ import sun.util.logging.PlatformLogger;
  */
 public final class FontUtilities {
 
-    public static boolean isSolaris;
-
     public static boolean isLinux;
-
     public static boolean isBSD;
-
+    public static boolean isMacOSX;
+    public static boolean isSolaris;
     public static boolean isSolaris8;
-
     public static boolean isSolaris9;
-
     public static boolean isOpenSolaris;
-
-    public static boolean useT2K;
-
     public static boolean isWindows;
 
+    public static boolean useT2K;
     public static boolean isOpenJDK;
 
     static final String LUCIDA_FILE_NAME = "LucidaSansRegular.ttf";
@@ -74,14 +68,14 @@ public final class FontUtilities {
         AccessController.doPrivileged(new PrivilegedAction () {
             public Object run() {
                 String osName = System.getProperty("os.name", "unknownOS");
-                isSolaris = osName.startsWith("SunOS");
 
                 isLinux = osName.startsWith("Linux");
-
 	        isBSD = (osName.startsWith("FreeBSD") ||
 	                 osName.startsWith("NetBSD") ||
 	                 osName.startsWith("OpenBSD") ||
 	                 osName.startsWith("Darwin"));
+		isMacOSX = osName.equals("Darwin"); // TODO: MacOSX
+                isWindows = osName.startsWith("Windows");
 
                 String t2kStr = System.getProperty("sun.java2d.font.scaler");
                 if (t2kStr != null) {
@@ -89,6 +83,8 @@ public final class FontUtilities {
                 } else {
                     useT2K = false;
                 }
+
+                isSolaris = osName.startsWith("SunOS");
                 if (isSolaris) {
                     String version = System.getProperty("os.version", "0.0");
                     isSolaris8 = version.startsWith("5.8");
@@ -120,7 +116,7 @@ public final class FontUtilities {
                     isSolaris9 = false;
                     isOpenSolaris = false;
                 }
-                isWindows = osName.startsWith("Windows");
+
                 String jreLibDirName = System.getProperty("java.home", "")
                                                       + File.separator + "lib";
                 String jreFontDirName =

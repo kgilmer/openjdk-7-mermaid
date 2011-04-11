@@ -53,6 +53,11 @@ ifndef PLATFORM_SRC
   PLATFORM_SRC  = $(BUILDDIR)/../src/windows
 endif # PLATFORM_SRC
 
+# Windows build pulls its platform sources from the windows tree.
+SRCDIR_LIST = src/windows src/share
+JAVA_SRCDIR_LIST = src/$(PLATFORM) src/share
+NATIVE_SRCDIR_LIST = src/$(PLATFORM) src/share
+
 # Platform specific closed sources
 ifndef OPENJDK
   ifndef CLOSED_PLATFORM_SRC

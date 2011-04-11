@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -58,6 +58,10 @@ ifneq ($(PLATFORM), windows)
   XAWT_SUBDIR     = xawt
 endif
 
+ifeq ($(PLATFORM), macosx)
+  LWAWT_SUBDIR = lwawt
+endif
+
 ifndef OPENJDK
   JDBC_SUBDIR = jdbc
 endif
@@ -70,7 +74,7 @@ endif
 # nio need to be compiled before awt to have all charsets ready
 SUBDIRS            = jar security javazic misc net nio text launcher
 SUBDIRS_desktop    = audio $(RENDER_SUBDIR) image \
-                     awt splashscreen $(XAWT_SUBDIR) \
+                     awt splashscreen $(XAWT_SUBDIR) $(LWAWT_SUBDIR) \
                      $(HEADLESS_SUBDIR) $(DGA_SUBDIR) \
                      jawt font jpeg cmm applet beans
 SUBDIRS_management = management

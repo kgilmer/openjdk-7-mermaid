@@ -95,7 +95,7 @@ include $(BUILDDIR)/common/Mapfile-vers.gmk
 
 include $(BUILDDIR)/common/Library.gmk
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 ifdef DONT_ENABLE_IPV6
   OTHER_CFLAGS += -DDONT_ENABLE_IPV6
 endif
@@ -109,7 +109,7 @@ endif
 ifeq ($(PLATFORM), linux)
   OTHER_LDLIBS += -lpthread
 endif
-endif # PLATFORM == bsd
+endif # PLATFORM == bsd || macosx
 
 CLASSES.export += java.lang.Integer java.io.FileDescriptor java.net.InetAddressImplFactory java.net.Inet4AddressImpl java.net.Inet6AddressImpl
 

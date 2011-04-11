@@ -169,7 +169,7 @@ ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS = -lXt -lXext $(LIBXTST) $(LIBXMU) -lX11 -lXi
 endif
 
-ifneq (,$(findstring $(PLATFORM), linux bsd))
+ifneq (,$(findstring $(PLATFORM), linux bsd macosx))
 OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
 # XXX what is this define below? Isn't it motif-related?
 OTHER_CFLAGS += -DXMSTRINGDEFINES=1
@@ -241,7 +241,7 @@ ifeq ($(PLATFORM), linux)
               -I/usr/include/X11/extensions
 endif
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
   CPPFLAGS += -I$(OPENWIN_HOME)/include/X11/extensions \
               -I$(OPENWIN_HOME)/include 
 endif
