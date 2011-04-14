@@ -208,7 +208,7 @@ static char *execname = NULL;
 
 static const char * SetExecname(char **argv);
 static jboolean GetJVMPath(const char *jrepath, const char *jvmtype,
-                           char *jvmpath, jint jvmpathsize, const char * arch);
+                           char *jvmpath, jint jvmpathsize, const char * arch, int bitsWanted);
 static jboolean GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative);
 
 
@@ -460,7 +460,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
             exit(4);
         }
 
-        if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch )) {
+        if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch, wanted)) {
           JLI_ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
           exit(4);
         }
@@ -505,7 +505,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
           }
 
           /* exec child can do error checking on the existence of the path */
-          jvmpathExists = GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, GetArchPath(wanted));
+          jvmpathExists = GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, GetArchPath(wanted), wanted);
 
         }
 #else
@@ -602,7 +602,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
  */
 static jboolean
 GetJVMPath(const char *jrepath, const char *jvmtype,
-           char *jvmpath, jint jvmpathsize, const char * arch)
+           char *jvmpath, jint jvmpathsize, const char * arch, int bitsWanted)
 {
     struct stat s;
 
@@ -610,7 +610,9 @@ GetJVMPath(const char *jrepath, const char *jvmtype,
         JLI_Snprintf(jvmpath, jvmpathsize, "%s/" JVM_DLL, jvmtype);
     } else {
 #ifdef MACOSX
-        JLI_Snprintf(jvmpath, jvmpathsize, "%s/lib/%s/" JVM_DLL, jrepath, jvmtype);
+        // macosx client library is built thin, i386 only.  64 bit client requests must load server library
+        const char *jvmtypeUsed = ((bitsWanted == 64) && (strcmp(jvmtype, "client") == 0)) ? "server" : jvmtype;
+        JLI_Snprintf(jvmpath, jvmpathsize, "%s/lib/%s/" JVM_DLL, jrepath, jvmtypeUsed);
 #else
         JLI_Snprintf(jvmpath, jvmpathsize, "%s/lib/%s/%s/" JVM_DLL, jrepath, arch, jvmtype);
 #endif
