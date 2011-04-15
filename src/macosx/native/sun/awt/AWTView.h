@@ -50,7 +50,5 @@
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;
 - (void) setContextMenu:(NSMenu *)aMenu;
 
-- (void) _createAWTView_OnAppKitThread: (NSMutableArray *)argValue;
-
 @end
 #endif _AWTVIEW_H

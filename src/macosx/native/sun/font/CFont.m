@@ -34,7 +34,7 @@
 #import "CFont.h"
 #import "CStrike.h"
 #import "CoreTextSupport.h"
-#import "jni_util.h"
+
 
 #define DEBUG
 
@@ -102,7 +102,7 @@
 }
 
 + (NSFont *) nsFontForJavaFont:(jobject)javaFont env:(JNIEnv *)env {
-    if (JNU_IsNull(env, javaFont)) {
+    if (javaFont == NULL) {
 #ifdef DEBUG
         NSLog(@"nil font");
 #endif
@@ -114,7 +114,7 @@
     // obtain the Font2D
     static JNF_MEMBER_CACHE(jm_Font_getFont2D, jc_Font, "getFont2D", "()Lsun/font/Font2D;");
     jobject font2d = JNFCallObjectMethod(env, javaFont, jm_Font_getFont2D);
-    if (JNU_IsNull(env, font2d)) {
+    if (font2d == NULL) {
 #ifdef DEBUG
         NSLog(@"nil font2d");
 #endif

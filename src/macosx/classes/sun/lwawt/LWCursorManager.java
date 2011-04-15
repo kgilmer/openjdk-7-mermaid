@@ -32,6 +32,8 @@ import java.awt.Point;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import sun.awt.SunToolkit;
+
 public abstract class LWCursorManager {
 
     // A flag to indicate if the update is scheduled, so we don't
@@ -67,14 +69,14 @@ public abstract class LWCursorManager {
                     updateCursor();
                 }
             };
-            LWToolkit.executeOnEventHandlerThread(window.getTarget(), r);
+            SunToolkit.executeOnEventHandlerThread(window.getTarget(), r);
         }
     }
 
     private void updateCursorImpl() {
         LWWindowPeer windowUnderCursor = LWWindowPeer.getWindowUnderCursor();
         Point cursorPos = getCursorPosition();
-        LWComponentPeer componentUnderCursor = null;
+        LWComponentPeer<?, ?> componentUnderCursor = null;
         // TODO: it's possible to get the component under cursor directly as
         // it's stored in LWWindowPee anyway (lastMouseEventPeer)
         if (windowUnderCursor != null) {
@@ -99,7 +101,7 @@ public abstract class LWCursorManager {
             }
         }
         // TODO: default cursor for modal blocked windows
-        setCursor(cursor);
+        setCursor(windowUnderCursor, cursor);
     }
 
     /*
@@ -111,6 +113,6 @@ public abstract class LWCursorManager {
     /*
      * Sets a cursor. The cursor can be null if the mouse is not over a Java window.
      */
-    protected abstract void setCursor(Cursor cursor);
+    protected abstract void setCursor(LWWindowPeer windowUnderCursor, Cursor cursor);
 
 }

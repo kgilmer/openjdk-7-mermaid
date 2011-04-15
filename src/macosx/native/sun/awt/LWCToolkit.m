@@ -32,6 +32,8 @@
 #import "ThreadUtilities.h"
 
 
+const char *kInternalError = "java/lang/InternalError";
+
 static long eventCount;
 
 @implementation AWTToolkit

@@ -53,7 +53,8 @@ FILES_objc = \
         CTrayIcon.m \
         CWrapper.m \
         LWCToolkit.m \
-        ThreadUtilities.m
+        ThreadUtilities.m \
+        GeomUtilities.m
 
 FILES_c = \
         OGLBlitLoops.c \

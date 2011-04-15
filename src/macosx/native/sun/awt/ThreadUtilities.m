@@ -38,7 +38,6 @@ static NSArray *sAWTPerformModes = nil;
 
 static BOOL sCocoaComponentCompatibility = NO;
 static NSTimeInterval sCocoaComponentCompatibilityTimeout = 0.5;
-static BOOL sCocoaComponentCompatibilityForced = NO;
 static BOOL sLoggingEnabled = YES;
 
 NSString *AWTRunLoopMode = @"AWTRunLoopMode";

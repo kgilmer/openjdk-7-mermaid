@@ -115,7 +115,7 @@ public final class CFont extends Font2D {
     }
 
     public String toString() {
-        return "CFont{ fullName: " + fullName +
+        return "CFont { fullName: " + fullName +
             ",  familyName: " + familyName + ", style: " + style +
             " } aka: " + super.toString();
     }

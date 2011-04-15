@@ -39,7 +39,7 @@ extern "C" {
 /*
  * AWTTrayIcon
  */
-@interface AWTTrayIcon : NSObject{
+@interface AWTTrayIcon : NSObject {
 	NSStatusBar * nsStatusBar;
 	jobject peer;
 	NSButton *button;
@@ -47,7 +47,8 @@ extern "C" {
 	NSStatusItem *theItem;
 	NSMenu *menu;
 }
-- (id) initWithPeer:(jobject)thePeer withEnv:(JNIEnv *)theEnv;
+
+- (id) initWithPeer:(jobject)thePeer;
 - (void) setTooltip:(NSString *)tooltip;
 - (NSMenu *) menu;
 - (NSStatusItem *)theItem;
@@ -62,11 +63,10 @@ extern "C" {
  * AWTNSButton
  */
 @interface AWTNSButton : NSButton {
-	JNIEnv * env;
 @public
 	AWTTrayIcon *trayIcon;
 }
--(id)initWithTrayIcon:(AWTTrayIcon *)theTrayIcon withEnv:(JNIEnv *)theEnv;
+-(id)initWithTrayIcon:(AWTTrayIcon *)theTrayIcon;
 
 @end //AWTNSButton
 

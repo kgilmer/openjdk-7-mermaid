@@ -27,26 +27,14 @@ package sun.lwawt;
 
 import java.awt.*;
 import java.awt.event.*;
-
 import java.awt.image.BufferedImage;
-
-import java.awt.peer.ComponentPeer;
-import java.awt.peer.DialogPeer;
-import java.awt.peer.FramePeer;
-import java.awt.peer.WindowPeer;
-
-import javax.swing.SwingUtilities;
-import javax.swing.JComponent;
-
+import java.awt.peer.*;
 import java.util.List;
 
-import sun.awt.FullScreenCapable;
-import sun.awt.AWTAccessor;
-import sun.awt.CausedFocusEvent;
+import javax.swing.SwingUtilities;
 
-import sun.java2d.InvalidPipeException;
-import sun.java2d.SunGraphics2D;
-import sun.java2d.SurfaceData;
+import sun.awt.*;
+import sun.java2d.*;
 
 public class LWWindowPeer
     extends LWContainerPeer<Window, LWComponentPeer.JComponentDelegate>
@@ -166,8 +154,7 @@ public class LWWindowPeer
         if (getTarget() instanceof Frame) {
             setTitle(((Frame)getTarget()).getTitle());
             setState(((Frame)getTarget()).getExtendedState());
-        } else
-        if (getTarget() instanceof Dialog) {
+        } else if (getTarget() instanceof Dialog) {
             setTitle(((Dialog)getTarget()).getTitle());
         }
 
@@ -1043,7 +1030,6 @@ public class LWWindowPeer
             }
             return blocker;
         }
-
     }
     
     public void enterFullScreenMode() {

@@ -23,7 +23,10 @@
  * questions.
  */
 
+#include <JavaNativeFoundation/JavaNativeFoundation.h>
+
 #include "LWCToolkit.h"
+
 
 /*
  * Class:     sun_awt_CGraphicsEnvironment
@@ -32,16 +35,18 @@
  */
 JNIEXPORT void JNICALL
 Java_sun_awt_CGraphicsEnvironment_initCocoa
-  (JNIEnv *env, jclass self)
+(JNIEnv *env, jclass self)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
 
-    /* Inform Cocoa that we're multi-threaded. Creating a short-lived NSThread is the
-     * recommended way of doing so. */
-    [NSThread detachNewThreadSelector: @selector(sharedApplication) toTarget: [NSApplication class] withObject: nil];
+    // Inform Cocoa that we're multi-threaded.
+	// Creating a short-lived NSThread is the recommended way of doing so.
+    [NSThread detachNewThreadSelector:@selector(self) toTarget:[NSObject class] withObject:nil];
 
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
+
+#define MAX_DISPLAYS 64
 
 /*
  * Class:     sun_awt_CGraphicsEnvironment
@@ -50,50 +55,46 @@ Java_sun_awt_CGraphicsEnvironment_initCocoa
  */
 JNIEXPORT jintArray JNICALL
 Java_sun_awt_CGraphicsEnvironment_getDisplayIDs
-  (JNIEnv *env, jclass class)
+(JNIEnv *env, jclass class)
 {
-    CGDisplayCount displayCount;
-    CGDirectDisplayID *displays = NULL;
-    jintArray ret = NULL;
+	jintArray ret = NULL;
+	
+JNF_COCOA_ENTER(env);
 
     /* Get the count */
-    if (CGGetOnlineDisplayList(0, NULL, &displayCount) != kCGErrorSuccess) {
-        JNU_ThrowInternalError(env, "CGGetOnlineDisplayList() failed to get display count");
+	CGDisplayCount displayCount;
+    if (CGGetActiveDisplayList(MAX_DISPLAYS, NULL, &displayCount) != kCGErrorSuccess) {
+		[JNFException raise:env
+						 as:kInternalError
+					 reason:"CGGetOnlineDisplayList() failed to get display count"];
         return NULL;
     }
 
     /* Allocate an array and get the size list of display Ids */
-    displays = malloc(sizeof(CGDirectDisplayID) * displayCount);
-    if (displays == NULL)
+    CGDirectDisplayID displays[MAX_DISPLAYS];
+    if (CGGetActiveDisplayList(displayCount, displays, &displayCount) != kCGErrorSuccess) {
+		[JNFException raise:env
+						 as:kInternalError
+					 reason:"CGGetOnlineDisplayList() failed to get display list"];
         return NULL;
-
-    if (CGGetOnlineDisplayList(displayCount, displays, &displayCount) != kCGErrorSuccess) {
-        JNU_ThrowInternalError(env, "CGGetOnlineDisplayList() failed to get display list");
-        goto cleanup;
     }
 
     /* Allocate a java array for display identifiers */
-    ret = (*env)->NewIntArray(env, displayCount);
-    if (ret == NULL)
-        goto cleanup;
+    ret = JNFNewIntArray(env, displayCount);
 
     /* Initialize and return the backing int array */
     assert(sizeof(jint) >= sizeof(CGDirectDisplayID));
-    {
-        jint *elems = (*env)->GetIntArrayElements(env, ret, 0);
+	jint *elems = (*env)->GetIntArrayElements(env, ret, 0);
 
-        CGDisplayCount i;
-        for (i = 0; i < displayCount; i++) {
-            elems[i] = displays[i];
-        }
+	CGDisplayCount i;
+	for (i = 0; i < displayCount; i++) {
+		elems[i] = displays[i];
+	}
 
-        (*env)->ReleaseIntArrayElements(env, ret, elems, 0);
-    }
+	(*env)->ReleaseIntArrayElements(env, ret, elems, 0);
 
-cleanup:
-    if (displays != NULL)
-        free(displays);
-
+JNF_COCOA_EXIT(env);
+	
     return ret;
 }
 
@@ -104,7 +105,7 @@ cleanup:
  */
 JNIEXPORT jint JNICALL
 Java_sun_awt_CGraphicsEnvironment_getMainDisplayID
-  (JNIEnv *env, jclass class)
+(JNIEnv *env, jclass class)
 {
     return CGMainDisplayID();
 }
@@ -121,37 +122,20 @@ struct DisplayCallback {
  * Post the display reconfiguration event.
  */
 static void displaycb_handle
-  (CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
+(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
 {
-    JNIEnv *env;
-    struct DisplayCallback *cb = userInfo;
-    jboolean unbind = JNI_FALSE;
-
-    /* Skip pre-change notification */
-    if (flags == kCGDisplayBeginConfigurationFlag)
-        return;
-
-    /* Is the thread already attached? Try getting the environment. */
-    env = JNU_GetEnv(cb->vm, JNI_VERSION_1_2);
-    if (env == NULL || env == (void *) JNI_ERR) {
-        /* Not bound, bind this thread to the VM */
-        unbind = JNI_TRUE;
-        if ((*(cb->vm))->AttachCurrentThread(cb->vm, (void **)&env, (void *)NULL) != 0) {
-            /* If this fails, we can not do anything else here */
-            return;
-        }
-    }
-
-    /* If the weak reference is not valid, return */
-    if ((*env)->IsSameObject(env, cb->instance, NULL) == JNI_TRUE)
-        return;
-
-    /* Reference is valid, environment is live, send the message */
-    JNU_CallMethodByName(env, NULL, cb->instance, "_displayReconfiguration", "(J)V", (jlong) display);
-
-    /* Unbind this thread, if necessary */
-    if (unbind)
-        (*(cb->vm))->DetachCurrentThread(cb->vm);
+	if (flags == kCGDisplayBeginConfigurationFlag) return;
+	
+	JNFPerformEnvBlock(JNFThreadDetachImmediately, ^(JNIEnv *env) {
+		JNFWeakJObjectWrapper *wrapper = (JNFWeakJObjectWrapper *)userInfo;
+		
+		jobject graphicsEnv = [wrapper jObjectWithEnv:env];
+		if (graphicsEnv == NULL) return; // ref already GC'd
+		
+		static JNF_CLASS_CACHE(jc_CGraphicsEnvironment, "sun/awt/CGraphicsEnvironment");
+		static JNF_MEMBER_CACHE(jm_displayReconfiguration, jc_CGraphicsEnvironment, "_displayReconfiguration", "(J)V");
+		JNFCallVoidMethod(env, graphicsEnv, jm_displayReconfiguration);
+	});
 }
 
 /*
@@ -170,41 +154,28 @@ static void displaycb_free (JNIEnv *env, struct DisplayCallback *cb) {
  */
 JNIEXPORT jlong JNICALL
 Java_sun_awt_CGraphicsEnvironment_registerDisplayReconfiguration
-  (JNIEnv *env, jobject this)
+(JNIEnv *env, jobject this)
 {
-    struct DisplayCallback *cb;
+	jlong ret = 0L;
+	
+JNF_COCOA_ENTER(env);
+	
+	JNFWeakJObjectWrapper *wrapper = [JNFWeakJObjectWrapper wrapperWithJObject:this withEnv:env];
+	CFRetain(wrapper); // pin from ObjC-GC
 
-    /* Allocate our new DisplayCallback */
-    cb = calloc(1, sizeof(*cb));
-    if (cb == NULL) {
-        JNU_ThrowOutOfMemoryError(env, "Could not malloc() DisplayCallback struct");
+    /* Register the callback */
+    if (CGDisplayRegisterReconfigurationCallback(&displaycb_handle, wrapper) != kCGErrorSuccess) {
+		[JNFException raise:env
+						 as:kInternalError
+					 reason:"CGDisplayRegisterReconfigurationCallback() failed"];
         return 0L;
     }
 
-    /* Save a reference to the VM */
-    if ((*env)->GetJavaVM(env, &(cb->vm)) != 0) {
-        JNU_ThrowInternalError(env, "Could not get Java VM reference");
-        goto error;
-    }
-
-    /* Save a weak reference to our instance */
-    cb->instance = (*env)->NewWeakGlobalRef(env, this);
-    if (cb->instance == NULL) {
-        goto error;
-    }
-
-    /* Register the callback */
-    if (CGDisplayRegisterReconfigurationCallback(&displaycb_handle, cb) != kCGErrorSuccess) {
-        JNU_ThrowInternalError(env, "CGDisplayRegisterReconfigurationCallback() failed");
-        goto error;
-    }
-
-    /* All done, return the handle */
-    return PTRLONG(cb);
-
-error:
-    displaycb_free(env, cb);
-    return 0L;
+    ret = ptr_to_jlong(wrapper);
+	
+JNF_COCOA_EXIT(env);
+	
+    return ret;
 }
 
 /*
@@ -214,16 +185,24 @@ error:
  */
 JNIEXPORT void JNICALL
 Java_sun_awt_CGraphicsEnvironment_deregisterDisplayReconfiguration
-  (JNIEnv *env, jobject this, jlong p)
+(JNIEnv *env, jobject this, jlong p)
 {
-    struct DisplayCallback *cb = PTR(p);
+JNF_COCOA_ENTER(env);
+	
+	JNFWeakJObjectWrapper *wrapper = (JNFWeakJObjectWrapper *)jlong_to_ptr(p);
+	if (!wrapper) return;
 
     /* Remove the registration */
-    if (CGDisplayRemoveReconfigurationCallback(&displaycb_handle, cb) != kCGErrorSuccess) {
-        JNU_ThrowInternalError(env, "CGDisplayRemoveReconfigurationCallback() failed, leaking the callback context!");
+    if (CGDisplayRemoveReconfigurationCallback(&displaycb_handle, wrapper) != kCGErrorSuccess) {
+		[JNFException raise:env
+						 as:kInternalError
+					 reason:"CGDisplayRemoveReconfigurationCallback() failed, leaking the callback context!"];
         return;
     }
-
-    /* Free the context */
-    displaycb_free(env, cb);
+	
+	[wrapper setJObject:NULL withEnv:env]; // more efficiant to pre-clear
+	
+	CFRelease(wrapper);
+	
+JNF_COCOA_EXIT(env);
 }

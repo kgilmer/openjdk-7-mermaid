@@ -142,7 +142,8 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
     
     @Override
     public synchronized GraphicsDevice getDefaultScreenDevice() throws HeadlessException {
-        return devices.get(getMainDisplayID());
+        final int mainDisplayID = getMainDisplayID();
+        return devices.get(mainDisplayID);
     }
     
     @Override

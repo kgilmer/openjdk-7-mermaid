@@ -23,6 +23,7 @@
  * questions.
  */
 
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <sys/time.h>
 
 #import "LWCToolkit.h"
@@ -676,18 +677,13 @@ DeliverJavaKeyEvent(JNIEnv *env, NSEvent *event, jobject peer)
     }
 
     if (env != NULL) {
-        JNU_CallMethodByName(env, NULL, peer,
-                             "deliverKeyEvent", "(IICII)V",
-                             javaKeyType, javaModifiers,
-                             testChar, javaKeyCode, javaKeyLocation);
+        static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
+        static JNF_MEMBER_CACHE(jm_deliverKeyEvent, jc_CPlatformView, "deliverKeyEvent", "(IICII)V");
+        JNFCallVoidMethod(env, peer, jm_deliverKeyEvent,
+                          javaKeyType, javaModifiers,
+                          testChar, javaKeyCode, javaKeyLocation);
     }
 }
-
-// NSEvents' modifierFlags don't carry mouseButton info - we have to keep
-// state for that!  This is needed for rollover mouse events whereas multiple
-// buttons can be down at the same time while one of them is getting
-// released or another is being pressed.
-static jint javaMouseButtonState = 0;
 
 /*
  * Converts the NSEvent type to a Java mouse button mask.
@@ -778,13 +774,13 @@ DeliverMouseClickedEvent(JNIEnv *env, NSEvent *event, jobject peer)
     jint button = NSButtonToJavaButton([event buttonNumber]);
 
     if (env != NULL) {
-        JNU_CallMethodByName(env, NULL, peer,
-                             "deliverMouseEvent", "(IIIIFFFF)V",
-                             etype, modifiers,
-                             clickCount, button,
-                             pt.x, pt.y,
-                             pOnScreen.x, pOnScreen.y
-                            );
+        static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
+        static JNF_MEMBER_CACHE(jm_deliverMouseEvent, jc_CPlatformView, "deliverMouseEvent", "(IIIIFFFF)V");
+        JNFCallVoidMethod(env, peer, jm_deliverMouseEvent,
+                          etype, modifiers,
+                          clickCount, button,
+                          pt.x, pt.y,
+                          pOnScreen.x, pOnScreen.y);
     }
 }
 
@@ -832,13 +828,14 @@ DeliverKeyTypedEvents(JNIEnv *env, NSEvent *nsEvent, jobject peer)
             unichar theChar = GetJavaCharacter(nsEvent, i);
             if (theChar != java_awt_event_KeyEvent_CHAR_UNDEFINED) {
                 if (env != NULL) {
-                    JNU_CallMethodByName(env, NULL, peer,
-                                         "deliverKeyEvent", "(IICII)V",
-                                         java_awt_event_KeyEvent_KEY_TYPED,
-                                         javaModifiers,
-                                         theChar,
-                                         java_awt_event_KeyEvent_VK_UNDEFINED,
-                                         java_awt_event_KeyEvent_KEY_LOCATION_UNKNOWN);
+                    static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
+                    static JNF_MEMBER_CACHE(jm_deliverKeyEvent, jc_CPlatformView, "deliverKeyEvent", "(IICII)V");
+                    JNFCallVoidMethod(env, peer, jm_deliverKeyEvent,
+                                      java_awt_event_KeyEvent_KEY_TYPED,
+                                      javaModifiers,
+                                      theChar,
+                                      java_awt_event_KeyEvent_VK_UNDEFINED,
+                                      java_awt_event_KeyEvent_KEY_LOCATION_UNKNOWN);
                 }
             }
         }

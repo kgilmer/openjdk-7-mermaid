@@ -24,28 +24,27 @@
  */
 
 #include "LWCToolkit.h"
+#include "GeomUtilities.h"
+
+#include "sun_awt_CGraphicsConfig.h"
+
 
 /*
  * Class:     sun_awt_CGraphicsConfig
  * Method:    nativeGetBounds
  * Signature: (I)Ljava/awt/Rectangle;
  */
-JNIEXPORT jobject JNICALL
-Java_sun_awt_CGraphicsConfig_nativeGetBounds
-  (JNIEnv *env, jclass class, jint displayID)
+JNIEXPORT jobject JNICALL Java_sun_awt_CGraphicsConfig_nativeGetBounds
+(JNIEnv *env, jclass class, jint displayID)
 {
-    CGRect rect;
-    jobject bounds;
+    jobject jrect = NULL;
+    
+JNF_COCOA_ENTER(env);
+    
+    CGRect rect = CGDisplayBounds((CGDirectDisplayID)displayID);
+    jrect = CGToJavaRect(env, rect);
+    
+JNF_COCOA_EXIT(env);
 
-    /* Get the CoreGraphics rect, and construct a matching Rectangle */ 
-    rect = CGDisplayBounds(displayID);
-    bounds = JNU_NewObjectByName(env, "java/awt/Rectangle", "(IIII)V",
-            (jint) rect.origin.x, (jint) rect.origin.y,
-            (jint) rect.size.width, (jint) rect.size.height);
-
-    if ((*env)->ExceptionOccurred(env)) {
-        return NULL;
-    }
-
-    return bounds;
+    return jrect;
 }

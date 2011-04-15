@@ -29,7 +29,6 @@
 #import "CGGlyphOutlines.h"
 #import "CStrike.h"
 #import "CoreTextSupport.h"
-#import "jni_util.h"
 
 #import "java_awt_geom_PathIterator.h"
 #import "sun_awt_SunHints.h"
@@ -107,7 +106,7 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
     if (_fontThrowJavaException == YES) {                               \
         char s[512];                                                    \
         sprintf(s, "%s-%s:%d", __FILE__, __FUNCTION__, __LINE__);       \
-        JNU_ThrowNullPointerException(env, s);                          \
+        [JNFException raise:env as:kNullPointerException reason:s];     \
     }
 
 
@@ -118,7 +117,7 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
 static inline CGAffineTransform
 GetTxFromDoubles(JNIEnv *env, jdoubleArray txArray)
 {
-    if (JNU_IsNull(env, txArray)) {
+    if (txArray == NULL) {
         return CGAffineTransformIdentity;
     }
 	

@@ -56,7 +56,6 @@ public class LWCToolkit extends LWToolkit {
         });
         
         initIDs();
-        CWrapper.init();
     }
 
     @Override

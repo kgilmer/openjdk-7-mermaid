@@ -23,10 +23,10 @@
  * questions.
  */
 
-#import <Foundation/Foundation.h>
-#import <JavaVM/jni.h>
+#import <Cocoa/Cocoa.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
-@interface CFileDialog : NSObject {
+@interface CFileDialog : NSObject <NSOpenSavePanelDelegate> {
     // Should we query back to Java for a file filter?
     jboolean fHasFileFilter;
 
@@ -54,25 +54,22 @@
 }
 
 // Allocator
-- (id)initWithFilter:(jboolean)inHasFilter
-          fileDialog:(jobject)inDialog
-               title:(NSString *)inTitle
-           directory:(NSString *)inPath
-                file:(NSString *)inFile
-                mode:(jint)inMode
-      shouldNavigate:(BOOL)inNavigateApps
-	  withEnv:(JNIEnv*)env;
-
-// NSSavePanel delegate method.
-- (BOOL)panel:(id)sender shouldShowFilename:(NSString *)filename;
+- (id) initWithFilter:(jboolean)inHasFilter
+           fileDialog:(jobject)inDialog
+                title:(NSString *)inTitle
+            directory:(NSString *)inPath
+                 file:(NSString *)inFile
+                 mode:(jint)inMode
+       shouldNavigate:(BOOL)inNavigateApps
+              withEnv:(JNIEnv*)env;
 
 // Invoked from the main thread
-- (void)safeSaveOrLoad;
+- (void) safeSaveOrLoad;
 
 // Get dialog return value
 - (BOOL) userClickedOK;
 
 // Filename user chose
-- (NSString *)filename;
+- (NSString *) filename;
 
 @end

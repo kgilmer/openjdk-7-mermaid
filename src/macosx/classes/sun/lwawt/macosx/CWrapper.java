@@ -25,16 +25,10 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 
 public final class CWrapper {
     private CWrapper() { }
-
-    // The init() method must be called before any method of the static
-    // inner classes is called. Note that init() call can't be placed into
-    // the static initializer for CWrapper as the initializer
-    // doesn't work when any method of static classes is called.
-    static native void init();
     
     public static final class NSWindow {
         // NSWindowOrderingMode
@@ -72,7 +66,7 @@ public final class CWrapper {
         public static native void removeFromSuperview(long view);
 
         public static native void setFrame(long view, int x, int y, int w, int h);
-        public static native Rectangle frame(long view);
+        public static native Rectangle2D frame(long view);
         public static native long window(long view);
         
         public static native void enterFullScreenMode(long view);
@@ -84,6 +78,6 @@ public final class CWrapper {
     }
     
     public static final class NSScreen {
-        public static native Rectangle frame(long screen);
+        public static native Rectangle2D frame(long screen);
     }
 }

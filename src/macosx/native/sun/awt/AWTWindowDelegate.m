@@ -23,7 +23,7 @@
  * questions.
  */
 
-#import <AppKit/NSScreen.h>
+#import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "AWTWindowDelegate.h"
@@ -31,171 +31,162 @@
 #import "LWCToolkit.h"
 #import "ThreadUtilities.h"
 
+
+static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
+
+
 @implementation AWTWindowDelegate
 
-- (id) initWithAWTWindow: (AWTWindow *) window
-{
-  if (self = [super init]) {
-    m_awtWindow = window;
-  }
-  return self;
+- (id) initWithAWTWindow: (AWTWindow *) window {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    if (self = [super init]) {
+        m_awtWindow = window;
+    }
+    return self;
 }
 
 - (void) dealloc {
-  [super dealloc];
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [super dealloc];
 }
 
-//This prevents the toplevel to open a menu on the mouse click over the title.
+// This prevents the toplevel to open a menu on the mouse click over the title
 - (BOOL)window:(NSWindow *)sender shouldPopUpDocumentPathMenu:(NSMenu *)titleMenu{
-  return NO;
+AWT_ASSERT_APPKIT_THREAD;
+    
+    return NO;
 }
 
-- (void)windowDidMove:(NSNotification *)notification {
-  [self deliverMoveResizeEvent];
-}
-
-- (void)windowDidResize:(NSNotification *)notification {
-  [self deliverMoveResizeEvent];
-}
-
-- (void)windowWillClose:(NSNotification *)notification {
-  AWT_ASSERT_APPKIT_THREAD;
-  [AWTToolkit eventCountPlusPlus];
-  JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-                         "deliverWindowClosingEvent", "()V");
-    if ((*env)->ExceptionOccurred(env)) {
-       (*env)->ExceptionDescribe(env);
-       (*env)->ExceptionClear(env);
-    }
-  }
-}
-
-- (void)windowDidExpose:(NSNotification *)notification {
-  [AWTToolkit eventCountPlusPlus];
-  // TODO: don't see this callback invoked anytime so we track
-  // window exposing in _setVisible:(BOOL)
-}
-
-- (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)proposedFrame {
-  [self deliverZoom: ![window isZoomed]];
-  return YES;
-}
-
-- (void)windowDidMiniaturize:(NSNotification *)notification {
-  [self deliverIconify: JNI_TRUE];
-}
-
-- (void)windowDidDeminiaturize:(NSNotification *)notification {
-  [self deliverIconify: JNI_FALSE];
-}
-
-/*******************************
- * Callbacks into Java methods
- *******************************/
-
-- (void) windowDidBecomeKey: (NSNotification *) notification {
-  AWT_ASSERT_APPKIT_THREAD;
-  [AWTToolkit eventCountPlusPlus];
-  BOOL showMenuBarDisabled = FALSE;
-  //  [CMenuBar activate:_menuBar modallyDisabled:showMenuBarDisabled];
-  JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-			 "deliverWindowFocusEvent", "(Z)V", JNI_TRUE);
-  }
-}
-
-- (void) windowDidResignKey: (NSNotification *) notification {
-  // TODO: check why sometimes at start is invoked *not* on AppKit main thread.
-  AWT_ASSERT_APPKIT_THREAD;
-  [AWTToolkit eventCountPlusPlus];
-  JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-  //TODO: deactivate menubar
-
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-			 "deliverWindowFocusEvent", "(Z)V", JNI_FALSE);
-  }
-}
-
-- (void) windowDidBecomeMain: (NSNotification *) notification {
-  AWT_ASSERT_APPKIT_THREAD;
-  [AWTToolkit eventCountPlusPlus];
-
-  JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-
-  if (env != NULL) {
-      (*env)->CallVoidMethod(env, [m_awtWindow cPlatformWindow],
-              javaIDs.CPlatformWindow.windowDidBecomeMain);
-  }
-}
-
-- (BOOL)windowShouldClose:(id)sender {
-  AWT_ASSERT_APPKIT_THREAD;
-
-  JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-
-  return (BOOL) (*env)->CallBooleanMethod(env, [m_awtWindow cPlatformWindow],
-              javaIDs.CPlatformWindow.windowShouldClose);
-}
-
-/*******************************
- * Callbacks into Java methods
- *******************************/
-
-- (void) deliverIconify: (BOOL) iconify {
-  [AWTToolkit eventCountPlusPlus];
-  JNIEnv *env = [ThreadUtilities getJNIEnv];
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-			 "deliverIconify", "(Z)V",
-			 iconify);
-  }
-}
-
-- (void) deliverZoom: (BOOL) zoom {
-  [AWTToolkit eventCountPlusPlus];
-  JNIEnv *env = [ThreadUtilities getJNIEnv];
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-			 "deliverZoom", "(Z)V",
-			 zoom);
-  }
-}
-
-- (void) deliverMoveResizeEvent {
-    AWT_ASSERT_APPKIT_THREAD;
+- (void) _deliverMoveResizeEvent {
+AWT_ASSERT_APPKIT_THREAD;
+    
     NSRect screenRect = [[NSScreen mainScreen] frame];
     NSRect frame = [m_awtWindow frame];
     frame.origin.y = screenRect.size.height - frame.size.height - frame.origin.y;
-
-    //TODO: add check if we are resizing it in program or by the native system.
-    // only deliver the event if this is a user-initiated live resize
+    
+    // deliver the event if this is a user-initiated live resize or as a side-effect
+    // of a Java initiated resize, because AppKit can override the bounds and force
+    // the bounds of the window to avoid the Dock or remain on screen.
+    
     [AWTToolkit eventCountPlusPlus];
     JNIEnv *env = [ThreadUtilities getJNIEnv];
-    if (env != NULL) {
-        JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformWindow],
-            "deliverMoveResizeEvent", "(IIII)V",
-                (jint)frame.origin.x,
-                (jint)frame.origin.y,
-                (jint)frame.size.width,
-                (jint)frame.size.height);
-        if ((*env)->ExceptionOccurred(env)) {
-            (*env)->ExceptionDescribe(env);
-            (*env)->ExceptionClear(env);
-        }
-    }
+    static JNF_MEMBER_CACHE(jm_deliverMoveResizeEvent, jc_CPlatformWindow, "deliverMoveResizeEvent", "(IIII)V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_deliverMoveResizeEvent,
+                      (jint)frame.origin.x,
+                      (jint)frame.origin.y,
+                      (jint)frame.size.width,
+                      (jint)frame.size.height);
+}
+
+- (void)windowDidMove:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [self _deliverMoveResizeEvent];
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [self _deliverMoveResizeEvent];
+}
+
+- (void)windowWillClose:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [AWTToolkit eventCountPlusPlus];
+    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    static JNF_MEMBER_CACHE(jm_deliverWindowClosingEvent, jc_CPlatformWindow, "deliverWindowClosingEvent", "()V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_deliverWindowClosingEvent);
+}
+
+- (void)windowDidExpose:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [AWTToolkit eventCountPlusPlus];
+    // TODO: don't see this callback invoked anytime so we track
+    // window exposing in _setVisible:(BOOL)
+}
+
+- (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)proposedFrame {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [AWTToolkit eventCountPlusPlus];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    static JNF_MEMBER_CACHE(jm_deliverZoom, jc_CPlatformWindow, "deliverZoom", "(Z)V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_deliverZoom, ![window isZoomed]);
+    
+    return YES;
+}
+
+- (void) _deliverIconify:(BOOL)iconify {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [AWTToolkit eventCountPlusPlus];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    static JNF_MEMBER_CACHE(jm_deliverIconify, jc_CPlatformWindow, "deliverIconify", "(Z)V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_deliverIconify, iconify);
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [self _deliverIconify:JNI_TRUE];
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    [self _deliverIconify:JNI_FALSE];
+}
+
+- (void) _deliverWindowFocusEvent:(BOOL)focused {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    static JNF_MEMBER_CACHE(jm_deliverWindowFocusEvent, jc_CPlatformWindow, "deliverWindowFocusEvent", "(Z)V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_deliverWindowFocusEvent, (jboolean)focused);
+}
+
+- (void) windowDidBecomeKey: (NSNotification *) notification {
+AWT_ASSERT_APPKIT_THREAD;
+    [AWTToolkit eventCountPlusPlus];
+    //  [CMenuBar activate:_menuBar modallyDisabled:showMenuBarDisabled];
+    [self _deliverWindowFocusEvent:YES];
+}
+
+- (void) windowDidResignKey: (NSNotification *) notification {
+    // TODO: check why sometimes at start is invoked *not* on AppKit main thread.
+AWT_ASSERT_APPKIT_THREAD;
+    [AWTToolkit eventCountPlusPlus];
+    //TODO: deactivate menubar
+    [self _deliverWindowFocusEvent:NO];
+}
+
+- (void) windowDidBecomeMain: (NSNotification *) notification {
+AWT_ASSERT_APPKIT_THREAD;
+    [AWTToolkit eventCountPlusPlus];
+    
+    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    static JNF_MEMBER_CACHE(jm_windowDidBecomeMain, jc_CPlatformWindow, "windowDidBecomeMain", "()V");
+    JNFCallVoidMethod(env, m_awtWindow.m_cPlatformWindow, jm_windowDidBecomeMain);
+}
+
+- (BOOL)windowShouldClose:(id)sender {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    static JNF_MEMBER_CACHE(jm_windowShouldClose, jc_CPlatformWindow, "windowShouldClose", "()Z");
+    return (BOOL) JNFCallBooleanMethod(env, m_awtWindow.m_cPlatformWindow, jm_windowShouldClose);
 }
 
 /*
-- (void) deliverResizePaintEvent: (JNIEnv *) env {
-  if (env != NULL) {
-    JNU_CallMethodByName(env, NULL, _jpeerObj,
-			 "deliverResizePaintEvent", "()V");
-  }
-}
-*/
-@end //AWTWindowDelegate
+ - (void) deliverResizePaintEvent: (JNIEnv *) env {
+ if (env != NULL) {
+ JNU_CallMethodByName(env, NULL, _jpeerObj,
+ "deliverResizePaintEvent", "()V");
+ }
+ }
+ */
+@end // AWTWindowDelegate

@@ -26,30 +26,16 @@
 #ifndef _AWTWINDOWDELEGATE_H
 #define _AWTWINDOWDELEGATE_H
 
-#import <AppKit/NSWindow.h>
+#import <Cocoa/Cocoa.h>
 
 @class AWTWindow, AWTView;
 
 @interface AWTWindowDelegate : NSResponder <NSWindowDelegate> {
-
 @private
-  AWTWindow *m_awtWindow;
-
-  AWTView *m_view;
+    AWTWindow *m_awtWindow;
 }
 
-- (id) initWithAWTWindow: (AWTWindow *) window;
-
-- (void) windowDidMove:(NSNotification *)notification;
-- (void) windowDidResize: (NSNotification *) notification;
-- (void) deliverIconify: (BOOL) iconify;
-- (void) deliverZoom: (BOOL) zoom;
-- (BOOL) window:(NSWindow *)sender shouldPopUpDocumentPathMenu:(NSMenu *)titleMenu;
-
-/*
- * Callbacks
- */
-- (void) deliverMoveResizeEvent;
+- (id) initWithAWTWindow:(AWTWindow *)window;
 
 @end // AWTWindowDelegate
 

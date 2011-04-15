@@ -23,184 +23,87 @@
  * questions.
  */
 
-#include <CCursorManager.h> 
+#include "sun_lwawt_macosx_CCursorManager.h"
+
+#include <Cocoa/Cocoa.h>
 #include <JavaNativeFoundation/JavaNativeFoundation.h>
-#include <dlfcn.h>
-#include <jni.h>
-#include <jni_util.h>
 
-#include "AppKit/NSEvent.h"
-#include "AppKit/NSScreen.h"
-#include "AppKit/NSImage.h"
+#include "GeomUtilities.h"
+#include "ThreadUtilities.h"
+
+#include "java_awt_Cursor.h"
 
 
-@implementation CCursorManager
-
-+ (void) _setCursor: (NSCursor *) cursor {
-    // Non-blocking cursor update, otherwise we deadlock with EDT(hold AWTLock)
-    // and AppKit thread (try AWTLock). The Wait cursor could be removed in more
-    // polite manner but even this should be OK.
-    [CCursorManager setWaitCursor:FALSE];
-    [cursor performSelectorOnMainThread: @selector(set) withObject: nil  waitUntilDone: NO];
-}
-
-+ (void) setWaitCursor: (bool) enable {
-    [CCursorManager performSelectorOnMainThread: @selector(setWaitCursor_OnAppKitThread:) withObject:[NSNumber numberWithBool: enable] waitUntilDone:NO];
-}
-
-+ (void) setWaitCursor_OnAppKitThread: (NSNumber *) enable {
-    // Enable false is just noop
-    if( [enable boolValue] ) {
-        [[CCursorManager getCustomWaitCursor] set];
+static SEL lookupCursorSelectorForType(jint type) {
+    switch (type) {
+        case java_awt_Cursor_DEFAULT_CURSOR:        return @selector(arrowCursor);
+        case java_awt_Cursor_CROSSHAIR_CURSOR:      return @selector(crosshairCursor);
+        case java_awt_Cursor_TEXT_CURSOR:           return @selector(IBeamCursor);
+        case java_awt_Cursor_WAIT_CURSOR:           return @selector(javaBusyButClickableCursor);
+        case java_awt_Cursor_SW_RESIZE_CURSOR:      return @selector(javaResizeSWCursor);
+        case java_awt_Cursor_SE_RESIZE_CURSOR:      return @selector(javaResizeSECursor);
+        case java_awt_Cursor_NW_RESIZE_CURSOR:      return @selector(javaResizeNWCursor);
+        case java_awt_Cursor_NE_RESIZE_CURSOR:      return @selector(javaResizeNECursor);
+        case java_awt_Cursor_N_RESIZE_CURSOR:       return @selector(resizeUpDownCursor);
+        case java_awt_Cursor_S_RESIZE_CURSOR:       return @selector(resizeUpDownCursor);
+        case java_awt_Cursor_W_RESIZE_CURSOR:       return @selector(resizeLeftRightCursor);
+        case java_awt_Cursor_E_RESIZE_CURSOR:       return @selector(resizeLeftRightCursor);
+        case java_awt_Cursor_HAND_CURSOR:           return @selector(pointingHandCursor);
+        case java_awt_Cursor_MOVE_CURSOR:           return @selector(javaMoveCursor);
     }
+    
+    return nil;
 }
 
-@end
+static SEL getBuiltInCursorSelectorForType(JNIEnv *env, jint type) {
+    SEL sel = lookupCursorSelectorForType(type);
+    if (sel == nil) {
+        [JNFException raise:env as:kIllegalArgumentException reason:"unimplemented built-in cursor type"];
+    }
+    
+    if (![[NSCursor class] respondsToSelector:sel]) {
+        [JNFException raise:env as:kNoSuchMethodException reason:"missing NSCursor selector"];
+    }
+    
+    return sel;
+}
+
+JNIEXPORT void JNICALL
+Java_sun_lwawt_macosx_CCursorManager_nativeSetBuiltInCursor
+(JNIEnv *env, jclass class, jlong windowPtr, jint type)
+{
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    SEL cursorSelector = getBuiltInCursorSelectorForType(env, type);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [[[NSCursor class] performSelector:cursorSelector] set];
+    }];
+
+JNF_COCOA_EXIT(env);
+}
+
 
 JNIEXPORT jobject JNICALL
 Java_sun_lwawt_macosx_CCursorManager_nativeGetCursorPosition
 (JNIEnv *env, jclass class)
 {
-  NSPoint absP = [NSEvent mouseLocation];
-//TODO: create function to convert coordinates.
-  NSRect screenRect = [[NSScreen mainScreen] frame];
-  absP.y = screenRect.size.height - absP.y;
-  
-  jobject ret = JNU_NewObjectByName(env, "java/awt/Point", "(II)V", (jint)absP.x , (jint)absP.y);
-  return ret;
-}
+    jobject jpt = NULL;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    __block NSPoint pt = NSZeroPoint;
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        pt = ConvertNSScreenPoint(env, [NSEvent mouseLocation]);
+    }];
+    jpt = NSToJavaPoint(env, pt);
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setWaitCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager setWaitCursor:TRUE];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setHandCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setHandCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor openHandCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setCrosshairCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setCrosshairCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor crosshairCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setEResizeCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setEResizeCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor resizeRightCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setMoveCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setMoveCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor closedHandCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setNResizeCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setNResizeCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor resizeUpCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setSResizeCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setSResizeCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor resizeDownCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setTextCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setTextCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor IBeamCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setArrowCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setArrowCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor arrowCursor]];
-	JNF_COCOA_EXIT(env);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CCursorManager
- * Method:    setWResizeCursor
- * Signature: ()V;
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CCursorManager_setWResizeCursor
-(JNIEnv *env, jclass class)
-{
-	JNF_COCOA_ENTER(env);
-	[CCursorManager _setCursor: [NSCursor resizeLeftCursor]];
-	JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
+    
+    return jpt;
 }

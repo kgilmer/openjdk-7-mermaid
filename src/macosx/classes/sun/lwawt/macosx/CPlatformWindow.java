@@ -30,8 +30,6 @@ import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.util.List;
 
-import javax.swing.ImageIcon;
-
 import sun.java2d.SurfaceData;
 import sun.lwawt.*;
 import sun.util.logging.PlatformLogger;
@@ -262,13 +260,9 @@ public class CPlatformWindow implements PlatformWindow {
     @Override // PlatformWindow
     public void updateTitleIconImages() {
         CImage cImage = getImageForTarget();
-	if (cImage != null) {
-	    nativeSetTitleIconImage(awtWindowPtr, cImage.getNSImagePtr());
-	}
-    }
-
-    private static Image getDefaultJavaImage() {
-        return createImageFromFile("../resources/java-icon48.png");
+        if (cImage != null) {
+            nativeSetTitleIconImage(awtWindowPtr, cImage.getNSImagePtr());
+        }
     }
 
     public long getAWTWindow() {
@@ -435,39 +429,22 @@ public class CPlatformWindow implements PlatformWindow {
      * This method shouldn't return null.
      */
     private CImage getImageForTarget() {
-        Image image = null;
-
         List<Image> icons = target.getIconImages();
         if (icons == null || icons.size() == 0) {
-            image = getDefaultJavaImage();
-        } else {
-            // TODO: need a walk-through to find the best image.
-            // The best mean with higher resolution. Otherwise an icon looks bad.
-            image = icons.get(0);
+            return null;
         }
+        
+        // TODO: need a walk-through to find the best image.
+        // The best mean with higher resolution. Otherwise an icon looks bad.
+        Image image = icons.get(0);
         CImage cImage = null;
         try {
             cImage = CImage.fromImage(image);
         } catch (Exception ignore) {
             log.fine("Invalid image.", ignore);
-            image = getDefaultJavaImage();
-            if (image == null) {
-                return null;
-            }
-            cImage = CImage.fromImage(image);
-            //no more checks - hope we got good one...
         }
 
         return cImage;
-    }
-
-    private static Image createImageFromFile(final String imageFile){
-        ImageIcon img = null;
-        java.net.URL imgURL = CPlatformWindow.class.getResource(imageFile);
-        if (imgURL != null) {
-            img = new ImageIcon(imgURL, "Failed to load");
-        }
-        return (img != null) ? img.getImage() : null;
     }
 
     /*
@@ -479,12 +456,11 @@ public class CPlatformWindow implements PlatformWindow {
     
     public CPlatformView getContentView() {
         return contentView;
-    }    
-
-/*
- * Once we disposed the ptr, it becomes invalid.
- * In our case, the 0L value means it is invalid.
- */
+    }
+    
+    /*
+     * Once we disposed the ptr, it becomes invalid. In our case, the 0L value means it is invalid.
+     */
     private boolean isValidPtr() {
         if (getAWTWindow() == 0L) {
             log.fine("Pointer to the native NSWindow is invalid. Disposed before?");

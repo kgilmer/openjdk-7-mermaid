@@ -25,6 +25,8 @@
 
 #include "splashscreen_impl.h"
 
+#include <AppKit/AppKit.h>
+
 #include <sys/time.h>
 #include <pthread.h>
 #include <iconv.h>
@@ -38,21 +40,14 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-#include <NSBitmapImageRep.h>
-#include <NSScreen.h>
-#include <NSWindow.h>
-#include <NSImage.h>
-#include <NSView.h>
-#include <NSImageView.h>
-#include <NSColor.h>
 
 #define NSWIN(p) ((NSWindow*)(p))
 
-@interface AppKitThreadHelper : NSObject {
-}
+@interface AppKitThreadHelper : NSObject { }
 @end
 
 @implementation AppKitThreadHelper
+
 - (void)splashCenter: (Splash *)splash
 {
     // otherwise could use screens[0] to select the menu-bar screen

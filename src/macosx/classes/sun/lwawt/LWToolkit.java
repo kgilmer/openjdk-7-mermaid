@@ -26,27 +26,16 @@
 package sun.lwawt;
 
 import java.awt.*;
-
+import java.awt.List;
 import java.awt.datatransfer.Clipboard;
-
 import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.peer.DragSourceContextPeer;
-
 import java.awt.image.ColorModel;
-
 import java.awt.peer.*;
+import java.security.*;
+import java.util.*;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import sun.awt.AWTAutoShutdown;
-import sun.awt.AppContext;
-import sun.awt.SunToolkit;
-import sun.awt.EmbeddedFrame;
+import sun.awt.*;
 
 public abstract class LWToolkit extends SunToolkit implements Runnable {
 

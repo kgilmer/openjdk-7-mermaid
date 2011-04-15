@@ -72,30 +72,32 @@
 -(void) dealloc {
     [fDirectory release];
     fDirectory = nil;
-    
+
     [fFile release];
     fFile = nil;
-    
+
     [fTitle release];
     fTitle = nil;
-    
+
     [fReturnedFilename release];
     fReturnedFilename = nil;
 
     [super dealloc];
 }
+//- (void)finalize { [super finalize]; }
 
 - (void)safeSaveOrLoad {
     NSSavePanel *thePanel = nil;
     
     if (fMode == java_awt_FileDialog_SAVE) {
         thePanel = [NSSavePanel savePanel];
+        [thePanel setAllowsOtherFileTypes:YES];
     } else {
         thePanel = [NSOpenPanel openPanel];
     }
     
     if (thePanel != nil) {
-        [thePanel setTitle:fTitle];
+		[thePanel setTitle:fTitle];
         
         if (fNavigateApps) {
             [thePanel setTreatsFilePackagesAsDirectories:YES];
@@ -119,34 +121,37 @@
     [self disposer];
 }
 
-- (BOOL)panel:(id)sender shouldShowFilename:(NSString *)filename
-{
-    static JNF_CLASS_CACHE(jc_CFileDialog, "sun/lwawt/macosx/CFileDialog");
-    static JNF_MEMBER_CACHE(jm_queryFF, jc_CFileDialog,
-                            "queryFilenameFilter", "(Ljava/lang/String;)Z");
-    
-    BOOL returnValue = YES;
-    struct stat statBuf;
-    
-    // Directories always get shown.
-    if (!stat([filename UTF8String], &statBuf)) {
-        if ((statBuf.st_mode & S_IFDIR) == 0) {
-            // Not a directory, so it must be a file.
-            if ((fMode != java_awt_FileDialog_LOAD) &&
-                (fMode != java_awt_FileDialog_SAVE))
-            {
-                returnValue = NO;
-            } else if (fHasFileFilter) {
-                JNIEnv *env = [ThreadUtilities getJNIEnv];
-                jstring jString = JNFNSToJavaString(env, filename);
-                returnValue =
-                    JNFCallBooleanMethod(env, fFileDialog, jm_queryFF, jString);
-                (*env)->DeleteLocalRef(env, jString);
-            }
-        }
-    }
-    
-    return returnValue;
+- (BOOL) askFilenameFilter:(NSString *)filename {
+	JNIEnv *env = [ThreadUtilities getJNIEnv];
+	jstring jString = JNFNormalizedJavaStringForPath(env, filename);
+	
+	static JNF_CLASS_CACHE(jc_CFileDialog, "apple/awt/CFileDialog");
+    static JNF_MEMBER_CACHE(jm_queryFF, jc_CFileDialog, "queryFilenameFilter", "(Ljava/lang/String;)Z");
+	BOOL returnValue = JNFCallBooleanMethod(env, fFileDialog, jm_queryFF, jString); // AWT_THREADING Safe (AWTRunLoopMode)
+	(*env)->DeleteLocalRef(env, jString);
+	
+	return returnValue;
+}
+
+- (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
+	if (!fHasFileFilter) return YES; // no filter, no problem!
+	
+	// check if it's not a normal file
+	NSNumber *isFile = nil;
+	if ([url getResourceValue:&isFile forKey:NSURLIsRegularFileKey error:nil]) {
+		if (![isFile boolValue]) return YES; // always show directories and non-file entities (browsing servers/mounts, etc)
+	}
+	
+	// if in directory-browsing mode, don't offer files
+	if ((fMode != java_awt_FileDialog_LOAD) && (fMode != java_awt_FileDialog_SAVE)) {
+		return NO;
+	}
+	
+	// ask the file filter up in Java
+	CFStringRef filePath = CFURLCopyFileSystemPath((CFURLRef)url, kCFURLPOSIXPathStyle);
+	BOOL shouldEnableFile = [self askFilenameFilter:(NSString *)filePath];
+	CFRelease(filePath);
+	return shouldEnableFile;
 }
 
 - (BOOL) userClickedOK {
@@ -166,29 +171,30 @@
  */
 JNIEXPORT jstring JNICALL
 Java_sun_lwawt_macosx_CFileDialog_nativeRunFileDialog
-    (JNIEnv *env, jobject peer,
-     jstring title, jint mode, jboolean navigateApps,
-     jboolean hasFilter, jstring directory, jstring file)
+(JNIEnv *env, jobject peer, jstring title, jint mode, jboolean navigateApps, jboolean hasFilter, jstring directory, jstring file)
 {
     jstring returnValue = NULL;
     
-    JNF_COCOA_ENTER(env);
-    NSString *dialogTitle = JNFJavaToNSString(env, title);  
-
-    CFileDialog *dialogDelegate =
-        [[CFileDialog alloc] initWithFilter:hasFilter
-                                 fileDialog:peer
-                                      title:dialogTitle
-                                  directory:JNFJavaToNSString(env, directory)
-                                       file:JNFJavaToNSString(env, file)
-                                       mode:mode
-                             shouldNavigate:navigateApps
-                                    withEnv:env];
+JNF_COCOA_ENTER(env);
+    NSString *dialogTitle = JNFJavaToNSString(env, title);
+    if ([dialogTitle length] == 0) {
+		dialogTitle = @" ";
+	}
     
+    CFileDialog *dialogDelegate = [[CFileDialog alloc] initWithFilter:hasFilter
+                                                           fileDialog:peer
+                                                                title:dialogTitle
+                                                            directory:JNFJavaToNSString(env, directory)
+                                                                 file:JNFJavaToNSString(env, file)
+                                                                 mode:mode
+                                                       shouldNavigate:navigateApps
+															  withEnv:env];
+
     [ThreadUtilities performOnMainThread:@selector(safeSaveOrLoad)
                                 onObject:dialogDelegate
                               withObject:nil
-                           waitUntilDone:YES awtMode:YES];
+                           waitUntilDone:YES
+                                 awtMode:YES];
 
     if ([dialogDelegate userClickedOK]) {
         NSString *filename = [dialogDelegate filename];
@@ -196,6 +202,6 @@ Java_sun_lwawt_macosx_CFileDialog_nativeRunFileDialog
     }
     
     [dialogDelegate release];
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
     return returnValue;
 }

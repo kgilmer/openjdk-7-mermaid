@@ -24,7 +24,7 @@
  */
 
 #import <AppKit/AppKit.h>
-#import <CoreText/CTFont.h>
+#import <CoreText/CoreText.h>
 
 #import "CoreTextSupport.h"
 

@@ -54,8 +54,6 @@
            platformWindow:(jobject) cPlatformWindow
               contentView:(NSView *)contentView;
 
-- (jobject) cPlatformWindow;
-
 @end
 
 #endif _AWTWINDOW_H

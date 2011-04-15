@@ -86,12 +86,6 @@ AWT_ASSERT_APPKIT_THREAD;
     [super dealloc];
 }
 
-- (jobject) cPlatformWindow {
-AWT_ASSERT_APPKIT_THREAD;
-    
-    return self.m_cPlatformWindow;
-}
-
 // NSWindow overrides
 
 - (BOOL) canBecomeKeyWindow {

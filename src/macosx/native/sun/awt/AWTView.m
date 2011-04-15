@@ -24,14 +24,13 @@
  */
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
-#import <jni_util.h>
 
 #import "ThreadUtilities.h"
 #import "AWTView.h"
 #import "AWTEvent.h"
 #import "AWTWindow.h"
-#import <CCursorManager.h> 
 #import "LWCToolkit.h"
+
 
 @implementation AWTView
 
@@ -155,7 +154,7 @@
     [[self window] setAcceptsMouseMovedEvents:NO];
     [self deliverJavaMouseEvent: event];
     //Restore the cursor back.
-    [CCursorManager _setCursor: [NSCursor arrowCursor]];
+    //[CCursorManager _setCursor: [NSCursor arrowCursor]];
 }
 
 - (void) scrollWheel: (NSEvent*) event {
@@ -218,15 +217,17 @@
     }
 
     jint modifiers = GetJavaMouseModifiers(event);
-    jobject jEvent = JNU_NewObjectByName(env, "sun/lwawt/macosx/event/NSEvent", "(IIIIIIIIDD)V",
-					 [event type], 
-					 modifiers,
-					 clickCount,
-					 [event buttonNumber],
-					 (jint)localPoint.x, (jint)localPoint.y,
-					 (jint)absP.x, (jint)absP.y,
-					 [event deltaY],
-					 [event deltaX]);
+    static JNF_CLASS_CACHE(jc_NSEvent, "sun/lwawt/macosx/event/NSEvent");
+    static JNF_CTOR_CACHE(jctor_NSEvent, jc_NSEvent, "(IIIIIIIIDD)V");
+    jobject jEvent = JNFNewObject(env, jctor_NSEvent,
+                                  [event type], 
+                                  modifiers,
+                                  clickCount,
+                                  [event buttonNumber],
+                                  (jint)localPoint.x, (jint)localPoint.y,
+                                  (jint)absP.x, (jint)absP.y,
+                                  [event deltaY],
+                                  [event deltaX]);
     if (jEvent == nil) {
         // Unable to create event by some reason.
         return;
@@ -282,6 +283,8 @@
 }
 
 - (void) drawRect:(NSRect)dirtyRect {
+AWT_ASSERT_APPKIT_THREAD;
+    
     [super drawRect:dirtyRect];
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
     if (env != NULL) {
@@ -302,35 +305,13 @@
 	    }
         } else {
 */
-            JNU_CallMethodByName(env, NULL, m_cPlatformView,
-				 "deliverWindowDidExposeEvent", "()V");
-	    if ((*env)->ExceptionOccurred(env)) {
-                (*env)->ExceptionDescribe(env);
-	        (*env)->ExceptionClear(env);
-	    }
+        static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
+        static JNF_MEMBER_CACHE(jm_deliverWindowDidExposeEvent, jc_CPlatformView, "deliverWindowDidExposeEvent", "()V");
+        JNFCallVoidMethod(env, m_cPlatformView, jm_deliverWindowDidExposeEvent);
 /*       
         }    
 */      
     }
-}
-
--(void) _createAWTView_OnAppKitThread: (NSMutableArray *)argValue {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    jobject cPlatformView = (jobject)[[argValue objectAtIndex: 0] pointerValue];
-
-    jint x = [[argValue objectAtIndex: 1] intValue];
-    jint y = [[argValue objectAtIndex: 2] intValue];
-    jint w = [[argValue objectAtIndex: 3] intValue];
-    jint h = [[argValue objectAtIndex: 4] intValue];
-    
-    [argValue removeAllObjects];
-    
-    NSRect rect = NSMakeRect(x, y, w, h);
-    AWTView *aView = [[AWTView alloc] initWithRect: rect
-                                      platformView: cPlatformView];
-    
-    [argValue addObject: aView];
 }
 
 @end //AWTView
@@ -344,29 +325,26 @@ JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CPlatformView_nativeCreateView
 (JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height)
 {
-    AR_POOL(pool);    
+    __block AWTView *newView = nil;
     
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    NSRect rect = NSMakeRect(originX, originY, width, height);
     jobject cPlatformView = (*env)->NewGlobalRef(env, obj);
     
-    NSMutableArray * retArray = [NSMutableArray arrayWithCapacity:5];
-    [retArray addObject: [NSValue valueWithBytes: &cPlatformView objCType:@encode(jobject)]];
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        AWTView *view = [[AWTView alloc] initWithRect:rect
+                                         platformView:cPlatformView];
+        CFRetain(view);
+        [view release]; // GC
+        
+        newView = view;
+    }];
 
-    [retArray addObject: [NSNumber numberWithInt: originX]];
-    [retArray addObject: [NSNumber numberWithInt: originY]];
-    [retArray addObject: [NSNumber numberWithInt: width]];
-    [retArray addObject: [NSNumber numberWithInt: height]];    
-
-    // "init" eliminates warning: "NSView not correctly initialized"
-    AWTView *awtView = [[AWTView alloc] init];
-
-    [ThreadUtilities performOnMainThread: @selector(_createAWTView_OnAppKitThread:)
-        onObject: awtView withObject:retArray waitUntilDone: YES awtMode: NO];
-    awtView = (AWTView *)[retArray objectAtIndex: 0];
+JNF_COCOA_EXIT(env);
     
-    if (awtView == nil) {
-        return 0L;
-    }
-
-    [pool drain];
-    return OBJCLONG(awtView);
+    return ptr_to_jlong(newView);
 }

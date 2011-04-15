@@ -25,24 +25,14 @@
 
 package sun.awt;
 
-import java.awt.AWTException;
-import java.awt.BufferCapabilities;
-import java.awt.Component;
-import java.awt.GraphicsConfiguration;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.Transparency;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.VolatileImage;
-
-import sun.lwawt.macosx.CPlatformView;
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.*;
 
 import sun.java2d.SurfaceData;
+import sun.lwawt.macosx.CPlatformView;
 
 public class CGraphicsConfig extends GraphicsConfiguration {
-
     private final CGraphicsDevice device;
         
     public CGraphicsConfig(CGraphicsDevice device) {
@@ -54,11 +44,13 @@ public class CGraphicsConfig extends GraphicsConfiguration {
         throw new UnsupportedOperationException("not implemented");
     }
 
-    private static native Rectangle nativeGetBounds(int screen);
+    private static native Rectangle2D nativeGetBounds(int screen);
 
     @Override
     public Rectangle getBounds() {
-        return nativeGetBounds(device.getCoreGraphicsScreen());
+        final Rectangle2D.Double d = new Rectangle2D.Double();
+        final Rectangle2D nativeBounds = nativeGetBounds(device.getCoreGraphicsScreen());
+        return nativeBounds.getBounds(); // does integer rounding
     }
 
     @Override

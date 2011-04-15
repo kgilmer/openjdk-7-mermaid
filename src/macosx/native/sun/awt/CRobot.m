@@ -262,12 +262,6 @@ Java_sun_lwawt_macosx_CRobot_nativeGetScreenPixels
     jint screenWidth = width;
     jint screenHeight = height;
 	
-    jint actualX = 0;
-    jint actualY = 0;
-    jint actualWidth = 0;
-    jint actualHeight = 0;
-    jint* actualPixelData = NULL;
-	
     CGDirectDisplayID displayID =
 	FindCGDirectDisplayIDForScreenIndex(screenIndex);
     

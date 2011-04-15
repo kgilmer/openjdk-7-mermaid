@@ -25,87 +25,49 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.Cursor;
-import java.awt.Point;
-import sun.lwawt.LWCursorManager;
+import java.awt.*;
+import java.awt.geom.Point2D;
+
+import sun.lwawt.*;
 
 public class CCursorManager extends LWCursorManager {
-
+    private static native Point2D nativeGetCursorPosition();
+    private static native void nativeSetBuiltInCursor(final long nsWindow, final int type);
+    
     private final static CCursorManager theInstance = new CCursorManager();
-
-    private Cursor currentCursor = null;
-
-    public synchronized static CCursorManager getInstance() {
+    public static CCursorManager getInstance() {
         return theInstance;
     }
 
-    private CCursorManager() {
-        super();
-    }
+    private CCursorManager() { }
 
     @Override
     protected Point getCursorPosition() {
-        return nativeGetCursorPosition();
+        final Point2D nativePosition = nativeGetCursorPosition();
+        return new Point((int)nativePosition.getX(), (int)nativePosition.getY());
     }
 
     @Override
-    protected void setCursor(Cursor cursor) {
+    protected void setCursor(final LWWindowPeer windowUnderCursor, final Cursor cursor) {
         if (cursor == null) {
-            setArrowCursor();
+            nativeSetBuiltInCursor(getNativeWindow(windowUnderCursor), Cursor.DEFAULT_CURSOR);
             return;
         }
-
-        // TODO: lock required
-        switch (cursor.getType()) {
-        case Cursor.HAND_CURSOR:
-            setHandCursor();
-            break;
-        case Cursor.CROSSHAIR_CURSOR:
-            setCrosshairCursor();
-            break;
-        case Cursor.E_RESIZE_CURSOR:
-            setEResizeCursor();
-            break;
-        case Cursor.MOVE_CURSOR:
-            setMoveCursor();
-            break;
-        case Cursor.N_RESIZE_CURSOR:
-            setNResizeCursor();
-            break;
-        case Cursor.S_RESIZE_CURSOR:
-            setSResizeCursor();
-            break;
-        case Cursor.TEXT_CURSOR:
-            setTextCursor();
-            break;
-        case Cursor.W_RESIZE_CURSOR:
-            setWResizeCursor();
-            break;
-        case Cursor.WAIT_CURSOR:
-            setWaitCursor();
-            break;
-        case Cursor.DEFAULT_CURSOR:
-            setArrowCursor();
-            break;
+        
+        final int type = cursor.getType();
+        if (type != Cursor.CUSTOM_CURSOR) {
+            nativeSetBuiltInCursor(getNativeWindow(windowUnderCursor), type);
+            return;
         }
-
-        // currentCursor = cursor;
+        
+        // do something special
+        throw new RuntimeException("Unimplemented");
     }
-
-    /*************************************************/
-
-    private native void setNResizeCursor();
-    private native void setSResizeCursor();
-    private native void setWResizeCursor();
-    private native void setEResizeCursor();
-
-    private native void setWaitCursor();
-    private native void setMoveCursor();
-    private native void setCrosshairCursor();
-    private native void setHandCursor();
-    private native void setArrowCursor();
-    private native void setTextCursor();
-
-    private native Point nativeGetCursorPosition();
-
+    
+    static long getNativeWindow(final LWWindowPeer window) {
+        if (window == null) return 0;
+        final CPlatformWindow platformWindow = (CPlatformWindow)window.getPlatformWindow();
+        if (platformWindow == null) return 0;
+        return platformWindow.getAWTWindow();
+    }
 }

@@ -99,7 +99,7 @@ public class CPlatformView {
         Insets insets = peer.getInsets();
         
         long screenPtr = CWrapper.NSWindow.screen(getWindow());
-        Rectangle screenBounds = CWrapper.NSScreen.frame(screenPtr);
+        Rectangle screenBounds = CWrapper.NSScreen.frame(screenPtr).getBounds();
         
         // the move/size notification from the underlying system comes
         // but it contains a bounds smaller than the whole screen

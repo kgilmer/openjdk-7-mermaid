@@ -23,199 +23,15 @@
  * questions.
  */
 
+#import "CWrapper.h"
+
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
+
 #import "AWTWindow.h"
 #import "LWCToolkit.h"
-#import <jni.h>
-
-#import "CWrapper.h"
+#import "GeomUtilities.h"
 #import "ThreadUtilities.h"
 
-@implementation CWrapper
-
-- (void) _NSWindow_addChildWindow:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    NSWindow * child = OBJC([[args objectAtIndex: 1] longValue]);
-    jint order = [[args objectAtIndex: 2] intValue];
-
-    [obj addChildWindow: child ordered: order];
-}
-
-
-- (void) _NSWindow_orderWindow:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    jint order = [[args objectAtIndex: 1] intValue];
-    NSWindow * relativeToWindow = OBJC([[args objectAtIndex: 2] longValue]);
-
-    [obj orderWindow: order relativeTo: [relativeToWindow windowNumber]];
-}
-
-- (void) _NSWindow_setFrame:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj setFrame: [(NSValue *)[args objectAtIndex: 1] rectValue] display: [[args objectAtIndex: 2] boolValue]];
-}
-
-- (void) _NSWindow_makeKeyAndOrderFront:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj makeKeyAndOrderFront: nil];
-}
-
-- (void) _NSWindow_makeMainWindow:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj makeMainWindow];
-}
-
-- (void) _NSWindow_isKeyWindow:(NSMutableArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    [args addObject: [NSNumber numberWithBool: [obj isKeyWindow]]];
-}
-
-- (void) _NSWindow_orderFrontRegardless:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj orderFrontRegardless];
-}
-
-- (void) _NSWindow_setAlphaValue:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj setAlphaValue: [[args objectAtIndex: 1] floatValue]];
-}
-
-- (void) _NSWindow_screen:(NSMutableArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    NSScreen * screen = [obj screen];
-    
-    [args addObject: [NSNumber numberWithLong: OBJCLONG(screen)]];
-}
-
-- (void) _NSWindow_miniaturize:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    [obj miniaturize: nil];
-}
-
-- (void) _NSWindow_deminiaturize:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    [obj deminiaturize: nil];
-}
-
-- (void) _NSWindow_zoom:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    [obj zoom: nil];
-}
-
-- (void) _NSWindow_makeFirstResponder:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSWindow * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    NSResponder * responder = OBJC([[args objectAtIndex: 1] longValue]);
-    
-    [obj makeFirstResponder: responder];
-}
-
-- (void) _NSView_addSubview:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSView * view = OBJC([[args objectAtIndex: 0] longValue]);
-    NSView * subview = OBJC([[args objectAtIndex: 1] longValue]);
-    
-    [view addSubview: subview];
-}
-
-- (void) _NSView_setFrame:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSView * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    [obj setFrame: [(NSValue *)[args objectAtIndex: 1] rectValue]];
-}
-
-- (void) _NSView_frame:(NSMutableArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSView * view = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    NSRect frame = [view frame];
-    
-    [args addObject: [NSValue valueWithRect: frame]];
-}
-
-- (void) _NSView_enterFullScreenMode:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSView * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    NSScreen * screen = [[obj window] screen];
-
-    NSDictionary * opts = [NSDictionary dictionaryWithObjectsAndKeys:
-                           [NSNumber numberWithBool: NO], NSFullScreenModeAllScreens, nil];
-    
-    [obj enterFullScreenMode: screen withOptions: opts];
-}
-
-- (void) _NSView_exitFullScreenMode:(NSArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSView * obj = OBJC([[args objectAtIndex: 0] longValue]);
-
-    [obj exitFullScreenModeWithOptions: nil];
-}
-
-- (void) _NSView_window:(NSMutableArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSView * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    NSWindow * window = [obj window];
-    
-    [args addObject: [NSNumber numberWithLong: OBJCLONG(window)]];
-}
-
-- (void) _NSScreen_frame:(NSMutableArray *) args {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    NSScreen * obj = OBJC([[args objectAtIndex: 0] longValue]);
-    
-    NSRect frame = [obj frame];
-    
-    [args addObject: [NSValue valueWithRect: frame]];
-}
-
-@end //CWrapper
-
-static CWrapper * cwrapper = NULL;
 
 /*
  * Class:     sun_lwawt_macosx_CWrapper$NSObject
@@ -226,27 +42,16 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSObject_release
 (JNIEnv *env, jclass cls, jlong objectPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSObject *object = OBJC(objectPtr);
-    
-    [object performSelectorOnMainThread: @selector(release)
-                             withObject: nil waitUntilDone:YES];
-    
-    [pool drain];
+    id obj = (id)jlong_to_ptr(objectPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        CFRelease(obj);
+    }];
+
+JNF_COCOA_EXIT(env);
 }
 
-/*
- * Class:     sun_lwawt_macosx_CWrapper
- * Method:    init
- * Signature: ()V
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CWrapper_init
-(JNIEnv *env, jclass cls)
-{
-    cwrapper = [[CWrapper alloc] init];
-}
 
 /*
  * Class:     sun_lwawt_macosx_CWrapper$NSWindow
@@ -257,16 +62,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_makeKeyAndOrderFront
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(makeKeyAndOrderFront:)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_makeKeyAndOrderFront:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -278,16 +82,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_makeMainWindow
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(makeMainWindow)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_makeMainWindow:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -299,20 +102,18 @@ JNIEXPORT jboolean JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_isKeyWindow
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+    __block jboolean isKeyWindow = JNI_FALSE;
     
-    NSMutableArray * args = [NSMutableArray arrayWithObjects: 
-                             [NSNumber numberWithLong: windowPtr],
-                             nil];
+JNF_COCOA_ENTER(env);
     
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_isKeyWindow:)
-                               withObject: args waitUntilDone:YES];
-    
-    BOOL isKeyWindow = [[args objectAtIndex: 1] boolValue];
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        isKeyWindow = [window isKeyWindow];
+    }];
 
-    [pool drain];
+JNF_COCOA_EXIT(env);
     
-    return (jboolean)isKeyWindow;
+    return isKeyWindow;
 }
 
 /*
@@ -324,14 +125,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderFront
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(orderFront:)
+                                 on:window
+                         withObject:window
+                      waitUntilDone:NO];
 
-    AWTWindow *window = OBJC(windowPtr);
-
-    [window performSelectorOnMainThread: @selector(orderFront:)
-                             withObject: window waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -343,14 +145,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderOut
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    AWTWindow *window = OBJC(windowPtr);
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(orderOut:)
+                                 on:window
+                         withObject:window
+                      waitUntilDone:NO];
     
-    [window performSelectorOnMainThread: @selector(orderOut:)
-                             withObject: window waitUntilDone:YES];
-    
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -362,16 +165,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderFrontRegardless
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(orderFrontRegardless)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_orderFrontRegardless:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -381,20 +183,17 @@ Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderFrontRegardless
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderWindow
-(JNIEnv *env, jclass cls, jlong windowPtr, jint ordered, jlong relativeToPtr)
+(JNIEnv *env, jclass cls, jlong windowPtr, jint order, jlong relativeToPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    NSWindow *relativeTo = (NSWindow *)jlong_to_ptr(relativeToPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [window orderWindow:(NSWindowOrderingMode)order relativeTo:[relativeTo windowNumber]];
+    }];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                       [NSNumber numberWithInt: ordered],
-                      [NSNumber numberWithLong: relativeToPtr],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_orderWindow:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 
@@ -405,20 +204,17 @@ Java_sun_lwawt_macosx_CWrapper_00024NSWindow_orderWindow
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_addChildWindow
-(JNIEnv *env, jclass cls, jlong parentPtr, jlong childPtr, jint ordered)
+(JNIEnv *env, jclass cls, jlong parentPtr, jlong childPtr, jint order)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *parent = (NSWindow *)jlong_to_ptr(parentPtr);
+    NSWindow *child = (NSWindow *)jlong_to_ptr(childPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [parent addChildWindow:child ordered:order];
+    }];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: parentPtr],
-                      [NSNumber numberWithLong: childPtr],
-                       [NSNumber numberWithInt: ordered],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_addChildWindow:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -430,15 +226,16 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_removeChildWindow
 (JNIEnv *env, jclass cls, jlong parentPtr, jlong childPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *parent = (AWTWindow *)jlong_to_ptr(parentPtr);
+    AWTWindow *child = (AWTWindow *)jlong_to_ptr(childPtr);
+    [JNFRunLoop performOnMainThread:@selector(removeChildWindow:)
+                                 on:parent
+                         withObject:child
+                      waitUntilDone:NO];
 
-    AWTWindow *parent = OBJC(parentPtr);
-    AWTWindow *child = OBJC(childPtr);
-
-    [parent performSelectorOnMainThread: @selector(removeChildWindow:)
-                             withObject: child waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -450,26 +247,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_setFrame
 (JNIEnv *env, jclass cls, jlong windowPtr, jint x, jint y, jint w, jint h, jboolean display)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
+    NSRect frame = NSMakeRect(x, y, w, h);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [window setFrame:frame display:display];
+    }];
 
-    AWTWindow *window = OBJC(windowPtr);
-
-    NSRect rect;
-    rect.origin.x = x;
-    rect.origin.y = y;
-    rect.size.width = w;
-    rect.size.height = h;
-
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                        [NSValue valueWithRect:rect],
-                      [NSNumber numberWithBool: display],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_setFrame:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -481,17 +267,14 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_setAlphaValue
 (JNIEnv *env, jclass cls, jlong windowPtr, jfloat alpha)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [window setAlphaValue:(CGFloat)alpha];
+    }];
 
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      [NSNumber numberWithFloat: alpha],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_setAlphaValue:)
-                             withObject: args waitUntilDone:YES];
-
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -503,18 +286,16 @@ JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_screen
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+    __block jlong screenPtr = 0L;
     
-    NSMutableArray * args = [NSMutableArray arrayWithObjects: 
-                             [NSNumber numberWithLong: windowPtr],
-                             nil];    
+JNF_COCOA_ENTER(env);
     
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_screen:)
-                               withObject: args waitUntilDone:YES];
-    
-    jlong screenPtr = [[args objectAtIndex: 1] longValue];
-    
-    [pool drain];
+    AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        screenPtr = ptr_to_jlong([window screen]);
+    }];
+
+JNF_COCOA_EXIT(env);
     
     return screenPtr;
 }
@@ -527,16 +308,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_miniaturize
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_miniaturize:)
-                               withObject: args waitUntilDone:YES];
-    
-    [pool drain];
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(miniaturize:)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
+
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -548,16 +328,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_deminiaturize
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_deminiaturize:)
-                               withObject: args waitUntilDone:YES];
-    
-    [pool drain];
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(deminiaturize:)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
+
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -569,16 +348,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_zoom
 (JNIEnv *env, jclass cls, jlong windowPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      nil];
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_zoom:)
-                               withObject: args waitUntilDone:YES];
-    
-    [pool drain];
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThread:@selector(zoom:)
+                                 on:window
+                         withObject:nil
+                      waitUntilDone:NO];
+
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -590,17 +368,16 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSWindow_makeFirstResponder
 (JNIEnv *env, jclass cls, jlong windowPtr, jlong responderPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: windowPtr],
-                      [NSNumber numberWithLong: responderPtr],
-                      nil];
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSWindow_makeFirstResponder:)
-                               withObject: args waitUntilDone:YES];
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    NSResponder *responder = (NSResponder *)jlong_to_ptr(responderPtr);
+    [JNFRunLoop performOnMainThread:@selector(makeFirstResponder:)
+                                 on:window
+                         withObject:responder
+                      waitUntilDone:NO];
 
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -612,17 +389,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_addSubview
 (JNIEnv *env, jclass cls, jlong viewPtr, jlong subviewPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects:
-                      [NSNumber numberWithLong: viewPtr],
-                      [NSNumber numberWithLong: subviewPtr],
-                      nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_addSubview:)
-                               withObject: args waitUntilDone:YES];
-    
-    [pool drain];
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    NSView *subview = (NSView *)jlong_to_ptr(subviewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        [view addSubview:subview];
+    }];
+  
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -634,14 +409,15 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_removeFromSuperview
 (JNIEnv *env, jclass cls, jlong viewPtr)
 {
-    AR_POOL(pool);
-
-    NSView *view = OBJC(viewPtr);
-
-    [view performSelectorOnMainThread: @selector(removeFromSuperview)
-                             withObject: nil waitUntilDone:YES];
+JNF_COCOA_ENTER(env);
+    
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThread:@selector(removeFromSuperview)
+                                 on:view
+                         withObject:nil
+                      waitUntilDone:NO];
   
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -653,23 +429,14 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_setFrame
 (JNIEnv *env, jclass cls, jlong viewPtr, jint x, jint y, jint w, jint h)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSRect rect;
-    rect.origin.x = x;
-    rect.origin.y = y;
-    rect.size.width = w;
-    rect.size.height = h;
-    
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: viewPtr],
-                      [NSValue valueWithRect:rect],
-                      nil];    
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_setFrame:)
-                               withObject: args waitUntilDone:YES];
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [view setFrame:NSMakeRect(x, y, w, h)];
+    }];
 
-    [pool drain];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -681,28 +448,21 @@ JNIEXPORT jobject JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_frame
 (JNIEnv *env, jclass cls, jlong viewPtr)
 {
-    AR_POOL(pool);
+    jobject jRect = NULL;
     
-    NSMutableArray * args = [NSMutableArray arrayWithObjects:
-                             [NSNumber numberWithLong: viewPtr],
-                             nil];
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_frame:)
-                               withObject: args waitUntilDone:YES];
-
-    NSRect frame = [(NSValue *)[args objectAtIndex: 1] rectValue];
-
-    jobject jRect = JNU_NewObjectByName(env, "java/awt/Rectangle", "(IIII)V",
-                                        (jint)frame.origin.x, (jint)frame.origin.y,
-                                        (jint)frame.size.width, (jint)frame.size.height);
-
-    if ((*env)->ExceptionOccurred(env)) {
-        (*env)->ExceptionDescribe(env);
-        (*env)->ExceptionClear(env);
-    }    
+JNF_COCOA_ENTER(env);
     
-    [pool drain];    
+    __block NSRect rect = NSZeroRect;
+    
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        rect = [view frame];
+    }];
 
+    jRect = NSToJavaRect(env, rect);
+
+JNF_COCOA_EXIT(env);
+    
     return jRect;
 }
 
@@ -715,16 +475,16 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_enterFullScreenMode
 (JNIEnv *env, jclass cls, jlong viewPtr)
 {
-    AR_POOL(pool);
-
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: viewPtr],
-                      nil];    
-
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_enterFullScreenMode:)
-                               withObject: args waitUntilDone:YES];
+JNF_COCOA_ENTER(env);
     
-    [pool drain];
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        NSScreen *screen = [[view window] screen];
+        NSDictionary *opts = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO], NSFullScreenModeAllScreens, nil];
+        [view enterFullScreenMode:screen withOptions:opts];
+    }];
+
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -736,16 +496,14 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_exitFullScreenMode
 (JNIEnv *env, jclass cls, jlong viewPtr)
 {
-    AR_POOL(pool);
+JNF_COCOA_ENTER(env);
     
-    NSArray * args = [NSArray arrayWithObjects: 
-                      [NSNumber numberWithLong: viewPtr],
-                      nil];    
-    
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_exitFullScreenMode:)
-                               withObject: args waitUntilDone:YES];
-    
-    [pool drain];
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [view exitFullScreenModeWithOptions:nil];
+    }];
+
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -757,19 +515,17 @@ JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSView_window
 (JNIEnv *env, jclass cls, jlong viewPtr)
 {
-    AR_POOL(pool);
+    __block jlong windowPtr = 0L;
     
-    NSMutableArray * args = [NSMutableArray arrayWithObjects: 
-                             [NSNumber numberWithLong: viewPtr],
-                             nil];
+JNF_COCOA_ENTER(env);
     
-    [cwrapper performSelectorOnMainThread: @selector(_NSView_window:)
-                               withObject: args waitUntilDone:YES];
+    NSView *view = (NSView *)jlong_to_ptr(viewPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        windowPtr = ptr_to_jlong([view window]);
+    }];
 
-    jlong windowPtr = [[args objectAtIndex: 1] longValue];
-
-    [pool drain];
-
+JNF_COCOA_EXIT(env);
+    
     return windowPtr;
 }
 
@@ -782,27 +538,20 @@ JNIEXPORT jobject JNICALL
 Java_sun_lwawt_macosx_CWrapper_00024NSScreen_frame
 (JNIEnv *env, jclass cls, jlong screenPtr)
 {
-    AR_POOL(pool);
-
-    NSMutableArray * args = [NSMutableArray arrayWithObjects:
-                             [NSNumber numberWithLong: screenPtr],
-                             nil];
+    jobject jRect = NULL;
     
-    [cwrapper performSelectorOnMainThread: @selector(_NSScreen_frame:)
-                               withObject: args waitUntilDone:YES];
-
-    NSRect frame = [(NSValue *)[args objectAtIndex: 1] rectValue];
-
-    jobject jRect = JNU_NewObjectByName(env, "java/awt/Rectangle", "(IIII)V",
-                                        (jint)frame.origin.x, (jint)frame.origin.y,
-                                        (jint)frame.size.width, (jint)frame.size.height);
+JNF_COCOA_ENTER(env);
     
-    if ((*env)->ExceptionOccurred(env)) {
-        (*env)->ExceptionDescribe(env);
-        (*env)->ExceptionClear(env);
-    }    
+    __block NSRect rect = NSZeroRect;
+    
+    NSScreen *screen = (NSScreen *)jlong_to_ptr(screenPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        rect = [screen frame];
+    }];
 
-    [pool drain];    
+    jRect = NSToJavaRect(env, rect);
+
+JNF_COCOA_EXIT(env);
     
     return jRect;
 }

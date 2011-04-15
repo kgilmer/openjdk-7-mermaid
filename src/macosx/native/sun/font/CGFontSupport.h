@@ -36,37 +36,37 @@ typedef _CGFS_FontRenderingMode CGFS_FontRenderingMode;
 
 
 // provides the desired text rendering mode for these hints
-inline CGFS_FontRenderingMode
+CGFS_FontRenderingMode
 CGFS_GetFontRenderingModeForHints(const jint fmHint, const jint aaHint);
 
 // provides an altered mode which is more appropriate for measuring,
 // but not striking glyphs
-inline CGFS_FontRenderingMode
+CGFS_FontRenderingMode
 CGFS_AlignModeForMeasurement(const CGFS_FontRenderingMode mode);
 
 // provides an altered mode which adds fractional components for measuring,
 // but not for striking
-inline CGFS_FontRenderingMode
+CGFS_FontRenderingMode
 CGFS_AlignModeForFractionalMeasurement(const CGFS_FontRenderingMode mode);
 
 // checks this mode represents character strike that would return a
 // non-integer size
-inline bool
+bool
 CGFS_FontIsUsingFractionalMetrics(const CGFS_FontRenderingMode mode);
 
 // checks if this the mode supports antialiasing
-inline bool
+bool
 CGFS_FontModeIsAntiAliased(const CGFS_FontRenderingMode mode);
 
 // set this text rendering mode onto this context
-inline void
+void
 CGFS_SetFontRenderingModeOnContext(const CGContextRef context,
                                    const CGFS_FontRenderingMode mode);
 
 
 // pass-though to get an array of advances for some glyphs, given this mode
 // WORKAROUND: passing size should not be necessary once we move to JRS
-inline bool
+bool
 CGFS_GetAdvancesForGlyphs(const CGFontRef font, const CGFloat size,
                           const CGAffineTransform *tx,
                           const CGFS_FontRenderingMode mode,
@@ -76,7 +76,7 @@ CGFS_GetAdvancesForGlyphs(const CGFontRef font, const CGFloat size,
 // pass-though to get an array of bounding boxes for some glyphs,
 // given this mode
 // WORKAROUND: passing size should not be necessary once we move to JRS
-inline bool
+bool
 CGFS_GetBBoxesForGlyphs(const CGFontRef font, const CGFloat size,
                         const CGAffineTransform *tx,
                         const CGFS_FontRenderingMode mode,

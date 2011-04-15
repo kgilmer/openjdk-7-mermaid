@@ -27,7 +27,6 @@
 #define __LWCTOOLKIT_H
 
 #import <jni.h>
-#import <jni_util.h>
 #import <pthread.h>
 #import <assert.h>
 
@@ -38,6 +37,8 @@
 
 #define DEBUG 1
 
+
+const char *kInternalError;
 
 @interface AWTToolkit : NSObject { }
 

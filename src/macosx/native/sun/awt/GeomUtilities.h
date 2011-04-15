@@ -23,19 +23,17 @@
  * questions.
  */
 
-#include <AppKit/NSCursor.h> 
+#import <Cocoa/Cocoa.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
-@interface CCursorManager : NSObject {
-}
 
-// Needed in AWTView only for setting the arrow on exiting outside the window.
-+ (NSCursor *) getCustomWaitCursor;
+jobject CGToJavaRect(JNIEnv *env, CGRect rect);
+CGRect JavaToCGRect(JNIEnv *env, jobject rect);
 
-+ (void) _setCursor: (NSCursor *) cursor;
+jobject NSToJavaRect(JNIEnv *env, NSRect rect);
+NSRect JavaToNSRect(JNIEnv *env, jobject rect);
 
-+(void) setWaitCursor: (bool) enable;
+jobject NSToJavaPoint(JNIEnv *env, NSPoint point);
+NSPoint JavaToNSPoint(JNIEnv *env, jobject point);
 
-+(void) setWaitCursor_OnAppKitThread: (NSNumber *) enable;
-
-	
-@end
+NSPoint ConvertNSScreenPoint(JNIEnv *env, NSPoint point);

@@ -22,12 +22,3 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
-#ifndef _CWRAPPER_H
-#define _CWRAPPER_H
-
-@interface CWrapper : NSObject {
-}
-@end
-
-#endif _CWRAPPER_H
