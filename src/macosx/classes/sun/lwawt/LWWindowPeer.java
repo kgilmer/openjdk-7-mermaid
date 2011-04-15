@@ -542,21 +542,25 @@ public class LWWindowPeer
             sysW = w;
             sysH = h;
         }
+        
         // Check if anything changed
         if (!moved && !resized) {
             return;
         }
         // First, update peer's bounds
         setBounds(x, y, w, h, SET_BOUNDS, false);
+        
         // Second, update the graphics config and surface data
         checkIfOnNewScreen();
         if (resized) {
             replaceSurfaceData();
             flushOffscreenGraphics(new Rectangle(0, 0, w, h));
         }
+        
         // Third, update target's bounds
         AWTAccessor.getComponentAccessor().setLocation(getTarget(), x, y);
         AWTAccessor.getComponentAccessor().setSize(getTarget(), w, h);
+        
         // Fourth, post COMPONENT_MOVED/COMPONENT_RESIZED events
         // TODO: is it worth reusing handleMove/handleResize methods here?
         if (moved) {
@@ -834,13 +838,13 @@ public class LWWindowPeer
         
         // TODO: DisplayChangedListener stuff
         final GraphicsConfiguration newGC = getScreenGraphicsConfig(windowScreen);
-        if (setGraphicsConfig(newGC)) {
-            LWToolkit.executeOnEventHandlerThread(getTarget(), new Runnable() {
-                public void run() {
-                    AWTAccessor.getComponentAccessor().setGraphicsConfiguration(getTarget(), newGC);
-                }
-            });
-        }
+        if (!setGraphicsConfig(newGC)) return;
+        
+        SunToolkit.executeOnEventHandlerThread(getTarget(), new Runnable() {
+            public void run() {
+                AWTAccessor.getComponentAccessor().setGraphicsConfiguration(getTarget(), newGC);
+            }
+        });
     }
 
     /*

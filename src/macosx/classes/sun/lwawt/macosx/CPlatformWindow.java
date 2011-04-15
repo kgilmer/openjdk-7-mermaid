@@ -64,7 +64,7 @@ public class CPlatformWindow implements PlatformWindow {
     protected Window target;
     private CPlatformWindow ownerPlatformWindow;
 
-    private long awtWindowPtr;
+    private long _awtWindowPtr;
 
     protected LWWindowPeer peer;
 
@@ -123,13 +123,13 @@ public class CPlatformWindow implements PlatformWindow {
         contentView = new CPlatformView();
         contentView.initialize(peer);
 
-        awtWindowPtr = nativeCreateWindow(contentView.getAWTView(),
+        _awtWindowPtr = nativeCreateWindow(contentView.getAWTView(),
                                           !undecorated, //hasBorder 
                                           0, 0, //x, y, width, height
                                           0, 0
                                           );
         
-        contentView.setWindow(awtWindowPtr);
+        contentView.setWindow(_awtWindowPtr);
 
         // Since JDK7 we have standard way to set opacity, so we should not pick
         // background's alpha.
@@ -142,7 +142,7 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void setMenuBar(MenuBar mb) {
-        if (!isValidPtr()) { return; }
+        final long awtWindowPtr = getAWTWindow();
         CMenuBar mbPeer = (CMenuBar)LWCToolkit.targetToPeer(mb);
         if (mbPeer != null) {
             nativeSetMenuBar(awtWindowPtr, mbPeer.getModel());
@@ -156,16 +156,14 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void dispose() {
-        if (!isValidPtr()) {
-            return;
-        }
+        final long awtWindowPtr = getAWTWindow();
         if (ownerPlatformWindow != null) {
             CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
         }
         contentView.dispose();
 
         CWrapper.NSObject.release(awtWindowPtr);
-        awtWindowPtr = 0L;
+        _awtWindowPtr = 0L;
     }
 
     @Override // PlatformWindow
@@ -182,9 +180,7 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public Insets getInsets() {
-        if (!isValidPtr()) {
-            return null;
-        }
+        final long awtWindowPtr = getAWTWindow();
         return nativeGetInsets(awtWindowPtr);
     }
 
@@ -195,14 +191,12 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public int getScreenImOn() {
-        if (!isValidPtr()) {
-            return 0;
-        }
+        final long awtWindowPtr = getAWTWindow();
 	// REMIND: we could also acquire screenID from the
 	// graphicsConfig.getDevice().getCoreGraphicsScreen()
 	// which might look a bit less natural but don't
 	// require new native accessor.
-        return nativeScreenOn(awtWindowPtr);
+        return nativeScreenOn_AppKitThread(awtWindowPtr);
     }
 
     @Override // PlatformWindow
@@ -218,10 +212,7 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void setBounds(int x, int y, int w, int h) {
-        if (!isValidPtr()) {
-            return;
-        }
-
+        final long awtWindowPtr = getAWTWindow();
     	Rectangle newBounds = new Rectangle(x, y, w, h);
         Rectangle cocoaBounds = convertCoreCoordinatesToNSWindow(newBounds);
         nativeSetBounds(awtWindowPtr, cocoaBounds.x, cocoaBounds.y, cocoaBounds.width, cocoaBounds.height);
@@ -231,8 +222,7 @@ public class CPlatformWindow implements PlatformWindow {
     public void setVisible(boolean visible) {
         if (ownerPlatformWindow != null) {
             if (!visible) {
-                CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(),
-                         getAWTWindow());
+                CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
             }
         }
 
@@ -256,23 +246,22 @@ public class CPlatformWindow implements PlatformWindow {
                          getAWTWindow(), CWrapper.NSWindow.NSWindowAbove);
             }
         }
+        
         if (blocker != null && visible) {
             // Make sure the blocker is above its siblings
             ((CPlatformWindow)blocker.getPlatformWindow()).orderAboveSiblings();
         }
-
     }
 
     @Override // PlatformWindow
     public void setTitle(String title) {
-        nativeSetTitle(awtWindowPtr, title);
+        nativeSetTitle(getAWTWindow(), title);
     }
-
-/*
- * Should be called on every window key property change. 
- */
+    
+    // Should be called on every window key property change.
     @Override // PlatformWindow
     public void updateTitleIconImages() {
+        final long awtWindowPtr = getAWTWindow();
         CImage cImage = getImageForTarget();
         if (cImage != null) {
             nativeSetTitleIconImage(awtWindowPtr, cImage.getNSImagePtr());
@@ -280,7 +269,10 @@ public class CPlatformWindow implements PlatformWindow {
     }
 
     public long getAWTWindow() {
-        return awtWindowPtr;
+        if (_awtWindowPtr == 0L) {
+            (new Exception("Pointer to the native NSWindow is invalid. Disposed before?")).printStackTrace();
+        }
+        return _awtWindowPtr;
     }    
     
     public SurfaceData getSurfaceData() {
@@ -289,18 +281,13 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override  // PlatformWindow
     public void toBack() {
-        if (!isValidPtr()) {
-            return;
-        }
+        final long awtWindowPtr = getAWTWindow();
         nativeToBack(awtWindowPtr);
     }
 
     @Override  // PlatformWindow
     public void toFront() {
-        if (!isValidPtr()) {
-            return;
-        }
-
+        final long awtWindowPtr = getAWTWindow();
         updateFocusabilityForAutoRequestFocus(false);
         nativeToFront(awtWindowPtr);
         updateFocusabilityForAutoRequestFocus(true);
@@ -308,17 +295,13 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override
     public void setResizable(boolean resizable) {
-        if (!isValidPtr()) {
-            return;
-        }
+        final long awtWindowPtr = getAWTWindow();
         nativeSetResizable(awtWindowPtr, resizable);
     }
 
     @Override
     public void setMinimumSize(int width, int height) {
-        if (!isValidPtr()) {
-            return;
-        }        
+        final long awtWindowPtr = getAWTWindow();
         nativeSetMinSize(awtWindowPtr, width, height);
     }
 
@@ -330,9 +313,6 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override
     public void updateFocusableWindowState() {
-        if (!isValidPtr()) {
-            return;
-        }
         isFocusable = isNativelyFocusableWindow();
     }
 
@@ -343,9 +323,7 @@ public class CPlatformWindow implements PlatformWindow {
 	
     @Override
     public void setAlwaysOnTop(boolean isAlwaysOnTop) {
-        if (!isValidPtr()) {
-            return;
-        }        
+        final long awtWindowPtr = getAWTWindow();
         nativeSetAlwaysOnTop(awtWindowPtr, isAlwaysOnTop);
     }
 
@@ -369,43 +347,43 @@ public class CPlatformWindow implements PlatformWindow {
     @Override
     public void setWindowState(int windowState) {
         int prevWindowState = peer.getState();
-        if (prevWindowState != windowState) {
-            switch (windowState) {
-                case Frame.ICONIFIED:
-                    if (!peer.isVisible()) {
-                        // later on the setVisible will minimize itself
-                        // otherwise, orderFront will deminiaturize window
-                       return;
-                    }
-                    if (prevWindowState == Frame.MAXIMIZED_BOTH) {
-                        // let's return into the normal states first
-                        // the zoom call toggles between the normal and the max states
-                        CWrapper.NSWindow.zoom(getAWTWindow());
-                    }
-                    CWrapper.NSWindow.miniaturize(getAWTWindow());
-                    break;
-                case Frame.MAXIMIZED_BOTH:
-                    if (prevWindowState == Frame.ICONIFIED) {
-                        // let's return into the normal states first
-                        CWrapper.NSWindow.deminiaturize(getAWTWindow());
-                    }
+        if (prevWindowState == windowState) return;
+        
+        switch (windowState) {
+            case Frame.ICONIFIED:
+                if (!peer.isVisible()) {
+                    // later on the setVisible will minimize itself
+                    // otherwise, orderFront will deminiaturize window
+                   return;
+                }
+                if (prevWindowState == Frame.MAXIMIZED_BOTH) {
+                    // let's return into the normal states first
+                    // the zoom call toggles between the normal and the max states
                     CWrapper.NSWindow.zoom(getAWTWindow());
-                    break;
-                case Frame.NORMAL:
-                    if (prevWindowState == Frame.ICONIFIED) {
-                        CWrapper.NSWindow.deminiaturize(getAWTWindow());
-                    } else if (prevWindowState == Frame.MAXIMIZED_BOTH) {
-                        // the zoom call toggles between the normal and the max states
-                        CWrapper.NSWindow.zoom(getAWTWindow());
-                    }
-                    break;
-                default:
-                    throw new RuntimeException("Unknown window state: "+windowState);
-            }
-            
-            // NOTE: the SWP.windowState field gets updated to the newWindowState
-            //       value when the native notification comes to us
+                }
+                CWrapper.NSWindow.miniaturize(getAWTWindow());
+                break;
+            case Frame.MAXIMIZED_BOTH:
+                if (prevWindowState == Frame.ICONIFIED) {
+                    // let's return into the normal states first
+                    CWrapper.NSWindow.deminiaturize(getAWTWindow());
+                }
+                CWrapper.NSWindow.zoom(getAWTWindow());
+                break;
+            case Frame.NORMAL:
+                if (prevWindowState == Frame.ICONIFIED) {
+                    CWrapper.NSWindow.deminiaturize(getAWTWindow());
+                } else if (prevWindowState == Frame.MAXIMIZED_BOTH) {
+                    // the zoom call toggles between the normal and the max states
+                    CWrapper.NSWindow.zoom(getAWTWindow());
+                }
+                break;
+            default:
+                throw new RuntimeException("Unknown window state: "+windowState);
         }
+        
+        // NOTE: the SWP.windowState field gets updated to the newWindowState
+        //       value when the native notification comes to us
     }
 
     // ----------------------------------------------------------------------
@@ -426,14 +404,15 @@ public class CPlatformWindow implements PlatformWindow {
                     CWrapper.NSWindow.miniaturize(getAWTWindow());
                 }
             }
-        } else {
-            if (target instanceof Frame) {
-                if (((Frame)target).getExtendedState() == Frame.ICONIFIED) {
-                    CWrapper.NSWindow.deminiaturize(getAWTWindow());
-                }
+            return;
+        }
+        
+        if (target instanceof Frame) {
+            if (((Frame)target).getExtendedState() == Frame.ICONIFIED) {
+                CWrapper.NSWindow.deminiaturize(getAWTWindow());
             }
-            CWrapper.NSWindow.orderOut(getAWTWindow());
-        }        
+        }
+        CWrapper.NSWindow.orderOut(getAWTWindow());        
     }
     
     /*
@@ -471,17 +450,6 @@ public class CPlatformWindow implements PlatformWindow {
     public CPlatformView getContentView() {
         return contentView;
     }
-    
-    /*
-     * Once we disposed the ptr, it becomes invalid. In our case, the 0L value means it is invalid.
-     */
-    private boolean isValidPtr() {
-        if (getAWTWindow() == 0L) {
-            log.fine("Pointer to the native NSWindow is invalid. Disposed before?");
-            return false;
-        }
-        return true;
-    }
 
     /**
      * Convert CoreGraphics coordinates to NSWindow coordinates, on the given
@@ -512,33 +480,21 @@ public class CPlatformWindow implements PlatformWindow {
         }
     }
     
-/******************
- * Native methods.
- ******************/
-    private native long nativeCreateWindow(long viewPointer, boolean withBorder,
-                                           int x, int y, int width, int height);
+    /******************
+     * Native methods.
+     ******************/
+    private native int nativeScreenOn_AppKitThread(long awtWindow);
     
+    private native long nativeCreateWindow(long viewPointer, boolean withBorder, int x, int y, int width, int height);
     private native Insets nativeGetInsets(long awtWindow);
-
     private native void nativeSetBounds(long awtWindow, int x, int y, int w, int h);
-
-    private native int nativeScreenOn(long awtWindow);
-   
     protected native void nativeToBack(long awtWindow);
-
     protected native void nativeToFront(long awtWindow);
-
     protected native void nativeSetTitle(long awtWindow, String title);
-
     private native void nativeSetResizable(long awtWindow, boolean resizable);
-   
     private native void nativeSetMinSize(long awtWindow, int w, int h);
-
     private native void nativeSetAlwaysOnTop(long awtWindow, boolean isAlwaysOnTop);
-
     private native void nativeSetTitleIconImage(long awtWindow, long nsImage);
-    
-    private native long nativeGetContentViewPtr(long awtWindow);
     
     /*************************************************************
      * Callbacks from the AWTWindowDelegate, AWTWindow and AWTView objc classes.

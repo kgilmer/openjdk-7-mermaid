@@ -108,8 +108,7 @@ AWT_ASSERT_APPKIT_THREAD;
  * Method:    nativeSetMenuBar
  * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetMenuBar
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetMenuBar
 (JNIEnv *env, jobject obj, jlong awtWindowPtr, jlong mbPtr)
 {
 JNF_COCOA_ENTER(env);
@@ -192,8 +191,7 @@ JNF_COCOA_EXIT(env);
  * Method:    nativeSetTitle
  * Signature: (JLjava/lang/String;)V
  */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetTitle
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetTitle
 (JNIEnv *env, jobject obj, jlong awtWindowPtr, jstring jtitle)
 {
 JNF_COCOA_ENTER(env);
@@ -212,8 +210,7 @@ JNF_COCOA_EXIT(env);
  * Method:    nativeGetInsets
  * Signature: (J)Ljava/awt/Insets;
  */
-JNIEXPORT jobject JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeGetInsets
+JNIEXPORT jobject JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeGetInsets
 (JNIEnv *env, jobject obj, jlong awtWindowPtr)
 {
     jobject ret = NULL;
@@ -250,8 +247,7 @@ JNF_COCOA_EXIT(env);
  * Method:    nativeSetBounds
  * Signature: (JIIII)V
  */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetBounds
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetBounds
 (JNIEnv *env, jobject obj, jlong awtWindowPtr, jint originX, jint originY, jint width, jint height)
 {
 JNF_COCOA_ENTER(env);
@@ -281,17 +277,16 @@ JNF_COCOA_EXIT(env);
 
 /*
  * Class:     sun_lwawt_macosx_CPlatformWindow
- * Method:    nativeScreenOn
- * Signature: (J)J
+ * Method:    nativeScreenOn_AppKitThread
+ * Signature: (J)I
  */
-JNIEXPORT jlong JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeScreenOn
+JNIEXPORT jint JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeScreenOn_1AppKitThread
 (JNIEnv *env, jobject self, jlong objcPtr)
 {
-    jlong ret = 0L;
+    jint ret = 0;
     
 JNF_COCOA_ENTER(env);
-AWT_ASSERT_NOT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     
     AWTWindow *aWindow = OBJC(objcPtr);
     NSDictionary *props = [[aWindow screen] deviceDescription];
@@ -302,8 +297,12 @@ JNF_COCOA_EXIT(env);
     return ret;
 }
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeToBack
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    nativeToBack
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeToBack
 (JNIEnv *env, jobject obj, jlong objcPtr)
 {
 JNF_COCOA_ENTER(env);
@@ -319,8 +318,12 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeToFront
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    nativeToFront
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeToFront
 (JNIEnv *env, jobject obj, jlong objcPtr)
 {
 JNF_COCOA_ENTER(env);
@@ -340,8 +343,12 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetResizable
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    nativeSetResizable
+ * Signature: (JZ)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetResizable
 (JNIEnv *env, jobject obj, jlong windowPtr, jboolean resizable)
 {
 JNF_COCOA_ENTER(env);
@@ -369,8 +376,12 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetMinSize
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    nativeSetMinSize
+ * Signature: (JII)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetMinSize
 (JNIEnv *env, jobject obj, jlong windowPtr, jint w, jint h)
 {
 JNF_COCOA_ENTER(env);
@@ -390,8 +401,12 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetAlwaysOnTop
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    nativeSetAlwaysOnTop
+ * Signature: (JZ)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetAlwaysOnTop
 (JNIEnv *env, jobject obj, jlong windowPtr, jboolean isAlwaysOnTop)
 {
 JNF_COCOA_ENTER(env);
@@ -413,10 +428,9 @@ JNF_COCOA_EXIT(env);
 /*
  * Class:     sun_lwawt_macosx_CPlatformWindow
  * Method:    nativeSetTitleIconImage
- * Signature: (II)V
+ * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CPlatformWindow_nativeSetTitleIconImage
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeSetTitleIconImage
 (JNIEnv *env, jobject obj, jlong windowPtr, jlong nsImagePtr)
 {
 JNF_COCOA_ENTER(env);
