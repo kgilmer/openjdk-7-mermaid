@@ -29,14 +29,13 @@ import java.awt.*;
 import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.locks.*;
+
 import apple.laf.JRSUIState;
 
 /**
- * ImageCache - A fixed pixel count sized cache of Images keyed by
- * arbitrary set of arguments. All images are held with SoftReferences
- * so they will be dropped by the GC if heap memory gets tight. When
- * our size hits max pixel count least recently requested images are
- * removed first.
+ * ImageCache - A fixed pixel count sized cache of Images keyed by arbitrary set of arguments. All images are held with
+ * SoftReferences so they will be dropped by the GC if heap memory gets tight. When our size hits max pixel count least
+ * recently requested images are removed first.
  */
 class ImageCache {
     // Ordered Map keyed by args hash, ordered by most recent accessed entry.

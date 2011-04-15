@@ -26,6 +26,8 @@
 package com.apple.laf;
 
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+
 import javax.swing.*;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.ComponentUI;
@@ -34,8 +36,7 @@ import javax.swing.plaf.basic.BasicTableUI;
 /**
  * A Mac L&F implementation of JTable
  *
- * All this does is look for a ThemeBorder and invalidate it when
- * the focus changes
+ * All this does is look for a ThemeBorder and invalidate it when the focus changes
  */
 public class AquaTableUI extends BasicTableUI {
     public static ComponentUI createUI(final JComponent c) {
@@ -73,14 +74,22 @@ public class AquaTableUI extends BasicTableUI {
         }
     }
 
-    protected AquaFocusHandler focusHandler = new AquaFocusHandler();
+    protected AquaFocusHandler focusHandler = new AquaFocusHandler() {
+        public void propertyChange(final PropertyChangeEvent ev) {
+            super.propertyChange(ev);
+            if (!FRAME_ACTIVE_PROPERTY.equals(ev.getPropertyName())) return;
+            AquaFocusHandler.swapSelectionColors("Table", getComponent(), ev.getNewValue());
+        }
+    };
     protected void installListeners() {
         super.installListeners();
+        table.addFocusListener(focusHandler);
         table.addPropertyChangeListener(focusHandler);
     }
 
     protected void uninstallListeners() {
         table.removePropertyChangeListener(focusHandler);
+        table.removeFocusListener(focusHandler);
         super.uninstallListeners();
     }
 

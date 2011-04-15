@@ -27,6 +27,7 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.util.Enumeration;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.*;
@@ -87,6 +88,8 @@ public class AquaTableHeaderUI extends BasicTableHeaderUI {
             sortDirection = 1;
         } else if ("descending".equalsIgnoreCase(direction+"")) {
             sortDirection = -1;
+        } else if ("decending".equalsIgnoreCase(direction+"")) {
+            sortDirection = -1; // stupid misspelling that GM'ed in 10.5.0
         }
         
         final TableHeaderUI headerUI = target.getUI();

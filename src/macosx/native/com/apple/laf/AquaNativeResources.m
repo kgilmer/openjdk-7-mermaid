@@ -40,7 +40,7 @@ JNIEXPORT jlong JNICALL Java_com_apple_laf_AquaNativeResources_getWindowBackgrou
 #if 0
     NSColor* color = nil;
 JNF_COCOA_ENTER(env);
-    color = [AWTColor getMagicBackgroundColor];
+    color = [NSColor lightGrayColor];//[AWTColor getMagicBackgroundColor];
     if (color) CFRetain(color); // GC
 JNF_COCOA_EXIT(env);
     return ptr_to_jlong(color);

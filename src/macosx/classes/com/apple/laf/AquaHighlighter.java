@@ -23,23 +23,23 @@
  * questions.
  */
 
-// Based on 1.3.1's AquaHighlighter, with the main difference that
-// an inactive selection should be gray rather than a darker version
-// of the current highlight color.
+//  Based on 1.3.1's AquaHighlighter, with the main difference that an inactive selection should be gray
+//  rather than a darker version of the current highlight color.
 
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.*;
+
 import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaHighlighter extends DefaultHighlighter implements UIResource {
     final static Color DEFAULT_INACTIVE_SELECTION = new Color(212, 212, 212);
     
-    static final LazySingleton<LayerPainter> instance =
-        new LazySingleton<LayerPainter>() {
+    static final LazySingleton<LayerPainter> instance = new LazySingleton<LayerPainter>() {
         protected LayerPainter getInstance() {
             return new AquaHighlightPainter(null);
         }
@@ -49,9 +49,7 @@ public class AquaHighlighter extends DefaultHighlighter implements UIResource {
         return instance.get();
     }
     
-    public static class AquaHighlightPainter
-        extends DefaultHighlightPainter
-    {
+    public static class AquaHighlightPainter extends DefaultHighlightPainter {
         Color selectionColor;
         Color disabledSelectionColor;
 
@@ -67,8 +65,7 @@ public class AquaHighlighter extends DefaultHighlighter implements UIResource {
         protected Color getInactiveSelectionColor() {
             if (disabledSelectionColor != null) return disabledSelectionColor;
             
-            final Color disabledSelectionFromUIManager =
-                UIManager.getColor("TextComponent.selectionBackgroundInactive");
+            final Color disabledSelectionFromUIManager = UIManager.getColor("TextComponent.selectionBackgroundInactive");
             if (disabledSelectionFromUIManager != null) {
                 return disabledSelectionColor = disabledSelectionFromUIManager;
             }
@@ -83,8 +80,7 @@ public class AquaHighlighter extends DefaultHighlighter implements UIResource {
 
             final Window owningWindow = SwingUtilities.getWindowAncestor(c);
 
-            // If window is not currently active selection color is a gray
-            // with RGB of (212, 212, 212).
+            // If window is not currently active selection color is a gray with RGB of (212, 212, 212).
             if (owningWindow != null && !owningWindow.isActive()) {
                 selectionColor = getInactiveSelectionColor();
             }
@@ -94,19 +90,12 @@ public class AquaHighlighter extends DefaultHighlighter implements UIResource {
             }
         }
 
-        public void paint(final Graphics g,
-                          final int offs0, final int offs1,
-                          final Shape bounds, final JTextComponent c)
-        {
+        public void paint(final Graphics g, final int offs0, final int offs1, final Shape bounds, final JTextComponent c) {
             setColor(c);
             super.paint(g, offs0, offs1, bounds, c);
         }
 
-        public Shape paintLayer(final Graphics g,
-                                final int offs0, final int offs1,
-                                final Shape bounds, final JTextComponent c,
-                                final View view)
-        {
+        public Shape paintLayer(final Graphics g, final int offs0, final int offs1, final Shape bounds, final JTextComponent c, final View view) {
             setColor(c);
             return super.paintLayer(g, offs0, offs1, bounds, c, view);
         }

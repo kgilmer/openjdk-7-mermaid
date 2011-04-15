@@ -27,6 +27,7 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.accessibility.*;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -36,42 +37,40 @@ import javax.swing.plaf.basic.*;
 import com.apple.laf.ClientPropertyApplicator;
 import com.apple.laf.ClientPropertyApplicator.Property;
 import apple.laf.JRSUIConstants.Size;
+
 import com.apple.laf.AquaUtilControlSize.Sizeable;
 
-// Inspired by MetalComboBoxUI, which also has a combined
-// text-and-arrow button for noneditables
+// Inspired by MetalComboBoxUI, which also has a combined text-and-arrow button for noneditables
 public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
-
     static final String POPDOWN_CLIENT_PROPERTY_KEY = "JComboBox.isPopDown";
     static final String ISSQUARE_CLIENT_PROPERTY_KEY = "JComboBox.isSquare";
     
     public static ComponentUI createUI(final JComponent c) {
         return new AquaComboBoxUI();
     }
-    
+
     private boolean wasOpaque;
     public void installUI(final JComponent c) {
         super.installUI(c);
 
-        // this doesn't work right now, because the JComboBox.init() method
-        // calls setOpaque(false) directly, and doesn't allow the LaF to
-        // decide
+        // this doesn't work right now, because the JComboBox.init() method calls
+        // .setOpaque(false) directly, and doesn't allow the LaF to decided. Bad Sun!
         LookAndFeel.installProperty(c, "opaque", Boolean.FALSE);
-        
+
         wasOpaque = c.isOpaque();
         c.setOpaque(false);
     }
-    
+
     public void uninstallUI(final JComponent c) {
         c.setOpaque(wasOpaque);
         super.uninstallUI(c);
     }
-    
+
     protected void installListeners() {
         super.installListeners();
         AquaUtilControlSize.addSizePropertyListener(comboBox);
     }
-    
+
     protected void uninstallListeners() {
         AquaUtilControlSize.removeSizePropertyListener(comboBox);
         super.uninstallListeners();
@@ -80,9 +79,8 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
     protected void installComponents() {
         super.installComponents();
         
-        // client properties must be applied after the components have
-        // been installed, because isSquare and isPopdown are applied
-        // to the installed button
+        // client properties must be applied after the components have been installed,
+        // because isSquare and isPopdown are applied to the installed button
         APPLICATOR.attachAndApplyClientProperties(comboBox);
     }
     
@@ -92,38 +90,35 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
     }
     
     protected ItemListener createItemListener() {
-        return new CoreAquaItemListener();
-    }
-    
-    protected class CoreAquaItemListener implements ItemListener {
-        public void itemStateChanged(final ItemEvent e) {
-            if (e.getStateChange() != ItemEvent.SELECTED) {
-                return;
+        return new ItemListener() {
+            long lastBlink = 0L;
+            public void itemStateChanged(final ItemEvent e) {
+                if (e.getStateChange() != ItemEvent.SELECTED) return;
+                if (!popup.isVisible()) return;
+                
+                // sometimes, multiple selection changes can occur while the popup is up,
+                // and blinking more than "once" (in a second) is not desirable
+                final long now = System.currentTimeMillis();
+                if (now - 1000 < lastBlink) return;
+                lastBlink = now;
+                
+                final JList itemList = popup.getList();
+                final ListUI listUI = itemList.getUI();
+                if (!(listUI instanceof AquaListUI)) return;
+                final AquaListUI aquaListUI = (AquaListUI)listUI;
+                
+                final int selectedIndex = comboBox.getSelectedIndex();
+                final ListModel dataModel = itemList.getModel();
+                if (dataModel == null) return;
+                
+                final Object value = dataModel.getElementAt(selectedIndex);
+                AquaUtils.blinkMenu(new AquaUtils.Selectable() {
+                    public void paintSelected(final boolean selected) {
+                        aquaListUI.repaintCell(value, selectedIndex, selected);
+                    }
+                });
             }
-            if (!popup.isVisible()) {
-                return;
-            }
-            
-            final JList itemList = popup.getList();
-            final ListUI listUI = itemList.getUI();
-            if (!(listUI instanceof AquaListUI)) {
-                return;
-            }
-            final AquaListUI aquaListUI = (AquaListUI)listUI;
-            
-            final int selectedIndex = comboBox.getSelectedIndex();
-            final ListModel dataModel = itemList.getModel();
-            if (dataModel == null) {
-                return;
-            }
-            
-            final Object value = dataModel.getElementAt(selectedIndex);
-            AquaUtils.blinkMenu(new AquaUtils.Selectable() {
-                public void paintSelected(final boolean selected) {
-                    aquaListUI.repaintCell(value, selectedIndex, selected);
-                }
-            });
-        }
+        };
     }
 
     public void paint(final Graphics g, final JComponent c) {
@@ -146,10 +141,7 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         return new AquaComboBoxEditor();
     }
 
-    class AquaComboBoxEditor
-        extends BasicComboBoxEditor
-        implements UIResource, DocumentListener
-    {
+    class AquaComboBoxEditor extends BasicComboBoxEditor implements UIResource, DocumentListener {
         protected AquaComboBoxEditor() {
             super();
             editor = new AquaCustomComboTextField();
@@ -178,19 +170,21 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         }
         
         protected void editorTextChanged() {
-            if (!popup.isVisible()) {
-                return;
-            }
+            if (!popup.isVisible()) return;
             
-            final String text = editor.getText();
+            final Object text = editor.getText();
+            
             final ListModel model = listBox.getModel();
             final int items = model.getSize();
             for (int i = 0; i < items; i++) {
                 final Object element = model.getElementAt(i);
-                if (element != null && element.equals(text)) {
-                    popup.getList().setSelectedIndex(i);
-                    return;
-                }
+                if (element == null) continue;
+                
+                final String asString = element.toString();
+                if (asString == null || !asString.equals(text)) continue;
+                
+                popup.getList().setSelectedIndex(i);
+                return;
             }
             
             popup.getList().clearSelection();
@@ -200,18 +194,30 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
     class AquaCustomComboTextField extends JTextField {
         public AquaCustomComboTextField() {
             final InputMap inputMap = getInputMap();
-            inputMap.put(KeyStroke.getKeyStroke("DOWN"),
-                         new ComboBoxDownAction(comboBox));
-            inputMap.put(KeyStroke.getKeyStroke("KP_DOWN"),
-                         new ComboBoxDownAction(comboBox));
-            inputMap.put(KeyStroke.getKeyStroke("UP"),
-                         new ComboBoxUpAction(comboBox));
-            inputMap.put(KeyStroke.getKeyStroke("KP_UP"),
-                         new ComboBoxUpAction(comboBox));
+            inputMap.put(KeyStroke.getKeyStroke("DOWN"), highlightNextAction);
+            inputMap.put(KeyStroke.getKeyStroke("KP_DOWN"), highlightNextAction);
+            inputMap.put(KeyStroke.getKeyStroke("UP"), highlightPreviousAction);
+            inputMap.put(KeyStroke.getKeyStroke("KP_UP"), highlightPreviousAction);
+            
+            inputMap.put(KeyStroke.getKeyStroke("HOME"), highlightFirstAction);
+            inputMap.put(KeyStroke.getKeyStroke("END"), highlightLastAction);
+            inputMap.put(KeyStroke.getKeyStroke("PAGE_UP"), highlightPageUpAction);
+            inputMap.put(KeyStroke.getKeyStroke("PAGE_DOWN"), highlightPageDownAction);
             
             final Action action = getActionMap().get(JTextField.notifyAction);
-            inputMap.put(KeyStroke.getKeyStroke("ENTER"),
-                         new ComboBoxEditorDelegatingEnterAction(action));
+            inputMap.put(KeyStroke.getKeyStroke("ENTER"), new AbstractAction() {
+                public void actionPerformed(final ActionEvent e) {
+                    if (popup.isVisible()) {
+                        triggerSelectionEvent(comboBox, e);
+                        
+                        if (editor instanceof AquaCustomComboTextField) {
+                            ((AquaCustomComboTextField)editor).selectAll();
+                        }
+                    } else {
+                        action.actionPerformed(e);
+                    }
+                }
+            });
         }
         
         // workaround for 4530952
@@ -222,35 +228,14 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
             super.setText(s);
         }
     }
-    
-    class ComboBoxEditorDelegatingEnterAction extends AbstractAction {
-        final Action defaultDelegate;
-        
-        public ComboBoxEditorDelegatingEnterAction(final Action defaultDelegate) {
-            this.defaultDelegate = defaultDelegate;
-        }
-
-        public void actionPerformed(final ActionEvent e) {
-            if (popup.isVisible()) {
-                triggerSelectionEvent(comboBox, e);
-                
-                if (editor instanceof AquaCustomComboTextField) {
-                    ((AquaCustomComboTextField)editor).selectAll();
-                }
-            } else {
-                defaultDelegate.actionPerformed(e);
-            }
-        }
-    }
 
     /**
      * This listener hides the popup when the focus is lost.  It also repaints
      * when focus is gained or lost.
      *
-     * This override is necessary because the Basic L&F for the combo box
-     * is working around a Solaris-only bug that we don't have on Mac OS X.
-     * So, remove the lightweight popup check here.
-     * rdar://3518582 142DP2: JComboBox popup not dismissed by tabbing
+     * This override is necessary because the Basic L&F for the combo box is working
+     * around a Solaris-only bug that we don't have on Mac OS X.  So, remove the lightweight
+     * popup check here. rdar://Problem/3518582
      */
     protected FocusListener createFocusListener() {
         return new BasicComboBoxUI.FocusHandler() {
@@ -262,11 +247,9 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
                 comboBox.repaint();
 
                 // Notify assistive technologies that the combo box lost focus
-                final AccessibleContext ac =
-                    ((Accessible)comboBox).getAccessibleContext();
+                final AccessibleContext ac = ((Accessible)comboBox).getAccessibleContext();
                 if (ac != null) {
-                    ac.firePropertyChange(AccessibleContext.ACCESSIBLE_STATE_PROPERTY,
-                                          AccessibleState.FOCUSED, null);
+                    ac.firePropertyChange(AccessibleContext.ACCESSIBLE_STATE_PROPERTY, AccessibleState.FOCUSED, null);
                 }
             }
         };
@@ -276,42 +259,124 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         super.installKeyboardActions();
         
         final ActionMap actionMap = comboBox.getActionMap();
-        actionMap.put("aquaSelectNext", new ComboBoxDownAction());
-        actionMap.put("aquaSelectPrevious", new ComboBoxUpAction());
-        actionMap.put("aquaEnterPressed", new ComboBoxEnterAction());
-        actionMap.put("aquaSpacePressed", new ComboBoxSpaceAction());
+        actionMap.put("aquaSelectNext", highlightNextAction);
+        actionMap.put("aquaSelectPrevious", highlightPreviousAction);
+        actionMap.put("aquaEnterPressed", triggerSelectionAction);
+        actionMap.put("aquaSpacePressed", toggleSelectionAction);
+        
+        actionMap.put("aquaSelectHome", highlightFirstAction);
+        actionMap.put("aquaSelectEnd", highlightLastAction);
+        actionMap.put("aquaSelectPageUp", highlightPageUpAction);
+        actionMap.put("aquaSelectPageDown", highlightPageDownAction);
     }
+    
+    abstract class ComboBoxAction extends AbstractAction {
+        public void actionPerformed(final ActionEvent e) {
+            if (!comboBox.isEnabled() || !comboBox.isShowing()) return;
 
+            if (comboBox.isPopupVisible()) {
+                final AquaComboBoxUI ui = (AquaComboBoxUI)comboBox.getUI();
+                performComboBoxAction(ui);
+            } else {
+                comboBox.setPopupVisible(true);
+            }
+        }
+        
+        abstract void performComboBoxAction(final AquaComboBoxUI ui);
+    }
+    
     /**
      * Hilight _but do not select_ the next item in the list.
      */
-    protected void hiliteNextPossibleValue() {
-        final int si = listBox.getSelectedIndex();
+    Action highlightNextAction = new ComboBoxAction() {
+        @Override
+        public void performComboBoxAction(AquaComboBoxUI ui) {
+            final int si = listBox.getSelectedIndex();
 
-        if (si < comboBox.getModel().getSize() - 1) {
-            listBox.setSelectedIndex(si + 1);
-            listBox.ensureIndexIsVisible(si + 1);
+            if (si < comboBox.getModel().getSize() - 1) {
+                listBox.setSelectedIndex(si + 1);
+                listBox.ensureIndexIsVisible(si + 1);
+            }
+            comboBox.repaint();
         }
-        comboBox.repaint();
-    }
-
+    };
+    
     /**
      * Hilight _but do not select_ the previous item in the list.
      */
-    protected void hilitePreviousPossibleValue() {
-        final int si = listBox.getSelectedIndex();
-
-        if (si > 0) {
-            listBox.setSelectedIndex(si - 1);
-            listBox.ensureIndexIsVisible(si - 1);
+    Action highlightPreviousAction = new ComboBoxAction() {
+        @Override
+        void performComboBoxAction(final AquaComboBoxUI ui) {
+            final int si = listBox.getSelectedIndex();
+            if (si > 0) {
+                listBox.setSelectedIndex(si - 1);
+                listBox.ensureIndexIsVisible(si - 1);
+            }
+            comboBox.repaint();
         }
-        comboBox.repaint();
-    }
+    };
 
-    // rdar://3759984 Java 1.4.2_5: Serializing Swing components not working
-    // Inner classes were using a this reference and then trying to
-    // serialize the AquaComboBoxUI.  We shouldn't do that.  But we need
-    // to be able to get the popup from other classes, so we need
+    Action highlightFirstAction = new ComboBoxAction() {
+        @Override
+        void performComboBoxAction(final AquaComboBoxUI ui) {
+            listBox.setSelectedIndex(0);
+            listBox.ensureIndexIsVisible(0);
+        }
+    };
+    
+    Action highlightLastAction = new ComboBoxAction() {
+        @Override
+        void performComboBoxAction(final AquaComboBoxUI ui) {
+            final int size = listBox.getModel().getSize();
+            listBox.setSelectedIndex(size - 1);
+            listBox.ensureIndexIsVisible(size - 1);
+        }
+    };
+    
+    Action highlightPageUpAction = new ComboBoxAction() {
+        @Override
+        void performComboBoxAction(final AquaComboBoxUI ui) {
+            final int current = listBox.getSelectedIndex();
+            final int first = listBox.getFirstVisibleIndex();
+            
+            if (current != first) {
+                listBox.setSelectedIndex(first);
+                return;
+            }
+            
+            final int page = listBox.getVisibleRect().height / listBox.getCellBounds(0, 0).height;
+            int target = first - page;
+            if (target < 0) target = 0;
+            
+            listBox.ensureIndexIsVisible(target);
+            listBox.setSelectedIndex(target);
+        }
+    };
+    
+    Action highlightPageDownAction = new ComboBoxAction() {
+        @Override
+        void performComboBoxAction(final AquaComboBoxUI ui) {
+            final int current = listBox.getSelectedIndex();
+            final int last = listBox.getLastVisibleIndex();
+            
+            if (current != last) {
+                listBox.setSelectedIndex(last);
+                return;
+            }
+            
+            final int page = listBox.getVisibleRect().height / listBox.getCellBounds(0, 0).height;
+            final int end = listBox.getModel().getSize() - 1;
+            int target = last + page;
+            if (target > end) target = end;
+            
+            listBox.ensureIndexIsVisible(target);
+            listBox.setSelectedIndex(target);
+        }
+    };
+
+    // For <rdar://problem/3759984> Java 1.4.2_5: Serializing Swing components not working
+    // Inner classes were using a this reference and then trying to serialize the AquaComboBoxUI
+    // We shouldn't do that. But we need to be able to get the popup from other classes, so we need
     // a public accessor.
     public ComboPopup getPopup() {
         return popup;
@@ -321,17 +386,13 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         return new AquaComboBoxLayoutManager();
     }
 
-    class AquaComboBoxLayoutManager
-        extends BasicComboBoxUI.ComboBoxLayoutManager
-    {
+    class AquaComboBoxLayoutManager extends BasicComboBoxUI.ComboBoxLayoutManager {
         public void layoutContainer(final Container parent) {
             if (arrowButton != null && !comboBox.isEditable()) {
                 final Insets insets = comboBox.getInsets();
                 final int width = comboBox.getWidth();
                 final int height = comboBox.getHeight();
-                arrowButton.setBounds(insets.left, insets.top,
-                                      width - (insets.left + insets.right),
-                                      height - (insets.top + insets.bottom));
+                arrowButton.setBounds(insets.left, insets.top, width - (insets.left + insets.right), height - (insets.top + insets.bottom));
                 return;
             }
             
@@ -344,8 +405,7 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
             final int buttonWidth = 20;
             
             if (arrowButton != null) {
-                arrowButton.setBounds(width - (insets.right + buttonWidth),
-                                      insets.top, buttonWidth, buttonHeight);
+                arrowButton.setBounds(width - (insets.right + buttonWidth), insets.top, buttonWidth, buttonHeight);
             }
             
             if (editor != null) {
@@ -356,68 +416,19 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         }
     }
 
-    static class ComboBoxUpAction extends AbstractAction {
-        protected JComboBox combo;
-        public ComboBoxUpAction() {
-        }
-        public ComboBoxUpAction(final JComboBox combo) {
-            this.combo = combo;
-        }
-        
-        public void actionPerformed(final ActionEvent e) {
-            final JComboBox comboBox = combo == null ?
-                (JComboBox)e.getSource() : combo;
-            if (!comboBox.isEnabled() || !comboBox.isShowing()) {
-                return;
-            }
-
-            if (comboBox.isPopupVisible()) {
-                final AquaComboBoxUI ui = (AquaComboBoxUI)comboBox.getUI();
-                ui.hilitePreviousPossibleValue();
-            } else {
-                comboBox.setPopupVisible(true);
-            }
-        }
-    }
-
-    static class ComboBoxDownAction extends AbstractAction {
-        protected JComboBox combo;
-        public ComboBoxDownAction() {
-        }
-        public ComboBoxDownAction(final JComboBox combo) {
-            this.combo = combo;
-        }
-        
-        public void actionPerformed(final ActionEvent e) {
-            final JComboBox comboBox = combo == null ?
-                (JComboBox)e.getSource() : combo;
-            if (!comboBox.isEnabled() || !comboBox.isShowing()) {
-                return;
-            }
-
-            if (comboBox.isPopupVisible()) {
-                final AquaComboBoxUI ui = (AquaComboBoxUI)comboBox.getUI();
-                ui.hiliteNextPossibleValue();
-            } else {
-                comboBox.setPopupVisible(true);
-            }
-        }
-    }
-
     // This is here because Sun can't use protected like they should!
-    protected static final String IS_TABLE_CELL_EDITOR =
-        "JComboBox.isTableCellEditor";
+    protected static final String IS_TABLE_CELL_EDITOR = "JComboBox.isTableCellEditor";
     
     protected static boolean isTableCellEditor(final JComponent c) {
         return Boolean.TRUE.equals(c.getClientProperty(AquaComboBoxUI.IS_TABLE_CELL_EDITOR));
     }
     
-    protected static void triggerSelectionEvent(final JComboBox comboBox,
-                                                final ActionEvent e)
-    {
-        if (!comboBox.isEnabled()) {
-            return;
-        }
+    protected static boolean isPopdown(final JComboBox c) {
+        return c.isEditable() || Boolean.TRUE.equals(c.getClientProperty(AquaComboBoxUI.POPDOWN_CLIENT_PROPERTY_KEY));
+    }
+    
+    protected static void triggerSelectionEvent(final JComboBox comboBox, final ActionEvent e) {
+        if (!comboBox.isEnabled()) return;
         
         final AquaComboBoxUI aquaUi = (AquaComboBoxUI)comboBox.getUI();
 
@@ -426,8 +437,7 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         }
         
         if (isTableCellEditor(comboBox)) {
-            // Forces the selection of the list item if the combo box is
-            // in a JTable
+            // Forces the selection of the list item if the combo box is in a JTable
             comboBox.setSelectedIndex(aquaUi.getPopup().getList().getSelectedIndex());
             return;
         }
@@ -439,44 +449,32 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         }
 
         // Call the default button binding.
-        // This is a pretty messy way of passing an event through to
-        // the root pane
+        // This is a pretty messy way of passing an event through to the root pane
         final JRootPane root = SwingUtilities.getRootPane(comboBox);
-        if (root == null) {
-            return;
-        }
+        if (root == null) return;
 
         final InputMap im = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         final ActionMap am = root.getActionMap();
-        if (im == null || am == null) {
-            return;
-        }
+        if (im == null || am == null) return;
 
         final Object obj = im.get(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0));
-        if (obj == null) {
-            return;
-        }
+        if (obj == null) return;
 
         final Action action = am.get(obj);
-        if (action == null) {
-            return;
-        }
+        if (action == null) return;
         
-        action.actionPerformed(new ActionEvent(root, e.getID(),
-                                               e.getActionCommand(),
-                                               e.getWhen(), e.getModifiers()));
+        action.actionPerformed(new ActionEvent(root, e.getID(), e.getActionCommand(), e.getWhen(), e.getModifiers()));
     }
 
-    // This is somewhat messy.  The difference here from
-    // BasicComboBoxUI.EnterAction is that
+    // This is somewhat messy.  The difference here from BasicComboBoxUI.EnterAction is that
     // arrow up or down does not automatically select the 
-    static class ComboBoxEnterAction extends AbstractAction {
+    static Action triggerSelectionAction = new AbstractAction() {
         public void actionPerformed(final ActionEvent e) {
             triggerSelectionEvent((JComboBox)e.getSource(), e);
         }
-    }
+    };
     
-    static class ComboBoxSpaceAction extends AbstractAction {
+    static Action toggleSelectionAction = new AbstractAction() {
         public void actionPerformed(final ActionEvent e) {
             final JComboBox comboBox = (JComboBox)e.getSource();
             if (!comboBox.isEnabled()) return;
@@ -485,15 +483,14 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
             final AquaComboBoxUI aquaUi = (AquaComboBoxUI)comboBox.getUI();
 
             if (comboBox.isPopupVisible()) {
-                comboBox.setSelectedIndex(
-                    aquaUi.getPopup().getList().getSelectedIndex());
+                comboBox.setSelectedIndex(aquaUi.getPopup().getList().getSelectedIndex());
                 comboBox.setPopupVisible(false);
                 return;
             }
             
             comboBox.setPopupVisible(true);
         }
-    }
+    };
     
     public void applySizeFor(final JComponent c, final Size size) {
         if (arrowButton == null) return;
@@ -511,23 +508,19 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
         final boolean editable = comboBox.isEditable();
 
         final Dimension size;
-        if (!editable &&
-            arrowButton != null &&
-            arrowButton instanceof AquaComboBoxButton)
-        {
+        if (!editable && arrowButton != null && arrowButton instanceof AquaComboBoxButton) {
             final AquaComboBoxButton button = (AquaComboBoxButton)arrowButton;
             final Insets buttonInsets = button.getInsets();
             //  Insets insets = comboBox.getInsets();
-            final Insets insets = new Insets(0, 5, 0, 25);
+            final Insets insets = new Insets(0, 5, 0, 25);//comboBox.getInsets();
 
             size = getDisplaySize();
             size.width += insets.left + insets.right;
             size.width += buttonInsets.left + buttonInsets.right;
-            size.width += buttonInsets.right + 5;
+            size.width += buttonInsets.right + 10;
             size.height += insets.top + insets.bottom;
             size.height += buttonInsets.top + buttonInsets.bottom;
-            // Min height = Height of arrow button plus 2 pixels
-            // fuzz above plus 2 below.  23 + 2 + 2
+            // Min height = Height of arrow button plus 2 pixels fuzz above plus 2 below.  23 + 2 + 2
             size.height = Math.max(27, size.height);
         } else if (editable && arrowButton != null && editor != null) {
             size = super.getMinimumSize(c);
@@ -551,84 +544,51 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
     }
     
     @SuppressWarnings("unchecked")
-    static final ClientPropertyApplicator<JComboBox, AquaComboBoxUI> APPLICATOR =
-        new ClientPropertyApplicator<JComboBox, AquaComboBoxUI>(
+    static final ClientPropertyApplicator<JComboBox, AquaComboBoxUI> APPLICATOR = new ClientPropertyApplicator<JComboBox, AquaComboBoxUI>(
         new Property<AquaComboBoxUI>(AquaFocusHandler.FRAME_ACTIVE_PROPERTY) {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
                 if (Boolean.FALSE.equals(value)) {
-                    if (target.comboBox != null) {
-                        target.comboBox.hidePopup();
-                    }
+                    if (target.comboBox != null) target.comboBox.hidePopup();
                 }
-                if (target.listBox != null) {
-                    target.listBox.repaint();
-                }
+                if (target.listBox != null) target.listBox.repaint();
             }
         },
         new Property<AquaComboBoxUI>("editable") {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
                 if (target.comboBox == null) return;
                 target.comboBox.repaint();
             }
         },
         new Property<AquaComboBoxUI>("background") {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
                 final Color color = (Color)value;
-                if (target.arrowButton != null) {
-                    target.arrowButton.setBackground(color);
-                }
-                if (target.listBox != null) {
-                    target.listBox.setBackground(color);
-                }
+                if (target.arrowButton != null) target.arrowButton.setBackground(color);
+                if (target.listBox != null) target.listBox.setBackground(color);
             }
         },
         new Property<AquaComboBoxUI>("foreground") {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
                 final Color color = (Color)value;
-                if (target.arrowButton != null) {
-                    target.arrowButton.setForeground(color);
-                }
-                if (target.listBox != null) {
-                    target.listBox.setForeground(color);
-                }
+                if (target.arrowButton != null) target.arrowButton.setForeground(color);
+                if (target.listBox != null) target.listBox.setForeground(color);
             }
         },
         new Property<AquaComboBoxUI>(POPDOWN_CLIENT_PROPERTY_KEY) {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
-                if (!(target.arrowButton instanceof AquaComboBoxButton)) {
-                    return;
-                }
-                ((AquaComboBoxButton)target.arrowButton).
-                    setIsPopDown(Boolean.TRUE.equals(value));
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
+                if (!(target.arrowButton instanceof AquaComboBoxButton)) return;
+                ((AquaComboBoxButton)target.arrowButton).setIsPopDown(Boolean.TRUE.equals(value));
             }
         },
         new Property<AquaComboBoxUI>(ISSQUARE_CLIENT_PROPERTY_KEY) {
-            public void applyProperty(final AquaComboBoxUI target,
-                                      final Object value)
-            {
-                if (!(target.arrowButton instanceof AquaComboBoxButton)) {
-                    return;
-                }
-                ((AquaComboBoxButton)target.arrowButton).
-                    setIsSquare(Boolean.TRUE.equals(value));
+            public void applyProperty(final AquaComboBoxUI target, final Object value) {
+                if (!(target.arrowButton instanceof AquaComboBoxButton)) return;
+                ((AquaComboBoxButton)target.arrowButton).setIsSquare(Boolean.TRUE.equals(value));
             }
         }
     ){
         public AquaComboBoxUI convertJComponentToTarget(final JComboBox combo) {
             final ComboBoxUI comboUI = combo.getUI();
-            if (comboUI instanceof AquaComboBoxUI) {
-                return (AquaComboBoxUI)comboUI;
-            }
+            if (comboUI instanceof AquaComboBoxUI) return (AquaComboBoxUI)comboUI;
             return null;
         }
     };

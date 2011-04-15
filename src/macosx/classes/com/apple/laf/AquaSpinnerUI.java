@@ -32,16 +32,18 @@ import java.text.*;
 import java.text.AttributedCharacterIterator.Attribute;
 import java.text.Format.Field;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.plaf.*;
 import javax.swing.text.InternationalFormatter;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
 /**
- * This is originally derived from BasicSpinnerUI, but they made
- * everything private so we can't subclass!
+ * This is originally derived from BasicSpinnerUI, but they made everything private
+ * so we can't subclass!
  */
 public class AquaSpinnerUI extends SpinnerUI {
     private static final PropertyChangeListener propertyChangeListener = new PropertyChangeHandler();

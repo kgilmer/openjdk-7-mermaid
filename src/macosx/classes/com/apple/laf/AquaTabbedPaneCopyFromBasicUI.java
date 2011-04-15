@@ -37,18 +37,17 @@ import java.awt.event.*;
 import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
 import javax.swing.text.View;
+
 import sun.swing.*;
 
-public class AquaTabbedPaneCopyFromBasicUI
-    extends TabbedPaneUI
-    implements SwingConstants
-{
-    // Instance variables initialized at installation
+public class AquaTabbedPaneCopyFromBasicUI extends TabbedPaneUI implements SwingConstants {
+// Instance variables initialized at installation
 
     protected JTabbedPane tabPane;
 

@@ -27,11 +27,15 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicHTML;
 import javax.swing.text.View;
+
 import apple.laf.JRSUIConstants.*;
+
+import com.apple.laf.AquaIcon.InvertableIcon;
 import com.apple.laf.AquaUtils.LazySingleton;
 
 /**
@@ -42,6 +46,7 @@ import com.apple.laf.AquaUtils.LazySingleton;
  * Our classes need an implementation of paintMenuItem
  * that allows them to paint their own backgrounds
  */
+
 public class AquaMenuPainter {
     // Glyph statics:
     // ASCII character codes
@@ -163,17 +168,6 @@ public class AquaMenuPainter {
         selectedMenuItemPainter.get().paintBorder(null, g, 0, 0, width, height);
     }
 
-    public void paintAlphaBackground(final Graphics g, final Color c, final float alpha, final int width, final int height) {
-        final Graphics2D g2d = (Graphics2D)g;
-        final Composite holdComp = g2d.getComposite();
-        final AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha);
-        g2d.setComposite(ac);
-
-        g.setColor(c);
-        g.fillRect(0, 0, width, height);
-        g2d.setComposite(holdComp);
-    }
-
     protected void paintMenuItem(final Client client, final Graphics g, final JComponent c, final Icon checkIcon, final Icon arrowIcon, final Color background, final Color foreground, final Color disabledForeground, final Color selectionForeground, final int defaultTextIconGap, final Font acceleratorFont) {
         final Graphics2D g2d = (Graphics2D)g;
         final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
@@ -257,15 +251,15 @@ public class AquaMenuPainter {
 
         // We want to paint the icon after the text color is set since some icon painting depends on the correct
         // graphics color being set
-        // See <rdar://3792383> Menu icons missing in Java2D's Lines.Joins demo
+        // See <rdar://problem/3792383> Menu icons missing in Java2D's Lines.Joins demo
         // Paint the Icon
         if (b.getIcon() != null) {
-            paintIcon(g, c, iconRect, isEnabled);
+            paintIcon(g, b, iconRect, isEnabled);
         }
 
         // Paint the Check using the current text color
         if (checkIcon != null) {
-            paintCheck(g, c, checkIcon);
+            paintCheck(g, b, checkIcon);
         }
 
         // Draw the accelerator first in case the HTML renderer changes the color
@@ -286,9 +280,9 @@ public class AquaMenuPainter {
                     g.setFont(acceleratorFont);
                     drawString(g, modifiersString, underlinedChar, acceleratorRect.x, yAccel, isEnabled, isSelected);
                     g.setFont(f);
-                    g.drawString(keyString, acceleratorRect.x + acceleratorRect.width - kAcceleratorArrowSpace - emWidth, yAccel);
+                    g.drawString(keyString, acceleratorRect.x + acceleratorRect.width - emWidth, yAccel);
                 } else {
-                    final int xAccel = acceleratorRect.x + kAcceleratorArrowSpace + emWidth;
+                    final int xAccel = acceleratorRect.x + emWidth;
                     g.setFont(acceleratorFont);
                     drawString(g, modifiersString, underlinedChar, xAccel, yAccel, isEnabled, isSelected);
                     g.setFont(f);
@@ -310,8 +304,7 @@ public class AquaMenuPainter {
 
         // Paint the Arrow
         if (arrowIcon != null) {
-            if (model.isArmed() || (c instanceof JMenu && model.isSelected())) g.setColor(foreground);
-            if (useCheckAndArrow(b)) arrowIcon.paintIcon(c, g, arrowIconRect.x, arrowIconRect.y);
+            paintArrow(g, b, model, arrowIcon);
         }
         
         g.setColor(holdc);
@@ -360,7 +353,7 @@ public class AquaMenuPainter {
             r.width += acceleratorRect.width;
         }
 
-        if (useCheckAndArrow(b)) {
+        if (!isTopLevelMenu(b)) {
             // Add in the checkIcon
             r.width += checkIconRect.width;
             r.width += defaultTextIconGap;
@@ -383,27 +376,42 @@ public class AquaMenuPainter {
         return r.getSize();
     }
 
-    protected void paintCheck(final Graphics g, final JComponent c, final Icon checkIcon) {
-        if (useCheckAndArrow((JMenuItem)c)) checkIcon.paintIcon(c, g, checkIconRect.x, checkIconRect.y);
+    protected void paintCheck(final Graphics g, final JMenuItem item, Icon checkIcon) {
+        if (isTopLevelMenu(item) || !item.isSelected()) return;
+        
+        if (item.isArmed() && checkIcon instanceof InvertableIcon) {
+            ((InvertableIcon)checkIcon).getInvertedIcon().paintIcon(item, g, checkIconRect.x, checkIconRect.y);
+        } else {
+            checkIcon.paintIcon(item, g, checkIconRect.x, checkIconRect.y);
+        }
     }
 
-    protected void paintIcon(final Graphics g, final JComponent c, final Rectangle localIconRect, boolean isEnabled) {
-        final AbstractButton b = (AbstractButton)c;
-        final ButtonModel model = b.getModel();
+    protected void paintIcon(final Graphics g, final JMenuItem c, final Rectangle localIconRect, boolean isEnabled) {
+        final ButtonModel model = c.getModel();
         Icon icon;
         if (!isEnabled) {
-            icon = b.getDisabledIcon();
+            icon = c.getDisabledIcon();
         } else if (model.isPressed() && model.isArmed()) {
-            icon = b.getPressedIcon();
+            icon = c.getPressedIcon();
             if (icon == null) {
                 // Use default icon
-                icon = b.getIcon();
+                icon = c.getIcon();
             }
         } else {
-            icon = b.getIcon();
+            icon = c.getIcon();
         }
 
         if (icon != null) icon.paintIcon(c, g, localIconRect.x, localIconRect.y);
+    }
+    
+    protected void paintArrow(Graphics g, JMenuItem c, ButtonModel model, Icon arrowIcon) {
+        if (isTopLevelMenu(c)) return;
+        
+        if (c instanceof JMenu && (model.isArmed() || model.isSelected()) && arrowIcon instanceof InvertableIcon) {
+            ((InvertableIcon)arrowIcon).getInvertedIcon().paintIcon(c, g, arrowIconRect.x, arrowIconRect.y);
+        } else {
+            arrowIcon.paintIcon(c, g, arrowIconRect.x, arrowIconRect.y);
+        }
     }
 
     /** Draw a string with the graphics g at location (x,y) just like g.drawString() would.
@@ -443,12 +451,8 @@ public class AquaMenuPainter {
      * Returns false if the component is a JMenu and it is a top
      * level menu (on the menubar).
      */
-    private boolean useCheckAndArrow(final JMenuItem menuItem) {
-        boolean b = true;
-        if ((menuItem instanceof JMenu) && (((JMenu)menuItem).isTopLevelMenu())) {
-            b = false;
-        }
-        return b;
+    private static boolean isTopLevelMenu(final JMenuItem menuItem) {
+        return (menuItem instanceof JMenu) && (((JMenu)menuItem).isTopLevelMenu());
     }
 
     private String layoutMenuItem(final JMenuItem menuItem, final FontMetrics fm, final String text, final FontMetrics fmAccel, String keyString, final String modifiersString, final Icon icon, final Icon checkIcon, final Icon arrowIcon, final int verticalAlignment, final int horizontalAlignment, final int verticalTextPosition, final int horizontalTextPosition, final Rectangle viewR, final Rectangle iconR, final Rectangle textR, final Rectangle acceleratorR, final Rectangle checkIconR, final Rectangle arrowIconR, final int textIconGap, final int menuItemGap) {
@@ -462,7 +466,7 @@ public class AquaMenuPainter {
             keyString = "";
         } else {
             // Accel space doesn't overlap arrow space, even though items can't have both
-            acceleratorR.width = SwingUtilities.computeStringWidth(fmAccel, modifiersString) + kAcceleratorArrowSpace;
+            acceleratorR.width = SwingUtilities.computeStringWidth(fmAccel, modifiersString);
             // The keyStrings should all line up, so always adjust the width by the same amount
             // (if they're multi-char, they won't line up but at least they won't be cut off)
             acceleratorR.width += Math.max(fm.charWidth('M'), SwingUtilities.computeStringWidth(fm, keyString));
@@ -472,12 +476,13 @@ public class AquaMenuPainter {
         /* Initialize the checkIcon bounds rectangle checkIconR.
          */
 
-        if (useCheckAndArrow(menuItem)) {
+        final boolean isTopLevelMenu = isTopLevelMenu(menuItem);
+        if (!isTopLevelMenu) {
             if (checkIcon != null) {
                 checkIconR.width = checkIcon.getIconWidth();
                 checkIconR.height = checkIcon.getIconHeight();
             } else {
-                checkIconR.width = checkIconR.height = 0;
+                checkIconR.width = checkIconR.height = 16;
             }
 
             /* Initialize the arrowIcon bounds rectangle arrowIconR.
@@ -487,11 +492,11 @@ public class AquaMenuPainter {
                 arrowIconR.width = arrowIcon.getIconWidth();
                 arrowIconR.height = arrowIcon.getIconHeight();
             } else {
-                arrowIconR.width = arrowIconR.height = 0;
+                arrowIconR.width = arrowIconR.height = 16;
             }
 
-            textR.x += checkIconR.width;
-            iconR.x += checkIconR.width;
+            textR.x += 12;
+            iconR.x += 12;
         }
 
         final Rectangle labelR = iconR.union(textR);
@@ -501,14 +506,16 @@ public class AquaMenuPainter {
         acceleratorR.x += (viewR.width - arrowIconR.width - acceleratorR.width);
         acceleratorR.y = viewR.y + (viewR.height / 2) - (acceleratorR.height / 2);
 
-        if (useCheckAndArrow(menuItem)) {
+        if (!isTopLevelMenu) {
             //    if ( GetSysDirection() < 0 ) hierRect.right = hierRect.left + w + 4;
             //    else hierRect.left = hierRect.right - w - 4;
-            arrowIconR.x = (viewR.width - arrowIconR.width);
-            arrowIconR.y = viewR.y + (labelR.height / 2) - (arrowIconR.height / 2);
+            arrowIconR.x = (viewR.width - arrowIconR.width) + 1;
+            arrowIconR.y = viewR.y + (labelR.height / 2) - (arrowIconR.height / 2) + 1;
 
             checkIconR.y = viewR.y + (labelR.height / 2) - (checkIconR.height / 2);
-            checkIconR.x = 0;
+            checkIconR.x = 5;
+            
+            textR.width += 8;
         }
 
         /*System.out.println("Layout: " +horizontalAlignment+ " v=" +viewR+"  c="+checkIconR+" i="+

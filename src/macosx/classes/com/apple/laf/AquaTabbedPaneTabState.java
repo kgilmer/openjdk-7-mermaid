@@ -26,6 +26,7 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.SwingConstants;
 
 class AquaTabbedPaneTabState {
@@ -164,8 +165,7 @@ class AquaTabbedPaneTabState {
             right = lastLeftmostTab;
             left = -1;
         } else if (selectedIndex < 0) {
-            // this is if there is none selected
-            // rdar://3138137 ArrayIndexOutOfBoundsException opening Java source file in JBuilder8
+            // this is if there is none selected see radar 3138137
             right = 0;
             left = -1;
         }

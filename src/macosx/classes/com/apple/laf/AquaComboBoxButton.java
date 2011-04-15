@@ -26,8 +26,10 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.UIResource;
+
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
 
@@ -36,24 +38,20 @@ class AquaComboBoxButton extends JButton {
     final protected JList list;
     final protected CellRendererPane rendererPane;
     final protected AquaComboBoxUI ui;
-    
+
     protected final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
     boolean isPopDown;
     boolean isSquare;
     
-    protected AquaComboBoxButton(final AquaComboBoxUI ui,
-                                 final JComboBox comboBox,
-                                 final CellRendererPane rendererPane,
-                                 final JList list)
-    {
+    protected AquaComboBoxButton(final AquaComboBoxUI ui, final JComboBox comboBox, final CellRendererPane rendererPane, final JList list) {
         super("");
         putClientProperty("JButton.buttonType", "comboboxInternal");
-    
+        
         this.ui = ui;
         this.comboBox = comboBox;
         this.rendererPane = rendererPane;
         this.list = list;
-    
+        
         setModel(new DefaultButtonModel() {
             public void setArmed(final boolean armed) {
                 super.setArmed(isPressed() ? true : armed);
@@ -66,7 +64,7 @@ class AquaComboBoxButton extends JButton {
     public boolean isEnabled() {
         return comboBox == null ? true : comboBox.isEnabled();
     }
-    
+
     public boolean isFocusTraversable() {
         return false;
     }
@@ -92,23 +90,23 @@ class AquaComboBoxButton extends JButton {
         // Don't Paint the button as usual
         // super.paintComponent( g );
         final boolean editable = comboBox.isEditable();
-    
+        
         int top = 0;
         int left = 0;
         int width = getWidth();
         int height = getHeight();
-    
+        
         if (comboBox.isOpaque()) {
             g.setColor(getBackground());
             g.fillRect(0, 0, width, height);
         }
-    
+        
         final Size size = AquaUtilControlSize.getUserSizeFrom(comboBox);
         painter.state.set(size == null ? Size.REGULAR : size);
-    
+        
         final ButtonModel buttonModel = getModel();
         painter.state.set(getState(buttonModel));
-    
+        
         painter.state.set(AlignmentVertical.CENTER);
         
         if (AquaComboBoxUI.isTableCellEditor(comboBox)) {
@@ -116,8 +114,7 @@ class AquaComboBoxButton extends JButton {
             painter.state.set(Widget.BUTTON_POP_UP);
             painter.state.set(ArrowsOnly.YES);
             painter.paint(g, this, left, top, width, height);
-            doRendererPaint(g, buttonModel, editable, getInsets(),
-                            left, top, width, height);
+            doRendererPaint(g, buttonModel, editable, getInsets(), left, top, width, height);
             return;
         }
         
@@ -129,11 +126,11 @@ class AquaComboBoxButton extends JButton {
             width -= insets.left + insets.right;
             height -= insets.top + insets.bottom;
         }
-        
+
         if (height <= 0 || width <= 0) {
             return;
         }
-    
+        
         boolean hasFocus = comboBox.hasFocus();
         if (editable) {
             painter.state.set(Widget.BUTTON_COMBO_BOX);
@@ -150,48 +147,39 @@ class AquaComboBoxButton extends JButton {
             }
         }
         painter.state.set(hasFocus ? Focused.YES : Focused.NO);
-    
+        
         if (isSquare) {
             painter.paint(g, comboBox, left + 2, top - 1, width - 4, height);
         } else {
             painter.paint(g, comboBox, left, top, width, height);
         }
-    
+        
         // Let the renderer paint
         if (!editable && comboBox != null) {
-            doRendererPaint(g, buttonModel, editable, insets,
-                            left, top, width, height);
+            doRendererPaint(g, buttonModel, editable, insets, left, top, width, height);
         }
     }
     
-    protected void doRendererPaint(final Graphics g,
-                                   final ButtonModel buttonModel,
-                                   final boolean editable,
-                                   final Insets insets,
-                                   int left, int top, int width, int height)
-    {
+    protected void doRendererPaint(final Graphics g, final ButtonModel buttonModel, final boolean editable, final Insets insets, int left, int top, int width, int height) {
         final ListCellRenderer renderer = comboBox.getRenderer();
-    
-        // fake it out! not renderPressed
-        final Component c =
-            renderer.getListCellRendererComponent(list,
-                                                  comboBox.getSelectedItem(),
-                                                  -1, false, false);
-        // System.err.println("Renderer: " + renderer);
         
+        // fake it out! not renderPressed
+        final Component c = renderer.getListCellRendererComponent(list, comboBox.getSelectedItem(), -1, false, false);
+        // System.err.println("Renderer: " + renderer);
+
         if (!editable && !AquaComboBoxUI.isTableCellEditor(comboBox)) {
             final int indentLeft = 10;
             final int buttonWidth = 24;
-            
+
             // hardcoded for now. We should adjust as necessary.
             top += 1;
             height -= 4;
             left += indentLeft;
             width -= (indentLeft + buttonWidth);
         }
-        
+
         c.setFont(rendererPane.getFont());
-        
+
         if (buttonModel.isArmed() && buttonModel.isPressed()) {
             if (isOpaque()) {
                 c.setBackground(UIManager.getColor("Button.select"));
@@ -206,18 +194,17 @@ class AquaComboBoxButton extends JButton {
             c.setForeground(comboBox.getForeground());
             c.setBackground(comboBox.getBackground());
         }
-        
+
         // Sun Fix for 4238829: should lay out the JPanel.
         boolean shouldValidate = false;
         if (c instanceof JPanel) {
             shouldValidate = true;
         }
-        
+
         final int iconWidth = 0;
         final int cWidth = width - (insets.right + iconWidth);
-        
-        // rdar://3156483 images are way outside combo box bounds
-        // we need to crop images that are too big.
+
+        // fix for 3156483 we need to crop images that are too big.
         // if (height > 18)
         // always crop.
         {
@@ -228,17 +215,12 @@ class AquaComboBoxButton extends JButton {
         // It doesn't need to draw its background, we handled it
         final Color bg = c.getBackground();
         final boolean inhibitBackground = bg instanceof UIResource;
-        if (inhibitBackground) {
-            c.setBackground(CLEAR);
-        }
+        if (inhibitBackground) c.setBackground(CLEAR);
         
-        rendererPane.paintComponent(g, c, this,
-                                    left, top, cWidth, height, shouldValidate);
+        rendererPane.paintComponent(g, c, this, left, top, cWidth, height, shouldValidate); // h - (insets.top + insets.bottom) );
         
-        if (inhibitBackground) {
-            c.setBackground(bg);
-        }
+        if (inhibitBackground) c.setBackground(bg);
     }
-    
+
     static final Color CLEAR = new Color(0, 0, 0, 0);
 }

@@ -27,15 +27,15 @@ package com.apple.laf;
 
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
+
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaButtonCheckBoxUI extends AquaButtonLabeledUI {
-    protected static LazySingleton<AquaButtonCheckBoxUI> instance =
-        new LazySingletonFromDefaultContructor<AquaButtonCheckBoxUI>(AquaButtonCheckBoxUI.class);
-    protected static LazySingleton<ImageIcon> sizingIcon =
-        new LazySingleton<ImageIcon>() {
+    protected static LazySingleton<AquaButtonCheckBoxUI> instance = new LazySingletonFromDefaultContructor<AquaButtonCheckBoxUI>(AquaButtonCheckBoxUI.class); 
+    protected static LazySingleton<ImageIcon> sizingIcon = new LazySingleton<ImageIcon>() {
         protected ImageIcon getInstance() {
             return new ImageIcon(AquaNativeResources.getRadioButtonSizerImage());
         }
@@ -45,10 +45,10 @@ public class AquaButtonCheckBoxUI extends AquaButtonLabeledUI {
         return instance.get();
     }
     
-    public static Icon getSizingCheckBoxIcon(){
+    public static Icon getSizingCheckBoxIcon() {
         return sizingIcon.get();
     }
-    
+
     public String getPropertyPrefix() {
         return "CheckBox" + ".";
     }

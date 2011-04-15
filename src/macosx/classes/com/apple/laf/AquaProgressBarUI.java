@@ -29,19 +29,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
+
 import apple.laf.JRSUIStateFactory;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ValueState;
+
 import com.apple.laf.AquaUtilControlSize.*;
 
-public class AquaProgressBarUI
-    extends ProgressBarUI
-    implements ChangeListener, PropertyChangeListener,
-               AncestorListener, Sizeable
-{
+public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, PropertyChangeListener, AncestorListener, Sizeable {
     protected static final AffineTransform kRotateTx = AffineTransform.getRotateInstance(0.0f - (Math.PI / 2.0f), 0, 0);
     private static final boolean ADJUSTTIMER = true;
     
@@ -64,8 +63,7 @@ public class AquaProgressBarUI
         return new AquaProgressBarUI();
     }
     
-    protected AquaProgressBarUI() {
-    }
+    protected AquaProgressBarUI() { }
 
     public void installUI(final JComponent c) {
         progressBar = (JProgressBar)c;
@@ -125,7 +123,7 @@ public class AquaProgressBarUI
     }
     
     // listen for Ancestor events to stop our timer when we are no longer visible
-    // <rdar://5405035> JProgressBar: UI in Aqua look and feel causes memory leaks
+    // <rdar://problem/5405035> JProgressBar: UI in Aqua look and feel causes memory leaks
     public void ancestorRemoved(final AncestorEvent e) {
         stopAnimationTimer();
     }

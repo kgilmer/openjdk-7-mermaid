@@ -29,6 +29,7 @@ import java.io.*;
 import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.Map.Entry;
+
 import javax.swing.Icon;
 import javax.swing.filechooser.FileView;
 
@@ -37,14 +38,29 @@ class AquaFileView extends FileView {
     
     private static final int UNINITALIZED_LS_INFO = -1;
     
-    static final int itemInfoIsPackage          = 0x00000002; /* Packaged directory */
-    static final int itemInfoIsApplication      = 0x00000004; /* Single-file or packaged application */
-    static final int itemInfoIsAliasFile        = 0x00000010; /* Alias file (includes symlinks) */
-    static final int itemInfoIsSymlink          = 0x00000020; /* Symlink */
+    // Constants from LaunchServices.h
+    static final int kLSItemInfoIsPlainFile        = 0x00000001; /* Not a directory, volume, or symlink*/
+    static final int kLSItemInfoIsPackage          = 0x00000002; /* Packaged directory*/
+    static final int kLSItemInfoIsApplication      = 0x00000004; /* Single-file or packaged application*/
+    static final int kLSItemInfoIsContainer        = 0x00000008; /* Directory (includes packages) or volume*/
+    static final int kLSItemInfoIsAliasFile        = 0x00000010; /* Alias file (includes sym links)*/
+    static final int kLSItemInfoIsSymlink          = 0x00000020; /* UNIX sym link*/
+    static final int kLSItemInfoIsInvisible        = 0x00000040; /* Invisible by any known mechanism*/
+    static final int kLSItemInfoIsNativeApp        = 0x00000080; /* Carbon or Cocoa native app*/
+    static final int kLSItemInfoIsClassicApp       = 0x00000100; /* CFM/68K Classic app*/
+    static final int kLSItemInfoAppPrefersNative   = 0x00000200; /* Carbon app that prefers to be launched natively*/
+    static final int kLSItemInfoAppPrefersClassic  = 0x00000400; /* Carbon app that prefers to be launched in Classic*/
+    static final int kLSItemInfoAppIsScriptable    = 0x00000800; /* App can be scripted*/
+    static final int kLSItemInfoIsVolume           = 0x00001000; /* Item is a volume*/
+    static final int kLSItemInfoExtensionIsHidden  = 0x00100000; /* Item has a hidden extension*/
     
     static {
         java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
     }
+    
+    // TODO: Un-comment this out when the native version exists
+    //private static native String getNativePathToRunningJDKBundle();
+    private static native String getNativePathToSharedJDKBundle();
     
     private static native String getNativeMachineName();
     private static native String getNativeDisplayName(final byte[] pathBytes, final boolean isDirectory);
@@ -59,13 +75,22 @@ class AquaFileView extends FileView {
         return machineName;
     }
     
+    protected static String getPathToRunningJDKBundle() {
+        // TODO: Return empty string for now
+        return "";//getNativePathToRunningJDKBundle();
+    }
+    
+    protected static String getPathToSharedJDKBundle() {
+        return getNativePathToSharedJDKBundle();
+    }
+    
     static class FileInfo {
         final boolean isDirectory;
         final String absolutePath;
         byte[] pathBytes;
         
         String displayName;
-        AquaIcon.CachingScalingIcon icon;
+        Icon icon;
         int launchServicesInfo = UNINITALIZED_LS_INFO;
         
         FileInfo(final File file){
@@ -154,8 +179,9 @@ class AquaFileView extends FileView {
             info.icon = AquaIcon.SystemIcon.documentIcon;
         } else {
             // Look for the document's icon
-            info.icon = new AquaIcon.FileIcon(f);
-            if (!info.icon.hasIconRef()) {
+            final AquaIcon.FileIcon fileIcon = new AquaIcon.FileIcon(f);
+            info.icon = fileIcon;
+            if (!fileIcon.hasIconRef()) {
                 // Fall back on the default icons
                 if (f.isDirectory()) {
                     if (fFileChooserUI.getFileChooser().getFileSystemView().isRoot(f)) {
@@ -213,15 +239,15 @@ class AquaFileView extends FileView {
     
     boolean isAlias(final File f) {
         final int lsInfo = getLSInfoFor(f);
-        return ((lsInfo & itemInfoIsAliasFile) != 0) && ((lsInfo & itemInfoIsSymlink) == 0);
+        return ((lsInfo & kLSItemInfoIsAliasFile) != 0) && ((lsInfo & kLSItemInfoIsSymlink) == 0);
     }
     
     boolean isApplication(final File f) {
-        return (getLSInfoFor(f) & itemInfoIsApplication) != 0;
+        return (getLSInfoFor(f) & kLSItemInfoIsApplication) != 0;
     }
     
     boolean isPackage(final File f) {
-        return (getLSInfoFor(f) & itemInfoIsPackage) != 0;
+        return (getLSInfoFor(f) & kLSItemInfoIsPackage) != 0;
     }
 
     /**

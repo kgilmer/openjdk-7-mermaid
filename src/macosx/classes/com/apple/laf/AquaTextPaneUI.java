@@ -26,13 +26,13 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicTextPaneUI;
 import javax.swing.text.*;
 
-// rdar://3663467 JTextPane can't support Font setting
-// moved it to subclass from BasicEditorPaneUI to BasicTextPaneUI. (vm)
+//[3663467] moved it to sublcass from BasicEditorPaneUI to BasicTextPaneUI. (vm)
 public class AquaTextPaneUI extends BasicTextPaneUI {
     public static ComponentUI createUI(final JComponent c) {
         return new AquaTextPaneUI();
@@ -85,6 +85,7 @@ public class AquaTextPaneUI extends BasicTextPaneUI {
         
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
+        AquaKeyBindings.installFullWordDeleteAction(c);
     }
 
     protected void paintSafely(final Graphics g) {

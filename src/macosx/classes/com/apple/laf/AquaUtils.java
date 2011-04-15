@@ -31,8 +31,15 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
+
+import sun.awt.AppContext;
+
+import sun.lwawt.macosx.CImage;
+//import sun.lwawt.macosx.CImage.Creator;
+
 import com.apple.laf.AquaImageFactory.SlicedImageControl;
 
 public class AquaUtils {
@@ -46,6 +53,31 @@ public class AquaUtils {
         return c.getComponentOrientation().isLeftToRight();
     }
     
+    protected static boolean IS_JAVA5 = System.getProperty("java.version").startsWith("1.5.");
+    protected static boolean isJava5() {
+        return IS_JAVA5;
+    }
+    
+    // TODO: no CImage.Creator for now
+    /*private static CImage.Creator getCImageCreatorInternal() {
+        return java.security.AccessController.doPrivileged(new PrivilegedAction<CImage.Creator>() {
+            public Creator run() {
+                try {
+                    final Method getCreatorMethod = CImage.class.getDeclaredMethod("getCreator", new Class[] {});
+                    getCreatorMethod.setAccessible(true);
+                    return (CImage.Creator)getCreatorMethod.invoke(null, new Object[] {});
+                } catch (final Exception e) {
+                    return null;
+                }
+            }
+        });
+    }
+    
+    private static CImage.Creator cImageCreator = getCImageCreatorInternal();
+    static CImage.Creator getCImageCreator() {
+        return cImageCreator;
+    }*/
+
     public static Object beginFont(final Graphics2D g2d) {
         if (g2d == null) return null;
         
@@ -67,17 +99,25 @@ public class AquaUtils {
     }
     
     protected static Image generateSelectedDarkImage(final Image image) {
-        final ImageProducer prod = new FilteredImageSource(image.getSource(), new PressedIconFilter());
+        final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {
+            int getGreyFor(final int gray) {
+                return gray * 75 / 100;
+            }
+        });
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
     
     protected static Image generateDisabledImage(final Image image) {
-        final ImageProducer prod = new FilteredImageSource(image.getSource(), new DisabledIconFilter());
+        final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {
+            int getGreyFor(final int gray) {
+                return 255 - ((255 - gray) * 65 / 100);
+            }
+        });
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
     
-    protected static Image generateLightenedImage(final Image image) {
-        final GrayFilter filter = new GrayFilter(true, 50);
+    protected static Image generateLightenedImage(final Image image, final int percent) {
+        final GrayFilter filter = new GrayFilter(true, percent);
         final ImageProducer prod = new FilteredImageSource(image.getSource(), filter);
         return Toolkit.getDefaultToolkit().createImage(prod);
     }
@@ -107,39 +147,24 @@ public class AquaUtils {
         abstract int getGreyFor(final int gray);
     }
     
-    static class DisabledIconFilter extends IconImageFilter {
-        int getGreyFor(final int gray) {
-            return 255 - ((255 - gray) * 65 / 100);
-        }
-    }
-    
-    static class PressedIconFilter extends IconImageFilter {
-        int getGreyFor(final int gray) {
-            return gray * 75 / 100;
-        }
-    }
-    
-    protected static boolean IS_JAVA5 = System.getProperty("java.version").startsWith("1.5.");
-    protected static boolean isJava5() {
-        return IS_JAVA5;
-    }
-    
     public abstract static class LazySingleton<T> {
-        protected SoftReference<T> ref;
         
         public T get() {
+            final AppContext appContext = AppContext.getAppContext();
+            SoftReference<T> ref = (SoftReference<T>) appContext.get(this);
             if (ref != null) {
                 final T object = ref.get();
                 if (object != null) return object;
             }
-            
             final T object = getInstance();
             ref = new SoftReference<T>(object);
+            appContext.put(this, ref);
             return object;
         }
         
         public void reset() {
-            ref = null;
+            AppContext appContext = AppContext.getAppContext();
+            appContext.remove(this);
         }
         
         protected abstract T getInstance();
@@ -188,7 +213,7 @@ public class AquaUtils {
         return enableAnimations = new Boolean(!"false".equals(sizeProperty)); // should be true by default
     }
     
-    static final int MENU_BLINK_DELAY = 50; // 50ms
+    static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec == TicksToEventTime(3) from HIToolbox/Menus/Source/MenuEvents.cp
     protected static void blinkMenu(final Selectable selectable) {
         if (!animationsEnabled()) return;
         try {
@@ -222,13 +247,13 @@ public class AquaUtils {
         final Insets insets;
         final ConvolveOp blurOp;
         
-        public ShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final int blur) {
+        public ShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur) {
             this.prePainter = prePainter; this.postPainter = postPainter;
             this.offsetX = offsetX; this.offsetY = offsetY; this.distance = distance; this.blur = blur;
             final int halfBlur = blur / 2;
             this.insets = new Insets(halfBlur - offsetY, halfBlur - offsetX, halfBlur + offsetY, halfBlur + offsetX);
             
-            final float blurry = 1.0f / (blur * blur);
+            final float blurry = intensity / (blur * blur);
             final float[] blurKernel = new float[blur * blur];
             for (int i = 0; i < blurKernel.length; i++) blurKernel[i] = blurry;
             blurOp = new ConvolveOp(new Kernel(blur, blur, blurKernel));
@@ -281,8 +306,8 @@ public class AquaUtils {
     public static class SlicedShadowBorder extends ShadowBorder {
         final SlicedImageControl slices;
         
-        public SlicedShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final int blur, final int templateWidth, final int templateHeight, final int leftCut, final int topCut, final int rightCut, final int bottomCut) {
-            super(prePainter, postPainter, offsetX, offsetY, distance, blur);
+        public SlicedShadowBorder(final Painter prePainter, final Painter postPainter, final int offsetX, final int offsetY, final float distance, final float intensity, final int blur, final int templateWidth, final int templateHeight, final int leftCut, final int topCut, final int rightCut, final int bottomCut) {
+            super(prePainter, postPainter, offsetX, offsetY, distance, intensity, blur);
             
             final BufferedImage i = new BufferedImage(templateWidth, templateHeight, BufferedImage.TYPE_INT_ARGB_PRE);
             super.paintBorder(null, i.getGraphics(), 0, 0, templateWidth, templateHeight);
@@ -301,6 +326,14 @@ public class AquaUtils {
 //        f.pack();
 //        f.setVisible(true);
 //    }
+    
+    // special casing naughty applications, like InstallAnywhere
+    // <rdar://problem/4851533> REGR: JButton: Myst IV: the buttons of 1.0.3 updater have redraw issue
+    static boolean shouldUseOpaqueButtons() {
+        final ClassLoader launcherClassLoader = sun.misc.Launcher.getLauncher().getClassLoader();
+        if (classExists(launcherClassLoader, "com.installshield.wizard.platform.macosx.MacOSXUtils")) return true;
+        return false;
+    }
         
     static boolean classExists(final ClassLoader classLoader, final String clazzName) {
         try {

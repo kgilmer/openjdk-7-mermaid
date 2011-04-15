@@ -26,19 +26,22 @@
 package com.apple.laf;
 
 import java.awt.*;
+import java.beans.*;
+
 import javax.swing.*;
-import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicMenuItemUI;
 
-public class AquaMenuItemUI
-    extends BasicMenuItemUI
-    // TODO: no screen menu bar for now
-    implements AquaMenuPainter.Client//, ScreenMenuItemUI
-{
-    boolean fIsScreenMenuItem = false;
-    int fType;
+import apple.laf.JRSUIConstants.Size;
+
+// TODO: no screen menu bar for now
+public class AquaMenuItemUI extends BasicMenuItemUI implements AquaMenuPainter.Client/*, ScreenMenuItemUI*/ {
     static final int kPlain = 0, kCheckBox = 1, kRadioButton = 2;
     static final String sPropertyPrefixes[] = { "MenuItem", "CheckBoxMenuItem", "RadioButtonMenuItem" };
+    
+    boolean fIsScreenMenuItem = false;
+    boolean fIsIndeterminate = false;
+    int fType;
 
     AquaMenuItemUI(final int type) {
         super();
@@ -56,6 +59,18 @@ public class AquaMenuItemUI
     // and therefore which icons!
     protected String getPropertyPrefix() {
         return sPropertyPrefixes[fType];
+    }
+    
+    @Override
+    protected void installListeners() {
+        super.installListeners();
+        IndeterminateListener.install(menuItem);
+    }
+    
+    @Override
+    protected void uninstallListeners() {
+        IndeterminateListener.uninstall(menuItem);
+        super.uninstallListeners();
     }
     
     public void updateListenersForScreenMenuItem() {
@@ -140,5 +155,47 @@ public class AquaMenuItemUI
             }
         });
         super.doClick(msm);
+    }
+    
+    static IndeterminateListener INDETERMINATE_LISTENER = new IndeterminateListener();
+    static class IndeterminateListener implements PropertyChangeListener {
+        static final String CLIENT_PROPERTY_KEY = "JMenuItem.selectedState";
+        
+        static void install(final JMenuItem menuItem) {
+            menuItem.addPropertyChangeListener(CLIENT_PROPERTY_KEY, INDETERMINATE_LISTENER);
+            apply(menuItem, menuItem.getClientProperty(CLIENT_PROPERTY_KEY));
+        }
+        
+        static void uninstall(final JMenuItem menuItem) {
+            menuItem.removePropertyChangeListener(CLIENT_PROPERTY_KEY, INDETERMINATE_LISTENER);
+        }
+        
+        public void propertyChange(final PropertyChangeEvent evt) {
+            final String key = evt.getPropertyName();
+            if (!CLIENT_PROPERTY_KEY.equalsIgnoreCase(key)) return;
+
+            final Object source = evt.getSource();
+            if (!(source instanceof JMenuItem)) return;
+            
+            final JMenuItem c = (JMenuItem)source;
+            apply(c, evt.getNewValue());
+        }
+        
+        static void apply(final JMenuItem menuItem, final Object value) {
+            final ButtonUI ui = menuItem.getUI();
+            if (!(ui instanceof AquaMenuItemUI)) return;
+            
+            final AquaMenuItemUI aquaUI = (AquaMenuItemUI)ui;
+            
+            if (aquaUI.fIsIndeterminate = "indeterminate".equals(value)) {
+                aquaUI.checkIcon = UIManager.getIcon(aquaUI.getPropertyPrefix() + ".dashIcon");
+            } else {
+                aquaUI.checkIcon = UIManager.getIcon(aquaUI.getPropertyPrefix() + ".checkIcon");
+            }
+        }
+
+        public static boolean isIndeterminate(final JMenuItem menuItem) {
+            return "indeterminate".equals(menuItem.getClientProperty(CLIENT_PROPERTY_KEY));
+        }
     }
 }

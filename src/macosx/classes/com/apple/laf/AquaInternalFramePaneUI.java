@@ -28,15 +28,13 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyVetoException;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicDesktopPaneUI;
 
-public class AquaInternalFramePaneUI
-    extends BasicDesktopPaneUI
-    implements MouseListener
-{
+public class AquaInternalFramePaneUI extends BasicDesktopPaneUI implements MouseListener {
     static final Color sSmokeyGlass = new Color(0, 0, 0, 152);
     static final Color sRim = new Color(192, 192, 192, 192);
     
@@ -229,7 +227,13 @@ public class AquaInternalFramePaneUI
     }
     
     public void mousePressed(final MouseEvent e) {
-        desktop.getDesktopManager().activateFrame(null);
+        JInternalFrame selectedFrame = desktop.getSelectedFrame();
+        if (selectedFrame != null) {
+            try {
+                selectedFrame.setSelected(false);
+            } catch (PropertyVetoException ex) {}
+            desktop.getDesktopManager().deactivateFrame(selectedFrame);
+        }
     }
 
     public void mouseReleased(final MouseEvent e) { }

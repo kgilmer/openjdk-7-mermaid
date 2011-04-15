@@ -26,6 +26,7 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.border.Border;
 
 public class AquaMenuBarBorder implements Border {

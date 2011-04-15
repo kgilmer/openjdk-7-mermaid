@@ -27,18 +27,20 @@ package com.apple.laf;
 
 import java.awt.Component;
 import java.awt.Graphics;
+
 import javax.swing.JComponent;
+
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.Focused;
 import apple.laf.JRSUIConstants.State;
 import apple.laf.JRSUIConstants.Widget;
+
 import com.apple.laf.AquaUtilControlSize.SizeDescriptor;
 import com.apple.laf.AquaUtilControlSize.SizeVariant;
 import com.apple.laf.AquaUtils.LazySingletonFromDefaultContructor;
 
 public class AquaScrollRegionBorder extends AquaBorder {
-    static LazySingletonFromDefaultContructor<AquaScrollRegionBorder> instance =
-        new LazySingletonFromDefaultContructor<AquaScrollRegionBorder>(AquaScrollRegionBorder.class);
+    static LazySingletonFromDefaultContructor<AquaScrollRegionBorder> instance = new LazySingletonFromDefaultContructor<AquaScrollRegionBorder>(AquaScrollRegionBorder.class);
     
     public static AquaScrollRegionBorder getScrollRegionBorder() {
         return instance.get();
@@ -55,10 +57,7 @@ public class AquaScrollRegionBorder extends AquaBorder {
         return new AquaCachingPainter<JRSUIState>(null, state, 7, 7, 3, 3, 3, 3);
     }
     
-    public void paintBorder(final Component c, final Graphics g,
-                            final int x, final int y,
-                            final int width, final int height)
-    {
+    public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int width, final int height) {
         final State state = getState((JComponent)c);
         painter.state.set(state);
         painter.state.set(isFocused(c) && state == State.ACTIVE ? Focused.YES : Focused.NO);

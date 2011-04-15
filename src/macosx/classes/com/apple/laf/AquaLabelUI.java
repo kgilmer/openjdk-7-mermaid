@@ -26,9 +26,11 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
+
 import sun.swing.SwingUtilities2;
 
 public class AquaLabelUI extends BasicLabelUI {

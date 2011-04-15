@@ -27,62 +27,51 @@ package com.apple.laf;
 
 import java.awt.Insets;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
+
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.LazySingleton;
 
 /**
- * FIXME: All the "magic numbers" in this class should go away once
+ * All the "magic numbers" in this class should go away once
  * <rdar://problem/4613866> "default font" and sizes for controls in Java Aqua Look and Feel
  * has been addressed, and we can cull widget metrics from the native system.
  */
 public class AquaButtonExtendedTypes {
-    protected static Border getBorderForPosition(final AbstractButton c,
-                                                 final Object type,
-                                                 final Object position)
-    {
-        final String name = type + "-" + position;
+    protected static Border getBorderForPosition(final AbstractButton c, final Object type, final Object position) {
+        final String name = (position == null ? (String)type : type + "-" + position);
         final TypeSpecifier specifier = getSpecifierByName(name);
-        if (specifier == null) {
-            return null;
-        }
+        if (specifier == null) return null;
         
         final Border border = specifier.getBorder();
-        if (!(border instanceof AquaBorder)) {
-            return border;
-        }
+        if (!(border instanceof AquaBorder)) return border;
         
-        return ((AquaBorder)border).
-            deriveBorderForSize(AquaUtilControlSize.getUserSizeFrom(c));
+        return ((AquaBorder)border).deriveBorderForSize(AquaUtilControlSize.getUserSizeFrom(c));
     }
     
     static abstract class TypeSpecifier {
         final String name;
         final boolean setIconFont;
-    
+        
         TypeSpecifier(final String name, final boolean setIconFont) {
             this.name = name; this.setIconFont = setIconFont;
         }
-        
+
         abstract Border getBorder();
     }
     
     static class BorderDefinedTypeSpecifier extends TypeSpecifier {
         final AquaBorder border;
-        
-        BorderDefinedTypeSpecifier(final String name, final Widget widget,
-                                   final SizeVariant variant)
-        {
+
+        BorderDefinedTypeSpecifier(final String name, final Widget widget, final SizeVariant variant) {
             this(name, widget, variant, 0, 0, 0, 0);
         }
         
-        BorderDefinedTypeSpecifier(final String name, final Widget widget,
-                                   final SizeVariant variant,
-                                   final int smallW, final int smallH,
-                                   final int miniW, final int miniH)
-        {
+        BorderDefinedTypeSpecifier(final String name, final Widget widget, final SizeVariant variant, final int smallW, final int smallH, final int miniW, final int miniH) {
             super(name, false);
             border = initBorder(widget, new SizeDescriptor(variant) {
                 public SizeVariant deriveSmall(final SizeVariant v) { 
@@ -96,39 +85,21 @@ public class AquaButtonExtendedTypes {
             });
             patchUp(border.sizeDescriptor);
         }
-        
-        Border getBorder() {
-            return border;
-        }
 
-        void patchUp(final SizeDescriptor descriptor) {
-        }
+        Border getBorder() { return border; }
+        void patchUp(final SizeDescriptor descriptor) {}
         
         AquaBorder initBorder(final Widget widget, final SizeDescriptor desc) {
             return new AquaButtonBorder.Named(widget, desc);
         }
     }
     
-    static class SegmentedBorderDefinedTypeSpecifier
-        extends BorderDefinedTypeSpecifier
-    {
-        public SegmentedBorderDefinedTypeSpecifier(final String name,
-                                                   final Widget widget,
-                                                   final SegmentPosition position,
-                                                   final SizeVariant variant)
-        {
+    static class SegmentedBorderDefinedTypeSpecifier extends BorderDefinedTypeSpecifier {
+        public SegmentedBorderDefinedTypeSpecifier(final String name, final Widget widget, final SegmentPosition position, final SizeVariant variant) {
             this(name, widget, position, variant, 0, 0, 0, 0);
         }
         
-        public SegmentedBorderDefinedTypeSpecifier(final String name,
-                                                   final Widget widget,
-                                                   final SegmentPosition position,
-                                                   final SizeVariant variant,
-                                                   final int smallW,
-                                                   final int smallH,
-                                                   final int miniW,
-                                                   final int miniH)
-        {
+        public SegmentedBorderDefinedTypeSpecifier(final String name, final Widget widget, final SegmentPosition position, final SizeVariant variant, final int smallW, final int smallH, final int miniW, final int miniH) {
             super(name, widget, variant, smallW, smallH, miniW, miniH);
             border.painter.state.set(SegmentTrailingSeparator.YES);
             border.painter.state.set(position);
@@ -143,13 +114,11 @@ public class AquaButtonExtendedTypes {
         public SegmentedNamedBorder(final SegmentedNamedBorder sizeDescriptor) {
             super(sizeDescriptor);
         }
-    
-        public SegmentedNamedBorder(final Widget widget,
-                                    final SizeDescriptor sizeDescriptor)
-        {
+        
+        public SegmentedNamedBorder(final Widget widget, final SizeDescriptor sizeDescriptor) {
             super(widget, sizeDescriptor);
         }
-    
+        
         protected boolean isSelectionPressing() {
             return false;
         }
@@ -159,39 +128,29 @@ public class AquaButtonExtendedTypes {
         return typeDefinitions.get().get(name);
     }
     
-    protected final static LazySingleton<Map<String, TypeSpecifier>> typeDefinitions =
-        new LazySingleton<Map<String, TypeSpecifier>>() {
+    protected final static LazySingleton<Map<String, TypeSpecifier>> typeDefinitions = new LazySingleton<Map<String, TypeSpecifier>>() {
         protected Map<String, TypeSpecifier> getInstance() {
             return getAllTypes();
         }
     };
     
     protected static Map<String, TypeSpecifier> getAllTypes() {
-        final Map<String, TypeSpecifier> specifiersByName =
-            new HashMap<String, TypeSpecifier>();
-    
+        final Map<String, TypeSpecifier> specifiersByName = new HashMap<String, TypeSpecifier>();
+        
         final Insets focusInsets = new Insets(4, 4, 4, 4);
         
         final TypeSpecifier[] specifiers = {
             new TypeSpecifier("toolbar", true) {
-                Border getBorder() {
-                    return AquaButtonBorder.getToolBarButtonBorder();
-                }
+                Border getBorder() { return AquaButtonBorder.getToolBarButtonBorder(); }
             },
             new TypeSpecifier("icon", true) {
-                Border getBorder() {
-                    return AquaButtonBorder.getToggleButtonBorder();
-                }
+                Border getBorder() { return AquaButtonBorder.getToggleButtonBorder(); }
             },
             new TypeSpecifier("text", false) {
-                Border getBorder() {
-                    return UIManager.getBorder("Button.border");
-                }
+                Border getBorder() { return UIManager.getBorder("Button.border"); }
             },
             new TypeSpecifier("toggle", false) {
-                Border getBorder() {
-                    return AquaButtonBorder.getToggleButtonBorder();
-                }
+                Border getBorder() { return AquaButtonBorder.getToggleButtonBorder(); }
             },
             new BorderDefinedTypeSpecifier("combobox", Widget.BUTTON_POP_DOWN, new SizeVariant().alterMargins(7, 10, 6, 30).alterInsets(1, 2, 0, 2).alterMinSize(0, 29), 0, -3, 0, -6) {
                 void patchUp(final SizeDescriptor descriptor) { descriptor.small.alterMargins(0, 0, 0, -4); descriptor.mini.alterMargins(0, 0, 0, -6); }
@@ -252,11 +211,11 @@ public class AquaButtonExtendedTypes {
             //new BorderDefinedTypeSpecifier("disclosureTriangle", false, Widget.DISCLOSURE_TRIANGLE, new SizeVariant()),
             new BorderDefinedTypeSpecifier("scrollColumnSizer", Widget.SCROLL_COLUMN_SIZER, new SizeVariant(14, 14)),
         };
-    
+        
         for (final TypeSpecifier specifier : specifiers) {
             specifiersByName.put(specifier.name, specifier);
         }
-    
+        
         return specifiersByName;
     }
 }

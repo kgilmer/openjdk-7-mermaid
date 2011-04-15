@@ -26,49 +26,57 @@
 package com.apple.laf;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
+import java.awt.image.*;
 import java.security.PrivilegedAction;
+
 import javax.swing.*;
-import javax.swing.plaf.UIResource;
+import javax.swing.plaf.*;
 
-import sun.lwawt.macosx.CImage;
-
-import sun.java2d.*;
-
-import apple.laf.*;
+import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
 import com.apple.laf.AquaIcon.*;
 import com.apple.laf.AquaUtils.LazySingleton;
+import sun.lwawt.macosx.CImage;
 
 public class AquaImageFactory {
-    public static Icon getConfirmImageIcon() {
+    public static IconUIResource getConfirmImageIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
         
-        return new AquaIcon.CachingScalingIcon(kAlertIconSize, kAlertIconSize) {
+        return new IconUIResource(new AquaIcon.CachingScalingIcon(kAlertIconSize, kAlertIconSize) {
             Image createImage() {
                 return getThisApplicationsIcon(kAlertIconSize, kAlertIconSize);
             }
-        };
+        });
     }
     
-    public static ImageIcon getCautionImageIcon() {
+    public static IconUIResource getCautionImageIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        return getAppIconCompositedOn(AquaIcon.SystemIcon.cautionIcon);
+        return getAppIconCompositedOn(AquaIcon.SystemIcon.caut);
     }
     
-    public static ImageIcon getStopImageIcon() {
+    public static IconUIResource getStopImageIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        return getAppIconCompositedOn(AquaIcon.SystemIcon.stopIcon);
+        return getAppIconCompositedOn(AquaIcon.SystemIcon.stop);
+    }
+    
+    public static IconUIResource getLockImageIcon() {
+        // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
+        // TODO: use blank image for now
+        return new IconUIResource(new ImageIcon(new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE)));
+        /*final Image lockIcon = AquaUtils.getCImageCreator().createImageFromFile("/System/Library/CoreServices/SecurityAgent.app/Contents/Resources/Security.icns", kAlertIconSize, kAlertIconSize);
+        return getAppIconCompositedOn(lockIcon);*/
     }
     
     static Image getThisApplicationsIcon(final int width, final int height) {
-        final String path = getPathToThisApplication();
+        // TODO: return blank image for now
+        return getGenericJavaIcon();
+        /*final String path = getPathToThisApplication();
         
         if (path == null) {
             return getGenericJavaIcon();
         }
         
-        if (path.startsWith("/System/Library/Frameworks/JavaVM.framework/")) {
+        if (path.endsWith("/Home/bin")) {
             return getGenericJavaIcon();
         }
         
@@ -76,9 +84,7 @@ public class AquaImageFactory {
             return getGenericJavaIcon();
         }
         
-        int w = (int)(width * SCALE_FACTOR);
-        int h = (int)(height * SCALE_FACTOR);
-        return CImage.fromFile(path).resize(w, h).toImage();
+        return AquaUtils.getCImageCreator().createImageOfFile(path, height, width);*/
     }
     
     static Image getGenericJavaIcon() {
@@ -95,27 +101,27 @@ public class AquaImageFactory {
         // TODO: just return null for now
         /*return java.security.AccessController.doPrivileged(new PrivilegedAction<String>() {
             public String run() {
-                return com.apple.eio.FileManager.getPathToApplicationBundle();
+                return FileManager.getPathToApplicationBundle();
             }
         });*/
         return null;
     }
     
-    private static final float SCALE_FACTOR = 1.0f; //RuntimeOptions.getScaleFactor();
+    static IconUIResource getAppIconCompositedOn(final SystemIcon systemIcon) {
+        systemIcon.setSize(kAlertIconSize, kAlertIconSize);
+        return getAppIconCompositedOn(systemIcon.createImage());
+    }
+    
     private static final int kAlertIconSize = 64;
-    static ImageIcon getAppIconCompositedOn(final SystemIcon systemIcon) {
-        final int kAlertSubIconSize = (int)(kAlertIconSize * SCALE_FACTOR / 2.0);
-        final int kAlertSubIconInset = (int)((kAlertIconSize * SCALE_FACTOR) - kAlertSubIconSize);
-        
+    static IconUIResource getAppIconCompositedOn(final Image image) {
+        final int kAlertSubIconSize = (int)(kAlertIconSize * 0.5);
+        final int kAlertSubIconInset = kAlertIconSize - kAlertSubIconSize;
         final Icon smallAppIconScaled = new AquaIcon.CachingScalingIcon(kAlertSubIconSize, kAlertSubIconSize) {
             Image createImage() {
                 return getThisApplicationsIcon(kAlertSubIconSize, kAlertSubIconSize);
             }
         };
-        systemIcon.setSize(kAlertIconSize, kAlertIconSize);
-        final Image systemImage = systemIcon.createImage();
-        
-        final Graphics g = systemImage.getGraphics();
+        final Graphics g = image.getGraphics();
         if (g instanceof Graphics2D) {
             // improves icon rendering quality in Quartz
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -123,27 +129,27 @@ public class AquaImageFactory {
         smallAppIconScaled.paintIcon(null, g, kAlertSubIconInset, kAlertSubIconInset);
         g.dispose();
         
-        return new ImageIcon(systemImage);
+        return new IconUIResource(new ImageIcon(image));
     }
 
-    public static Icon getTreeFolderIcon() {
+    public static IconUIResource getTreeFolderIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
         return AquaIcon.SystemIcon.folderIcon;
     }
 
-    public static Icon getTreeOpenFolderIcon() {
+    public static IconUIResource getTreeOpenFolderIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
         return AquaIcon.SystemIcon.openFolderIcon;
     }
 
-    public static Icon getTreeDocumentIcon() {
+    public static IconUIResource getTreeDocumentIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
         return AquaIcon.SystemIcon.documentIcon;
     }
 
-    public static Icon getTreeExpandedIcon() {
+    public static UIResource getTreeExpandedIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        return AquaIcon.getIconFor(new CoreUIControlSpec() {
+        return AquaIcon.getIconFor(new JRSUIControlSpec() {
             public void initIconPainter(final AquaPainter<? extends JRSUIState> painter) {
                 painter.state.set(Widget.DISCLOSURE_TRIANGLE);
                 painter.state.set(State.ACTIVE);
@@ -154,9 +160,9 @@ public class AquaImageFactory {
         }, 20, 20);
     }
 
-    public static Icon getTreeCollapsedIcon() {
+    public static UIResource getTreeCollapsedIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        return AquaIcon.getIconFor(new CoreUIControlSpec() {
+        return AquaIcon.getIconFor(new JRSUIControlSpec() {
             public void initIconPainter(final AquaPainter<? extends JRSUIState> painter) {
                 painter.state.set(Widget.DISCLOSURE_TRIANGLE);
                 painter.state.set(State.ACTIVE);
@@ -167,9 +173,9 @@ public class AquaImageFactory {
         }, 20, 20);
     }
     
-    public static Icon getTreeRightToLeftCollapsedIcon() {
+    public static UIResource getTreeRightToLeftCollapsedIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        return AquaIcon.getIconFor(new CoreUIControlSpec() {
+        return AquaIcon.getIconFor(new JRSUIControlSpec() {
             public void initIconPainter(final AquaPainter<? extends JRSUIState> painter) {
                 painter.state.set(Widget.DISCLOSURE_TRIANGLE);
                 painter.state.set(State.ACTIVE);
@@ -180,24 +186,55 @@ public class AquaImageFactory {
         }, 20, 20);
     }
     
-    static class NamedImageSingleton extends LazySingleton<ImageIcon> {
+    static class NamedImageSingleton extends LazySingleton<Image> {
         final String namedImage;
         
         NamedImageSingleton(final String namedImage) {
             this.namedImage = namedImage;
         }
         
-        protected ImageIcon getInstance() {
-            return new ImageIcon(Toolkit.getDefaultToolkit().getImage("NSImage://" + namedImage));
+        @Override
+        protected Image getInstance() {
+            return Toolkit.getDefaultToolkit().getImage("NSImage://" + namedImage);
+        }
+    }
+    
+    static class IconUIResourceSingleton extends LazySingleton<IconUIResource> {
+        final NamedImageSingleton holder;
+        
+        public IconUIResourceSingleton(final NamedImageSingleton holder) {
+            this.holder = holder;
+        }
+        
+        @Override
+        protected IconUIResource getInstance() {
+            return new IconUIResource(new ImageIcon(holder.get()));
+        }
+    }
+    
+    static class InvertableImageIcon extends ImageIcon implements InvertableIcon, UIResource {
+        Icon invertedImage;
+        public InvertableImageIcon(final Image image) {
+            super(image);
+        }
+
+        @Override
+        public Icon getInvertedIcon() {
+            if (invertedImage != null) return invertedImage;
+            return invertedImage = new IconUIResource(new ImageIcon(AquaUtils.generateLightenedImage(getImage(), 100)));
         }
     }
     
     protected static NamedImageSingleton northArrow = new NamedImageSingleton("NSMenuScrollUp");
+    protected static IconUIResourceSingleton northArrowIcon = new IconUIResourceSingleton(northArrow);
     protected static NamedImageSingleton southArrow = new NamedImageSingleton("NSMenuScrollDown");
+    protected static IconUIResourceSingleton southArrowIcon = new IconUIResourceSingleton(southArrow);
     protected static NamedImageSingleton westArrow = new NamedImageSingleton("NSMenuSubmenuLeft");
+    protected static IconUIResourceSingleton westArrowIcon = new IconUIResourceSingleton(westArrow);
     protected static NamedImageSingleton eastArrow = new NamedImageSingleton("NSMenuSubmenu");
+    protected static IconUIResourceSingleton eastArrowIcon = new IconUIResourceSingleton(eastArrow);
     
-    public static ImageIcon getArrowIconForDirection(final int direction) {
+    static Image getArrowImageForDirection(final int direction) {
         switch(direction) {
             case SwingConstants.NORTH: return northArrow.get();
             case SwingConstants.SOUTH: return southArrow.get();
@@ -205,6 +242,28 @@ public class AquaImageFactory {
             case SwingConstants.WEST: return westArrow.get();
         }
         return null;
+    }
+    
+    static Icon getArrowIconForDirection(int direction) {
+        switch(direction) {
+            case SwingConstants.NORTH: return northArrowIcon.get();
+            case SwingConstants.SOUTH: return southArrowIcon.get();
+            case SwingConstants.EAST: return eastArrowIcon.get();
+            case SwingConstants.WEST: return westArrowIcon.get();
+        }
+        return null;
+    }
+    
+    public static Icon getMenuArrowIcon() {
+        return new InvertableImageIcon(AquaUtils.generateLightenedImage(eastArrow.get(), 25));
+    }
+    
+    public static Icon getMenuItemCheckIcon() {
+        return new InvertableImageIcon(AquaUtils.generateLightenedImage(Toolkit.getDefaultToolkit().getImage("NSImage://NSMenuItemSelection"), 25));
+    }
+    
+    public static Icon getMenuItemDashIcon() {
+        return new InvertableImageIcon(AquaUtils.generateLightenedImage(Toolkit.getDefaultToolkit().getImage("NSImage://NSMenuMixedState"), 25));
     }
 
     /*
@@ -222,10 +281,7 @@ public class AquaImageFactory {
         final int totalWidth, totalHeight;
         final int centerColWidth, centerRowHeight;
         
-        public SlicedImageControl(final Image img,
-                                  final int westCut, final int eastCut,
-                                  final int northCut, final int southCut,
-                                  final boolean useMiddle) {
+        public SlicedImageControl(final Image img, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean useMiddle) {
             this.wCut = westCut; this.eCut = eastCut;
             this.nCut = northCut; this.sCut = southCut;
             
@@ -304,80 +360,6 @@ public class AquaImageFactory {
         }
     }
     
-    // TODO: Can we port this?
-//     public static Icon createFocusedImage(final Image image, final Component c, final int slack) {
-//         final int w = image.getWidth(c);
-//         final int h = image.getHeight(c);
-        
-//         final AImage focusedImage = AquaUtils.getAImageCreator().createImage(w + slack + slack, h + slack + slack);
-        
-//         final Graphics g = focusedImage.getGraphics();
-//         if (!(g instanceof SunGraphics2D)) return null;
-        
-//         final SunGraphics2D sg2d = (SunGraphics2D)g;
-//         final SurfaceData surfaceData = sg2d.getSurfaceData();
-//         if (!(surfaceData instanceof OSXSurfaceData)) return null;
-        
-//         try {
-//             ((OSXSurfaceData)surfaceData).performCocoaDrawing(sg2d, new OSXSurfaceData.CGContextDrawable() {
-//                 @Override
-//                 public void drawIntoCGContext(final long cgContext) {
-//                     final JRSUIFocus focus = new JRSUIFocus(cgContext);
-//                     focus.beginFocus(JRSUIFocus.RING_BELOW);
-//                     sg2d.drawImage(image, slack, slack, c);
-//                     focus.endFocus();
-//                 }
-//             });
-//         } finally {
-//             g.dispose();
-//         }
-        
-//         return new ImageIcon(focusedImage);
-//     }
-    
-//     public static Icon createFocusedIcon(final Icon tmpIcon, final Component c, final int slack) {
-//         return new FocusedIcon(tmpIcon, slack);
-//     }
-    
-//     static class FocusedIcon implements Icon {
-//         final Icon icon;
-//         final int slack;
-        
-//         public FocusedIcon(final Icon icon, final int slack) {
-//             this.icon = icon;
-//             this.slack = slack;
-//         }
-
-//         @Override
-//         public int getIconHeight() {
-//             return icon.getIconHeight() + slack + slack;
-//         }
-
-//         @Override
-//         public int getIconWidth() {
-//             return icon.getIconWidth() + slack + slack;
-//         }
-
-//         @Override
-//         public void paintIcon(final Component c, final Graphics g, final int x, final int y) {
-//             if (!(g instanceof SunGraphics2D)) return;
-            
-//             final SunGraphics2D sg2d = (SunGraphics2D)g;
-//             final SurfaceData surfaceData = sg2d.getSurfaceData();
-//             if (!(surfaceData instanceof OSXSurfaceData)) return;
-            
-//             ((OSXSurfaceData)surfaceData).performCocoaDrawing(sg2d, new OSXSurfaceData.CGContextDrawable() {
-//                 @Override
-//                 public void drawIntoCGContext(final long cgContext) {
-//                     final JRSUIFocus focus = new JRSUIFocus(cgContext);
-//                     focus.beginFocus(JRSUIFocus.RING_BELOW);
-//                     icon.paintIcon(c, sg2d, x + slack, y + slack);
-//                     focus.endFocus();
-//                 }
-//             });
-//         }
-//     }
-    
     // when we use SystemColors, we need to proxy the color with something that implements UIResource,
     // so that it will be uninstalled when the look and feel is changed.
     private static class SystemColorProxy extends Color implements UIResource {
@@ -412,9 +394,18 @@ public class AquaImageFactory {
         return new SystemColorProxy(SystemColor.controlLtHighlight);
     }
     
-    // TODO: Un-hardcode the returned color
     public static Color getFocusRingColorUIResource() {
-        //return new SystemColorProxy(AToolkit.getAppleColor(AToolkit.KEYBOARD_FOCUS_COLOR));
-        return new SystemColorProxy(new Color(75, 137, 208));
+        // TODO: un-hardcode Color value
+        return new Color(75, 137, 208);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.KEYBOARD_FOCUS_COLOR));
+    }
+    
+    public static Color getSelectionInactiveBackgroundColorUIResource() {
+        // TODO: un-hardcode Color value
+        return new Color(202, 202, 202);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.INACTIVE_SELECTION_BACKGROUND_COLOR));
+    }
+    
+    public static Color getSelectionInactiveForegroundColorUIResource() {
+        // TODO: un-hardcode Color value
+        return new Color(0, 0, 0);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.INACTIVE_SELECTION_FOREGROUND_COLOR));
     }
 }

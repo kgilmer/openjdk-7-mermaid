@@ -28,18 +28,19 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicListUI;
+
 import apple.laf.JRSUIConstants.*;
 
 /**
  * A Mac L&F implementation of JList
  * 
- * All this does is look for a ThemeBorder and invalidate it when the
- * focus changes.
+ * All this does is look for a ThemeBorder and invalidate it when the focus changes
  */
 public class AquaListUI extends BasicListUI {
     public static ComponentUI createUI(final JComponent c) {
@@ -113,6 +114,7 @@ public class AquaListUI extends BasicListUI {
             final String prop = e.getPropertyName();
             if (AquaFocusHandler.FRAME_ACTIVE_PROPERTY.equals(prop)) {
                 AquaBorder.repaintBorder(getComponent());
+                AquaFocusHandler.swapSelectionColors("List", getComponent(), e.getNewValue());
             } else {
                 super.propertyChange(e);
             }

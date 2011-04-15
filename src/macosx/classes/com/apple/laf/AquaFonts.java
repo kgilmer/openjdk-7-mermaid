@@ -29,6 +29,7 @@ import java.awt.Font;
 import java.awt.geom.AffineTransform;
 import java.text.AttributedCharacterIterator.Attribute;
 import java.util.Map;
+
 import javax.swing.plaf.*;
 
 public class AquaFonts {
@@ -81,8 +82,7 @@ public class AquaFonts {
     }
     
     /**
-     * All fonts derived from this type will also be of this type, and not a
-     * plain java.awt.Font
+     * All fonts derived from this type will also be of this type, and not a plain java.awt.Font
      */
     static class DerivedUIResourceFont extends FontUIResource implements UIResource {
         public DerivedUIResourceFont(final Font font) {

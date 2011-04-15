@@ -35,6 +35,20 @@ import sun.lwawt.*;
 import sun.util.logging.PlatformLogger;
 
 public class CPlatformWindow implements PlatformWindow {
+	
+	// TODO: deal with these properties
+    public static final String DOCUMENT_MODIFIED = "Window.documentModified";
+    
+    public static final String DRAGGABLE_WINDOW_BACKGROUND = "apple.awt.draggableWindowBackground";
+    
+    public static final String WINDOW_ALPHA = "Window.alpha";
+    public static final String WINDOW_SHADOW = "Window.shadow";
+
+    public static final String WINDOW_SHADOW_REVALIDATE_NOW = "apple.awt.windowShadow.revalidateNow";
+    
+	public static final String WINDOW_FADE_OUT = "";
+	public static final String WINDOW_FADE_DELEGATE = "";
+	
     private static final PlatformLogger log = PlatformLogger.getLogger("sun.lwawt.macosx.CPlatformWindow");
 
     private CPlatformView contentView = null;

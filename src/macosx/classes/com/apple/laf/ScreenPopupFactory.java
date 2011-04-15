@@ -27,21 +27,23 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.security.PrivilegedAction;
+
 import javax.swing.*;
+
+import sun.lwawt.macosx.CPlatformWindow;
 
 class ScreenPopupFactory extends PopupFactory {
     static {
-        java.security.AccessController.doPrivileged((PrivilegedAction<?>)
-            new sun.security.action.LoadLibraryAction("laf"));
+        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
     }
     
-    static final Float TRANSLUCENT = new Float(233f/255f);
+    static final Color WHITE_ALPHA = new Color(0xFF, 0xFF, 0xFF, 0xFE);
+    static final Float TRANSLUCENT = new Float(248f/255f);
     static final Float OPAQUE = new Float(1.0f);
     
     boolean fIsActive = true;
     
-    // Only popups generated with the Aqua LaF turned on will be
-    // translucent with shadows
+    // Only popups generated with the Aqua LaF turned on will be translucent with shadows
     void setActive(final boolean b) {
         fIsActive = b;
     }
@@ -59,15 +61,10 @@ class ScreenPopupFactory extends PopupFactory {
      * private method getPopup(Component, Component, int, int, int) through JNI
      * (see AquaLookAndFeel.m)
      */
-    native Popup _getHeavyWeightPopup(Component comp, Component invoker,
-                                      int x, int y);
+    native Popup _getHeavyWeightPopup(Component comp, Component invoker, int x, int y);
     
-    public Popup getPopup(final Component comp, final Component invoker,
-                          final int x, final int y)
-    {
-        if (invoker == null) {
-            throw new IllegalArgumentException("Popup.getPopup must be passed non-null contents");
-        }
+    public Popup getPopup(final Component comp, final Component invoker, final int x, final int y) {
+        if (invoker == null) throw new IllegalArgumentException("Popup.getPopup must be passed non-null contents");
         
         final Popup popup;
         if (fIsActive) {
@@ -76,32 +73,31 @@ class ScreenPopupFactory extends PopupFactory {
             popup = super.getPopup(comp, invoker, x, y);
         }
         
-        // <rdar://3547670> JPopupMenus have incorrect background
         // Make the popup semi-translucent if it is a heavy weight
+        // see <rdar://problem/3547670> JPopupMenus have incorrect background
         final Window w = getWindow(invoker);
-        if (w == null) {
-            return popup;
-        }
+        if (w == null) return popup;
         
-        if (!(w instanceof RootPaneContainer)) {
-            return popup;
-        }
+        if (!(w instanceof RootPaneContainer)) return popup;
         final JRootPane popupRootPane = ((RootPaneContainer)w).getRootPane();
-    
-        // we need to set every time, because PopupFactory caches
-        // the heavy weight
         
-        // TODO: un-hardcode the property strings
+        // we need to set every time, because PopupFactory caches the heavy weight
+        // TODO: CPlatformWindow constants?
         if (fIsActive) {
-            popupRootPane.putClientProperty("Window.alpha", //AWindowDelegate.WINDOW_ALPHA,
-                                            TRANSLUCENT);
-            popupRootPane.putClientProperty("Window.shadow", //AWindowDelegate.WINDOW_SHADOW,
-                                            Boolean.TRUE);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_ALPHA, TRANSLUCENT);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_SHADOW, Boolean.TRUE);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_FADE_DELEGATE, invoker);
+            
+            w.setBackground(WHITE_ALPHA);
+            popupRootPane.putClientProperty(CPlatformWindow.DRAGGABLE_WINDOW_BACKGROUND, Boolean.FALSE);
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    popupRootPane.putClientProperty(CPlatformWindow.WINDOW_SHADOW_REVALIDATE_NOW, Double.valueOf(Math.random()));
+                }
+            });
         } else {
-            popupRootPane.putClientProperty("Window.alpha", //AWindowDelegate.WINDOW_ALPHA,
-                                            OPAQUE);
-            popupRootPane.putClientProperty("Window.shadow", //AWindowDelegate.WINDOW_SHADOW,
-                                            Boolean.FALSE);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_ALPHA, OPAQUE);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_SHADOW, Boolean.FALSE);
         }
         
         return popup;

@@ -26,9 +26,12 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.plaf.*;
 import javax.swing.text.JTextComponent;
+
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 

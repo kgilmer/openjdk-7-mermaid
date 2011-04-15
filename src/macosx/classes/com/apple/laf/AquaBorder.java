@@ -26,16 +26,18 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.JTextComponent;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 
 public abstract class AquaBorder implements Border, UIResource {
-
     protected final AquaPainter<? extends JRSUIState> painter;
     protected final SizeDescriptor sizeDescriptor;
     protected SizeVariant sizeVariant;
@@ -73,9 +75,7 @@ public abstract class AquaBorder implements Border, UIResource {
     protected AquaBorder deriveBorderForSize(final Size size) {
         try {
             final Class<? extends AquaBorder> clazz = getClass();
-            final AquaBorder border =
-                clazz.getConstructor(new Class[] { clazz }).
-                newInstance(new Object[] { this });
+            final AquaBorder border = clazz.getConstructor(new Class[] { clazz }).newInstance(new Object[] { this });
             border.setSize(size);
             return border;
         } catch (final Throwable e) {
@@ -91,24 +91,19 @@ public abstract class AquaBorder implements Border, UIResource {
             final Container p = c.getParent();
             if (p instanceof JViewport) {
                 borderedComponent = (JComponent)p.getParent();
-                if (borderedComponent != null) {
-                    border = borderedComponent.getBorder();
-                }
+                if (borderedComponent != null) border = borderedComponent.getBorder();
             }
         }
-        
+
         // If we really don't have a border, then bail
         // It might be a compound border with a ThemeBorder inside
-        // The check for that case is tricky, so we just go ahead and
-        // repaint any border
-        if (border == null || borderedComponent == null) {
-            return;
-        }
-        
+        // The check for that case is tricky, so we just go ahead and repaint any border
+        if (border == null || borderedComponent == null) return;
+
         final int width = borderedComponent.getWidth();
         final int height = borderedComponent.getHeight();
         final Insets i = borderedComponent.getInsets();
-        
+
         borderedComponent.repaint(0, 0, width, i.top); // Top edge
         borderedComponent.repaint(0, 0, i.left, height); // Left edge
         borderedComponent.repaint(0, height - i.bottom, width, i.bottom); // Bottom edge
@@ -124,29 +119,20 @@ public abstract class AquaBorder implements Border, UIResource {
             final JViewport vp = ((JScrollPane)c).getViewport();
             if (vp != null) {
                 focusable = vp.getView();
-                // Lists, Tables & Trees get focus rings, TextAreas don't
-                // (JBuilder puts TextField border on TextAreas)
-                if (focusable instanceof JTextComponent) {
-                    return false;
-                }
+                // Lists, Tables & Trees get focus rings, TextAreas don't (JBuilder puts TextField border on TextAreas)
+                if (focusable instanceof JTextComponent) return false;
             }
         } else if (focusable instanceof JTextComponent) {
             // non-editable text areas don't draw the focus ring
-            if (!((javax.swing.text.JTextComponent)focusable).isEditable()) {
-                return false;
-            }
+            if (!((javax.swing.text.JTextComponent)focusable).isEditable()) return false;
         }
         
-        return (focusable != null &&
-                focusable instanceof JComponent &&
-                ((JComponent)focusable).hasFocus());
+        return (focusable != null && focusable instanceof JComponent && ((JComponent)focusable).hasFocus());
     }
     
     public boolean isBorderOpaque() { return false; }
-    
-    public void paintBorder(final Component c, final Graphics g,
-                            final int x, final int y, final int w, final int h)
-    {
+
+    public void paintBorder(final Component c, final Graphics g, final int x, final int y, final int w, final int h) {
         painter.paint(g, c, x, y, w, h);
     }
     

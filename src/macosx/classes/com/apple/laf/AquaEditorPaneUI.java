@@ -27,35 +27,35 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.FocusListener;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicEditorPaneUI;
 import javax.swing.text.*;
 
 public class AquaEditorPaneUI extends BasicEditorPaneUI {
-
-    public static ComponentUI createUI(final JComponent c) {
+    public static ComponentUI createUI(final JComponent c){
         return new AquaEditorPaneUI();
     }
 
     boolean oldDragState = false;
-    protected void installDefaults() {
+    protected void installDefaults(){
         super.installDefaults();
-        if(!GraphicsEnvironment.isHeadless()) {
+        if(!GraphicsEnvironment.isHeadless()){
             oldDragState = getComponent().getDragEnabled();
             getComponent().setDragEnabled(true);
         }
     }
 
-    protected void uninstallDefaults() {
-        if(!GraphicsEnvironment.isHeadless()) {
+    protected void uninstallDefaults(){
+        if(!GraphicsEnvironment.isHeadless()){
             getComponent().setDragEnabled(oldDragState);
         }
         super.uninstallDefaults();
     }
     
     FocusListener focusListener;
-    protected void installListeners() {
+    protected void installListeners(){
         super.installListeners();
         focusListener = createFocusListener();
         getComponent().addFocusListener(focusListener);
@@ -66,32 +66,31 @@ public class AquaEditorPaneUI extends BasicEditorPaneUI {
         AquaKeyBindings.setDefaultAction(getKeymapName());
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
+        AquaKeyBindings.installFullWordDeleteAction(c);
     }
     
-    protected void uninstallListeners() {
+    protected void uninstallListeners(){
         getComponent().removeFocusListener(focusListener);
         super.uninstallListeners();
     }
     
-    protected FocusListener createFocusListener() {
+    protected FocusListener createFocusListener(){
         return new AquaFocusHandler();
     }
 
-    protected void paintSafely(final Graphics g) {
+    protected void paintSafely(final Graphics g){
         final Object savedHint = AquaUtils.beginFont((Graphics2D)g);
         super.paintSafely(g);
         AquaUtils.endFont((Graphics2D)g, savedHint);
     }
 
-    protected Caret createCaret() {
-        final Window owningWindow =
-            SwingUtilities.getWindowAncestor(getComponent());
-        final AquaCaret returnValue =
-            new AquaCaret(owningWindow, getComponent());
+    protected Caret createCaret(){
+        final Window owningWindow = SwingUtilities.getWindowAncestor(getComponent());
+        final AquaCaret returnValue = new AquaCaret(owningWindow, getComponent());
         return returnValue;
     }
 
-    protected Highlighter createHighlighter() {
+    protected Highlighter createHighlighter(){
         return new AquaHighlighter();
     }
 }

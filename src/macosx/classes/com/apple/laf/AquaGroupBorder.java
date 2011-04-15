@@ -26,26 +26,26 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.border.Border;
+
 import apple.laf.JRSUIConstants.Widget;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.LazySingletonFromDefaultContructor;
 
 public abstract class AquaGroupBorder extends AquaBorder {
-    static final LazySingletonFromDefaultContructor<? extends Border> tabbedPaneGroupBorder =
-        new LazySingletonFromDefaultContructor<TabbedPane>(TabbedPane.class);
+    static final LazySingletonFromDefaultContructor<? extends Border> tabbedPaneGroupBorder = new LazySingletonFromDefaultContructor<TabbedPane>(TabbedPane.class);
     public static Border getTabbedPaneGroupBorder() {
         return tabbedPaneGroupBorder.get();
     }
 
-    static final LazySingletonFromDefaultContructor<? extends Border> titleBorderGroupBorder =
-        new LazySingletonFromDefaultContructor<Titled>(Titled.class);
+    static final LazySingletonFromDefaultContructor<? extends Border> titleBorderGroupBorder = new LazySingletonFromDefaultContructor<Titled>(Titled.class);
     public static Border getBorderForTitledBorder() {
         return titleBorderGroupBorder.get();
     }
 
-    static final LazySingletonFromDefaultContructor<? extends Border> titlelessGroupBorder =
-        new LazySingletonFromDefaultContructor<Titleless>(Titleless.class);
+    static final LazySingletonFromDefaultContructor<? extends Border> titlelessGroupBorder = new LazySingletonFromDefaultContructor<Titleless>(Titleless.class);
     public static Border getTitlelessBorder() {
         return titlelessGroupBorder.get();
     }
@@ -55,9 +55,7 @@ public abstract class AquaGroupBorder extends AquaBorder {
         painter.state.set(Widget.FRAME_GROUP_BOX);
     }
 
-    public void paintBorder(final Component c, final Graphics g,
-                            int x, int y, int width, int height)
-    {
+    public void paintBorder(final Component c, final Graphics g, int x, int y, int width, int height) {
         // sg2d.setColor(Color.MAGENTA);
         // sg2d.drawRect(x, y, width - 1, height - 1);
 
@@ -86,7 +84,7 @@ public abstract class AquaGroupBorder extends AquaBorder {
 
     protected static class Titleless extends AquaGroupBorder {
         public Titleless() {
-            super(new SizeVariant().alterMargins(8, 12, 8, 12).alterInsets(5, 5, 7, 5));
+            super(new SizeVariant().alterMargins(8, 12, 8, 12).alterInsets(3, 5, 1, 5));
         }
     }
 }

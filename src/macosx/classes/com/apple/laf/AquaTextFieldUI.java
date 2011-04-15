@@ -26,10 +26,12 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicTextFieldUI;
 import javax.swing.text.*;
+
 import com.apple.laf.AquaUtils.JComponentPainter;
 
 public class AquaTextFieldUI extends BasicTextFieldUI {
@@ -86,6 +88,7 @@ public class AquaTextFieldUI extends BasicTextFieldUI {
     protected void installKeyboardActions() {
         super.installKeyboardActions();
         AquaKeyBindings.setDefaultAction(getKeymapName());
+        AquaKeyBindings.installFullWordDeleteAction(getComponent());
     }
     
     protected Rectangle getVisibleEditorRect() {

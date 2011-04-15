@@ -27,6 +27,7 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+
 import javax.swing.*;
 
 public class AquaMnemonicHandler {

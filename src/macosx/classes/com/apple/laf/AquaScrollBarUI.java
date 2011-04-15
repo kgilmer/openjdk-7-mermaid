@@ -29,10 +29,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ScrollBarState;
@@ -65,9 +67,7 @@ public class AquaScrollBarUI extends ScrollBarUI {
         return new AquaScrollBarUI();
     }
 
-    public AquaScrollBarUI() {
-        
-    }
+    public AquaScrollBarUI() { }
     
     public void installUI(final JComponent c) {
         fScrollBar = (JScrollBar)c;
@@ -264,8 +264,11 @@ public class AquaScrollBarUI extends ScrollBarUI {
 
         public void mouseReleased(final MouseEvent e) {
             if (!fScrollBar.isEnabled()) return;
-            if (fInArrows) mouseReleasedInArrows(e);
-            else mouseReleasedInTrack(e);
+            if (fInArrows) {
+                mouseReleasedInArrows(e);
+            } else {
+                mouseReleasedInTrack(e);
+            }
 
             fInArrows = false;
             fStillInArrow = false;
@@ -298,7 +301,8 @@ public class AquaScrollBarUI extends ScrollBarUI {
                 mouseDraggedInArrows(e);
             } else if (fIsDragging) {
                 mouseDraggedInTrack(e);
-            } else { // In pageup/down zones
+            } else {
+                // In pageup/down zones
                 fCurrentMouseX = e.getX();
                 fCurrentMouseY = e.getY();
 
@@ -575,7 +579,7 @@ public class AquaScrollBarUI extends ScrollBarUI {
     boolean isHorizontal() {
         return fScrollBar.getOrientation() == Adjustable.HORIZONTAL;
     }
-
+    
     // only do scroll-to-here for page up and page down regions, when the option key is pressed
     // This gets the point where the mouse would have been clicked in the current thumb
     // so we can pretend the mouse was dragged to the current mouse point in one big jump

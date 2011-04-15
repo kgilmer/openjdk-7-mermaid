@@ -27,16 +27,16 @@ package com.apple.laf;
 
 import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
+
 import com.apple.laf.AquaUtils.*;
 
 public class AquaButtonToggleUI extends AquaButtonUI {
     // Create PLAF
-    static final LazySingleton<AquaButtonToggleUI> aquaToggleButtonUI =
-        new LazySingletonFromDefaultContructor<AquaButtonToggleUI>(AquaButtonToggleUI.class);
+    static final LazySingleton<AquaButtonToggleUI> aquaToggleButtonUI = new LazySingletonFromDefaultContructor<AquaButtonToggleUI>(AquaButtonToggleUI.class);
     public static ComponentUI createUI(final JComponent b) {
         return aquaToggleButtonUI.get();
     }
-    
+
     protected String getPropertyPrefix() {
         return "ToggleButton" + ".";
     }

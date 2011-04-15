@@ -27,12 +27,15 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicSliderUI;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.LazySingleton;
 
@@ -132,7 +135,7 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
             // This is needed for when this is used as a renderer. It is the same as BasicSliderUI.java
             // and is missing from our reimplementation.
             //
-            // <rdar://3721898> JSlider in TreeCellRenderer component not painted properly.
+            // <rdar://problem/3721898> JSlider in TreeCellRenderer component not painted properly.
             //
             final boolean trackIntersectsClip = clip.intersects(trackRect);
             if (!trackIntersectsClip) {
@@ -474,7 +477,7 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
                     return;
             }
             
-            // enable live snap-to-ticks <rdar://3165310>
+            // enable live snap-to-ticks <rdar://problem/3165310>
             if (slider.getSnapToTicks()) {
                 calculateThumbLocation();
                 setThumbLocation(thumbRect.x, thumbRect.y); // need to call to refresh the repaint region

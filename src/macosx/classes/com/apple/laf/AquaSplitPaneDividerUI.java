@@ -27,11 +27,14 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.State;
+
 import com.apple.laf.AquaUtils.LazyKeyedSingleton;
 
 public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
@@ -48,11 +51,21 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
      */
     public void propertyChange(final PropertyChangeEvent e) {
         if (e.getSource() == splitPane) {
-            if ("enabled".equals(e.getPropertyName())) {
+            final String propName = e.getPropertyName();
+            if ("enabled".equals(propName)) {
                 final boolean enabled = splitPane.isEnabled();
                 if (leftButton != null) leftButton.setEnabled(enabled);
                 if (rightButton != null) rightButton.setEnabled(enabled);
-            }
+            } else if (JSplitPane.ORIENTATION_PROPERTY.equals(propName)) {
+                // need to regenerate the buttons, since we bake the orientation into them
+                if (rightButton  != null) {
+                    remove(rightButton); rightButton = null;
+                }
+                if (leftButton != null) {
+                    remove(leftButton); leftButton = null;
+                }
+                oneTouchExpandableChanged();
+            }        
         }
         super.propertyChange(e);
     }
@@ -103,37 +116,32 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
     }
     
     protected JButton createLeftOneTouchButton() {
-        return createOneTouchButtonForDirection(true);
+        return createButtonForDirection(getDirection(true));
     }
     
     protected JButton createRightOneTouchButton() {
-        return createOneTouchButtonForDirection(false);
+        return createButtonForDirection(getDirection(false));
     }
     
     static LazyKeyedSingleton<Integer, Image> directionArrows = new LazyKeyedSingleton<Integer, Image>() {
         protected Image getInstance(final Integer direction) {
-            final ImageIcon arrowIcon = AquaImageFactory.getArrowIconForDirection(direction);
-            final int h = (arrowIcon.getIconHeight() * 5) / 7;
-            final int w = (arrowIcon.getIconWidth() * 5) / 7;
-            return AquaUtils.generateLightenedImage(arrowIcon.getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH));
+            final Image arrowImage = AquaImageFactory.getArrowImageForDirection(direction);
+            final int h = (arrowImage.getHeight(null) * 5) / 7;
+            final int w = (arrowImage.getWidth(null) * 5) / 7;
+            return AquaUtils.generateLightenedImage(arrowImage.getScaledInstance(w, h, Image.SCALE_SMOOTH), 50);
         }
     };
-    protected JButton createOneTouchButtonForDirection(final boolean isLeft) {
-        final JButton b = new JButton() {
-            public void paint(final Graphics g) {
-                Image image = directionArrows.get(getDirection(isLeft));
-                if (getModel().isPressed()) {
-                    image = AquaUtils.generateSelectedDarkImage(image);
-                }
-                g.drawImage(image, 2, 1, null);
-            }
-        };
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        b.setFocusPainted(false);
-        b.setBorderPainted(false);
-        b.setRequestFocusEnabled(false);
-        b.setFocusable(false);
-        return b;
+    
+    // separate static, because the divider needs to be serializable
+    // see <rdar://problem/7590946> JSplitPane is not serializable when using Aqua look and feel
+    static JButton createButtonForDirection(final int direction) {
+        final JButton button = new JButton(new ImageIcon(directionArrows.get(Integer.valueOf(direction))));
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        button.setFocusPainted(false);
+        button.setRequestFocusEnabled(false);
+        button.setFocusable(false);
+        button.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        return button;
     }
     
     int getDirection(final boolean isLeft) {

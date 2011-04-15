@@ -28,19 +28,23 @@ package com.apple.laf;
 import java.awt.*;
 import java.security.PrivilegedAction;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
+
 import sun.awt.SunHints;
+import sun.swing.SwingLazyValue;
 import apple.laf.JRSUIControl;
+
 import com.apple.resources.MacOSXResourceBundle;
 
 public class AquaLookAndFeel extends BasicLookAndFeel {
     static final String sOldPropertyPrefix = "com.apple.macos."; // old prefix for things like 'useScreenMenuBar'
     static final String sPropertyPrefix = "apple.laf."; // new prefix for things like 'useScreenMenuBar'
     
-    // for lazy initializers. Following the pattern from metal.
+    // for lazy initalizers. Following the pattern from metal.
     private static final String PKG_PREFIX = "com.apple.laf.";
     private static final String kAquaImageFactoryName = PKG_PREFIX + "AquaImageFactory";
     private static final String kAquaFontsName = PKG_PREFIX + "AquaFonts";
@@ -150,8 +154,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         /*
         fOldAntiAliasingHint = RuntimeOptions.getTextAntialiasing();
 
-        // only force anti-aliasing if we are still default. If not default let the developer property work
-        // <rdar://3719623> Anti-aliasing remains on even when -Dapple.awt.textantialiasing=off
+        // only force anti-aliasing if we are still default. If not defaul let the developer property work
+        // <rdar://problem/3719623> Anti-aliasing remains on even when -Dapple.awt.textantialiasing=off
         if (fOldAntiAliasingHint == SunHints.INTVAL_TEXT_ANTIALIAS_DEFAULT) {
             RuntimeOptions.setTextAntialiasing(SunHints.INTVAL_TEXT_ANTIALIAS_ON);
         }
@@ -281,9 +285,11 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final InsetsUIResource zeroInsets = new InsetsUIResource(0, 0, 0, 0);
         final InsetsUIResource menuItemMargin = zeroInsets;
 
-        // <rdar://5189013> Entire Java application window refreshes when moving off Shortcut menu item
+        // <rdar://problem/5189013> Entire Java application window refreshes when moving off Shortcut menu item
         final Boolean useOpaqueComponents = Boolean.TRUE;
         
+        final Boolean buttonShouldBeOpaque = AquaUtils.shouldUseOpaqueButtons() ? Boolean.TRUE : Boolean.FALSE;
+
         // *** List value objects
         final Object listCellRendererActiveValue = new UIDefaults.ActiveValue(){
             public Object createValue(UIDefaults defaultsTable) {
@@ -314,25 +320,27 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         // our launch times of Swing apps.
         
         // *** Text value objects
-        final Object marginBorder = new UIDefaults.ProxyLazyValue("javax.swing.plaf.basic.BasicBorders$MarginBorder");
+        final Object marginBorder = new SwingLazyValue("javax.swing.plaf.basic.BasicBorders$MarginBorder");
 
         final Object zero = new Integer(0);
         final Object editorMargin = zeroInsets; // this is not correct - look at TextEdit to determine the right margin
         final Object textCaretBlinkRate = new Integer(500);
-        final UIDefaults.ProxyLazyValue textFieldBorder = new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaTextFieldBorder", "getTextFieldBorder");
+        final Object textFieldBorder = new SwingLazyValue(PKG_PREFIX + "AquaTextFieldBorder", "getTextFieldBorder");
         final Object textAreaBorder = marginBorder; // text areas have no real border - radar 311073
 
-        final Object scollListBorder = new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaScrollRegionBorder", "getScrollRegionBorder");
-        final Object aquaTitledBorder = new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaGroupBorder", "getBorderForTitledBorder");
-        final Object aquaInsetBorder = new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaGroupBorder", "getTitlelessBorder");
+        final Object scollListBorder = new SwingLazyValue(PKG_PREFIX + "AquaScrollRegionBorder", "getScrollRegionBorder");
+        final Object aquaTitledBorder = new SwingLazyValue(PKG_PREFIX + "AquaGroupBorder", "getBorderForTitledBorder");
+        final Object aquaInsetBorder = new SwingLazyValue(PKG_PREFIX + "AquaGroupBorder", "getTitlelessBorder");
         
         final Border listHeaderBorder = AquaTableHeaderBorder.getListHeaderBorder();
         final Border zeroBorder = new BorderUIResource.EmptyBorderUIResource(0, 0, 0, 0);
 
+        // we can't seem to proxy Colors
         final Color selectionBackground = AquaImageFactory.getSelectionBackgroundColorUIResource();
         final Color selectionForeground = AquaImageFactory.getSelectionForegroundColorUIResource();
+        final Color selectionInactiveBackground = AquaImageFactory.getSelectionInactiveBackgroundColorUIResource();
+        final Color selectionInactiveForeground = AquaImageFactory.getSelectionInactiveForegroundColorUIResource();
         
-        // we can't seem to proxy Colors
         final Color textHighlightText = AquaImageFactory.getTextSelectionForegroundColorUIResource();
         final Color textHighlight = AquaImageFactory.getTextSelectionBackgroundColorUIResource();
         final Color textHighlightInactive = new ColorUIResource(212, 212, 212);
@@ -342,7 +350,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final Color textBackground = white;
         final Color textInactiveBackground = white;
 
-        final Object internalFrameBorder = new UIDefaults.ProxyLazyValue("javax.swing.plaf.basic.BasicBorders", "getInternalFrameBorder");
+        final Object internalFrameBorder = new SwingLazyValue("javax.swing.plaf.basic.BasicBorders", "getInternalFrameBorder");
         final Color desktopBackgroundColor = new ColorUIResource(new Color(65, 105, 170));//SystemColor.desktop
 
         final Color focusRingColor = AquaImageFactory.getFocusRingColorUIResource();
@@ -353,13 +361,13 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final Color tabBackgroundColor = windowBackgroundColor;
         final Color controlBackgroundColor = windowBackgroundColor;
 
-        final UIDefaults.ProxyLazyValue controlFont = new UIDefaults.ProxyLazyValue(kAquaFontsName, "getControlTextFont");
-        final UIDefaults.ProxyLazyValue controlSmallFont = new UIDefaults.ProxyLazyValue(kAquaFontsName, "getControlTextSmallFont");
-        final UIDefaults.ProxyLazyValue alertHeaderFont = new UIDefaults.ProxyLazyValue(kAquaFontsName, "getAlertHeaderFont");
-        final UIDefaults.ProxyLazyValue menuFont = new UIDefaults.ProxyLazyValue(kAquaFontsName, "getMenuFont");
-        final UIDefaults.ProxyLazyValue viewFont = new UIDefaults.ProxyLazyValue(kAquaFontsName, "getViewFont");
+        final Object controlFont = new SwingLazyValue(kAquaFontsName, "getControlTextFont");
+        final Object controlSmallFont = new SwingLazyValue(kAquaFontsName, "getControlTextSmallFont");
+        final Object alertHeaderFont = new SwingLazyValue(kAquaFontsName, "getAlertHeaderFont");
+        final Object menuFont = new SwingLazyValue(kAquaFontsName, "getMenuFont");
+        final Object viewFont = new SwingLazyValue(kAquaFontsName, "getViewFont");
 
-        final Color menuBackgroundColor = new ColorUIResource(246, 246, 246);
+        final Color menuBackgroundColor = new ColorUIResource(Color.white);
         final Color menuForegroundColor = black;
 
         final Color menuSelectedForegroundColor = white;
@@ -379,9 +387,10 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         });
 
         // sja testing
-        final Object confirmIcon = new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getConfirmImageIcon"); // AquaImageFactory.getConfirmImageIcon();
-        final Object cautionIcon = new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getCautionImageIcon"); // AquaImageFactory.getCautionImageIcon();
-        final Object stopIcon = new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getStopImageIcon"); // AquaImageFactory.getStopImageIcon();
+        final Object confirmIcon = new SwingLazyValue(kAquaImageFactoryName, "getConfirmImageIcon"); // AquaImageFactory.getConfirmImageIcon();
+        final Object cautionIcon = new SwingLazyValue(kAquaImageFactoryName, "getCautionImageIcon"); // AquaImageFactory.getCautionImageIcon();
+        final Object stopIcon = new SwingLazyValue(kAquaImageFactoryName, "getStopImageIcon"); // AquaImageFactory.getStopImageIcon();
+        final Object securityIcon = new SwingLazyValue(kAquaImageFactoryName, "getLockImageIcon"); // AquaImageFactory.getLockImageIcon();
         
         final Object[] defaults = {
             "control", windowBackgroundColor, /* Default color for controls (buttons, sliders, etc) */
@@ -391,25 +400,25 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Button.foreground", black,
             "Button.disabledText", disabled,
             "Button.select", selected,
-            "Button.border", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaButtonBorder", "getDynamicButtonBorder"),
+            "Button.border", new SwingLazyValue(PKG_PREFIX + "AquaButtonBorder", "getDynamicButtonBorder"),
             "Button.font", controlFont,
             "Button.textIconGap", new Integer(4),
-            "Button.textShiftOffset", zero, // rdar://3308129 - aqua doesn't move images when pressed.
+            "Button.textShiftOffset", zero, // radar 3308129 - aqua doesn't move images when pressed.
             "Button.focusInputMap", controlFocusInputMap,
             "Button.margin", new InsetsUIResource(0, 2, 0, 2),
-            "Button.opaque", Boolean.FALSE,
+            "Button.opaque", buttonShouldBeOpaque,
 
             "CheckBox.background", controlBackgroundColor,
             "CheckBox.foreground", black,
             "CheckBox.disabledText", disabled,
             "CheckBox.select", selected,
-            "CheckBox.icon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaButtonCheckBoxUI", "getSizingCheckBoxIcon"),
+            "CheckBox.icon", new SwingLazyValue(PKG_PREFIX + "AquaButtonCheckBoxUI", "getSizingCheckBoxIcon"),
             "CheckBox.font", controlFont,
             "CheckBox.border", AquaButtonBorder.getBevelButtonBorder(),
             "CheckBox.margin", new InsetsUIResource(1, 1, 0, 1),
-            // rdar://3583849. This property never gets
+            // radar 3583849. This property never gets
             // used. The border for the Checkbox gets overridden 
-            // by AquaRadioButtonUI.setThemeBorder(). Needs refactoring. (vm)
+            // by AquaRadiButtonUI.setThemeBorder(). Needs refactoring. (vm)
             // why is button focus commented out?
             //"CheckBox.focus", getFocusColor(),
             "CheckBox.focusInputMap", controlFocusInputMap,
@@ -428,8 +437,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "CheckBoxMenuItem.border", menuBorder, // for inset calculation
             "CheckBoxMenuItem.margin", menuItemMargin,
             "CheckBoxMenuItem.borderPainted", Boolean.TRUE,
-
-            // "CheckBoxMenuItem.checkIcon",  see OS-specific section,
+            "CheckBoxMenuItem.checkIcon", new SwingLazyValue(kAquaImageFactoryName, "getMenuItemCheckIcon"),
+            "CheckBoxMenuItem.dashIcon", new SwingLazyValue(kAquaImageFactoryName, "getMenuItemDashIcon"),
             //"CheckBoxMenuItem.arrowIcon", null,
             
             "ColorChooser.background", panelBackgroundColor,
@@ -485,6 +494,19 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "FileChooser.filesOfTypeLabelMnemonic", zero,
             
             "Focus.color", focusRingColor,
+            
+            "FormattedTextField.focusInputMap", AquaKeyBindings.getFormattedTextFieldInputMap(),
+            "FormattedTextField.font", controlFont,
+            "FormattedTextField.background", textBackground,
+            "FormattedTextField.foreground", textForeground,
+            "FormattedTextField.inactiveForeground", textInactiveText,
+            "FormattedTextField.inactiveBackground", textInactiveBackground,
+            "FormattedTextField.selectionBackground", textHighlight,
+            "FormattedTextField.selectionForeground", textHighlightText,
+            "FormattedTextField.caretForeground", textForeground,
+            "FormattedTextField.caretBlinkRate", textCaretBlinkRate,
+            "FormattedTextField.border", textFieldBorder,
+            "FormattedTextField.margin", zeroInsets,
 
             "IconButton.font", controlSmallFont,
 
@@ -509,10 +531,10 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
 
             /* Default frame icons are undefined for Basic. */
 
-            "InternalFrame.closeIcon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportCloseIcon"),
-            "InternalFrame.maximizeIcon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportZoomIcon"),
-            "InternalFrame.iconifyIcon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportMinimizeIcon"),
-            "InternalFrame.minimizeIcon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportMinimizeIcon"),
+            "InternalFrame.closeIcon", new SwingLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportCloseIcon"),
+            "InternalFrame.maximizeIcon", new SwingLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportZoomIcon"),
+            "InternalFrame.iconifyIcon", new SwingLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportMinimizeIcon"),
+            "InternalFrame.minimizeIcon", new SwingLazyValue(PKG_PREFIX + "AquaInternalFrameUI", "exportMinimizeIcon"),
             // this could be either grow or icon
             // we decided to make it icon so that anyone who uses
             // these for ui will have different icons for max and min
@@ -537,7 +559,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
                 "ESCAPE", "hideSystemMenu"
             },
 
-            // rdar://3543438 We now define the TitledBorder properties for font and color.
+            // Radar [3543438]. We now define the TitledBorder properties for font and color.
             // Aqua HIG doesn't define TitledBorders as Swing does. Eventually, we might want to 
             // re-think TitledBorder to behave more like a Box (NSBox). (vm)
             "TitledBorder.font", controlFont,
@@ -555,22 +577,24 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Label.opaque", useOpaqueComponents,
             "Label.border", null,
 
-            "List.font", viewFont, // rdar://3577901 Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
+            "List.font", viewFont, // [3577901] Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
             "List.background", white,
             "List.foreground", black,
             "List.selectionBackground", selectionBackground,
             "List.selectionForeground", selectionForeground,
+            "List.selectionInactiveBackground", selectionInactiveBackground,
+            "List.selectionInactiveForeground", selectionInactiveForeground,
             "List.focusCellHighlightBorder", focusCellHighlightBorder,
             "List.border", null,
             "List.cellRenderer", listCellRendererActiveValue,
             
-            "List.sourceListBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListBackgroundPainter"),
-            "List.sourceListSelectionBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListSelectionBackgroundPainter"),
-            "List.sourceListFocusedSelectionBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListFocusedSelectionBackgroundPainter"),
-            "List.evenRowBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaListUI", "getListEvenBackgroundPainter"),
-            "List.oddRowBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaListUI", "getListOddBackgroundPainter"),
+            "List.sourceListBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListBackgroundPainter"),
+            "List.sourceListSelectionBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListSelectionBackgroundPainter"),
+            "List.sourceListFocusedSelectionBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getSourceListFocusedSelectionBackgroundPainter"),
+            "List.evenRowBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getListEvenBackgroundPainter"),
+            "List.oddRowBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getListOddBackgroundPainter"),
 
-            // <rdar://3743210> The modifier for the Mac is meta, not control.
+            // <rdar://Problem/3743210> The modifier for the Mac is meta, not control.
             "List.focusInputMap", AquaKeyBindings.getListInputMap(),
 
             //"List.scrollPaneBorder", listBoxBorder, // Not used in Swing1.1
@@ -592,9 +616,10 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Menu.borderPainted", Boolean.FALSE,
             "Menu.margin", menuItemMargin,
             //"Menu.checkIcon", emptyCheckIcon, // A non-drawing GlyphIcon to make the spacing consistent 
-            //"Menu.arrowIcon", new MenuArrowIcon(),
+            "Menu.arrowIcon", new SwingLazyValue(kAquaImageFactoryName, "getMenuArrowIcon"),
             "Menu.consumesTabs", Boolean.TRUE,
             "Menu.menuPopupOffsetY", new Integer(1),
+            "Menu.submenuPopupOffsetY", new Integer(-4),
 
             "MenuBar.font", menuFont,
             "MenuBar.background", menuBackgroundColor, // not a menu item, not selected
@@ -605,8 +630,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "MenuBar.selectionForeground", menuSelectedForegroundColor,
             "MenuBar.disabledBackground", menuDisabledBackgroundColor, //ThemeBrush.GetThemeBrushForMenu(false, false), // not a menu item, not selected
             "MenuBar.disabledForeground", menuDisabledForegroundColor,
-            "MenuBar.backgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaMenuPainter", "getMenuBarPainter"),
-            "MenuBar.selectedBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaMenuPainter", "getSelectedMenuBarItemPainter"),
+            "MenuBar.backgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaMenuPainter", "getMenuBarPainter"),
+            "MenuBar.selectedBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaMenuPainter", "getSelectedMenuBarItemPainter"),
             
             "MenuItem.font", menuFont,
             "MenuItem.acceleratorFont", menuFont,
@@ -624,7 +649,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "MenuItem.borderPainted", Boolean.TRUE,
             //"MenuItem.checkIcon", emptyCheckIcon, // A non-drawing GlyphIcon to make the spacing consistent 
             //"MenuItem.arrowIcon", null,
-            "MenuItem.selectedBackgroundPainter", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaMenuPainter", "getSelectedMenuItemPainter"),
+            "MenuItem.selectedBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaMenuPainter", "getSelectedMenuItemPainter"),
 
             // *** OptionPane
             // You can additionaly define OptionPane.messageFont which will
@@ -645,6 +670,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "OptionPane.informationIcon", confirmIcon,
             "OptionPane.warningIcon", cautionIcon,
             "OptionPane.questionIcon", confirmIcon,
+            "_SecurityDecisionIcon", securityIcon,
             "OptionPane.windowBindings", new Object[]{"ESCAPE", "close"},
             // OptionPane Auditory Cue Mappings
             "OptionPane.errorSound", null,
@@ -696,7 +722,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "RadioButton.foreground", black,
             "RadioButton.disabledText", disabled,
             "RadioButton.select", selected,
-            "RadioButton.icon", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaButtonRadioUI", "getSizingRadioButtonIcon"),
+            "RadioButton.icon", new SwingLazyValue(PKG_PREFIX + "AquaButtonRadioUI", "getSizingRadioButtonIcon"),
             "RadioButton.font", controlFont,
             "RadioButton.border", AquaButtonBorder.getBevelButtonBorder(),
             "RadioButton.margin", new InsetsUIResource(1, 1, 0, 1),
@@ -716,7 +742,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "RadioButtonMenuItem.border", menuBorder, // for inset calculation
             "RadioButtonMenuItem.margin", menuItemMargin,
             "RadioButtonMenuItem.borderPainted", Boolean.TRUE,
-            //"RadioButtonMenuItem.checkIcon",  see OS-specific section,
+            "RadioButtonMenuItem.checkIcon", new SwingLazyValue(kAquaImageFactoryName, "getMenuItemCheckIcon"),
+            "RadioButtonMenuItem.dashIcon", new SwingLazyValue(kAquaImageFactoryName, "getMenuItemDashIcon"),
             //"RadioButtonMenuItem.arrowIcon", null,
 
             "Separator.background", null,
@@ -771,13 +798,13 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "SplitPane.border", scollListBorder,
             "SplitPane.dividerSize", new Integer(9), //$
             "SplitPaneDivider.border", null, // AquaSplitPaneDividerUI draws it
-            "SplitPaneDivider.horizontalGradientVariant", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaSplitPaneDividerUI", "getHorizontalSplitDividerGradientVariant"),
+            "SplitPaneDivider.horizontalGradientVariant", new SwingLazyValue(PKG_PREFIX + "AquaSplitPaneDividerUI", "getHorizontalSplitDividerGradientVariant"),
             
             // *** TabbedPane
             "TabbedPane.font", controlFont,
             "TabbedPane.smallFont", controlSmallFont,
             "TabbedPane.useSmallLayout", Boolean.FALSE,//sSmallTabs ? Boolean.TRUE : Boolean.FALSE,
-            "TabbedPane.background", tabBackgroundColor, // for bug rdar://3398277 use a background color so that
+            "TabbedPane.background", tabBackgroundColor, // for bug [3398277] use a background color so that
             // tabs on a custom pane get erased when they are removed.
             "TabbedPane.foreground", black, //ThemeTextColor.GetThemeTextColor(AppearanceConstants.kThemeTextColorTabFrontActive),
             //"TabbedPane.lightHighlight", table.get("controlLtHighlight"),
@@ -800,11 +827,13 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "TabbedPane.tabsOverlapBorder", Boolean.TRUE,
             
             // *** Table
-            "Table.font", viewFont, // rdar://3577901 Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
+            "Table.font", viewFont, // [3577901] Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
             "Table.foreground", black, // cell text color
             "Table.background", white, // cell background color            
             "Table.selectionForeground", selectionForeground,
             "Table.selectionBackground", selectionBackground,
+            "Table.selectionInactiveBackground", selectionInactiveBackground,
+            "Table.selectionInactiveForeground", selectionInactiveForeground,
             "Table.gridColor", white, // grid line color
             "Table.focusCellBackground", textHighlightText,
             "Table.focusCellForeground", textHighlight,
@@ -873,7 +902,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             //    "ToggleButton.disabledBackground", getControl(),
             //    "ToggleButton.disabledSelectedBackground", getControlShadow(),
             //"ToggleButton.focus", getFocusColor(),
-            "ToggleButton.border", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaButtonBorder", "getDynamicButtonBorder"), // sja make this lazy!
+            "ToggleButton.border", new SwingLazyValue(PKG_PREFIX + "AquaButtonBorder", "getDynamicButtonBorder"), // sja make this lazy!
             "ToggleButton.font", controlFont,
             "ToggleButton.focusInputMap", controlFocusInputMap,
             "ToggleButton.margin", new InsetsUIResource(2, 2, 2, 2),
@@ -886,7 +915,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "ToolBar.dockingForeground", selectionBackground,
             "ToolBar.floatingBackground", panelBackgroundColor,
             "ToolBar.floatingForeground", new ColorUIResource(Color.darkGray),
-            "ToolBar.border", new UIDefaults.ProxyLazyValue(PKG_PREFIX + "AquaToolBarUI", "getToolBarBorder"),
+            "ToolBar.border", new SwingLazyValue(PKG_PREFIX + "AquaToolBarUI", "getToolBarBorder"),
             //"ToolBar.separatorSize", new DimensionUIResource( 10, 10 ), 
             "ToolBar.separatorSize", null,
 
@@ -902,7 +931,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "ToolTip.border", toolTipBorder,
 
             // *** Tree
-            "Tree.font", viewFont, // rdar://3577901 Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
+            "Tree.font", viewFont, // [3577901] Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
             "Tree.background", white,
             "Tree.foreground", black,
             // for now no lines
@@ -912,6 +941,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Tree.textBackground", white,
             "Tree.selectionForeground", selectionForeground,
             "Tree.selectionBackground", selectionBackground,
+            "Tree.selectionInactiveBackground", selectionInactiveBackground,
+            "Tree.selectionInactiveForeground", selectionInactiveForeground,
             "Tree.selectionBorderColor", selectionBackground, // match the background so it looks like we don't draw anything
             "Tree.editorBorderSelectionColor", null, // The EditTextFrame provides its own border
             // "Tree.editorBorder", textFieldBorder, // If you still have Sun bug 4376328 in DefaultTreeCellEditor, it has to have the same insets as TextField.border
@@ -919,12 +950,12 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Tree.rightChildIndent", new Integer(13),//$
             "Tree.rowHeight", new Integer(19),// iconHeight + 3, to match finder - a zero would have the renderer decide, except that leaves the icons touching
             "Tree.scrollsOnExpand", Boolean.FALSE,
-            "Tree.openIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeOpenFolderIcon"), // Open folder icon
-            "Tree.closedIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeFolderIcon"), // Closed folder icon 
-            "Tree.leafIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeDocumentIcon"), // Document icon 
-            "Tree.expandedIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeExpandedIcon"),
-            "Tree.collapsedIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeCollapsedIcon"),
-            "Tree.rightToLeftCollapsedIcon", new UIDefaults.ProxyLazyValue(kAquaImageFactoryName, "getTreeRightToLeftCollapsedIcon"),
+            "Tree.openIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeOpenFolderIcon"), // Open folder icon
+            "Tree.closedIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeFolderIcon"), // Closed folder icon 
+            "Tree.leafIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeDocumentIcon"), // Document icon 
+            "Tree.expandedIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeExpandedIcon"),
+            "Tree.collapsedIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeCollapsedIcon"),
+            "Tree.rightToLeftCollapsedIcon", new SwingLazyValue(kAquaImageFactoryName, "getTreeRightToLeftCollapsedIcon"),
             "Tree.changeSelectionWithFocus", Boolean.TRUE,
             "Tree.drawsFocusBorderAroundIcon", Boolean.FALSE,
 

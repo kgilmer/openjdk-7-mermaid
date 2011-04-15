@@ -64,4 +64,8 @@ public class JRSUIStateFactory {
     public static ValueState getProgressBar() {
         return new ValueState(0, 0);
     }
+    
+    public static ValueState getLabeledButton() {
+        return new ValueState(0, 0);
+    }
 }

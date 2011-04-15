@@ -26,6 +26,7 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicTextAreaUI;
@@ -80,13 +81,13 @@ public class AquaTextAreaUI extends BasicTextAreaUI {
         super.uninstallDefaults();
     }
     
-    // Install a default keypress action which handles Cmd and Option
-    // keys properly
+    // Install a default keypress action which handles Cmd and Option keys properly
     protected void installKeyboardActions() {
         super.installKeyboardActions();
         AquaKeyBindings.setDefaultAction(getKeymapName());
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
+        AquaKeyBindings.installFullWordDeleteAction(c);
     }
 
     protected void paintSafely(final Graphics g) {

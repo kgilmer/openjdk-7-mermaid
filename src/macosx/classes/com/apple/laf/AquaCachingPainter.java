@@ -31,14 +31,15 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.WritableRaster;
 import java.util.HashMap;
+
 import sun.java2d.SunGraphics2D;
 import apple.laf.JRSUIControl;
 import apple.laf.JRSUIState;
+
 import com.apple.laf.AquaImageFactory.SlicedImageControl;
 
 public class AquaCachingPainter<T extends JRSUIState> extends AquaPainter<T> {
-    final HashMap <JRSUIState, SlicedImageControl> map =
-        new HashMap<JRSUIState, SlicedImageControl>();
+    final HashMap <JRSUIState, SlicedImageControl> map = new HashMap<JRSUIState, SlicedImageControl>();
     
     final int sliceWidth;
     final int sliceHeight;
@@ -47,10 +48,7 @@ public class AquaCachingPainter<T extends JRSUIState> extends AquaPainter<T> {
     final int northCut;
     final int southCut;
     
-    public AquaCachingPainter(final JRSUIControl control, final T state,
-                              int sliceWidth, int sliceHeight,
-                              final int westCut, final int eastCut,
-                              final int northCut, final int southCut ) {
+    public AquaCachingPainter(final JRSUIControl control, final T state, int sliceWidth, int sliceHeight, final int westCut, final int eastCut, final int northCut, final int southCut ) {
         super(control, state);
         this.sliceHeight = sliceHeight;
         this.sliceWidth = sliceWidth;
@@ -61,9 +59,7 @@ public class AquaCachingPainter<T extends JRSUIState> extends AquaPainter<T> {
     }
     
     @Override
-    void paint(final Graphics g, final Component c,
-               final int x, final int y,
-               final int w, final int h) {
+    void paint(final Graphics g, final Component c, final int x, final int y, final int w, final int h) {
         state = (T)state.derive();
         final SlicedImageControl slices = map.get(state);
         if (slices != null) {
@@ -71,25 +67,16 @@ public class AquaCachingPainter<T extends JRSUIState> extends AquaPainter<T> {
             return;
         }
         
-        final BufferedImage image =
-            new BufferedImage(sliceWidth, sliceHeight,
-                              BufferedImage.TYPE_INT_ARGB_PRE);
+        final BufferedImage image = new BufferedImage(sliceWidth, sliceHeight, BufferedImage.TYPE_INT_ARGB_PRE);
         final JRSUIControl control = new JRSUIControl(false);
         control.set(state);
         
         final WritableRaster raster = image.getRaster();
         final DataBufferInt buffer = (DataBufferInt)raster.getDataBuffer();
         final int[] data = buffer.getData();
-        control.paint(data,
-                      sliceWidth, sliceHeight,
-                      0.0, 0.0,
-                      sliceWidth, sliceHeight);
+        control.paint(data, sliceWidth, sliceHeight, 0.0, 0.0, sliceWidth, sliceHeight);
         
-        final SlicedImageControl newSlices =
-            new SlicedImageControl(image,
-                                   westCut, eastCut,
-                                   northCut, southCut,
-                                   false);
+        final SlicedImageControl newSlices = new SlicedImageControl(image, westCut, eastCut, northCut, southCut, false);
         map.put(state, newSlices);
         newSlices.paint(g, x, y, w, h);
     }

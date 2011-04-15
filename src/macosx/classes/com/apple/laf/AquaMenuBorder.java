@@ -26,6 +26,7 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
@@ -76,7 +77,7 @@ public class AquaMenuBorder implements Border, UIResource {
     
     private static Insets popupBorderInsets;
     protected static Insets getPopupInsets() {
-        if (popupBorderInsets == null) popupBorderInsets = new Insets(3, 0, 3, 0);
+        if (popupBorderInsets == null) popupBorderInsets = new Insets(4, 0, 4, 0);
         return popupBorderInsets;
     }
 

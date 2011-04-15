@@ -26,9 +26,11 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.UIResource;
+
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
 

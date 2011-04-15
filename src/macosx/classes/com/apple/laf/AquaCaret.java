@@ -29,40 +29,34 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.*;
 
-public class AquaCaret
-    extends DefaultCaret
-    implements UIResource, PropertyChangeListener
-{
+public class AquaCaret extends DefaultCaret implements UIResource, PropertyChangeListener {
     final boolean isMultiLineEditor;
     final JTextComponent c;
     
     boolean mFocused = false;
-    
-    public AquaCaret(final Window inParentWindow,
-                     final JTextComponent inComponent)
-    {
+
+    public AquaCaret(final Window inParentWindow, final JTextComponent inComponent) {
         super();
         c = inComponent;
         isMultiLineEditor = (c instanceof JTextArea || c instanceof JEditorPane);
         inComponent.addPropertyChangeListener(this);
     }
-    
+
     protected Highlighter.HighlightPainter getSelectionPainter() {
         return AquaHighlighter.getInstance();
     }
-    
+
     /**
      * Only show the flashing caret if the selection range is zero
      */
     public void setVisible(boolean e) {
-        if (e) {
-            e = getDot() == getMark();
-        }
+        if (e) e = getDot() == getMark();
         super.setVisible(e);
     }
     
@@ -74,37 +68,32 @@ public class AquaCaret
         }
         super.setSelectionVisible(vis);
     }
-    
+
     protected void fireStateChanged() {
-        // If we have focus the caret should only flash if the range
-        // length is zero
-        if (mFocused) {
-            setVisible(getComponent().isEditable());
-        }
-        
+        // If we have focus the caret should only flash if the range length is zero
+        if (mFocused) setVisible(getComponent().isEditable());
+
         super.fireStateChanged();
     }
-    
+
     public void propertyChange(final PropertyChangeEvent evt) {
         final String propertyName = evt.getPropertyName();
-        
+
         if (AquaFocusHandler.FRAME_ACTIVE_PROPERTY.equals(propertyName)) {
             final JTextComponent comp = ((JTextComponent)evt.getSource());
-            
+
             if (evt.getNewValue() == Boolean.TRUE) {
                 setVisible(comp.hasFocus());
             } else {
                 setVisible(false);
             }
-            
-            if (getDot() != getMark()) {
-                comp.getUI().damageRange(comp, getDot(), getMark());
-            }
+
+            if (getDot() != getMark()) comp.getUI().damageRange(comp, getDot(), getMark());
         }
     }
-    
+
     // --- FocusListener methods --------------------------
-    
+
     private boolean shouldSelectAllOnFocus = true;
     public void focusGained(final FocusEvent e) {
         final JTextComponent component = getComponent();
@@ -112,19 +101,19 @@ public class AquaCaret
             super.focusGained(e);
             return;
         }
-    
+        
         mFocused = true;
         if (!shouldSelectAllOnFocus) {
             shouldSelectAllOnFocus = true;
             super.focusGained(e);
             return;
         }
-    
+        
         if (isMultiLineEditor) {
             super.focusGained(e);
             return;
         }
-    
+        
         final int end = component.getDocument().getLength();
         final int dot = getDot();
         final int mark = getMark();
@@ -137,27 +126,26 @@ public class AquaCaret
                 component.moveCaretPosition(end);
             }
         }
-    
+        
         super.focusGained(e);
     }
-    
+
     public void focusLost(final FocusEvent e) {
         mFocused = false;
         shouldSelectAllOnFocus = true;
         super.focusLost(e);
     }
-    
-    // This fixes the problem where, when on the mac you have to
-    // ctrl left click to get popup triggers, the caret has code
-    // that only looks at button number.
-    // rdar://3125390 current text selection is lost when you open a popup menu with control-left-click
+
+    // This fixes the problem where when on the mac you have to ctrl left click to 
+    // get popup triggers the caret has code that only looks at button number.
+    // see radar # 3125390
     public void mousePressed(final MouseEvent e) {
         if (!e.isPopupTrigger()) {
             super.mousePressed(e);
             shouldSelectAllOnFocus = false;
         }
     }
-    
+
     /**
      * Damages the area surrounding the caret to cause
      * it to be repainted in a new location.  If paint() 
@@ -169,18 +157,15 @@ public class AquaCaret
      * @see #paint
      */
     protected synchronized void damage(final Rectangle r) {
-        if (r == null || fPainting) {
-            return;
-        }
-    
+        if (r == null || fPainting) return;
+        
         x = r.x - 4;
         y = r.y;
         width = 10;
         height = r.height;
-        
-        // Don't damage the border area.  We can't paint a partial border,
-        // so get the intersection of the caret rectangle and the component
-        // less the border, if any.
+
+        // Don't damage the border area.  We can't paint a partial border, so get the
+        // intersection of the caret rectangle and the component less the border, if any.
         final Rectangle caretRect = new Rectangle(x, y, width, height);
         final Border border = getComponent().getBorder();
         if (border != null) {
@@ -199,16 +184,13 @@ public class AquaCaret
         height = Math.max(caretRect.height, 1);
         repaint();
     }
-    
+
     boolean fPainting = false;
-    
-    // See <rdar://problem/3833837>
-    //     1.4.2_05-141.3: JTextField performance with Aqua L&F
-    // We are getting into a circular condition with the BasicCaret
-    // paint code since it doesn't know about the fact that our damage
-    // routine above elminates the border. Sadly we can't easily change
-    // either one, so we will add a painting flag and not damage during
-    // a repaint.
+
+    // See <rdar://problem/3833837> 1.4.2_05-141.3: JTextField performance with Aqua L&F
+    // We are getting into a circular condition with the BasicCaret paint code since it doesn't know about the fact that our
+    // damage routine above elminates the border. Sadly we can't easily change either one, so we will
+    // add a painting flag and not damage during a repaint.
     public void paint(final Graphics g) {
         if (isVisible()) {
             fPainting = true;

@@ -26,6 +26,7 @@
 package com.apple.laf;
 
 import java.awt.event.*;
+
 import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.text.JTextComponent;
@@ -34,12 +35,14 @@ import javax.swing.text.JTextComponent;
  * This class exists only as a hack to work around a Sun bug which parks the
  * insertion caret at the begining of a text field when it gets clicked on.
  */
-public class AquaTextFieldFormattedUI
-    extends AquaTextFieldUI
-    implements MouseListener
-{
+public class AquaTextFieldFormattedUI extends AquaTextFieldUI implements MouseListener {
     public static ComponentUI createUI(final JComponent c) {
         return new AquaTextFieldFormattedUI();
+    }
+    
+    @Override
+    protected String getPropertyPrefix() {
+        return "FormattedTextField";
     }
     
     protected void installListeners() {

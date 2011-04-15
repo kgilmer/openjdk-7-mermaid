@@ -26,9 +26,11 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicSeparatorUI;
+
 import com.apple.laf.AquaUtils.LazySingletonFromDefaultContructor;
 
 public class AquaPopupMenuSeparatorUI extends BasicSeparatorUI {

@@ -28,6 +28,7 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
@@ -36,15 +37,12 @@ import javax.swing.plaf.basic.BasicRootPaneUI;
 /**
  * From AquaRootPaneUI.java
  *
- * The JRootPane manages the default button.  There can be only one
- * active rootpane, and one default button, so we need only one timer.
+ * The JRootPane manages the default button.  There can be only one active rootpane,
+ * and one default button, so we need only one timer
  *
- * AquaRootPaneUI is a singleton object.
+ * AquaRootPaneUI is a singleton object 
  */
-public class AquaRootPaneUI
-    extends BasicRootPaneUI
-    implements AncestorListener, WindowListener, ContainerListener
-{
+public class AquaRootPaneUI extends BasicRootPaneUI implements AncestorListener, WindowListener, ContainerListener {
     private static final RootPaneUI sRootPaneUI = new AquaRootPaneUI();
 
     final static int kDefaultButtonPaintDelayBetweenFrames = 50;
@@ -64,7 +62,7 @@ public class AquaRootPaneUI
             updateDefaultButton((JRootPane)c);
         }
 
-        // for <rdar://3689020> REGR: Realtime LAF updates no longer work
+        // for <rdar://problem/3689020> REGR: Realtime LAF updates no longer work
         //
         // because the JFrame parent has a LAF background set (why without a UI element I don't know!)
         // we have to set it from the root pane so when we are coming from metal we will set it to
@@ -82,7 +80,7 @@ public class AquaRootPaneUI
             }
         }
 
-        // for <rdar://3750909> OutOfMemoryError swapping menus.
+        // for <rdar://problem/3750909> OutOfMemoryError swapping menus.
         // Listen for layered pane/JMenuBar updates if the screen menu bar is active.
         if (sUseScreenMenuBar) {
             final JRootPane root = (JRootPane)c;
@@ -244,8 +242,8 @@ public class AquaRootPaneUI
         if (owningWindow != null) {
             // We get this message even when a dialog is opened and the owning window is a window
             // that could already be listened to. We should only be a listener once.
-            // adding multiple listeners was the cause of <rdar://3534047>
-            // but the incorrect removal of them caused <rdar://3617848>
+            // adding multiple listeners was the cause of <rdar://problem/3534047>
+            // but the incorrect removal of them caused <rdar://problem/3617848>
             owningWindow.removeWindowListener(this);
             owningWindow.addWindowListener(this);
         }

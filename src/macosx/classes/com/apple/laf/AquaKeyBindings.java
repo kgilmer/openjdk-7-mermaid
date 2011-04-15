@@ -27,6 +27,7 @@ package com.apple.laf;
 
 import java.awt.event.ActionEvent;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.UIDefaults.LazyValue;
 import javax.swing.text.*;
@@ -182,17 +183,16 @@ public class AquaKeyBindings {
             "KP_DOWN", "decrement",
 
             "ESCAPE", "reset-field-edit",
-            "typed \010", DefaultEditorKit.deletePrevCharAction,
         }));
     }
     
     static LateBoundInputMap getComboBoxInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "ESCAPE", "hidePopup",
-            "PAGE_UP", "pageUpPassThrough",
-            "PAGE_DOWN", "pageDownPassThrough",
-            "HOME", "homePassThrough",
-            "END", "endPassThrough",
+            "PAGE_UP", "aquaSelectPageUp",
+            "PAGE_DOWN", "aquaSelectPageDown",
+            "HOME", "aquaSelectHome",
+            "END", "aquaSelectEnd",
             "ENTER", "aquaEnterPressed",
             "UP", "aquaSelectPrevious",
             "KP_UP", "aquaSelectPrevious",
@@ -496,6 +496,14 @@ public class AquaKeyBindings {
                 }
             }
         }
+    }
+
+    static void installFullWordDeleteAction(final JTextComponent component) {
+        if (!AquaUtils.IS_JAVA5) return; // this action is built into Java 6 (and better)
+        
+        final ActionMap actionMap = component.getActionMap();
+        actionMap.put(deleteNextWord, deleteNextWordAction);
+        actionMap.put(deletePrevWord, deletePrevWordAction);
     }
     
     static void installAquaUpDownActions(final JTextComponent component) {

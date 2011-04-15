@@ -28,6 +28,7 @@ package com.apple.laf;
 import java.beans.*;
 import java.io.File;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
 import javax.swing.filechooser.FileSystemView;
@@ -38,10 +39,7 @@ import javax.swing.table.AbstractTableModel;
  * 
  * Some of it came from BasicDirectoryModel
  */
-class AquaFileSystemModel
-    extends AbstractTableModel
-    implements PropertyChangeListener
-{
+class AquaFileSystemModel extends AbstractTableModel implements PropertyChangeListener {
     private final JTable fFileList;
     private LoadFilesThread loadThread = null;
     private Vector<File> files = null;
@@ -60,9 +58,7 @@ class AquaFileSystemModel
     public final static String SORT_BY_CHANGED = "sortByChanged";
     public final static String SORT_ASCENDING_CHANGED = "sortAscendingChanged";
 
-    public AquaFileSystemModel(final JFileChooser filechooser,
-                               final JTable filelist, final String[] colNames)
-    {
+    public AquaFileSystemModel(final JFileChooser filechooser, final JTable filelist, final String[] colNames) {
         fileCacheLock = new Object();
         this.filechooser = filechooser;
         fFileList = filelist;
@@ -72,23 +68,14 @@ class AquaFileSystemModel
     }
 
     void updateSelectionMode() {
-        // Save dialog lists can't be multi select, because all we're
-        // selecting is the next folder to open
-        final boolean b =
-            filechooser.isMultiSelectionEnabled() &&
-            filechooser.getDialogType() != JFileChooser.SAVE_DIALOG;
-        fFileList.setSelectionMode(b ?
-                                   ListSelectionModel.MULTIPLE_INTERVAL_SELECTION :
-                                   ListSelectionModel.SINGLE_SELECTION);
+        // Save dialog lists can't be multi select, because all we're selecting is the next folder to open
+        final boolean b = filechooser.isMultiSelectionEnabled() && filechooser.getDialogType() != JFileChooser.SAVE_DIALOG;
+        fFileList.setSelectionMode(b ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION);
     }
 
     public void propertyChange(final PropertyChangeEvent e) {
         final String prop = e.getPropertyName();
-        if (prop == JFileChooser.DIRECTORY_CHANGED_PROPERTY ||
-            prop == JFileChooser.FILE_VIEW_CHANGED_PROPERTY ||
-            prop == JFileChooser.FILE_FILTER_CHANGED_PROPERTY ||
-            prop == JFileChooser.FILE_HIDING_CHANGED_PROPERTY)
-        {
+        if (prop == JFileChooser.DIRECTORY_CHANGED_PROPERTY || prop == JFileChooser.FILE_VIEW_CHANGED_PROPERTY || prop == JFileChooser.FILE_FILTER_CHANGED_PROPERTY || prop == JFileChooser.FILE_HIDING_CHANGED_PROPERTY) {
             invalidateFileCache();
             validateFileCache();
         } else if (prop.equals(JFileChooser.MULTI_SELECTION_ENABLED_CHANGED_PROPERTY)) {
@@ -105,8 +92,7 @@ class AquaFileSystemModel
         }
         if (prop == SORT_ASCENDING_CHANGED) {
             final int sortColumn = (fSortNames ? 0 : 1);
-            fSortAscending[sortColumn] =
-                ((Boolean)e.getNewValue()).booleanValue();
+            fSortAscending[sortColumn] = ((Boolean)e.getNewValue()).booleanValue();
             invalidateFileCache();
             validateFileCache();
             fFileList.repaint();
@@ -132,14 +118,10 @@ class AquaFileSystemModel
     }
 
     public Vector<File> getFiles() {
-        if (files != null) {
-            return files;
-        }
+        if (files != null) { return files; }
         files = new Vector<File>();
         directories = new Vector<File>();
-        directories.addElement(filechooser.
-            getFileSystemView().
-            createFileObject(filechooser.getCurrentDirectory(), ".."));
+        directories.addElement(filechooser.getFileSystemView().createFileObject(filechooser.getCurrentDirectory(), ".."));
 
         synchronized(fileCacheLock) {
             for (int i = 0; i < fileCache.size(); i++) {
@@ -216,9 +198,9 @@ class AquaFileSystemModel
         }
     }
 
-    // SAK: Part of fix for 3168263 (javax.swing.JFileChooser.rescanCurrentDirectory() doesn't).
-    // The fileCache contains SortableFiles, so when finding a
-    // file in the list we need to first create a sortable file.
+    // SAK: Part of fix for 3168263. The fileCache contains
+    // SortableFiles, so when finding a file in the list we need to
+    // first create a sortable file.
     public boolean contains(final File o) {
         synchronized(fileCacheLock) {
             if (fileCache != null) {
@@ -231,8 +213,7 @@ class AquaFileSystemModel
     public int indexOf(final File o) {
         synchronized(fileCacheLock) {
             if (fileCache != null) {
-                final boolean isAscending = fSortNames ?
-                    fSortAscending[0] : fSortAscending[1];
+                final boolean isAscending = fSortNames ? fSortAscending[0] : fSortAscending[1];
                 final int row = fileCache.indexOf(new SortableFile(o));
                 return isAscending ? row : fileCache.size() - row - 1;
             }
@@ -249,8 +230,7 @@ class AquaFileSystemModel
 
     public Object getValueAt(int row, final int col) {
         if (row < 0 || col < 0) return null;
-        final boolean isAscending = fSortNames ?
-            fSortAscending[0] : fSortAscending[1];
+        final boolean isAscending = fSortNames ? fSortAscending[0] : fSortAscending[1];
         synchronized(fileCacheLock) {
             if (fileCache != null) {
                 if (!isAscending) row = fileCache.size() - row - 1;
@@ -289,9 +269,7 @@ class AquaFileSystemModel
     // @param lo0 left boundary of array partition
     // @param hi0 right boundary of array partition
     abstract class QuickSort {
-        final void quickSort(final Vector<Object> v,
-                             final int lo0, final int hi0)
-        {
+        final void quickSort(final Vector<Object> v, final int lo0, final int hi0) {
             int lo = lo0;
             int hi = hi0;
             SortableFile mid;

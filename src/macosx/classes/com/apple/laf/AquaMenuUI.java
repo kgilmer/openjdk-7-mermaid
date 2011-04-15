@@ -27,6 +27,7 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.ComponentUI;
@@ -44,7 +45,8 @@ public class AquaMenuUI extends BasicMenuUI implements AquaMenuPainter.Client {
     protected void installDefaults() {
         super.installDefaults();
 
-        // rdar://3361625 In Aqua, the menu delay is 8 ticks
+        // [3361625]
+        // In Aqua, the menu delay is 8 ticks, according to Eric Schlegel.
         // That makes the millisecond delay 8 ticks * 1 second / 60 ticks * 1000 milliseconds/second
         ((JMenu)menuItem).setDelay(8 * 1000 / 60);
     }

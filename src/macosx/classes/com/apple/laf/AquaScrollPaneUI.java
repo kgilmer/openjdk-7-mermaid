@@ -26,11 +26,11 @@
 package com.apple.laf;
 
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
-import javax.swing.plaf.basic.BasicScrollPaneUI;
 
-public class AquaScrollPaneUI extends BasicScrollPaneUI {
+public class AquaScrollPaneUI extends javax.swing.plaf.basic.BasicScrollPaneUI {
     public static ComponentUI createUI(final JComponent x) {
         return new AquaScrollPaneUI();
     }

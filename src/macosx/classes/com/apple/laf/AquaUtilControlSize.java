@@ -28,9 +28,11 @@ package com.apple.laf;
 import java.awt.*;
 import java.beans.*;
 import java.lang.reflect.Method;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.*;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 

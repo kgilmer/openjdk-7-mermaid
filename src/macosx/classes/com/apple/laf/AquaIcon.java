@@ -25,33 +25,29 @@
 
 package com.apple.laf;
 
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.Image;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.plaf.UIResource;
+import javax.swing.*;
+import javax.swing.plaf.*;
 
 import sun.lwawt.macosx.CImage;
 
 import apple.laf.JRSUIConstants.Size;
 import apple.laf.JRSUIState;
 
-import com.apple.laf.AquaUtilControlSize.SizeDescriptor;
-import com.apple.laf.AquaUtilControlSize.SizeVariant;
+import com.apple.laf.AquaUtilControlSize.*;
 
 public class AquaIcon {
-    static Icon getIconFor(final CoreUIControlSpec spec, final int width, final int height) {
-        /*
-        if (RuntimeOptions.getRenderer() == RuntimeOptions.Quartz) {
-            final CoreUIIcon cuiIcon = new CoreUIIcon() {
+    interface InvertableIcon extends Icon {
+        public Icon getInvertedIcon();
+    }
+    
+    static UIResource getIconFor(final JRSUIControlSpec spec, final int width, final int height) {
+        // TODO: no RuntimeOptions for now
+        /*if (RuntimeOptions.getRenderer() == RuntimeOptions.Quartz) {
+            final JRSUIIcon cuiIcon = new JRSUIIcon() {
                 public int getIconHeight() {
                     return height;
                 }
@@ -61,11 +57,10 @@ public class AquaIcon {
                 }
             };
             spec.initIconPainter(cuiIcon.painter);
-            return cuiIcon;
-        }
-        */
+            return new IconUIResource(cuiIcon);
+        }*/
         
-        return new CachableCoreUIIcon(width, height) {
+        return new CachableJRSUIIcon(width, height) {
             public void initIconPainter(final AquaPainter<JRSUIState> painter) {
                 spec.initIconPainter(painter);
             }
@@ -89,11 +84,11 @@ public class AquaIcon {
         return image;
     }
     
-    public interface CoreUIControlSpec {
+    public interface JRSUIControlSpec {
         public void initIconPainter(final AquaPainter<? extends JRSUIState> painter);
     }
     
-    static abstract class CoreUIIcon implements Icon, UIResource {
+    static abstract class JRSUIIcon implements Icon, UIResource {
         protected final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
         
         public void paintIcon(final Component c, final Graphics g, final int x, final int y) {
@@ -101,17 +96,17 @@ public class AquaIcon {
         }
     }
     
-    static abstract class DynamicallySizingCoreUIIcon extends CoreUIIcon {
+    static abstract class DynamicallySizingJRSUIIcon extends JRSUIIcon {
         protected final SizeDescriptor sizeDescriptor;
         protected SizeVariant sizeVariant;
         
-        public DynamicallySizingCoreUIIcon(final SizeDescriptor sizeDescriptor) {
+        public DynamicallySizingJRSUIIcon(final SizeDescriptor sizeDescriptor) {
             this.sizeDescriptor = sizeDescriptor;
             this.sizeVariant = sizeDescriptor.regular;
-            initCoreUIState();
+            initJRSUIState();
         }
         
-        public abstract void initCoreUIState();
+        public abstract void initJRSUIState();
         
         public int getIconHeight() {
             return sizeVariant == null ? 0 : sizeVariant.h;
@@ -130,7 +125,6 @@ public class AquaIcon {
     }
     
     static abstract class CachingScalingIcon implements Icon, UIResource {
-        protected static final float SCALE_FACTOR = 1.0f; //RuntimeOptions.getScaleFactor();
         int width;
         int height;
         Image image;
@@ -158,7 +152,8 @@ public class AquaIcon {
         
         private Image getOptimizedImage() {
             final Image img = createImage();
-            //if (RuntimeOptions.getRenderer() != RuntimeOptions.Sun) return img;
+            // TODO: no RuntimeOptions for now
+            //if (RuntimeOptions.getRenderer(null) != RuntimeOptions.Sun) return img;
             return getProgressiveOptimizedImage(img, getIconWidth(), getIconHeight());
         }
         
@@ -169,11 +164,9 @@ public class AquaIcon {
             final int halfImgH = img.getHeight(null) / 2;
             if (w * 2 > halfImgW && h * 2 > halfImgH) return img;
             
-            final BufferedImage halfImage =
-                new BufferedImage(halfImgW, halfImgH, BufferedImage.TYPE_INT_ARGB);
+            final BufferedImage halfImage = new BufferedImage(halfImgW, halfImgH, BufferedImage.TYPE_INT_ARGB);
             final Graphics g = halfImage.getGraphics();
-            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                                             RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g.drawImage(img, 0, 0, halfImgW, halfImgH, null);
             g.dispose();
             
@@ -186,15 +179,12 @@ public class AquaIcon {
             return getImage() != null;
         }
         
-        public void paintIcon(final Component c, Graphics g,
-                              final int x, final int y)
-        {
+        public void paintIcon(final Component c, Graphics g, final int x, final int y) {
             g = g.create();
             
             if (g instanceof Graphics2D) {
                 // improves icon rendering quality in Quartz
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_RENDERING,
-                                                 RenderingHints.VALUE_RENDER_QUALITY);
+                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             }
             
             final Image myImage = getImage();
@@ -213,31 +203,29 @@ public class AquaIcon {
             return height;
         }
         
-        protected int getScaledIconWidth() {
-            return (int)(getIconWidth() * SCALE_FACTOR);
-        }
-        
-        protected int getScaledIconHeight() {
-            return (int)(getIconHeight() * SCALE_FACTOR);
-        }
     }
     
-    static abstract class CachableCoreUIIcon extends CachingScalingIcon implements UIResource {
-        public CachableCoreUIIcon(final int width, final int height) {
+    static abstract class CachableJRSUIIcon extends CachingScalingIcon implements UIResource {
+        public CachableJRSUIIcon(final int width, final int height) {
             super(width, height);
         }
         
         Image createImage() {
-            final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
+            // TODO: return blank image for now
+            /*final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
             initIconPainter(painter);
 
-            // TODO - Review AImage related merge
             final BufferedImage bufferedImage = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
-            Graphics buffImgG = bufferedImage.createGraphics();
-            painter.paint(buffImgG, null, 0, 0,
-                          getIconWidth(), getIconHeight());
+            final CImage nsImage = AquaUtils.getCImageCreator().createImage(bufferedImage);
+            final Graphics nsImageG = nsImage.getGraphics();
+            painter.paint(nsImageG, null, 0, 0, getIconWidth(), getIconHeight());
+            nsImageG.dispose();
+
+            final Graphics buffImgG = bufferedImage.getGraphics();
+            buffImgG.drawImage(nsImage, 0, 0, null);
             buffImgG.dispose();
-            return bufferedImage;
+            return bufferedImage;*/
+            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
         }
             
         public abstract void initIconPainter(final AquaPainter<JRSUIState> painter);
@@ -256,23 +244,42 @@ public class AquaIcon {
         }
         
         Image createImage() {
-            return CImage.fromFile(file.getAbsolutePath())
-                .resize(getScaledIconWidth(), getScaledIconHeight())
-                .toImage();
+            // TODO: use blank image for now
+            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
+            //return AquaUtils.getCImageCreator().createImageOfFile(file.getAbsolutePath(), getIconWidth(), getIconHeight());
         }
     }
     
     static class SystemIcon extends CachingScalingIcon {
-        static final SystemIcon folderIcon = new SystemIcon("fldr");
-        static final SystemIcon openFolderIcon = new SystemIcon("ofld");
-        static final SystemIcon desktopIcon = new SystemIcon("desk");
-        static final SystemIcon computerIcon = new SystemIcon("FNDR");
-        static final SystemIcon documentIcon = new SystemIcon("docu");
-        static final SystemIcon hardDriveIcon = new SystemIcon("hdsk");
-        static final SystemIcon floppyIcon = new SystemIcon("flpy");
-        static final SystemIcon noteIcon = new SystemIcon("note");
-        static final SystemIcon cautionIcon = new SystemIcon("caut");
-        static final SystemIcon stopIcon = new SystemIcon("stop");
+        static final SystemIcon fldr = new SystemIcon("fldr");
+        static final IconUIResource folderIcon = new IconUIResource(fldr);
+        
+        static final SystemIcon ofld = new SystemIcon("ofld");
+        static final IconUIResource openFolderIcon = new IconUIResource(ofld);
+        
+        static final SystemIcon desk = new SystemIcon("desk");
+        static final IconUIResource desktopIcon = new IconUIResource(desk);
+        
+        static final SystemIcon FNDR = new SystemIcon("FNDR");
+        static final IconUIResource computerIcon = new IconUIResource(FNDR);
+        
+        static final SystemIcon docu = new SystemIcon("docu");
+        static final IconUIResource documentIcon = new IconUIResource(docu);
+        
+        static final SystemIcon hdsk = new SystemIcon("hdsk");
+        static final IconUIResource hardDriveIcon = new IconUIResource(hdsk);
+        
+        static final SystemIcon flpy = new SystemIcon("flpy");
+        static final IconUIResource floppyIcon = new IconUIResource(flpy);
+        
+        static final SystemIcon note = new SystemIcon("note");
+        static final IconUIResource noteIcon = new IconUIResource(note);
+        
+        static final SystemIcon caut = new SystemIcon("caut");
+        static final IconUIResource cautionIcon = new IconUIResource(caut);
+        
+        static final SystemIcon stop = new SystemIcon("stop");
+        static final IconUIResource stopIcon = new IconUIResource(stop);
         
         final String selector;
         
@@ -286,9 +293,9 @@ public class AquaIcon {
         }
         
         Image createImage() {
-            int w = getScaledIconWidth();
-            int h = getScaledIconHeight();
-            return CImage.fromIcon(selector).resize(w, h).toImage();
+            // TODO: just return a blank image for now
+            //return AquaUtils.getCImageCreator().createSystemImageFromSelector(selector, getIconWidth(), getIconHeight());
+            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
         }
     }
 }

@@ -28,23 +28,30 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.security.PrivilegedAction;
+
 import javax.swing.plaf.UIResource;
-import javax.swing.plaf.ColorUIResource;
 
 public class AquaNativeResources {
     static {
         java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
+    }
+    
+    // TODO: removing CColorPaint for now
+    static class CColorPaintUIResource extends Color/*CColorPaint*/ implements UIResource {
+        // The color passed to this MUST be a retained NSColor, and the CColorPaintUIResource
+        //  takes ownership of that retain.
+        public CColorPaintUIResource(long color, int r, int g, int b, int a) {
+            super(r, g, b, a);
+            //super(color, r, g, b, a);
+        }
     }
 
     static Color sBackgroundColor;
     private static native long getWindowBackgroundColor();
     public static Color getWindowBackgroundColorUIResource() {
         if (sBackgroundColor == null) {
-//             final long backgroundID = getWindowBackgroundColor();
-//             // the average of the two greys in the pinstripes
-//             // (this is wrong if we are using metal)
-//             sBackgroundColor = new apple.awt.CColorPaint(backgroundID, 0xEE, 0xEE, 0xEE, 0xFF);
-            sBackgroundColor = new ColorUIResource(0xEE, 0xEE, 0xEE);
+            final long backgroundID = getWindowBackgroundColor();
+            sBackgroundColor = new CColorPaintUIResource(backgroundID, 0xEE, 0xEE, 0xEE, 0xFF); // the average of the two greys in the pinstripes (this is wrong if we are using metal)
         }
         return sBackgroundColor;
     }

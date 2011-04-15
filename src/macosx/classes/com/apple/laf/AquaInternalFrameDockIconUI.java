@@ -30,18 +30,18 @@ import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyVetoException;
+
 import javax.swing.*;
 import javax.swing.plaf.*;
 
 /**
  * From MacDockIconUI
  *
- * A CoreUI L&F implementation of JInternalFrame.JDesktopIcon
+ * A JRSUI L&F implementation of JInternalFrame.JDesktopIcon
+ * @author 
+ * @version 
  */
-public class AquaInternalFrameDockIconUI
-    extends DesktopIconUI
-    implements MouseListener, MouseMotionListener, ComponentListener
-{
+public class AquaInternalFrameDockIconUI extends DesktopIconUI implements MouseListener, MouseMotionListener, ComponentListener {
     private static final String CACHED_FRAME_ICON_KEY = "apple.laf.internal.frameIcon";
     private static final Color sMediumTranslucentBlack = new Color(0, 0, 0, 100);
     

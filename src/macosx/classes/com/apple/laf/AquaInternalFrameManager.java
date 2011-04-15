@@ -28,6 +28,7 @@ package com.apple.laf;
 import java.awt.*;
 import java.beans.PropertyVetoException;
 import java.util.Vector;
+
 import javax.swing.*;
 
 /**
@@ -151,7 +152,8 @@ public class AquaInternalFrameManager extends DefaultDesktopManager {
 
         final int currentIndex = fChildFrames.indexOf(fCurrentFrame);
         if (currentIndex == -1) {
-            // should never happen...
+            // the "current frame" is no longer in the list
+            fCurrentFrame = null;
             return;
         }
 

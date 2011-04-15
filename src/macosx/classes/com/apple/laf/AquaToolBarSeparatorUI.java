@@ -26,14 +26,15 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicToolBarSeparatorUI;
+
 import com.apple.laf.AquaUtils.*;
 
 public class AquaToolBarSeparatorUI extends BasicToolBarSeparatorUI {
-    protected static LazySingleton<AquaToolBarSeparatorUI> instance =
-        new LazySingletonFromDefaultContructor<AquaToolBarSeparatorUI>(AquaToolBarSeparatorUI.class);
+    protected static LazySingleton<AquaToolBarSeparatorUI> instance = new LazySingletonFromDefaultContructor<AquaToolBarSeparatorUI>(AquaToolBarSeparatorUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
         return instance.get();
@@ -43,9 +44,7 @@ public class AquaToolBarSeparatorUI extends BasicToolBarSeparatorUI {
         super();
     }
 
-    BasicStroke dashedStroke =
-        new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL,
-                        0.0f, new float[] { 1.0f, 2.0f }, 0.0f);
+    BasicStroke dashedStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0.0f, new float[] { 1.0f, 2.0f }, 0.0f);
 
     public void paint(final Graphics g, final JComponent c) {
         g.setColor(c.getForeground());

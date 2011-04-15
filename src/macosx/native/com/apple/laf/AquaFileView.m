@@ -31,6 +31,41 @@
 
 /*
  * Class:     com_apple_laf_AquaFileView
+ * Method:    getNativePathToRunningJDKBundle
+ * Signature: ()Ljava/lang/String;
+ */
+// TODO: Un-comment this out
+/*JNIEXPORT jstring JNICALL Java_com_apple_laf_AquaFileView_getNativePathToRunningJDKBundle
+(JNIEnv *env, jclass clazz)
+{
+    jstring returnValue = NULL;
+JNF_COCOA_ENTER(env);
+
+    returnValue = JNFNSToJavaString(env, getRunningJavaBundle());
+
+JNF_COCOA_EXIT(env);
+    return returnValue;
+}*/
+
+/*
+ * Class:     com_apple_laf_AquaFileView
+ * Method:    getNativePathToSharedJDKBundle
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_apple_laf_AquaFileView_getNativePathToSharedJDKBundle
+(JNIEnv *env, jclass clazz)
+{
+    jstring returnValue = NULL;
+JNF_COCOA_ENTER(env);
+    
+    returnValue = JNFNSToJavaString(env, [[NSBundle bundleWithIdentifier:@"com.apple.JavaVM"] bundlePath]);
+    
+JNF_COCOA_EXIT(env);
+    return returnValue;
+}
+
+/*
+ * Class:     com_apple_laf_AquaFileView
  * Method:    getNativeMachineName
  * Signature: ()Ljava/lang/String;
  */
@@ -157,8 +192,8 @@ JNF_COCOA_ENTER(env);
     jbyte *byteArray = (*env)->GetByteArrayElements(env, pathToAlias, NULL);
     jsize length = (*env)->GetArrayLength(env, pathToAlias);
     
-    if (length > (jsize)pathSize) {
-        length = (jsize)pathSize;
+    if (length > pathSize) {
+        length = pathSize;
     }
     strncpy((char *)pathCString, (char *)byteArray, length);
     // make sure it's null terminated

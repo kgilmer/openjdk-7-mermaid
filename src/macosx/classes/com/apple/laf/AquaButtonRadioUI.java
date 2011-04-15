@@ -27,15 +27,15 @@ package com.apple.laf;
 
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
+
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaButtonRadioUI extends AquaButtonLabeledUI {
-    protected static LazySingleton<AquaButtonRadioUI> instance =
-        new LazySingletonFromDefaultContructor<AquaButtonRadioUI>(AquaButtonRadioUI.class);
-    protected static LazySingleton<ImageIcon> sizingIcon =
-        new LazySingleton<ImageIcon>() {
+    protected static LazySingleton<AquaButtonRadioUI> instance = new LazySingletonFromDefaultContructor<AquaButtonRadioUI>(AquaButtonRadioUI.class); 
+    protected static LazySingleton<ImageIcon> sizingIcon = new LazySingleton<ImageIcon>() {
         protected ImageIcon getInstance() {
             return new ImageIcon(AquaNativeResources.getRadioButtonSizerImage());
         }
@@ -44,11 +44,11 @@ public class AquaButtonRadioUI extends AquaButtonLabeledUI {
     public static ComponentUI createUI(final JComponent b) {
         return instance.get();
     }
-    
+
     public static Icon getSizingRadioButtonIcon(){
         return sizingIcon.get();
     }
-    
+
     protected String getPropertyPrefix() {
         return "RadioButton" + ".";
     }
@@ -62,7 +62,7 @@ public class AquaButtonRadioUI extends AquaButtonLabeledUI {
             super(new SizeDescriptor(new SizeVariant().replaceMargins("RadioButton.margin")));
             painter.state.set(Widget.BUTTON_RADIO);
         }
-    
+        
         public RadioButtonBorder(final RadioButtonBorder other) {
             super(other);
         }

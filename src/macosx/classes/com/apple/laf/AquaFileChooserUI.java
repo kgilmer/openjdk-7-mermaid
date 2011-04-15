@@ -34,6 +34,7 @@ import java.io.File;
 import java.net.URI;
 import java.text.DateFormat;
 import java.util.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.*;
@@ -116,8 +117,7 @@ public class AquaFileChooserUI extends FileChooserUI {
 
     boolean selectionInProgress = false;
 
-    // The accessoryPanel is a container to place the JFileChooser
-    // accessory component
+    // The accessoryPanel is a container to place the JFileChooser accessory component
     private JPanel accessoryPanel = null;
 
     //
@@ -181,11 +181,8 @@ public class AquaFileChooserUI extends FileChooserUI {
         };
         fc.addAncestorListener(ancestorListener);
 
-        fc.registerKeyboardAction(new CancelSelectionAction(),
-                                  KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-                                  JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        dragAndDropTarget =
-            new DropTarget(fc, DnDConstants.ACTION_COPY, new DnDHandler(), true);
+        fc.registerKeyboardAction(new CancelSelectionAction(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        dragAndDropTarget = new DropTarget(fc, DnDConstants.ACTION_COPY, new DnDHandler(), true);
         fc.setDropTarget(dragAndDropTarget);
     }
 
@@ -370,7 +367,8 @@ public class AquaFileChooserUI extends FileChooserUI {
                             fFileList.setSelectedIndex(getModel().indexOf(f));
                         }
 
-                        // Need to populate the text field here.  No-op on Open dialogs
+                        // [3643835] Need to populate the text field here.  No-op on Open dialogs
+                        // Note that this was removed for 3514735, but should not have been.
                         if (!f.isDirectory()) {
                             setFileName(getFileChooser().getName(f));
                         }
@@ -1080,7 +1078,6 @@ public class AquaFileChooserUI extends FileChooserUI {
     }
 
     protected class FileRenderer extends MacFCTableCellRenderer {
-
         public FileRenderer(final Font f) {
             super(f);
         }
@@ -1097,7 +1094,6 @@ public class AquaFileChooserUI extends FileChooserUI {
     }
 
     protected class DateRenderer extends MacFCTableCellRenderer {
-
         public DateRenderer(final Font f) {
             super(f);
         }
@@ -1132,7 +1128,7 @@ public class AquaFileChooserUI extends FileChooserUI {
     }
 
     protected ListCellRenderer createDirectoryComboBoxRenderer(final JFileChooser fc) {
-        return new DefaultListCellRenderer() {
+        return new AquaComboBoxRendererInternal(directoryComboBox) {
             public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 final File directory = (File)value;
@@ -1141,9 +1137,9 @@ public class AquaFileChooserUI extends FileChooserUI {
                     return this;
                 }
 
-                final String fileName = getFileChooser().getName(directory);
-                setText(fileName);
-                setIcon(getFileChooser().getIcon(directory));
+                final JFileChooser chooser = getFileChooser();
+                setText(chooser.getName(directory));
+                setIcon(chooser.getIcon(directory));
                 return this;
             }
         };
@@ -1243,7 +1239,7 @@ public class AquaFileChooserUI extends FileChooserUI {
     // Renderer for Types ComboBox
     //
     protected ListCellRenderer createFilterComboBoxRenderer() {
-        return new DefaultListCellRenderer() {
+        return new AquaComboBoxRendererInternal(filterComboBox) {
             public Component getListCellRendererComponent(final JList list, final Object value, final int index, final boolean isSelected, final boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 final FileFilter filter = (FileFilter)value;
@@ -1703,7 +1699,7 @@ public class AquaFileChooserUI extends FileChooserUI {
 
             final File clickedFile = (File)(fFileList.getValueAt(row, 0));
 
-            // rdar://3734130 -- don't populate the text field if this file isn't selectable in this mode.
+            // rdar://problem/3734130 -- don't populate the text field if this file isn't selectable in this mode.
             if (isSelectableForMode(getFileChooser(), clickedFile)) {
                 // [3188387] Populate the file name field with the selected file name
                 // [3484163] It should also use the display name, not the actual name.
@@ -1716,7 +1712,7 @@ public class AquaFileChooserUI extends FileChooserUI {
         // The first part is similar to MetalFileChooserUI.createList - same kind of listeners
         final JPanel p = new JPanel(new BorderLayout());
         fFileList = new JTableExtension();
-        fFileList.setToolTipText(null); // 2487689 ToolTipManager is enabled by default and never removes its listeners
+        fFileList.setToolTipText(null); // Workaround for 2487689
         fFileList.addMouseListener(new FileListMouseListener());
         model = new AquaFileSystemModel(fc, fFileList, fColumnNames);
         final MacListSelectionModel listSelectionModel = new MacListSelectionModel(model);
@@ -1737,7 +1733,7 @@ public class AquaFileChooserUI extends FileChooserUI {
         final JTableHeader th = new JSortingTableHeader(fFileList.getColumnModel());
         fFileList.setTableHeader(th);
         fFileList.setRowMargin(0);
-        fFileList.setIntercellSpacing(new Dimension(0, 0));
+        fFileList.setIntercellSpacing(new Dimension(0, 1));
         fFileList.setShowVerticalLines(false);
         fFileList.setShowHorizontalLines(false);
         final Font f = fFileList.getFont(); //ThemeFont.GetThemeFont(AppearanceConstants.kThemeViewsFont);
@@ -2305,8 +2301,8 @@ public class AquaFileChooserUI extends FileChooserUI {
         }
     }
 
-    // Convenience, to translate from the JList directory view to the
-    // Mac-style JTable & minimize diffs between this and BasicFileChooserUI
+    // Convenience, to translate from the JList directory view to the Mac-style JTable
+    //   & minimize diffs between this and BasicFileChooserUI
     class JTableExtension extends JTable {
         public void setSelectedIndex(final int index) {
             getSelectionModel().setSelectionInterval(index, index);

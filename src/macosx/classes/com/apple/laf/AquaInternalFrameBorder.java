@@ -27,12 +27,15 @@ package com.apple.laf;
 
 import java.awt.*;
 import java.beans.PropertyVetoException;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.TitleBarHeightState;
+
 import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaInternalFrameBorder implements Border, UIResource {
@@ -207,8 +210,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         // shorten the string to fit in the
         if ((text != null) && !(text.equals(""))) {
             totalTextWidth = SwingUtilities.computeStringWidth(fm, text);
-                        // latin capital letter E with acute == \u00c9
-            final String clipString = "\u00c9";
+            final String clipString = "\u2026";
             if (totalTextWidth > availTextWidth) {
                 wasTextShortened = true;
                 totalTextWidth = SwingUtilities.computeStringWidth(fm, clipString);

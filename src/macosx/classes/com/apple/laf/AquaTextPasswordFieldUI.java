@@ -28,10 +28,12 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.*;
 import javax.swing.text.*;
+
 import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaTextPasswordFieldUI extends AquaTextFieldUI {

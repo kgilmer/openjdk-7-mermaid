@@ -28,19 +28,21 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicTreeUI;
 import javax.swing.tree.*;
+
 import com.apple.laf.AquaUtils.LazySingleton;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.AnimationFrameState;
 
 /**
- * AquaTreeUI supports the client property "value-add" system of customization.
- * See MetalTreeUI.
+ * AquaTreeUI supports the client property "value-add" system of customization See MetalTreeUI
  * This is heavily based on the 1.3.1 AquaTreeUI implementation.
  */
 public class AquaTreeUI extends BasicTreeUI {
@@ -311,6 +313,7 @@ public class AquaTreeUI extends BasicTreeUI {
             final String prop = e.getPropertyName();
             if (prop.equals(AquaFocusHandler.FRAME_ACTIVE_PROPERTY)) {
                 AquaBorder.repaintBorder(tree);
+                AquaFocusHandler.swapSelectionColors("Tree", tree, e.getNewValue());
             } else {
                 super.propertyChange(e);
             }
@@ -380,6 +383,8 @@ public class AquaTreeUI extends BasicTreeUI {
         }
 
         public void mouseReleased(final MouseEvent e) {
+            if (tree == null) return;
+            
             if (fIsPressed) {
                 fIsPressed = false;
                 fIsInBounds = false;
@@ -420,8 +425,9 @@ public class AquaTreeUI extends BasicTreeUI {
 
         // Utility to paint just one widget while it's being tracked
         // Just doing "repaint" runs into problems if someone does "translate" on the graphics
-        // (ie, Sun's JTreeTable example)
+        // (ie, Sun's JTreeTable example, which is used by Moneydance - see Radar 2697837)
         void paintOneControl() {
+            if (tree == null) return;
             final Graphics g = tree.getGraphics();
             if (g == null) {
                 // i.e. source is not displayable

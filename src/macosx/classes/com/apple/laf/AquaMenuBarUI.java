@@ -26,17 +26,16 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicMenuBarUI;
+
 import sun.security.action.GetPropertyAction;
 
 // MenuBar implementation for Mac L&F
-public class AquaMenuBarUI
-    extends BasicMenuBarUI
-    // TODO: no screen menu bar for now
-    //implements ScreenMenuBarProvider
-{
+// TODO: no screen menu bar for now
+public class AquaMenuBarUI extends BasicMenuBarUI /*implements ScreenMenuBarProvider*/ {
     // Utilities
     public void uninstallUI(final JComponent c) {
         // TODO: no screen menu bar for now
@@ -55,7 +54,7 @@ public class AquaMenuBarUI
         return new AquaMenuBarUI();
     }
 
-    // rdar://3320390 -- If the screen menu bar is in use, don't register keyboard actions that
+    // [3320390] -- If the screen menu bar is in use, don't register keyboard actions that
     // show the menus when F10 is pressed.
     protected void installKeyboardActions() {
         if (!useScreenMenuBar) {

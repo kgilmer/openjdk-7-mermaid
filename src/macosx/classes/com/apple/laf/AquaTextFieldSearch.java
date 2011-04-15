@@ -28,12 +28,15 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.TextUI;
 import javax.swing.text.JTextComponent;
+
 import apple.laf.JRSUIConstants.*;
-import com.apple.laf.AquaIcon.DynamicallySizingCoreUIIcon;
+
+import com.apple.laf.AquaIcon.DynamicallySizingJRSUIIcon;
 import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
@@ -44,6 +47,7 @@ public class AquaTextFieldSearch {
     private static final String FIND_POPUP_KEY = "JTextField.Search.FindPopup";
     private static final String FIND_ACTION_KEY = "JTextField.Search.FindAction";
     private static final String CANCEL_ACTION_KEY = "JTextField.Search.CancelAction";
+    private static final String PROMPT_KEY = "JTextField.Search.Prompt";
     
     private static final SearchFieldPropertyListener SEARCH_FIELD_PROPERTY_LISTENER = new SearchFieldPropertyListener();
     protected static void installSearchFieldListener(final JTextComponent c) {
@@ -60,7 +64,11 @@ public class AquaTextFieldSearch {
             if (!(source instanceof JTextComponent)) return;
             
             final String propertyName = evt.getPropertyName();
-            if (!VARIANT_KEY.equals(propertyName) && !FIND_POPUP_KEY.equals(propertyName) && !FIND_ACTION_KEY.equals(propertyName) && !CANCEL_ACTION_KEY.equals(propertyName)) {
+            if (!VARIANT_KEY.equals(propertyName) && 
+                !FIND_POPUP_KEY.equals(propertyName) && 
+                !FIND_ACTION_KEY.equals(propertyName) && 
+                !CANCEL_ACTION_KEY.equals(propertyName) &&
+                !PROMPT_KEY.equals(propertyName)) {
                 return;
             }
             
@@ -93,13 +101,14 @@ public class AquaTextFieldSearch {
         c.setLayout(border.getCustomLayout());
         c.add(getFindButton(c), BorderLayout.WEST);
         c.add(getCancelButton(c), BorderLayout.EAST);
+        c.add(getPromptLabel(c), BorderLayout.CENTER);
         
         final TextUI ui = c.getUI();
         if (ui instanceof AquaTextFieldUI) {
             ((AquaTextFieldUI)ui).setPaintingDelegate(border);
         }
     }
-    
+
     protected static void uninstallSearchField(final JTextComponent c) {
         c.setBorder(UIManager.getBorder("TextField.border"));
         c.removeAll();
@@ -112,24 +121,26 @@ public class AquaTextFieldSearch {
     
     // The "magnifying glass" icon that sometimes has a downward pointing triangle next to it
     // if a popup has been assigned to it. It does not appear to have a pressed state.
-    protected static DynamicallySizingCoreUIIcon getFindIcon() {
-        return new DynamicallySizingCoreUIIcon(new SizeDescriptor(new SizeVariant(25, 22).alterMargins(0, 4, 0, 0)) {
-            public SizeVariant deriveSmall(final SizeVariant v) { return v.alterMinSize(24, 19); };
-            public SizeVariant deriveMini(final SizeVariant v) { return v.alterMinSize(21, 15); };
-        }) {
-            public void initCoreUIState() {
-                painter.state.set(Widget.BUTTON_SEARCH_FIELD_FIND);
+    protected static DynamicallySizingJRSUIIcon getFindIcon(final JTextComponent text) {
+        return (text.getClientProperty(FIND_POPUP_KEY) == null) ?
+            new DynamicallySizingJRSUIIcon(new SizeDescriptor(new SizeVariant(25, 22).alterMargins(0, 4, 0, -5))) {
+                public void initJRSUIState() {
+                    painter.state.set(Widget.BUTTON_SEARCH_FIELD_FIND);
+                }
             }
-        };
+        :
+            new DynamicallySizingJRSUIIcon(new SizeDescriptor(new SizeVariant(25, 22).alterMargins(0, 4, 0, 2))) {
+                public void initJRSUIState() {
+                    painter.state.set(Widget.BUTTON_SEARCH_FIELD_FIND);
+                }
+            }
+        ;
     }
     
     // The "X in a circle" that only shows up when there is text in the search field.
-    protected static DynamicallySizingCoreUIIcon getCancelIcon() {
-        return new DynamicallySizingCoreUIIcon(new SizeDescriptor(new SizeVariant(22, 22).alterMargins(0, 0, 0, 4)) {
-            public SizeVariant deriveSmall(final SizeVariant v) { return v.alterMinSize(19, 19); };
-            public SizeVariant deriveMini(final SizeVariant v) { return v.alterMinSize(15, 15); };
-        }) {
-            public void initCoreUIState() {
+    protected static DynamicallySizingJRSUIIcon getCancelIcon() {
+        return new DynamicallySizingJRSUIIcon(new SizeDescriptor(new SizeVariant(22, 22).alterMargins(0, 0, 0, 4))) {
+            public void initJRSUIState() {
                 painter.state.set(Widget.BUTTON_SEARCH_FIELD_CANCEL);
             }
         };
@@ -141,15 +152,17 @@ public class AquaTextFieldSearch {
         return State.ACTIVE;
     }
     
-    protected static JButton createButton(final JTextComponent c, final DynamicallySizingCoreUIIcon icon) {
-        final JButton b = new JButton() {
-            public void paint(Graphics g) {
-                super.paint(g);
-                
+    protected static JButton createButton(final JTextComponent c, final DynamicallySizingJRSUIIcon icon) {
+        final JButton b = new JButton()
+//        {
+//            public void paint(Graphics g) {
+//                super.paint(g);
+//                
 //                g.setColor(Color.green);
 //                g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-            }
-        };
+//            }
+//        }
+        ;
         
         final Insets i = icon.sizeVariant.margins;
         b.setBorder(BorderFactory.createEmptyBorder(i.top, i.left, i.bottom, i.right));
@@ -173,7 +186,7 @@ public class AquaTextFieldSearch {
     }
     
     protected static JButton getFindButton(final JTextComponent c) {
-        final DynamicallySizingCoreUIIcon findIcon = getFindIcon();
+        final DynamicallySizingJRSUIIcon findIcon = getFindIcon(c);
         final JButton b = createButton(c, findIcon);
         b.setName("find");
         
@@ -199,6 +212,43 @@ public class AquaTextFieldSearch {
         return b;
     }
     
+    private static Component getPromptLabel(final JTextComponent c) {
+        final JLabel label = new JLabel();
+        label.setForeground(UIManager.getColor("TextField.inactiveForeground"));
+        
+        c.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(final DocumentEvent e) { updatePromptLabel(label, c); }
+            public void insertUpdate(final DocumentEvent e) { updatePromptLabel(label, c); }
+            public void removeUpdate(final DocumentEvent e) { updatePromptLabel(label, c); }
+        });
+        c.addFocusListener(new FocusAdapter() {
+            public void focusGained(final FocusEvent e) { updatePromptLabel(label, c); }
+            public void focusLost(final FocusEvent e) { updatePromptLabel(label, c); }
+        });
+        updatePromptLabel(label, c);
+        
+        return label;
+    }
+    
+    static void updatePromptLabel(final JLabel label, final JTextComponent text) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            updatePromptLabelOnEDT(label, text);
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() { updatePromptLabelOnEDT(label, text); }
+            });
+        }
+    }
+    
+    static void updatePromptLabelOnEDT(final JLabel label, final JTextComponent text) {
+        String promptText = " ";
+        if (!text.hasFocus() && "".equals(text.getText())) {
+            final Object prompt = text.getClientProperty(PROMPT_KEY);
+            if (prompt != null) promptText = prompt.toString();
+        }
+        label.setText(promptText);
+    }
+    
     protected static JButton getCancelButton(final JTextComponent c) {
         final JButton b = createButton(c, getCancelIcon());
         b.setName("cancel");
@@ -215,28 +265,28 @@ public class AquaTextFieldSearch {
         });
         
         c.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(final DocumentEvent e) { updateCancelIcon(); }
-            public void insertUpdate(final DocumentEvent e) { updateCancelIcon(); }
-            public void removeUpdate(final DocumentEvent e) { updateCancelIcon(); }
-            
-            // <rdar://6444328> JTextField.variant=search: not thread-safe
-            public void updateCancelIcon() {
-                if (SwingUtilities.isEventDispatchThread()) {
-                    updateCancelIconOnEDT();
-                } else {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() { updateCancelIconOnEDT(); }
-                    });
-                }
-            }
-            
-            public void updateCancelIconOnEDT() {
-                b.setVisible(!"".equals(c.getText()));
-            }
+            public void changedUpdate(final DocumentEvent e) { updateCancelIcon(b, c); }
+            public void insertUpdate(final DocumentEvent e) { updateCancelIcon(b, c); }
+            public void removeUpdate(final DocumentEvent e) { updateCancelIcon(b, c); }
         });
         
-        b.setVisible(!"".equals(c.getText()));
+        updateCancelIcon(b, c);
         return b;
+    }
+    
+    // <rdar://problem/6444328> JTextField.variant=search: not thread-safe
+    static void updateCancelIcon(final JButton button, final JTextComponent text) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            updateCancelIconOnEDT(button, text);
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() { updateCancelIconOnEDT(button, text); }
+            });
+        }
+    }
+    
+    static void updateCancelIconOnEDT(final JButton button, final JTextComponent text) {
+        button.setVisible(!"".equals(text.getText()));
     }
     
     // subclass of normal text border, because we still want all the normal text field behaviors

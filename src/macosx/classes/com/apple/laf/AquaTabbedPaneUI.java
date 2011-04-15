@@ -29,10 +29,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.*;
 import javax.swing.text.View;
+
 import sun.java2d.SunGraphics2D;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
@@ -59,9 +61,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
     protected final AquaTabbedPaneTabState visibleTabState = new AquaTabbedPaneTabState(this);
     protected final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIStateFactory.getTab());
     
-    public AquaTabbedPaneUI() {
-        
-    }
+    public AquaTabbedPaneUI() { }
 
     protected void installListeners() {
         super.installListeners();
@@ -253,10 +253,10 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
             }
         }
         
-        final ImageIcon icon = AquaImageFactory.getArrowIconForDirection(direction);
-        if (enabled) return icon;
+        if (enabled) return AquaImageFactory.getArrowIconForDirection(direction);
         
-        return new ImageIcon(AquaUtils.generateDisabledImage(icon.getImage()));
+        final Image icon = AquaImageFactory.getArrowImageForDirection(direction);
+        return new ImageIcon(AquaUtils.generateDisabledImage(icon));
     }
 
     protected void paintContents(final Graphics g, final int tabPlacement, final int tabIndex, final Rectangle tabRect, final Rectangle iconRect, final Rectangle textRect, final boolean isSelected) {
@@ -955,7 +955,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
             }
             
             menuItem.setForeground(tabPane.getForegroundAt(i));
-            // rdar://3520267 make sure to disable items that are disabled in the tab.
+            // for <rdar://problem/3520267> make sure to disable items that are disabled in the tab.
             if (!tabPane.isEnabledAt(i)) menuItem.setEnabled(false);
             
             final int fOffset = i;
@@ -976,7 +976,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
     }
     
     protected class AquaTruncatingTabbedPaneLayout extends AquaTabbedPaneCopyFromBasicUI.TabbedPaneLayout {
-        // rdar://3346131 Left side tabs of JTabbedPane draw wrong
+        // fix for Radar #3346131
         protected int preferredTabAreaWidth(final int tabPlacement, final int height) {
             // Our superclass wants to stack tabs, but we rotate them,
             // so when tabs are on the left or right we know that

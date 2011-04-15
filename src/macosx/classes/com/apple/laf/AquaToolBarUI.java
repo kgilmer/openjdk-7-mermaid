@@ -26,10 +26,12 @@
 package com.apple.laf;
 
 import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicToolBarUI;
+
 import com.apple.laf.AquaUtils.*;
 
 public class AquaToolBarUI extends BasicToolBarUI implements SwingConstants {

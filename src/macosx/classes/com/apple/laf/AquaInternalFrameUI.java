@@ -28,14 +28,20 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
+
 import com.apple.laf.AquaUtils.*;
+import com.apple.laf.AquaUtils.Painter;
+
+import sun.lwawt.macosx.CPlatformWindow;
 
 /**
  * From AquaInternalFrameUI
@@ -44,11 +50,9 @@ import com.apple.laf.AquaUtils.*;
  *
  * We want to inherit most of the inner classes, but not the base class,
  * so be very careful about subclassing so you know you get what you want
+ *
  */
-public class AquaInternalFrameUI
-    extends BasicInternalFrameUI
-    implements SwingConstants
-{
+public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingConstants {
     protected static String IS_PALETTE_PROPERTY = "JInternalFrame.isPalette";
     private static final String FRAME_TYPE = "JInternalFrame.frameType";
     private static final String NORMAL_FRAME = "normal";
@@ -166,7 +170,7 @@ public class AquaInternalFrameUI
         return zoomIcon.get();
     }
     
-    static class AquaInternalFrameButtonIcon extends AquaIcon.CoreUIIcon {
+    static class AquaInternalFrameButtonIcon extends AquaIcon.JRSUIIcon {
         public AquaInternalFrameButtonIcon(final Widget widget) {
             painter.state.set(widget);
         }
@@ -679,9 +683,8 @@ public class AquaInternalFrameUI
                 } else {
                     setPalette(false);
                 }
-            } else if ("windowModified".equals(name) || /*AWindowDelegate.DOCUMENT_MODIFIED*/ "Window.documentModified".equals(name)) {
-                // TODO: un-hardcode "Window.documentModified"
-                
+                // TODO: CPlatformWindow?
+            } else if ("windowModified".equals(name) || CPlatformWindow.DOCUMENT_MODIFIED.equals(name)) {
                 // repaint title bar
                 setDocumentEdited(((Boolean)e.getNewValue()).booleanValue());
                 frame.repaint(0, 0, frame.getWidth(), frame.getBorder().getBorderInsets(frame).top);
@@ -705,47 +708,47 @@ public class AquaInternalFrameUI
     
     static InternalFrameShadow documentWindowShadow = new InternalFrameShadow() {
         Border getForegroundShadowBorder() {
-            return new AquaUtils.SlicedShadowBorder(new com.apple.laf.AquaUtils.Painter() {
+            return new AquaUtils.SlicedShadowBorder(new Painter() {
                 public void paint(final Graphics g, final int x, final int y, final int w, final int h) {
                     g.setColor(new Color(0, 0, 0, 196));
                     g.fillRoundRect(x, y, w, h, 16, 16);
                     g.fillRect(x, y + h - 16, w, 16);
                 }
-            }, new com.apple.laf.AquaUtils.Painter() {
+            }, new Painter() {
                 public void paint(final Graphics g, int x, int y, int w, int h) {
                     g.setColor(new Color(0, 0, 0, 64));
                     g.drawLine(x + 2, y - 8, x + w - 2, y - 8);
                 }
             },
-            0, 7, 1.1f, 24, 51, 51, 25, 25, 25, 25);
+            0, 7, 1.1f, 1.0f, 24, 51, 51, 25, 25, 25, 25);
         }
         
         Border getBackgroundShadowBorder() {
-            return new AquaUtils.SlicedShadowBorder(new com.apple.laf.AquaUtils.Painter() {
+            return new AquaUtils.SlicedShadowBorder(new Painter() {
                 public void paint(final Graphics g, final int x, final int y, final int w, final int h) {
                     g.setColor(new Color(0, 0, 0, 128));
                     g.fillRoundRect(x - 3, y - 8, w + 6, h, 16, 16);
                     g.fillRect(x - 3, y + h - 20, w + 6, 19);
                 }
-            }, new com.apple.laf.AquaUtils.Painter() {
+            }, new Painter() {
                 public void paint(final Graphics g, int x, int y, int w, int h) {
                     g.setColor(new Color(0, 0, 0, 32));
                     g.drawLine(x, y - 11, x + w - 1, y - 11);
                 }
             },
-            0, 0, 3.0f, 10, 51, 51, 25, 25, 25, 25);
+            0, 0, 3.0f, 1.0f, 10, 51, 51, 25, 25, 25, 25);
         }
     };
     
     static InternalFrameShadow paletteWindowShadow = new InternalFrameShadow() {
         Border getForegroundShadowBorder() {
-            return new AquaUtils.SlicedShadowBorder(new com.apple.laf.AquaUtils.Painter() {
+            return new AquaUtils.SlicedShadowBorder(new Painter() {
                 public void paint(final Graphics g, final int x, final int y, final int w, final int h) {
                     g.setColor(new Color(0, 0, 0, 128));
                     g.fillRect(x, y + 3, w, h - 3);
                 }
             }, null,
-            0, 3, 1.0f, 10, 25, 25, 12, 12, 12, 12);
+            0, 3, 1.0f, 1.0f, 10, 25, 25, 12, 12, 12, 12);
         }
         
         Border getBackgroundShadowBorder() {
@@ -787,7 +790,7 @@ public class AquaInternalFrameUI
     
     static LazySingleton<Icon> RESIZE_ICON = new LazySingleton<Icon>() {
         protected Icon getInstance() {
-            return new AquaIcon.CachableCoreUIIcon(11, 11) {
+            return new AquaIcon.CachableJRSUIIcon(11, 11) {
                 public void initIconPainter(final AquaPainter<JRSUIState> iconState) {
                     iconState.state.set(Widget.GROW_BOX_TEXTURED);
                     iconState.state.set(WindowType.UTILITY);
@@ -896,11 +899,9 @@ public class AquaInternalFrameUI
             forwardEventToFrame(e);
         }
 
-        public void mouseEntered(final MouseEvent e) {
-        }
+        public void mouseEntered(final MouseEvent e) { }
 
-        public void mouseExited(final MouseEvent e) {
-        }
+        public void mouseExited(final MouseEvent e) { }
         
         public void mousePressed(final MouseEvent e) {
             if (frame == null) return;
@@ -931,8 +932,7 @@ public class AquaInternalFrameUI
             repositionResizeBox();
         }
 
-        public void mouseMoved(final MouseEvent e) {
-        }
+        public void mouseMoved(final MouseEvent e) { }
 
         public void mouseWheelMoved(final MouseWheelEvent e) {
             final Point pt = new Point();
@@ -953,8 +953,7 @@ public class AquaInternalFrameUI
             repositionResizeBox();
         }
 
-        public void componentHidden(final ComponentEvent e) {
-        }
+        public void componentHidden(final ComponentEvent e) { }
 
         public void propertyChange(final PropertyChangeEvent evt) {
             if (!"resizable".equals(evt.getPropertyName())) return;
