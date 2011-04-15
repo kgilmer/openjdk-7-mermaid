@@ -23,14 +23,14 @@
  * questions.
  */
 
-#include <jni.h>
-#import <AppKit/NSGraphics.h>
+#import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "AWTWindow.h"
 #import "CPopupMenu.h"
 #import "ThreadUtilities.h"
 #import "LWCToolkit.h"
+
 
 @implementation CPopupMenu
 
@@ -48,11 +48,6 @@
 
 @end // implementationCPopupMenu : CMenu
 
-#ifndef _Included_apple_awt_CPopupMenu
-#define _Included_apple_awt_CPopupMenu
-#ifdef __cplusplus
-extern "C" {
-#endif
 
   /*
    * Class:     sun_lwawt_macosx_CPopupMenu
@@ -60,34 +55,25 @@ extern "C" {
    * Signature: (JII)J
    */
 JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CPopupMenu_nativeCreatePopupMenu
-(JNIEnv *env, jobject peer, jlong awtWindowPtr, jint x, jint y){
-    AR_POOL(pool);
+(JNIEnv *env, jobject peer, jlong awtWindowPtr, jint x, jint y) {
+    
+    __block CPopupMenu *aCPopupMenu = nil;
+    
+JNF_COCOA_ENTER(env);
 
-    AWTWindow *awtWindow = OBJC(awtWindowPtr);
-    CPopupMenu *aCPopupMenu = nil;
+    AWTWindow *awtWindow = (AWTWindow *)jlong_to_ptr(awtWindowPtr);
 
-    jobject cPeerObjGlobal = (*env)->NewGlobalRef(env, peer);
+    jobject cPeerObjGlobal = JNFNewGlobalRef(env, peer);
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        aCPopupMenu = [[CPopupMenu alloc] initWithPeer:cPeerObjGlobal];
+        CFRetain(aCPopupMenu);
+        [aCPopupMenu release];
+        
+        [[awtWindow contentView] setContextMenu:[aCPopupMenu menu]];
+    }];
 
-    // We use an array here only to be able to get a return value
-    NSMutableArray *args = [[NSMutableArray alloc]
-                               initWithObjects:[NSValue valueWithBytes:&cPeerObjGlobal objCType:@encode(jobject)], nil];
-
-    [ThreadUtilities performOnMainThread:@selector(_create_OnAppKitThread:)
-                                              onObject:[CPopupMenu alloc] withObject:args waitUntilDone:YES awtMode:NO];
-
-    aCPopupMenu = (CMenuItem *)[args objectAtIndex: 0];
-
-    if (aCPopupMenu == nil) {
-        return 0L;
-    }
-
-    [[awtWindow contentView] setContextMenu:[aCPopupMenu menu]];
-    [pool drain];
+JNF_COCOA_EXIT(env);
+    
     return ptr_to_jlong(aCPopupMenu);
 }
-
-
-#ifdef __cplusplus
-}
-#endif
-#endif

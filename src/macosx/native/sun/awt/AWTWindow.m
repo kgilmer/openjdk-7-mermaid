@@ -184,7 +184,7 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     
 JNF_COCOA_EXIT(env);
     
-    return OBJCLONG(aWindow);
+    return ptr_to_jlong(aWindow);
 }
 
 /*

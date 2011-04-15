@@ -209,8 +209,7 @@
     
     if ([event type] == NSMouseEntered ||
 	[event type] == NSMouseExited ||
-	[event type] == NSScrollWheel)
-    {
+	[event type] == NSScrollWheel) {
         clickCount = 0;
     } else {
         clickCount = [event clickCount];
@@ -232,14 +231,10 @@
         // Unable to create event by some reason.
         return;
     }
-
-    (*env)->CallVoidMethod(env, m_cPlatformView,
-			   javaIDs.CPlatformView.deliverMouseEvent, jEvent);
     
-    if ((*env)->ExceptionOccurred(env)) {
-        (*env)->ExceptionDescribe(env);
-        (*env)->ExceptionClear(env);
-    }
+    static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
+    static JNF_MEMBER_CACHE(jm_deliverMouseEvent, jc_PlatformView, "deliverMouseEvent", "(Lsun/lwawt/macosx/event/NSEvent;)V");
+    JNFCallVoidMethod(env, m_cPlatformView, jm_deliverMouseEvent, jEvent);
 }
 
 

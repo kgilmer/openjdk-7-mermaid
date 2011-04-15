@@ -24,6 +24,7 @@
  */
 
 #import <stdlib.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "sun_java2d_opengl_CGLSurfaceData.h"
 
@@ -58,7 +59,9 @@ OGLSD_UnlockFocus(OGLContext *oglc, OGLSDOps *dstOps)
 
     NSOpenGLView *nsView = cglsdo->peerData;
     if (nsView != NULL) {
+JNF_COCOA_ENTER(env);
         [nsView unlockFocus];
+JNF_COCOA_EXIT(env);
     }
 }
 #endif
@@ -78,10 +81,10 @@ CGLSD_MakeCurrentToScratch(JNIEnv *env, OGLContext *oglc)
                       "CGLSD_MakeCurrentToScratch: context is null");
         return JNI_FALSE;
     }
-	
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-    CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
 
+JNF_COCOA_ENTER(env);
+    
+    CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
 #if USE_NSVIEW_FOR_SCRATCH
     [ctxinfo->context makeCurrentContext];
     [ctxinfo->context setView: ctxinfo->scratchSurface];
@@ -93,7 +96,8 @@ CGLSD_MakeCurrentToScratch(JNIEnv *env, OGLContext *oglc)
             mipMapLevel: 0
             currentVirtualScreen: [ctxinfo->context currentVirtualScreen]];
 #endif
-    [pool drain];
+
+JNF_COCOA_EXIT(env);
     
     return JNI_TRUE;
 }
@@ -109,6 +113,8 @@ OGLSD_DestroyOGLSurface(JNIEnv *env, OGLSDOps *oglsdo)
 {
     J2dTraceLn(J2D_TRACE_INFO, "OGLSD_DestroyOGLSurface");
 	
+JNF_COCOA_ENTER(env);
+    
     CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
     if (oglsdo->drawableType == OGLSD_PBUFFER) {
         if (oglsdo->textureID != 0) {
@@ -128,6 +134,8 @@ OGLSD_DestroyOGLSurface(JNIEnv *env, OGLSDOps *oglsdo)
     }
 	
     oglsdo->drawableType = OGLSD_UNDEFINED;
+    
+JNF_COCOA_EXIT(env);
 }
 
 /**
@@ -171,10 +179,12 @@ OGLSD_SetScratchSurface(JNIEnv *env, jlong pConfigInfo)
         J2dRlsTraceLn(J2D_TRACE_ERROR, "OGLSD_SetScratchContext: cgl config info is null");
         return NULL;
     }
-
+    
     OGLContext *oglc = cglInfo->context;
     CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
 
+JNF_COCOA_ENTER(env);
+    
     // avoid changing the context's target view whenever possible, since
     // calling setView causes flickering; as long as our context is current
     // to some view, it's not necessary to switch to the scratch surface
@@ -198,6 +208,8 @@ OGLSD_SetScratchSurface(JNIEnv *env, jlong pConfigInfo)
         // some other framebuffer object)
         j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
+    
+JNF_COCOA_EXIT(env);
 
     return oglc;
 }
@@ -251,6 +263,8 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
         return oglc;
     }
 
+JNF_COCOA_ENTER(env);
+    
     // set the current surface
     if (dstOps->drawableType == OGLSD_PBUFFER) {
         // REMIND: pbuffers are not fully tested yet...
@@ -261,8 +275,6 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
                 mipMapLevel: 0
                 currentVirtualScreen: [ctxinfo->context currentVirtualScreen]];
     } else {
-        NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-
         CGLSDOps *cglsdo = (CGLSDOps *)dstOps->privOps;
         NSView *nsView = (NSView *)cglsdo->peerData;
 
@@ -270,8 +282,6 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
             [ctxinfo->context makeCurrentContext];
             [ctxinfo->context setView: nsView];
         }
-
-        [pool drain];
     }
 	
     if (OGLC_IS_CAP_PRESENT(oglc, CAPS_EXT_FBOBJECT)) {
@@ -291,6 +301,8 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
                 colorBuffer: GL_FRONT];
     }
 	
+JNF_COCOA_EXIT(env);
+    
     return oglc;
 }
 
@@ -321,12 +333,13 @@ OGLSD_InitOGLWindow(JNIEnv *env, OGLSDOps *oglsdo)
         return JNI_FALSE;
     }
 
+JNF_COCOA_ENTER(env);
     NSRect surfaceBounds = [v bounds];
-    
     oglsdo->drawableType = OGLSD_WINDOW;
     oglsdo->isOpaque = JNI_TRUE;
     oglsdo->width = surfaceBounds.size.width;
     oglsdo->height = surfaceBounds.size.height;
+JNF_COCOA_EXIT(env);
 
     J2dTraceLn2(J2D_TRACE_VERBOSE, "  created window: w=%d h=%d", oglsdo->width, oglsdo->height);
 	
@@ -337,7 +350,10 @@ void
 OGLSD_SwapBuffers(JNIEnv *env, jlong pPeerData)
 {
     J2dTraceLn(J2D_TRACE_INFO, "OGLSD_SwapBuffers");
+    
+JNF_COCOA_ENTER(env);
     [[NSOpenGLContext currentContext] flushBuffer];
+JNF_COCOA_EXIT(env);
 }
 
 #pragma mark -
@@ -459,7 +475,7 @@ Java_sun_java2d_opengl_CGLSurfaceData_initPbuffer
 	
     int format = isOpaque ? GL_RGB : GL_RGBA;
 
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+JNF_COCOA_ENTER(env);
 
     cglsdo->pbuffer =
         [[NSOpenGLPixelBuffer alloc]
@@ -470,11 +486,8 @@ Java_sun_java2d_opengl_CGLSurfaceData_initPbuffer
             pixelsHigh: pbHeight];
     if (cglsdo->pbuffer == nil) {
         J2dRlsTraceLn(J2D_TRACE_ERROR, "CGLSurfaceData_initPbuffer: could not create pbuffer");
-        [pool drain];
         return JNI_FALSE;
     }
-
-    [pool drain];
 
     // make sure the actual dimensions match those that we requested
     GLsizei actualWidth  = [cglsdo->pbuffer pixelsWide];
@@ -501,6 +514,8 @@ Java_sun_java2d_opengl_CGLSurfaceData_initPbuffer
 	
     OGLSD_INIT_TEXTURE_FILTER(oglsdo, GL_NEAREST);
 
+JNF_COCOA_EXIT(env);
+    
     return JNI_TRUE;
 }
 
@@ -531,8 +546,8 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
         OGLContext *oglc = cglsdo->configInfo->context;
         CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
 		
-        NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+JNF_COCOA_ENTER(env);
         [ctxinfo->context update];
-        [pool drain];
+JNF_COCOA_EXIT(env);
     }
 }

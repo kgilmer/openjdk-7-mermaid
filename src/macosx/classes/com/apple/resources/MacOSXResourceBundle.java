@@ -31,7 +31,6 @@ import java.util.ResourceBundle;
 import java.io.*;
 
 public class MacOSXResourceBundle extends PropertyResourceBundle {
-
     MacOSXResourceBundle(InputStream stream) throws IOException {
         super(stream);
     }
@@ -51,7 +50,6 @@ public class MacOSXResourceBundle extends PropertyResourceBundle {
 }
 
 class LoadNativeBundleAction implements PrivilegedExceptionAction {
-    
     String mBaseJavaBundle;
     String mFilenameOverride;
     
@@ -69,8 +67,9 @@ class LoadNativeBundleAction implements PrivilegedExceptionAction {
         // with '.properties' appended. Either way, the native method will take care of the extension.
         String filename = mFilenameOverride;
         
-        if (filename == null)
+        if (filename == null) {
             filename = mBaseJavaBundle.substring(mBaseJavaBundle.lastIndexOf('.') + 1);
+        }
         
         File propsFile = null;        
         String propertyFileName = getPathToBundleFile(filename);
@@ -86,8 +85,7 @@ class LoadNativeBundleAction implements PrivilegedExceptionAction {
             System.out.println("Failed to create resources from application bundle.  Using Java-based resources.");
         } finally {
             try {
-                if (stream != null)
-                    stream.close();
+                if (stream != null) stream.close();
                 stream = null;
             } catch (Exception e) {
                 e.printStackTrace();

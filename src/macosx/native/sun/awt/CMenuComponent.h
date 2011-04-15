@@ -34,6 +34,5 @@
 
 // Setup
 - (id) initWithPeer:(jobject)peer;
-- (void) _create_OnAppKitThread: (NSMutableArray *)argValue;
 - (void) disposer;
 @end

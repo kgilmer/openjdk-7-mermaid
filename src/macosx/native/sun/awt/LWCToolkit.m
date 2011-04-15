@@ -49,7 +49,6 @@ static long eventCount;
 @end
 
 JavaVM *jvm = NULL;
-LWCJavaIDs javaIDs;
 
 //used to check if some event has processed by the main loop in syncNativeQueue.
 
@@ -268,22 +267,7 @@ FindCGDirectDisplayIDForScreenIndex(jint screenIndex)
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_LWCToolkit_initIDs
-(JNIEnv *env, jclass klass)
-{
-JNF_COCOA_ENTER(env);
-    
-    jclass cls = (*env)->FindClass(env, "sun/lwawt/macosx/CPlatformWindow");
-    javaIDs.CPlatformWindow.canBecomeKeyWindow = (*env)->GetMethodID(env, cls,
-            "canBecomeKeyWindow", "()Z");
-    javaIDs.CPlatformWindow.windowDidBecomeMain = (*env)->GetMethodID(env, cls,
-            "windowDidBecomeMain", "()V");
-    javaIDs.CPlatformWindow.windowShouldClose = (*env)->GetMethodID(env, cls,
-            "windowShouldClose", "()Z");
-
-    cls = (*env)->FindClass(env, "sun/lwawt/macosx/CPlatformView");
-    javaIDs.CPlatformView.deliverMouseEvent = (*env)->GetMethodID(env, cls,
-            "deliverMouseEvent", "(Lsun/lwawt/macosx/event/NSEvent;)V");
-    
+(JNIEnv *env, jclass klass) {
     // set thread names
     dispatch_async(dispatch_get_main_queue(), ^(void){
         [[NSThread currentThread] setName:@"CToolkit NSThread"];
@@ -293,8 +277,6 @@ JNF_COCOA_ENTER(env);
         static JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
         JNFCallStaticVoidMethod(env, jsm_installToolkitThreadNameInJava);
     });
-    
-JNF_COCOA_EXIT(env);
 }
 
 /*

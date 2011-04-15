@@ -41,62 +41,15 @@
 const char *kInternalError;
 
 @interface AWTToolkit : NSObject { }
-
 + (long) getEventCount;
 + (void) eventCountPlusPlus;
-
 @end
 
 CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);
 
-typedef struct tagLWCJavaIDs {
-    struct {
-        jmethodID canBecomeKeyWindow;
-        jmethodID windowDidBecomeMain;
-        jmethodID windowShouldClose;
-    } CPlatformWindow;
-    struct {
-        jmethodID deliverMouseEvent;
-    } CPlatformView;
-} LWCJavaIDs;
-
-extern LWCJavaIDs javaIDs;
-
-/**
- * A simple C representation of a Java Rectangle.
- */
-typedef struct AWTRect {
-    jint x;
-    jint y;
-    jint width;
-    jint height;
-} AWTRect;
-
 /*
  * Utility Macros
  */
-
-#ifdef DEBUG
-#define CDEBUG(str, args...) NSLog(str, args)
-#define ASSERT(args...) assert(args)
-#else
-#define CDEBUG(str, args...)
-#define ASSERT(args...)
-#endif
-
-/** Macro to cast a jlong to a void pointer. Casts to long on 32-bit systems to quiesce the compiler. */
-#ifdef _LP64
-#define PTR(jl) ((void *) jl)
-#else
-#define PTR(jl) ((void *) (long) jl)
-#endif
-
-/** Macro to cast a void pointer to jlong. Casts to long on 32-bit systems to quiesce the compiler. */
-#ifdef _LP64
-#define PTRLONG(ptr) ((jlong) ptr)
-#else
-#define PTRLONG(ptr) ((jlong) (long) ptr)
-#endif
 
 /** Macro to cast a jlong to an Objective-C object (id). Casts to long on 32-bit systems to quiesce the compiler. */
 #ifdef _LP64
@@ -104,21 +57,5 @@ typedef struct AWTRect {
 #else
 #define OBJC(jl) ((id) (long) jl)
 #endif
-
-/** Macro to cast an Objective-C object (id) to jlong. Casts to long on 32-bit systems to quiesce the compiler. */
-#ifdef _LP64
-#define OBJCLONG(ptr) ((jlong) ptr)
-#else
-#define OBJCLONG(ptr) ((jlong) (long) ptr)
-#endif
-
-/** Macro to create an NSAutoreleasePool. */
-#define AR_POOL(name) NSAutoreleasePool *name = [[NSAutoreleasePool alloc] init]
-
-/** Lock a pthread mutex. */
-#define LOCK(v) do { pthread_mutex_lock(v); } while (0)
-
-/** Unlock a pthread mutex. */
-#define UNLOCK(v) do { pthread_mutex_unlock(v); } while (0)
 
 #endif /* __LWCTOOLKIT_H */

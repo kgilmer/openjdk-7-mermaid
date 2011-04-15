@@ -47,10 +47,6 @@ public class CImage {
         return nsImagePtr;
     }
     
-    public static CImage wrapNSImage(long ptr, boolean releaseOnGC) {
-        return new CImage(ptr, releaseOnGC);
-    }
-    
     public static CImage fromImage(Image img) {
         int w = img.getWidth(null);
         int h = img.getHeight(null);
