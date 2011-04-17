@@ -251,7 +251,7 @@ static Bool IsXCompositeAvailable()
 
         if (XQueryExtension(awt_display, "Composite", &opcode, &eventb, &errorb)) {
             xcompositeLibHandle = dlopen("libXcomposite.so.1", RTLD_LAZY | RTLD_GLOBAL);
-#ifndef __linux__ /* SOLARIS */
+#if !defined(__linux__) && !defined(_ALLBSD_SOURCE) /* SOLARIS */
             if (xcompositeLibHandle == NULL) {
                 xcompositeLibHandle = dlopen("/usr/sfw/lib/libXcomposite.so.1",
                         RTLD_LAZY | RTLD_GLOBAL);
