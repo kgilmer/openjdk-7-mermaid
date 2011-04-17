@@ -128,6 +128,7 @@ ifneq (,$(findstring $(PLATFORM), linux bsd))
   endif
 endif # PLATFORM
 
+endif # PLATFORM
 
 #
 # Lets not remove any class files.
