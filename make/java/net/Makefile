@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1995, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -37,10 +37,6 @@ include FILES_c.gmk
 AUTO_FILES_JAVA_DIRS = java/net
 
 ifeq ($(PLATFORM), windows)
-    # Windows 9x module only needed on 32-bit build
-    ifeq ($(ARCH_DATA_MODEL), 32)
-	FILES_c += NetworkInterface_win9x.c
-    endif
     FILES_c += NTLMAuthSequence.c
     FILES_c += NetworkInterface_winXP.c
 else
@@ -102,7 +98,9 @@ endif
   OTHER_LDLIBS = $(JVMLIB) -pthread
 else
 ifeq ($(PLATFORM), windows)
-  OTHER_LDLIBS = ws2_32.lib $(JVMLIB)
+  OTHER_LDLIBS = ws2_32.lib $(JVMLIB) \
+                 secur32.lib iphlpapi.lib delayimp.lib \
+                 /DELAYLOAD:secur32.dll /DELAYLOAD:iphlpapi.dll
 else
   OTHER_LDLIBS = $(LIBSOCKET) $(LIBNSL) $(LIBDL) $(JVMLIB)
 endif

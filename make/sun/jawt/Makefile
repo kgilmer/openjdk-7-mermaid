@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1999, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -112,13 +112,20 @@ CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR)/debug \
 # Libraries to link in.
 #
 ifeq ($(PLATFORM), solaris)
-OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -L$(OPENWIN_LIB) -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt -L/usr/openwin/sfw/lib$(ISA_DIR) -lXrender
+  ifndef BUILD_HEADLESS_ONLY
+    OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -L$(OPENWIN_LIB) -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt -L/usr/openwin/sfw/lib$(ISA_DIR) -lXrender
+  else
+    OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -L$(OPENWIN_LIB) -L$(LIBDIR)/$(LIBARCH)/headless -lmawt -L/usr/openwin/sfw/lib$(ISA_DIR) -lXrender
+  endif
 endif # PLATFORM
 
 ifneq (,$(findstring $(PLATFORM), linux bsd))
-OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -lawt -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt
-endif # PLATFORM
-
+  ifndef BUILD_HEADLESS_ONLY
+    OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -lawt -L$(LIBDIR)/$(LIBARCH)/xawt -lmawt
+  else
+    OTHER_LDLIBS = -L$(LIBDIR)/$(LIBARCH) -lawt -L$(LIBDIR)/$(LIBARCH)/headless -lmawt
+    CFLAGS += -DHEADLESS
+  endif
 endif # PLATFORM
 
 
