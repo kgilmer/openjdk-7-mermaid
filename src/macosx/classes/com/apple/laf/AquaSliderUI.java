@@ -206,10 +206,7 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
         return State.ACTIVE;
     }
 
-    public void paintTicks(final Graphics g) {
-        final Graphics2D g2d = (Graphics2D)g;
-        final Object hint = AquaUtils.beginFont(g2d);
-        
+    public void paintTicks(final Graphics g) {        
         if (slider.isEnabled()) {
             g.setColor(tickColor);
         } else {
@@ -219,9 +216,7 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
             g.setColor(disabledTickColor);
         }
         
-        super.paintTicks(g);
-        
-        AquaUtils.endFont(g2d, hint);
+        super.paintTicks(g);        
     }
 
     // Layout Methods

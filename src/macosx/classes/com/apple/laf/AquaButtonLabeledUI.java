@@ -91,7 +91,6 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
     
     public synchronized void paint(final Graphics g, final JComponent c) {
         final Graphics2D fontg2d = (Graphics2D)g;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(fontg2d);
 
         final AbstractButton b = (AbstractButton)c;
         final ButtonModel model = b.getModel();
@@ -191,8 +190,6 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
                 paintText(g, b, textRect, text);
             }
         }
-
-        AquaUtils.endFont(fontg2d, savedAntiAliasingHint);
     }
 
     /*

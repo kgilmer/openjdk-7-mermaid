@@ -36,18 +36,6 @@ import sun.swing.SwingUtilities2;
 public class AquaLabelUI extends BasicLabelUI {
     protected static AquaLabelUI aquaLabelUI = new AquaLabelUI();
 
-    public void paint(final Graphics g, final JComponent c) {
-        if (!(g instanceof Graphics2D)) {
-            super.paint(g, c);
-            return;
-        }
-        
-        final Graphics2D g2d = (Graphics2D)g;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
-        super.paint(g, c);
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
-    }
-
     public static ComponentUI createUI(final JComponent c) {
         return aquaLabelUI;
     }

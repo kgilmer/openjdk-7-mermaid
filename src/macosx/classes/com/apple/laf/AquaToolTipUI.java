@@ -41,11 +41,4 @@ public class AquaToolTipUI extends BasicToolTipUI {
     public AquaToolTipUI() {
         super();
     }
-
-    public void paint(final Graphics g, final JComponent c) {
-        final Graphics2D g2d = (Graphics2D)g;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
-        super.paint(g, c);
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
-    }
 }

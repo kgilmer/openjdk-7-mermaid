@@ -191,8 +191,6 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
         final Point renderLocation = getStringPlacement(g2, progressString, x, y, width, height);
         final Rectangle oldClip = g2.getClipBounds();
 
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2);
-
         if (isHorizontal()) {
             g2.setColor(selectionForeground);
             g2.drawString(progressString, renderLocation.x, renderLocation.y);
@@ -210,7 +208,6 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
             g2.setTransform(savedAT);
         }
         
-        AquaUtils.endFont(g2, savedAntiAliasingHint);
         g2.setClip(oldClip);
     }
 

@@ -36,6 +36,7 @@ import javax.swing.plaf.basic.BasicLookAndFeel;
 
 import sun.awt.SunHints;
 import sun.swing.SwingLazyValue;
+import sun.swing.SwingUtilities2;
 import apple.laf.JRSUIControl;
 
 import com.apple.resources.MacOSXResourceBundle;
@@ -964,6 +965,11 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Tree.ancestorInputMap", new UIDefaults.LazyInputMap(new Object[]{"ESCAPE", "cancel"}),};
 
         table.putDefaults(defaults);
+        
+        // TODO: use the correct hint when it is available
+        //boolean aaCond = (fOldAntiAliasingHint != SunHints.INTVAL_TEXT_ANTIALIAS_OFF);
+        Object aaTextInfo = SwingUtilities2.AATextInfo.getAATextInfo(true/*aaCond*/);
+        table.put(SwingUtilities2.AA_TEXT_PROPERTY_KEY, aaTextInfo);
     }
 
     protected void initSystemColorDefaults(final UIDefaults table) {

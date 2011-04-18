@@ -77,26 +77,6 @@ public class AquaUtils {
     static CImage.Creator getCImageCreator() {
         return cImageCreator;
     }*/
-
-    public static Object beginFont(final Graphics2D g2d) {
-        if (g2d == null) return null;
-        
-        final Object savedAntiAliasingHint = g2d.getRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING);
-
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        return savedAntiAliasingHint;
-    }
-
-    public static void endFont(final Graphics2D g2d, final Object hint) {
-        if (g2d == null) return;
-        
-        if (hint == null) {
-            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
-            return;
-        }
-        
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, hint);
-    }
     
     protected static Image generateSelectedDarkImage(final Image image) {
         final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {

@@ -105,10 +105,7 @@ public class AquaTextFieldUI extends BasicTextFieldUI {
     
     protected void paintSafely(final Graphics g) {
         paintBackgroundSafely(g);
-
-        final Object savedHint = g instanceof Graphics2D ? AquaUtils.beginFont((Graphics2D)g) : null;
         super.paintSafely(g);
-        if (savedHint != null) AquaUtils.endFont((Graphics2D)g, savedHint);
     }
     
     protected void paintBackgroundSafely(final Graphics g) {

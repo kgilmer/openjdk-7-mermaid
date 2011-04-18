@@ -90,12 +90,6 @@ public class AquaTextAreaUI extends BasicTextAreaUI {
         AquaKeyBindings.installFullWordDeleteAction(c);
     }
 
-    protected void paintSafely(final Graphics g) {
-        final Object savedHint = AquaUtils.beginFont((Graphics2D)g);
-        super.paintSafely(g);
-        AquaUtils.endFont((Graphics2D)g, savedHint);
-    }
-
     protected Caret createCaret() {
         final JTextComponent c = getComponent();
         final Window owningWindow = SwingUtilities.getWindowAncestor(c);

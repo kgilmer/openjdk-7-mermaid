@@ -256,7 +256,6 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
     // Paint Methods
     public void paint(final Graphics g, final JComponent c) {
         final Graphics2D g2d = g instanceof Graphics2D ? (Graphics2D)g : null;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
 
         final AbstractButton b = (AbstractButton)c;
         final ButtonModel model = b.getModel();
@@ -327,8 +326,6 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
                 paintText(g, b, textRect, text);
             }
         }
-        
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
     }
     
     protected String layoutAndGetText(final Graphics g, final AbstractButton b, final AquaButtonBorder aquaBorder, final Insets i) {
@@ -414,7 +411,6 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
      */
     protected void paintText(final Graphics g, final JComponent c, final Rectangle localTextRect, final String text) {
         final Graphics2D g2d = g instanceof Graphics2D ? (Graphics2D)g : null;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
 
         final AbstractButton b = (AbstractButton)c;
         final ButtonModel model = b.getModel();
@@ -430,8 +426,6 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
             g.setColor(defaultDisabledTextColor);
         }
         BasicGraphicsUtils.drawStringUnderlineCharAt(g, text, mnemonicIndex, localTextRect.x, localTextRect.y + fm.getAscent());
-
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
     }
     
     protected void paintText(final Graphics g, final AbstractButton b, final Rectangle localTextRect, final String text) {

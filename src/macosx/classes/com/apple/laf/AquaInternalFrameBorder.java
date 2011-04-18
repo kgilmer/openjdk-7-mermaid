@@ -184,8 +184,6 @@ public class AquaInternalFrameBorder implements Border, UIResource {
             g.setFont(sStandardFont);
         }
 
-        final Object savedHints = AquaUtils.beginFont((Graphics2D)g);
-
         // Center text vertically.
         final FontMetrics fm = g.getFontMetrics();
         final int baseline = (fThisTitleBarHeight + fm.getAscent() - fm.getLeading() - fm.getDescent()) / 2;
@@ -253,7 +251,6 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         // sja fix x & y
         final int iconYPostion = (fThisTitleBarHeight - getIconHeight(frame)) / 2;
         paintTitleIcon(g, frame, x + startXPosition, y + iconYPostion);
-        AquaUtils.endFont((Graphics2D)g, savedHints);
     }
 
     public int getWhichButtonHit(final JInternalFrame frame, final int x, final int y) {

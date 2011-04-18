@@ -170,7 +170,6 @@ public class AquaMenuPainter {
 
     protected void paintMenuItem(final Client client, final Graphics g, final JComponent c, final Icon checkIcon, final Icon arrowIcon, final Color background, final Color foreground, final Color disabledForeground, final Color selectionForeground, final int defaultTextIconGap, final Font acceleratorFont) {
         final Graphics2D g2d = (Graphics2D)g;
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
 
         final JMenuItem b = (JMenuItem)c;
         final ButtonModel model = b.getModel();
@@ -309,7 +308,6 @@ public class AquaMenuPainter {
         
         g.setColor(holdc);
         g.setFont(holdf);
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
     }
 
     // All this had to be copied from BasicMenuItemUI, just to get the right keyModifiersText fn

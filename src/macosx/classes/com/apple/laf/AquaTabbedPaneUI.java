@@ -329,9 +329,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
     protected void paintTitle(final Graphics2D g2d, final Font font, final FontMetrics metrics, final Rectangle textRect, final int tabIndex, final String title) {
         final View v = getTextViewForTab(tabIndex);
         if (v != null) {
-            final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
             v.paint(g2d, textRect);
-            AquaUtils.endFont(g2d, savedAntiAliasingHint);
             return;
         }
         
@@ -350,9 +348,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         }
 
         g2d.setFont(font);
-        final Object savedAntiAliasingHint = AquaUtils.beginFont(g2d);
         g2d.drawString(title, textRect.x, textRect.y + metrics.getAscent()); // ThemeConstants.kSmallTabsTextPadding);
-        AquaUtils.endFont(g2d, savedAntiAliasingHint);
     }
     
     protected void rotateGraphics(final Graphics2D g2d, final Rectangle tabRect, final Rectangle textRect, final Rectangle iconRect, final int tabPlacement) {

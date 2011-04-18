@@ -78,12 +78,6 @@ public class AquaEditorPaneUI extends BasicEditorPaneUI {
         return new AquaFocusHandler();
     }
 
-    protected void paintSafely(final Graphics g){
-        final Object savedHint = AquaUtils.beginFont((Graphics2D)g);
-        super.paintSafely(g);
-        AquaUtils.endFont((Graphics2D)g, savedHint);
-    }
-
     protected Caret createCaret(){
         final Window owningWindow = SwingUtilities.getWindowAncestor(getComponent());
         final AquaCaret returnValue = new AquaCaret(owningWindow, getComponent());
