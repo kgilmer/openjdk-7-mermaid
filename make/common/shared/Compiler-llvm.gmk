@@ -30,10 +30,13 @@
 ifeq ($(PLATFORM), macosx)
 
   # Settings specific to Mac OS X
-
-  CC             = $(COMPILER_PATH)llvm-gcc
-  CPP            = $(COMPILER_PATH)llvm-gcc -E
-  CXX            = $(COMPILER_PATH)llvm-g++
+  ifeq ($(origin CC), default)
+   CC             = $(COMPILER_PATH)llvm-gcc
+  endif
+  CPP             = $(COMPILER_PATH)llvm-gcc -E
+  ifeq ($(origin CC), default)
+   CXX            = $(COMPILER_PATH)llvm-g++
+  endif
 
   REQUIRED_CC_VER = 4.2.1
 
