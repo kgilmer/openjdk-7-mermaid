@@ -392,7 +392,11 @@ OUTPUTDIR:=$(call AltCheckValue,OUTPUTDIR)
 include $(JDK_MAKE_SHARED_DIR)/Defs-versions.gmk
 
 # Get platform specific settings (defines COMPILER_PATH)
-include $(JDK_MAKE_SHARED_DIR)/Defs-$(PLATFORM).gmk
+ifeq ($(PLATFORM), macosx)
+ include $(JDK_MAKE_SHARED_DIR)/Defs-bsd.gmk
+else
+ include $(JDK_MAKE_SHARED_DIR)/Defs-$(PLATFORM).gmk
+endif
 
 # Components
 ifdef ALT_LANGTOOLS_DIST

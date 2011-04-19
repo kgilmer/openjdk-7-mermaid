@@ -155,8 +155,11 @@ endif
 #
 # Get platform definitions
 #
-
-include $(JDK_TOPDIR)/make/common/Defs-$(PLATFORM).gmk
+ifeq ($(PLATFORM), macosx)
+ include $(JDK_TOPDIR)/make/common/Defs-bsd.gmk
+else
+ include $(JDK_TOPDIR)/make/common/Defs-$(PLATFORM).gmk
+endif
 
 #
 # Cross-compilation Settings
