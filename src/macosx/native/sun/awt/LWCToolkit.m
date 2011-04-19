@@ -270,7 +270,7 @@ Java_sun_lwawt_macosx_LWCToolkit_initIDs
 (JNIEnv *env, jclass klass) {
     // set thread names
     dispatch_async(dispatch_get_main_queue(), ^(void){
-        [[NSThread currentThread] setName:@"CToolkit NSThread"];
+        [[NSThread currentThread] setName:@"AppKit Thread"];
         
         JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
         static JNF_CLASS_CACHE(jc_LWCToolkit, "sun/lwawt/macosx/LWCToolkit");

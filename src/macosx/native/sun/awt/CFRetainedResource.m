@@ -23,20 +23,30 @@
  * questions.
  */
 
-#import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
+#import "sun_lwawt_macosx_CFRetainedResource.h"
 
-jobject CGToJavaRect(JNIEnv *env, CGRect rect);
-CGRect JavaToCGRect(JNIEnv *env, jobject rect);
 
-jobject NSToJavaRect(JNIEnv *env, NSRect rect);
-NSRect JavaToNSRect(JNIEnv *env, jobject rect);
-
-jobject NSToJavaPoint(JNIEnv *env, NSPoint point);
-NSPoint JavaToNSPoint(JNIEnv *env, jobject point);
-
-jobject NSToJavaSize(JNIEnv *env, NSSize size);
-NSSize JavaToNSSize(JNIEnv *env, jobject);
-
-NSPoint ConvertNSScreenPoint(JNIEnv *env, NSPoint point);
+/*
+ * Class:     sun_lwawt_macosx_CFRetainedResource
+ * Method:    nativeCFRelease
+ * Signature: (JZ)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CFRetainedResource_nativeCFRelease
+(JNIEnv *env, jclass clazz, jlong ptr, jboolean releaseOnAppKitThread)
+{
+    if (releaseOnAppKitThread) {
+        [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+            CFRelease(jlong_to_ptr(ptr));
+        }];
+    } else {
+        
+JNF_COCOA_ENTER(env);
+        
+        CFRelease(jlong_to_ptr(ptr));
+        
+JNF_COCOA_EXIT(env);
+        
+    }
+}

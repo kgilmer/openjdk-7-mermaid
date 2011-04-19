@@ -31,33 +31,26 @@ import java.awt.peer.CheckboxMenuItemPeer;
 
 import sun.awt.SunToolkit;
 
-class CCheckboxMenuItem
-    extends CMenuItem
-    implements CheckboxMenuItemPeer
-{
+class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer {
+    private native void nativeSetState(long modelPtr, boolean state);
+    private native void nativeSetIsCheckbox(long modelPtr);
+    
     CCheckboxMenuItem(CheckboxMenuItem target) {
         super(target);
         nativeSetIsCheckbox(getModel());
         setState(target.getState());
     }
-
+    
     // MenuItemPeer implementation
     @Override
     public void setState(boolean state) {
         nativeSetState(getModel(), state);
     }
-
-    private native void nativeSetState(long modelPtr, boolean state);
-    private native void nativeSetIsCheckbox(long modelPtr);
-
+    
     public void handleAction(final boolean state) {
-        final CheckboxMenuItem target = (CheckboxMenuItem) getTarget();
+        final CheckboxMenuItem target = (CheckboxMenuItem)getTarget();
         target.setState(state);
-        ItemEvent event = new ItemEvent(target, ItemEvent.ITEM_STATE_CHANGED,
-                target.getLabel(), 
-                state ? ItemEvent.SELECTED
-                      : ItemEvent.DESELECTED);
+        ItemEvent event = new ItemEvent(target, ItemEvent.ITEM_STATE_CHANGED, target.getLabel(), state ? ItemEvent.SELECTED : ItemEvent.DESELECTED);
         SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
     }
 }
-

@@ -29,6 +29,10 @@ static JNF_CLASS_CACHE(sjc_Point2D, "java/awt/geom/Point2D");
 static JNF_MEMBER_CACHE(jm_pt_getX, sjc_Point2D, "getX", "()D");
 static JNF_MEMBER_CACHE(jm_pt_getY, sjc_Point2D, "getY", "()D");
 
+static JNF_CLASS_CACHE(sjc_Dimension2D, "java/awt/geom/Dimension2D");
+static JNF_MEMBER_CACHE(jm_sz_getWidth, sjc_Dimension2D, "getWidth", "()D");
+static JNF_MEMBER_CACHE(jm_sz_getHeight, sjc_Dimension2D, "getHeight", "()D");
+
 static JNF_CLASS_CACHE(sjc_Rectangle2D, "java/awt/geom/Rectangle2D");
 static JNF_MEMBER_CACHE(jm_rect_getX, sjc_Rectangle2D, "getX", "()D");
 static JNF_MEMBER_CACHE(jm_rect_getY, sjc_Rectangle2D, "getY", "()D");
@@ -81,6 +85,17 @@ jobject NSToJavaPoint(JNIEnv *env, NSPoint point) {
 NSPoint JavaToNSPoint(JNIEnv *env, jobject point) {
     return NSMakePoint(JNFCallDoubleMethod(env, point, jm_pt_getX),
                        JNFCallDoubleMethod(env, point, jm_pt_getY));
+}
+
+jobject NSToJavaSize(JNIEnv *env, NSSize size) {
+    static JNF_CLASS_CACHE(sjc_Dimension2DDouble, "java/awt/Dimension"); // No Dimension2D$Double :-(
+    static JNF_CTOR_CACHE(ctor_Dimension2DDouble, sjc_Dimension2DDouble, "(II)V");
+    return JNFNewObject(env, ctor_Dimension2DDouble, (jint)size.width, (jint)size.height);
+}
+
+NSSize JavaToNSSize(JNIEnv *env, jobject dimension) {
+    return NSMakeSize(JNFCallDoubleMethod(env, dimension, jm_sz_getWidth),
+                      JNFCallDoubleMethod(env, dimension, jm_sz_getHeight));
 }
 
 NSPoint ConvertNSScreenPoint(JNIEnv *env, NSPoint point) {

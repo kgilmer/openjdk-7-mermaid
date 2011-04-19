@@ -23,14 +23,17 @@
  * questions.
  */
 
-#import <AppKit/NSImage.h>
+#import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+
+#import "GeomUtilities.h"
+#import "ThreadUtilities.h"
 
 #import "sun_lwawt_macosx_CImage.h"
 
-static void
-CImage_CopyArrayIntoNSImageRep(jint *srcPixels, jint *dstPixels,
-                               int width, int height)
+
+static void CImage_CopyArrayIntoNSImageRep
+(jint *srcPixels, jint *dstPixels, int width, int height)
 {
     int x, y;
     // TODO: test this on big endian systems (not sure if its correct)...
@@ -48,12 +51,10 @@ CImage_CopyArrayIntoNSImageRep(jint *srcPixels, jint *dstPixels,
     }
 }
 
-static void
-CImage_CopyNSImageIntoArray(NSImage *srcImage, jint *dstPixels,
-                            int width, int height)
+static void CImage_CopyNSImageIntoArray
+(NSImage *srcImage, jint *dstPixels, int width, int height)
 {
-    NSBitmapImageRep *srcRep =
-        [NSBitmapImageRep imageRepWithData: [srcImage TIFFRepresentation]];
+    NSBitmapImageRep *srcRep = [NSBitmapImageRep imageRepWithData:[srcImage TIFFRepresentation]];
     jint *srcPixels = (jint *)[srcRep bitmapData];
     int x, y;
     // TODO: test this on big endian systems (not sure if its correct)...
@@ -73,195 +74,203 @@ CImage_CopyNSImageIntoArray(NSImage *srcImage, jint *dstPixels,
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    createNSImage
+ * Method:    nativeCreateNSImageFromArray
  * Signature: ([III)J
  */
-JNIEXPORT jlong JNICALL
-Java_sun_lwawt_macosx_CImage_createNSImage
-    (JNIEnv *env, jclass klass,
-     jintArray buffer, jint width, jint height)
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CImage_nativeCreateNSImageFromArray
+(JNIEnv *env, jclass klass, jintArray buffer, jint width, jint height)
 {
     jlong result = 0L;
 
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
 
-    NSBitmapImageRep* imageRep =
-        [[NSBitmapImageRep alloc]
-            initWithBitmapDataPlanes:NULL
-                pixelsWide:width
-                pixelsHigh:height
-                bitsPerSample:8
-                samplesPerPixel:4
-                hasAlpha:YES
-                isPlanar:NO
-                colorSpaceName:NSDeviceRGBColorSpace
-                bitmapFormat:NSAlphaFirstBitmapFormat
-                bytesPerRow:width*4 // TODO: use explicit scanStride
-                bitsPerPixel:32];
+    NSBitmapImageRep* imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+                                                                         pixelsWide:width
+                                                                         pixelsHigh:height
+                                                                      bitsPerSample:8
+                                                                    samplesPerPixel:4
+                                                                           hasAlpha:YES
+                                                                           isPlanar:NO
+                                                                     colorSpaceName:NSDeviceRGBColorSpace
+                                                                       bitmapFormat:NSAlphaFirstBitmapFormat
+                                                                        bytesPerRow:width*4 // TODO: use explicit scanStride
+                                                                       bitsPerPixel:32];
 
     jint *imgData = (jint *)[imageRep bitmapData];
-    if (imgData != NULL) {
-        jint *src = (*env)->GetPrimitiveArrayCritical(env, buffer, NULL);
-        if (src != NULL) {
-            CImage_CopyArrayIntoNSImageRep(src, imgData, width, height);
+    if (imgData == NULL) return 0L;
+    
+    jint *src = (*env)->GetPrimitiveArrayCritical(env, buffer, NULL);
+    if (src == NULL) return 0L;
+    
+    CImage_CopyArrayIntoNSImageRep(src, imgData, width, height);
+    
+    (*env)->ReleasePrimitiveArrayCritical(env, buffer, src, JNI_ABORT);
+    
+    NSImage *nsImage = [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
+    [nsImage addRepresentation:imageRep];
+    [imageRep release];
 
-            (*env)->ReleasePrimitiveArrayCritical(env, buffer, src, JNI_ABORT);
-
-            NSImage *nsImage =
-                [[NSImage alloc] initWithSize:NSMakeSize(width, height)];
-            [nsImage addRepresentation:imageRep];
-            [imageRep release];
-
-            if (nsImage != nil) {
-                CFRetain(nsImage);
-            }
-
-            result = ptr_to_jlong(nsImage);
-        }
+    if (nsImage != nil) {
+        CFRetain(nsImage); // GC
     }
 
-    JNF_COCOA_EXIT(env);
+    result = ptr_to_jlong(nsImage);
+
+JNF_COCOA_EXIT(env);
 
     return result;
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    createNSImageFromIcon
+ * Method:    nativeCreateNSImageFromIconSelector
  * Signature: (I)J
  */
-JNIEXPORT jlong JNICALL
-Java_sun_lwawt_macosx_CImage_createNSImageFromIcon
-    (JNIEnv *env, jclass klass, jint selector)
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CImage_nativeCreateNSImageFromIconSelector
+(JNIEnv *env, jclass klass, jint selector)
 {
-    NSImage *image = NULL;
-    JNF_COCOA_ENTER(env);
-
+    NSImage *image = nil;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
     IconRef iconRef;
     if (noErr == GetIconRef(kOnSystemDisk, kSystemIconsCreator, selector, &iconRef)) {
         image = [[NSImage alloc] initWithIconRef:iconRef];
         if (image) CFRetain(image); // GC
         ReleaseIconRef(iconRef);
     }
-
-    JNF_COCOA_EXIT(env);
+    
+JNF_COCOA_EXIT(env);
+    
     return ptr_to_jlong(image);
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    createNSImageFromFile
+ * Method:    nativeCreateNSImageFromFileContents
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL
-Java_sun_lwawt_macosx_CImage_createNSImageFromFile
-    (JNIEnv *env, jclass klass, jstring file)
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CImage_nativeCreateNSImageFromFileContents
+(JNIEnv *env, jclass klass, jstring file)
 {
-    NSImage *image = NULL;
-    JNF_COCOA_ENTER(env);
-
-    NSString *s = JNFJavaToNSString(env, file);
-    image = [[NSImage alloc] initByReferencingFile:s];
-    if(image) CFRetain(image); // GC
-
-    JNF_COCOA_EXIT(env);
+    NSImage *image = nil;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
+    NSString *path = JNFNormalizedNSStringForPath(env, file);
+    image = [[NSImage alloc] initByReferencingFile:path];
+    if (image) CFRetain(image); // GC
+    
+JNF_COCOA_EXIT(env);
+    
     return ptr_to_jlong(image);
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    createNSImageFromName
+ * Method:    nativeCreateNSImageOfFileFromLaunchServices
  * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL
-Java_sun_lwawt_macosx_CImage_createNSImageFromName
-    (JNIEnv *env, jclass klass, jstring name)
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CImage_nativeCreateNSImageOfFileFromLaunchServices
+(JNIEnv *env, jclass klass, jstring file)
 {
-    NSImage *image = NULL;
-    JNF_COCOA_ENTER(env);
+    __block NSImage *image = nil;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
+    NSString *path = JNFNormalizedNSStringForPath(env, file);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        image = [[NSWorkspace sharedWorkspace] iconForFile:path];
+        [image setScalesWhenResized:TRUE];
+        if (image) CFRetain(image); // GC
+    }];
+    
+JNF_COCOA_EXIT(env);
+    
+    return ptr_to_jlong(image);
+}
 
+/*
+ * Class:     sun_lwawt_macosx_CImage
+ * Method:    nativeCreateNSImageFromImageName
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CImage_nativeCreateNSImageFromImageName
+(JNIEnv *env, jclass klass, jstring name)
+{
+    NSImage *image = nil;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
     image = [NSImage imageNamed:JNFJavaToNSString(env, name)];
     if (image) CFRetain(image); // GC
-
-    JNF_COCOA_EXIT(env);
+    
+JNF_COCOA_EXIT(env);
+    
     return ptr_to_jlong(image);
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    disposeNSImage
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CImage_disposeNSImage
-    (JNIEnv *env , jclass klass, jlong nsImagePtr)
-{
-   CFRelease(jlong_to_ptr(nsImagePtr));
-}
-
-/*
- * Class:     sun_lwawt_macosx_CImage
- * Method:    copyNSImageIntoArray
+ * Method:    nativeCopyNSImageIntoArray
  * Signature: (J[III)V
  */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CImage_copyNSImageIntoArray
-    (JNIEnv *env, jclass klass, jlong jnsImage, jintArray buffer, jint w, jint h)
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CImage_nativeCopyNSImageIntoArray
+(JNIEnv *env, jclass klass, jlong nsImgPtr, jintArray buffer, jint w, jint h)
 {
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
+    NSImage *img = (NSImage *)jlong_to_ptr(nsImgPtr);
     jint *dst = (*env)->GetPrimitiveArrayCritical(env, buffer, NULL);
     if (dst) {
-        CImage_CopyNSImageIntoArray(jlong_to_ptr(jnsImage), dst, w, h);
+        CImage_CopyNSImageIntoArray(img, dst, w, h);
         (*env)->ReleasePrimitiveArrayCritical(env, buffer, dst, JNI_ABORT);
     }
+    
+JNF_COCOA_EXIT(env);
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    getNSImageWidth
- * Signature: (J)I
+ * Method:    nativeGetNSImageSize
+ * Signature: (J)Ljava/awt/geom/Dimension2D;
  */
-JNIEXPORT jint JNICALL
-Java_sun_lwawt_macosx_CImage_getNSImageWidth
-    (JNIEnv *env, jclass clazz, jlong image)
+JNIEXPORT jobject JNICALL Java_sun_lwawt_macosx_CImage_nativeGetNSImageSize
+(JNIEnv *env, jclass klass, jlong nsImgPtr)
 {
-    if (!image) return 0;
-    jint width;
-    JNF_COCOA_ENTER(env);
-    width = [(NSImage *)jlong_to_ptr(image) size].width;
-    JNF_COCOA_EXIT(env);
-    return width;
+    jobject size = NULL;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_ANY_THREAD;
+    
+    size = NSToJavaSize(env, [(NSImage *)jlong_to_ptr(nsImgPtr) size]);
+    
+JNF_COCOA_EXIT(env);
+    
+    return size;
 }
 
 /*
  * Class:     sun_lwawt_macosx_CImage
- * Method:    getNSImageHeight
- * Signature: (J)I
+ * Method:    nativeSetNSImageSize
+ * Signature: (JDD)V
  */
-JNIEXPORT jint JNICALL
-Java_sun_lwawt_macosx_CImage_getNSImageHeight
-    (JNIEnv *env, jclass clazz, jlong image)
-{
-    if (!image) return 0;
-    jint height;
-    JNF_COCOA_ENTER(env);
-    height = [(NSImage *)jlong_to_ptr(image) size].height;
-    JNF_COCOA_EXIT(env);
-    return height;
-}
-
-/*
- * Class:     sun_lwawt_macosx_CImage
- * Method:    setNSImageSize
- * Signature: (JII)V
- */
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_CImage_setNSImageSize
-    (JNIEnv *env, jclass clazz, jlong image, jint w, jint h)
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CImage_nativeSetNSImageSize
+(JNIEnv *env, jclass clazz, jlong image, jdouble w, jdouble h)
 {
     if (!image) return;
     NSImage *i = (NSImage *)jlong_to_ptr(image);
-    JNF_COCOA_ENTER(env);
+    
+JNF_COCOA_ENTER(env);
+    
     [i setScalesWhenResized:TRUE];
     [i setSize:NSMakeSize(w, h)];
-    JNF_COCOA_EXIT(env);
+    
+JNF_COCOA_EXIT(env);
 }

@@ -25,15 +25,10 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.Button;
-import java.awt.Image;
-import java.awt.MediaTracker;
-import java.awt.PopupMenu;
-import java.awt.TrayIcon;
+import java.awt.*;
 import java.awt.peer.TrayIconPeer;
 
 public class CTrayIcon implements TrayIconPeer {
-
     private TrayIcon target;
     private PopupMenu popup;
     private long model;
@@ -62,6 +57,7 @@ public class CTrayIcon implements TrayIconPeer {
     }
 
     private long createModel() {
+//        final NSStatusBarClass statusBarClass = JObjC.getInstance().AppKit().NSStatusBar();
         return nativeCreate();
     }
     
@@ -112,8 +108,8 @@ public class CTrayIcon implements TrayIconPeer {
             return;
         }
 
-        CImage cimage = CImage.fromImage(image);
-        setNativeImage(model, cimage.getNSImagePtr(), target.isImageAutoSize());
+        CImage cimage = CImage.getCreator().createFromImage(image);
+        setNativeImage(model, cimage.ptr, target.isImageAutoSize());
     }
 
     private native void setNativeImage(final long model, final long nsimage, final boolean autosize);

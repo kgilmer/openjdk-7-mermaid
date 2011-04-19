@@ -26,106 +26,121 @@
 package sun.lwawt.macosx;
 
 import java.awt.*;
+import java.awt.geom.Dimension2D;
 import java.awt.image.*;
 
 import sun.awt.image.SunWritableRaster;
-import sun.java2d.*;
 
-public class CImage {
-    private long nsImagePtr;
-    private Object disposerReferent;
+public class CImage extends CFRetainedResource {
+    private static native long nativeCreateNSImageFromArray(int[] buffer, int w, int h);
+    private static native long nativeCreateNSImageFromFileContents(String file);
+    private static native long nativeCreateNSImageOfFileFromLaunchServices(String file);
+    private static native long nativeCreateNSImageFromImageName(String name);
+    private static native long nativeCreateNSImageFromIconSelector(int selector);
+    private static native void nativeCopyNSImageIntoArray(long image, int[] buffer, int w, int h);
+    private static native Dimension2D nativeGetNSImageSize(long image);
+    private static native void nativeSetNSImageSize(long image, double w, double h);
     
-    private CImage(long nsImagePtr, boolean releaseOnGC) {
-        this.nsImagePtr = nsImagePtr;
-        if (releaseOnGC && nsImagePtr != 0) {
-            this.disposerReferent = new Object();
-            Disposer.addRecord(disposerReferent, new CImageDisposerRecord(nsImagePtr));
+    static Creator creator = new Creator();
+    static Creator getCreator() {
+        return creator;
+    }
+    
+    public static class Creator {
+        Creator() { }
+        
+        // This is used to create a CImage with an NSImage pointer. It MUST be a CFRetained
+        // NSImage, and the CImage takes ownership of the non-GC retain. If callers need the
+        // NSImage themselves, they MUST call retain on the NSImage themselves.
+        BufferedImage createImageUsingNativeSize(final long image) {
+            if (image == 0) return null;
+            final Dimension2D size = nativeGetNSImageSize(image);
+            return createBufferedImage(image, size.getWidth(), size.getHeight());
+        }
+        
+        // the width and height passed in as a parameter could differ than the width and the height of the NSImage (image), in that case, the image will be scaled
+        BufferedImage createBufferedImage(long image, double width, double height) {
+            if (image == 0) throw new Error("Unable to instantiate CImage with null native image reference.");
+            return createImageWithSize(image, width, height);
+        }
+        
+        public BufferedImage createImageWithSize(final long image, final double width, final double height) {
+            final CImage img = new CImage(image);
+            img.resize(width, height);
+            return img.toImage();
+        }
+        
+        // This is used to create a CImage that represents the icon of the given file.
+        public BufferedImage createImageOfFile(final String file, final int width, final int height) {
+            return createBufferedImage(nativeCreateNSImageOfFileFromLaunchServices(file), width, height);
+        }
+        
+        public BufferedImage createImageFromFile(final String file, final double width, final double height) {
+            final long image = nativeCreateNSImageFromFileContents(file);
+            nativeSetNSImageSize(image, width, height);    
+            return createBufferedImage(image, width, height);
+        }
+    
+        public BufferedImage createSystemImageFromSelector(final String iconSelector, final int width, final int height) {
+            return createBufferedImage(nativeCreateNSImageFromIconSelector(getSelectorAsInt(iconSelector)), width, height);
+        }
+        
+        public Image createImageFromName(final String name, final int width, final int height) {
+            return createBufferedImage(nativeCreateNSImageFromImageName(name), width, height);
+        }
+        
+        public Image createImageFromName(final String name) {
+            return createImageUsingNativeSize(nativeCreateNSImageFromImageName(name));
+        }
+    
+        // This is used to create a CImage from a Image
+        public CImage createFromImage(final Image image) {
+            int w = image.getWidth(null);
+            int h = image.getHeight(null);
+            BufferedImage bimg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB_PRE);
+            Graphics2D g2 = bimg.createGraphics();
+            g2.setComposite(AlphaComposite.Src);
+            g2.drawImage(image, 0, 0, null);
+            g2.dispose();
+            int[] buffer = ((DataBufferInt)bimg.getRaster().getDataBuffer()).getData();
+            return new CImage(nativeCreateNSImageFromArray(buffer, w, h));
+        }
+        
+        static int getSelectorAsInt(final String fromString) {
+            final byte[] b = fromString.getBytes();
+            final int len = Math.min(b.length, 4);
+            int result = 0;
+            for (int i = 0; i < len; i++) {
+                if (i > 0) result <<= 8;
+                result |= (b[i] & 0xff);
+            }
+            return result;
         }
     }
     
-    public long getNSImagePtr() {
-        return nsImagePtr;
-    }
-    
-    public static CImage fromImage(Image img) {
-        int w = img.getWidth(null);
-        int h = img.getHeight(null);
-        BufferedImage bimg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB_PRE);
-        Graphics2D g2 = bimg.createGraphics();
-        g2.setComposite(AlphaComposite.Src);
-        g2.drawImage(img, 0, 0, null);
-        g2.dispose();
-        int[] buffer = ((DataBufferInt)bimg.getRaster().getDataBuffer()).getData();
-        return new CImage(createNSImage(buffer, w, h), true);
-    }
-    
-    public static CImage fromFile(String s) {
-        return new CImage(createNSImageFromFile(s), true);
-    }
-    
-    public static CImage fromIcon(String s) {
-        return new CImage(createNSImageFromIcon(getSelectorAsInt(s)), true);
-    }
-    
-    public static CImage fromName(String s) {
-        return new CImage(createNSImageFromName(s), true);
+    CImage(long nsImagePtr) {
+        super(nsImagePtr, true);
     }
     
     /** @return A BufferedImage created from nsImagePtr, or null. */
-    public Image toImage() {
-        if (nsImagePtr == 0)
-            return null;
-        final int w = getNSImageWidth(nsImagePtr);
-        final int h = getNSImageHeight(nsImagePtr);
+    public BufferedImage toImage() {
+        if (ptr == 0) return null;
+        
+        final Dimension2D size = nativeGetNSImageSize(ptr);
+        final int w = (int)size.getWidth();
+        final int h = (int)size.getHeight();
+        
         final BufferedImage bimg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB_PRE);
         final DataBufferInt dbi = (DataBufferInt)bimg.getRaster().getDataBuffer();
         final int[] buffer = SunWritableRaster.stealData(dbi, 0);
-        copyNSImageIntoArray(nsImagePtr, buffer, w, h);
+        nativeCopyNSImageIntoArray(ptr, buffer, w, h);
         SunWritableRaster.markDirty(dbi);
         return bimg;
     }
     
     /** If nsImagePtr != 0 then scale this NSImage. @return *this* */
-    public CImage resize(int w, int h) {
-        if (nsImagePtr != 0)
-            setNSImageSize(nsImagePtr, w, h);
+    CImage resize(final double w, final double h) {
+        if (ptr != 0) nativeSetNSImageSize(ptr, w, h);
         return this;
-    }
-    
-    private static int getSelectorAsInt(final String fromString) {
-        final byte[] b = fromString.getBytes();
-        final int len = Math.min(b.length, 4);
-        int result = 0;
-        for (int i = 0; i < len; i++) {
-            if (i > 0)
-                result <<= 8;
-            result |= (b[i] & 0xff);
-        }
-        return result;
-    }
-    
-    private static native long createNSImage(int[] buffer, int w, int h);
-    private static native void disposeNSImage(long nsImagePtr);
-    private static native long createNSImageFromFile(String file);
-    private static native long createNSImageFromIcon(int selector);
-    private static native long createNSImageFromName(String name);
-    private static native void copyNSImageIntoArray(long image, int[] buffer, int w, int h);
-    private static native int getNSImageWidth(long image);
-    private static native int getNSImageHeight(long image);
-    private static native void setNSImageSize(long image, int w, int h);
-    
-    private static class CImageDisposerRecord implements DisposerRecord {
-        private long nsImagePtr;
-        
-        public CImageDisposerRecord(long nsImagePtr) {
-            this.nsImagePtr = nsImagePtr;
-        }
-        
-        public synchronized void dispose() {
-            if (nsImagePtr != 0L) {
-                disposeNSImage(nsImagePtr);
-                nsImagePtr = 0L;
-            }
-        }
     }
 }

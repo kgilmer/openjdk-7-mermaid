@@ -92,6 +92,7 @@ FILES_export = \
 	sun/lwawt/LWWindowPeer.java \
 	sun/lwawt/PlatformWindow.java \
 	sun/lwawt/SelectionClearListener.java \
+	sun/lwawt/macosx/CFRetainedResource.java \
 	sun/lwawt/macosx/CCheckboxMenuItem.java \
 	sun/lwawt/macosx/CClipboard.java \
 	sun/lwawt/macosx/CCursorManager.java \

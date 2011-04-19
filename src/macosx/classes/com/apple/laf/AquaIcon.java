@@ -33,11 +33,11 @@ import javax.swing.*;
 import javax.swing.plaf.*;
 
 import sun.lwawt.macosx.CImage;
-
 import apple.laf.JRSUIConstants.Size;
-import apple.laf.JRSUIState;
+import apple.laf.*;
 
-import com.apple.laf.AquaUtilControlSize.*;
+import com.apple.laf.AquaUtilControlSize.SizeDescriptor;
+import com.apple.laf.AquaUtilControlSize.SizeVariant;
 
 public class AquaIcon {
     interface InvertableIcon extends Icon {
@@ -45,21 +45,6 @@ public class AquaIcon {
     }
     
     static UIResource getIconFor(final JRSUIControlSpec spec, final int width, final int height) {
-        // TODO: no RuntimeOptions for now
-        /*if (RuntimeOptions.getRenderer() == RuntimeOptions.Quartz) {
-            final JRSUIIcon cuiIcon = new JRSUIIcon() {
-                public int getIconHeight() {
-                    return height;
-                }
-
-                public int getIconWidth() {
-                    return width;
-                }
-            };
-            spec.initIconPainter(cuiIcon.painter);
-            return new IconUIResource(cuiIcon);
-        }*/
-        
         return new CachableJRSUIIcon(width, height) {
             public void initIconPainter(final AquaPainter<JRSUIState> painter) {
                 spec.initIconPainter(painter);
@@ -211,21 +196,17 @@ public class AquaIcon {
         }
         
         Image createImage() {
-            // TODO: return blank image for now
-            /*final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
+            final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
             initIconPainter(painter);
 
             final BufferedImage bufferedImage = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
-            final CImage nsImage = AquaUtils.getCImageCreator().createImage(bufferedImage);
-            final Graphics nsImageG = nsImage.getGraphics();
-            painter.paint(nsImageG, null, 0, 0, getIconWidth(), getIconHeight());
-            nsImageG.dispose();
+            final CImage nsImage = AquaUtils.getCImageCreator().createFromImage(bufferedImage);
+            // TODO: implement rendering to NSImage/CImage
+//            final Graphics nsImageG = nsImage.getGraphics();
+//            painter.paint(nsImageG, null, 0, 0, getIconWidth(), getIconHeight());
+//            nsImageG.dispose();
 
-            final Graphics buffImgG = bufferedImage.getGraphics();
-            buffImgG.drawImage(nsImage, 0, 0, null);
-            buffImgG.dispose();
-            return bufferedImage;*/
-            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
+            return nsImage.toImage();
         }
             
         public abstract void initIconPainter(final AquaPainter<JRSUIState> painter);
@@ -244,9 +225,7 @@ public class AquaIcon {
         }
         
         Image createImage() {
-            // TODO: use blank image for now
-            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
-            //return AquaUtils.getCImageCreator().createImageOfFile(file.getAbsolutePath(), getIconWidth(), getIconHeight());
+            return AquaUtils.getCImageCreator().createImageOfFile(file.getAbsolutePath(), getIconWidth(), getIconHeight());
         }
     }
     
@@ -293,9 +272,7 @@ public class AquaIcon {
         }
         
         Image createImage() {
-            // TODO: just return a blank image for now
-            //return AquaUtils.getCImageCreator().createSystemImageFromSelector(selector, getIconWidth(), getIconHeight());
-            return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
+            return AquaUtils.getCImageCreator().createSystemImageFromSelector(selector, getIconWidth(), getIconHeight());
         }
     }
 }

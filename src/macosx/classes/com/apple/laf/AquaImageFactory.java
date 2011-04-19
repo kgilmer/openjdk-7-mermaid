@@ -61,16 +61,12 @@ public class AquaImageFactory {
     
     public static IconUIResource getLockImageIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        // TODO: use blank image for now
-        return new IconUIResource(new ImageIcon(new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE)));
-        /*final Image lockIcon = AquaUtils.getCImageCreator().createImageFromFile("/System/Library/CoreServices/SecurityAgent.app/Contents/Resources/Security.icns", kAlertIconSize, kAlertIconSize);
-        return getAppIconCompositedOn(lockIcon);*/
+        final Image lockIcon = AquaUtils.getCImageCreator().createImageFromFile("/System/Library/CoreServices/SecurityAgent.app/Contents/Resources/Security.icns", kAlertIconSize, kAlertIconSize);
+        return getAppIconCompositedOn(lockIcon);
     }
     
     static Image getThisApplicationsIcon(final int width, final int height) {
-        // TODO: return blank image for now
-        return getGenericJavaIcon();
-        /*final String path = getPathToThisApplication();
+        final String path = getPathToThisApplication();
         
         if (path == null) {
             return getGenericJavaIcon();
@@ -84,27 +80,27 @@ public class AquaImageFactory {
             return getGenericJavaIcon();
         }
         
-        return AquaUtils.getCImageCreator().createImageOfFile(path, height, width);*/
+        return AquaUtils.getCImageCreator().createImageOfFile(path, height, width);
     }
     
     static Image getGenericJavaIcon() {
-        // TODO: use blank image for now
-        /*return java.security.AccessController.doPrivileged(new PrivilegedAction<Image>() {
-            public Image run() {
-                return com.apple.eawt.Application.getApplication().getDockIconImage();
-            }
-        });*/
-        return new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB_PRE);
+        // TODO: port eAWT classes
+//        return java.security.AccessController.doPrivileged(new PrivilegedAction<Image>() {
+//            public Image run() {
+//                return com.apple.eawt.Application.getApplication().getDockIconImage();
+//            }
+//        });
+        return new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB_PRE);
     }
     
     static String getPathToThisApplication() {
-        // TODO: just return null for now
-        /*return java.security.AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return FileManager.getPathToApplicationBundle();
-            }
-        });*/
-        return null;
+        // TODO: port eIO classes
+//        return java.security.AccessController.doPrivileged(new PrivilegedAction<String>() {
+//            public String run() {
+//                return FileManager.getPathToApplicationBundle();
+//            }
+//        });
+        return "/tmp";
     }
     
     static IconUIResource getAppIconCompositedOn(final SystemIcon systemIcon) {

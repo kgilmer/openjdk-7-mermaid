@@ -26,11 +26,11 @@
 package sun.lwawt.macosx;
 
 import sun.awt.SunToolkit;
+import sun.lwawt.LWToolkit;
 
 import java.awt.MenuItem;
 import java.awt.MenuShortcut;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.awt.peer.MenuItemPeer;
 
 public class CMenuItem extends CMenuComponent implements MenuItemPeer {
@@ -56,24 +56,21 @@ public class CMenuItem extends CMenuComponent implements MenuItemPeer {
 
     @Override
     protected long createModel() {
-        CMenuComponent parent = (CMenuComponent)
-            LWCToolkit.targetToPeer(getTarget().getParent());
+        CMenuComponent parent = (CMenuComponent)LWToolkit.targetToPeer(getTarget().getParent());
         return nativeCreate(parent.getModel(), isSeparator());
     }
 
-    public void setLabel(String label, char keyChar,
-                         int keyCode, int modifiers)
-    {
+    public void setLabel(String label, char keyChar, int keyCode, int modifiers) {
         int keyMask = modifiers;
         if (keyCode == KeyEvent.VK_UNDEFINED) {
             MenuShortcut shortcut = ((MenuItem)getTarget()).getShortcut();
             
             if (shortcut != null) {
                 keyCode = shortcut.getKey();
-                keyMask |= KeyEvent.META_MASK;
+                keyMask |= InputEvent.META_MASK;
                 
                 if (shortcut.usesShiftModifier()) {
-                    keyMask |= KeyEvent.SHIFT_MASK;
+                    keyMask |= InputEvent.SHIFT_MASK;
                 }
             }
         }
@@ -106,12 +103,8 @@ public class CMenuItem extends CMenuComponent implements MenuItemPeer {
      * it isn't defined in the peer api.
      */
     public void setImage(java.awt.Image img) {
-        long nsImage = 0;
-        if (img != null) {
-            CImage cimg = CImage.fromImage(img);
-            nsImage = cimg.getNSImagePtr();
-        }
-        nativeSetImage(getModel(), nsImage);
+        CImage cimg = CImage.getCreator().createFromImage(img);
+        nativeSetImage(getModel(), cimg == null ? 0L : cimg.ptr);
     }
 
     /**
@@ -137,24 +130,21 @@ public class CMenuItem extends CMenuComponent implements MenuItemPeer {
     }
 
     private native long nativeCreate(long parentMenu, boolean isSeparator);
-    private native void nativeSetLabel(long modelPtr,
-                                       String label, char keyChar,
-                                       int keyCode, int modifiers);
+    private native void nativeSetLabel(long modelPtr, String label, char keyChar, int keyCode, int modifiers);
     private native void nativeSetImage(long modelPtr, long image);
     private native void nativeSetTooltip(long modelPtr, String text);
     private native void nativeSetEnabled(long modelPtr, boolean b);
 
     // native callbacks
-
     void handleAction(final long when, final int modifiers) {
-        LWCToolkit.executeOnEventHandlerThread(getTarget(), new Runnable() {
-	    public void run() {
-                String cmd = ((MenuItem)getTarget()).getActionCommand();
-                SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()),
-				     new ActionEvent(getTarget(),
-						     ActionEvent.ACTION_PERFORMED,
-						     cmd, when, modifiers));
+        assert CThreading.assertAppKit();
+        
+        SunToolkit.executeOnEventHandlerThread(getTarget(), new Runnable() {
+            public void run() {
+                final String cmd = ((MenuItem)getTarget()).getActionCommand();
+                final ActionEvent event = new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED, cmd, when, modifiers);
+                SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
             }
-	});
+        });
     }
 }

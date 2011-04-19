@@ -38,7 +38,7 @@ import javax.swing.border.Border;
 import sun.awt.AppContext;
 
 import sun.lwawt.macosx.CImage;
-//import sun.lwawt.macosx.CImage.Creator;
+import sun.lwawt.macosx.CImage.Creator;
 
 import com.apple.laf.AquaImageFactory.SlicedImageControl;
 
@@ -58,8 +58,7 @@ public class AquaUtils {
         return IS_JAVA5;
     }
     
-    // TODO: no CImage.Creator for now
-    /*private static CImage.Creator getCImageCreatorInternal() {
+    private static CImage.Creator getCImageCreatorInternal() {
         return java.security.AccessController.doPrivileged(new PrivilegedAction<CImage.Creator>() {
             public Creator run() {
                 try {
@@ -76,7 +75,7 @@ public class AquaUtils {
     private static CImage.Creator cImageCreator = getCImageCreatorInternal();
     static CImage.Creator getCImageCreator() {
         return cImageCreator;
-    }*/
+    }
     
     protected static Image generateSelectedDarkImage(final Image image) {
         final ImageProducer prod = new FilteredImageSource(image.getSource(), new IconImageFilter() {

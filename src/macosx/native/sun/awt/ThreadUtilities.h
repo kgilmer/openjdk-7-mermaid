@@ -98,6 +98,8 @@ do {                                           \
     }                                          \
 } while (0)
 
+#define AWT_ASSERT_ANY_THREAD
+
 #endif /* AWT_THREAD_ASSERTS_MESSAGES */
 	
 #ifdef AWT_THREAD_ASSERTS_WAIT
@@ -112,12 +114,15 @@ do {                                  \
     while (pthread_main_np() != 0) {} \
 } while (0)
 
+#define AWT_ASSERT_ANY_THREAD
+
 #endif /* AWT_THREAD_ASSERTS_WAIT */
 
 #else /* AWT_THREAD_ASSERTS */
 
 #define AWT_ASSERT_APPKIT_THREAD     do {} while (0)
 #define AWT_ASSERT_NOT_APPKIT_THREAD do {} while (0)
+#define AWT_ASSERT_ANY_THREAD
 
 #endif /* AWT_THREAD_ASSERTS */
 // --------------------------------------------------------------------------

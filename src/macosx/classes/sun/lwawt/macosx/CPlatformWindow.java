@@ -212,6 +212,7 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void setBounds(int x, int y, int w, int h) {
+//        assert CThreading.assertEventQueue();
         final long awtWindowPtr = getAWTWindow();
     	Rectangle newBounds = new Rectangle(x, y, w, h);
         Rectangle cocoaBounds = convertCoreCoordinatesToNSWindow(newBounds);
@@ -264,7 +265,7 @@ public class CPlatformWindow implements PlatformWindow {
         final long awtWindowPtr = getAWTWindow();
         CImage cImage = getImageForTarget();
         if (cImage != null) {
-            nativeSetTitleIconImage(awtWindowPtr, cImage.getNSImagePtr());
+            nativeSetTitleIconImage(awtWindowPtr, cImage.ptr);
         }
     }
 
@@ -432,7 +433,7 @@ public class CPlatformWindow implements PlatformWindow {
         Image image = icons.get(0);
         CImage cImage = null;
         try {
-            cImage = CImage.fromImage(image);
+            cImage = CImage.getCreator().createFromImage(image);
         } catch (Exception ignore) {
             log.fine("Invalid image.", ignore);
         }
@@ -461,11 +462,10 @@ public class CPlatformWindow implements PlatformWindow {
      * @param origBounds Rectangle using standard coordinates.
      * @return Rectangle mapped to NSWindow coordinates.
      */
-    protected Rectangle convertCoreCoordinatesToNSWindow(Rectangle origBounds) {
+    protected Rectangle convertCoreCoordinatesToNSWindow(final Rectangle origBounds) {
         final Rectangle bounds = peer.getGraphicsConfiguration().getBounds();
-        int y = bounds.height - (origBounds.y + origBounds.height);
-        final Rectangle cocoaBounds =
-            new Rectangle(origBounds.x, y, origBounds.width, origBounds.height);
+        final int y = bounds.height - (origBounds.y + origBounds.height);
+        final Rectangle cocoaBounds = new Rectangle(origBounds.x, y, origBounds.width, origBounds.height);
         return cocoaBounds; 
     }
 

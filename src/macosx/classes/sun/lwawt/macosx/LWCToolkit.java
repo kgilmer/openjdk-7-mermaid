@@ -201,10 +201,7 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
-    public void beep() {
-        // TODO Auto-generated method stub
-        
-    }
+    public native void beep();
 
     @Override
     public int getScreenResolution() throws HeadlessException {
@@ -272,12 +269,12 @@ public class LWCToolkit extends LWToolkit {
     }
 
     // Intended to be called from the LWCToolkit.m only.
-    private static void installToolkitThreadNameInJava(){
-      Thread.currentThread().setName("CToolkit thread");
+    private static void installToolkitThreadNameInJava() {
+        Thread.currentThread().setName(CThreading.APPKIT_THREAD_NAME);
     }
 
     void setApplicationIconImage(CImage cImage){
-        nativeSetApplicationIconImage(cImage.getNSImagePtr());
+        nativeSetApplicationIconImage(cImage.ptr);
     }
 
     @Override
@@ -286,8 +283,7 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
-    public boolean isFrameStateSupported(int state) throws HeadlessException
-    {
+    public boolean isFrameStateSupported(int state) throws HeadlessException {
         switch (state) {
             case Frame.NORMAL:
             case Frame.ICONIFIED:
@@ -296,7 +292,7 @@ public class LWCToolkit extends LWToolkit {
             default:
                 return false;
         }
-    }    
+    }   
     
     /************************
      * Native methods section
