@@ -53,6 +53,14 @@ ifndef PLATFORM_SRC
   PLATFORM_SRC = $(BUILDDIR)/../src/solaris
 endif # PLATFORM_SRC
 
+# BSD build pulls its platform sources from the solaris tree.
+ifeq ($(PLATFORM), macosx)
+ JAVA_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
+ NATIVE_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
+else
+ SRCDIR_LIST = src/solaris src/share
+endif
+
 # Platform specific closed sources
 ifndef OPENJDK
   ifndef CLOSED_PLATFORM_SRC
@@ -89,10 +97,19 @@ ifndef FASTDEBUG_OPTIMIZATION_LEVEL
   FASTDEBUG_OPTIMIZATION_LEVEL = LOWER
 endif
 
-CC_OPT/NONE     = 
-CC_OPT/LOWER    = -O2
-CC_OPT/HIGHER   = -O3
-CC_OPT/HIGHEST  = -O3
+# For macosx use -Os by default, unless -O3 can be proved to be worth the cost, as per policy
+# <http://wikis.sun.com/display/OpenJDK/Mac+OS+X+Port+Compilers>
+ifeq ($(OS_VENDOR), Apple)
+ CC_OPT/NONE     = 
+ CC_OPT/LOWER    = -Os
+ CC_OPT/HIGHER   = -Os
+ CC_OPT/HIGHEST  = -Os
+else
+ CC_OPT/NONE     = 
+ CC_OPT/LOWER    = -O2
+ CC_OPT/HIGHER   = -O3
+ CC_OPT/HIGHEST  = -O3
+endif
 
 CC_OPT          = $(CC_OPT/$(OPTIMIZATION_LEVEL))
 
@@ -117,6 +134,9 @@ ifeq ($(ZERO_BUILD), true)
     CFLAGS_REQUIRED     += -D_LITTLE_ENDIAN
   endif
   LDFLAGS_COMMON        += $(ZERO_ARCHFLAG)
+else ifeq ($(ARCH), universal)
+  CFLAGS_REQUIRED       += -arch i386 -arch x86_64 -D_LITTLE_ENDIAN
+  LDFLAGS_COMMON        += -arch i386 -arch x86_64
 else
   CFLAGS_REQUIRED       =  $(CFLAGS_REQUIRED_$(ARCH))
   LDFLAGS_COMMON        += $(LDFLAGS_COMMON_$(ARCH))
@@ -124,6 +144,12 @@ endif
 ifeq ($(OS_VENDOR),Apple)
   # 16-byte stack re-alignment on 32-bit Darwin
   CFLAGS_REQUIRED_i586 += -mstackrealign
+endif
+
+ifeq ($(PLATFORM), macosx)
+ OTHER_CFLAGS = \
+         -F/System/Library/Frameworks/JavaVM.framework/Frameworks \
+	     -F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
 endif
 
 # If this is a --hash-style=gnu system, use --hash-style=both
@@ -202,6 +228,10 @@ endif
 CPPFLAGS_COMMON = $(CPP_ARCH_FLAGS) -D_ALLBSD_SOURCE $(VERSION_DEFINES) \
 		  -D_LARGEFILE64_SOURCE -D_GNU_SOURCE -D_REENTRANT
 
+ifeq ($(PLATFORM), macosx)
+ CPPFLAGS_COMMON += -DMACOSX
+endif
+
 ifeq ($(ARCH_DATA_MODEL), 64)
 CPPFLAGS_COMMON += -D_LP64=1
 endif
@@ -237,7 +267,11 @@ endif
 #
 # -L paths for finding and -ljava
 #
-LDFLAGS_COMMON += -L$(LIBDIR)/$(LIBARCH)
+ifeq ($(PLATFORM), macosx)
+ LDFLAGS_COMMON += -L$(LIBDIR)
+else
+ LDFLAGS_COMMON += -L$(LIBDIR)/$(LIBARCH)
+endif
 
 ifneq ($(OS_VENDOR), Apple)
 LDFLAGS_OPT     = -Xlinker -O1
@@ -297,10 +331,14 @@ endif
 # the library itself should not.
 #
 VM_NAME         = server
-ifeq ($(OS_VENDOR),Apple)
-JVMLIB          = -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+ifeq ($(PLATFORM), macosx)
+ JVMLIB          = -L$(LIBDIR)/$(VM_NAME) -ljvm
 else
-JVMLIB          = -Xlinker -rpath -Xlinker $(LIBDIR)/$(LIBARCH)/$(VM_NAME) -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+ ifeq ($(OS_VENDOR), Apple)
+  JVMLIB          = -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+ else
+  JVMLIB          = -Xlinker -rpath -Xlinker $(LIBDIR)/$(LIBARCH)/$(VM_NAME) -L$(LIBDIR)/$(LIBARCH)/$(VM_NAME) -ljvm
+ endif
 endif
 JAVALIB         = -ljava $(JVMLIB)
 
@@ -358,11 +396,7 @@ override USE_EXECNAME            = true
 # DPS (Displayable PostScript) is available on Solaris machines
 HAVE_DPS = no
 
-ifeq ($(OS_VENDOR), FreeBSD)
-  SYSTEM_ZLIB = true
-endif
-
-ifeq ($(OS_VENDOR), OpenBSD)
+ifneq (,$(findstring $(OS_VENDOR), FreeBSD OpenBSD Apple))
   SYSTEM_ZLIB = true
 endif
 
@@ -373,7 +407,11 @@ JA_SOURCE_ENCODING = eucJP
 JA_TARGET_ENCODINGS = eucJP
 
 # Settings for the JDI - Serviceability Agent binding.
-HOTSPOT_SALIB_PATH   = $(HOTSPOT_IMPORT_PATH)/jre/lib/$(LIBARCH)
+ifeq ($(PLATFORM), macosx)
+ HOTSPOT_SALIB_PATH = $(HOTSPOT_IMPORT_PATH)/jre/lib
+else
+ HOTSPOT_SALIB_PATH = $(HOTSPOT_IMPORT_PATH)/jre/lib/$(LIBARCH)
+endif
 SALIB_NAME = $(LIB_PREFIX)saproc.$(LIBRARY_SUFFIX)
 
 # The JDI - Serviceability Agent binding is not currently supported
@@ -389,4 +427,8 @@ ifdef CROSS_COMPILE_ARCH
   OTHER_CFLAGS += -I$(OPENWIN_HOME)/include
   OTHER_CXXFLAGS += -I$(OPENWIN_HOME)/include
   OTHER_CPPFLAGS += -I$(OPENWIN_HOME)/include
+endif
+
+ifeq ($(PLATFORM), macosx)
+ LIB_LOCATION ?= $(LIBDIR)
 endif

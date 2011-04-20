@@ -1851,6 +1851,12 @@ public abstract class ClassLoader {
             if (loadLibrary0(fromClass, libfile)) {
                 return;
             }
+            for (String libname : System.mapLegacyLibraryNames(name)) {
+                libfile = new File(sys_paths[i], libname);
+                if (loadLibrary0(fromClass, libfile)) {
+                    return;
+                }
+            }
         }
         if (loader != null) {
             for (int i = 0 ; i < usr_paths.length ; i++) {
@@ -1858,6 +1864,12 @@ public abstract class ClassLoader {
                                         System.mapLibraryName(name));
                 if (loadLibrary0(fromClass, libfile)) {
                     return;
+                }
+                for (String libname : System.mapLegacyLibraryNames(name)) {
+                    libfile = new File(usr_paths[i], libname);
+                    if (loadLibrary0(fromClass, libfile)) {
+                        return;
+                    }
                 }
             }
         }
