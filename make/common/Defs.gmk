@@ -155,8 +155,17 @@ endif
 #
 # Get platform definitions
 #
+ifeq ($(PLATFORM), macosx)
+ include $(JDK_TOPDIR)/make/common/Defs-bsd.gmk
+else
+ include $(JDK_TOPDIR)/make/common/Defs-$(PLATFORM).gmk
+endif
 
-include $(JDK_TOPDIR)/make/common/Defs-$(PLATFORM).gmk
+#
+# SE-Embedded support, if enabled
+#
+
+include $(JDK_TOPDIR)/make/common/Defs-embedded.gmk
 
 #
 # Cross-compilation Settings
@@ -186,7 +195,6 @@ endif
 ifdef BUILD_CLIENT_ONLY
   VM_NAME = client
 endif
-
 
 #
 # Freetype logic is applicable to OpenJDK only
