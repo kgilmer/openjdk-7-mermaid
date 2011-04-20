@@ -34,7 +34,7 @@ ifeq ($(PLATFORM), macosx)
    CC             = $(COMPILER_PATH)llvm-gcc
   endif
   CPP             = $(COMPILER_PATH)llvm-gcc -E
-  ifeq ($(origin CC), default)
+  ifeq ($(origin CXX), default)
    CXX            = $(COMPILER_PATH)llvm-g++
   endif
 
