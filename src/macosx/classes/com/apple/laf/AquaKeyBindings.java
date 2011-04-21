@@ -44,8 +44,6 @@ public class AquaKeyBindings {
     static final String downMultilineAction = "aqua-move-down";
     static final String pageUpMultiline = "aqua-page-up";
     static final String pageDownMultiline = "aqua-page-down";
-    static final String deleteNextWord = "delete-next-word";
-    static final String deletePrevWord = "delete-previous-word";
     
     static final String[] commonTextEditorBindings = {
         "ENTER", JTextField.notifyAction,
@@ -498,14 +496,6 @@ public class AquaKeyBindings {
         }
     }
 
-    static void installFullWordDeleteAction(final JTextComponent component) {
-        if (!AquaUtils.IS_JAVA5) return; // this action is built into Java 6 (and better)
-        
-        final ActionMap actionMap = component.getActionMap();
-        actionMap.put(deleteNextWord, deleteNextWordAction);
-        actionMap.put(deletePrevWord, deletePrevWordAction);
-    }
-    
     static void installAquaUpDownActions(final JTextComponent component) {
         final ActionMap actionMap = component.getActionMap();
         actionMap.put(upMultilineAction, moveUpMultilineAction);
@@ -546,40 +536,6 @@ public class AquaKeyBindings {
         
         abstract int getEnd(final JTextComponent target, final Element line, final int start) throws BadLocationException;
     }
-    
-    static final TextAction deletePrevWordAction = new DeleteWordAction(deletePrevWord) {
-        int getEnd(JTextComponent target, Element line, int start) throws BadLocationException {
-            final int end = javax.swing.text.Utilities.getPreviousWord(target, start);
-            if (end != java.text.BreakIterator.DONE) return end;
-            
-            // there is no previous word in the paragraph
-            final int startOfLine = line.getStartOffset();
-            if (start == startOfLine) {
-                // for first position remove previous \n
-                return startOfLine - 1;
-            }
-            
-            // remove to the start of the paragraph
-            return startOfLine;
-        }
-    };
-    
-    static final TextAction deleteNextWordAction = new DeleteWordAction(deleteNextWord) {
-        int getEnd(final JTextComponent target, final Element line, final int start) throws BadLocationException {
-            final int end = Utilities.getNextWord(target, start);
-            if (end != java.text.BreakIterator.DONE) return end;
-            
-            // last word in the paragraph
-            final int endOfLine = line.getEndOffset();
-            if (start == endOfLine - 1) {
-                // for last position remove last \n
-                return endOfLine;
-            }
-            
-            // remove to the end of the paragraph
-            return endOfLine - 1;
-        }
-    };
     
     static final TextAction moveUpMultilineAction = new AquaMultilineAction(upMultilineAction, DefaultEditorKit.upAction, DefaultEditorKit.beginAction);
     static final TextAction moveDownMultilineAction = new AquaMultilineAction(downMultilineAction, DefaultEditorKit.downAction, DefaultEditorKit.endAction);

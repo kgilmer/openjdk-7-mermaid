@@ -88,7 +88,6 @@ public class AquaTextFieldUI extends BasicTextFieldUI {
     protected void installKeyboardActions() {
         super.installKeyboardActions();
         AquaKeyBindings.setDefaultAction(getKeymapName());
-        AquaKeyBindings.installFullWordDeleteAction(getComponent());
     }
     
     protected Rectangle getVisibleEditorRect() {

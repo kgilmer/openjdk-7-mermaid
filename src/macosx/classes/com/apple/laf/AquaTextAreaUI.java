@@ -87,7 +87,6 @@ public class AquaTextAreaUI extends BasicTextAreaUI {
         AquaKeyBindings.setDefaultAction(getKeymapName());
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
-        AquaKeyBindings.installFullWordDeleteAction(c);
     }
 
     protected Caret createCaret() {

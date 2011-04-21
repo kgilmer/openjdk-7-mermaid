@@ -53,11 +53,6 @@ public class AquaUtils {
         return c.getComponentOrientation().isLeftToRight();
     }
     
-    protected static boolean IS_JAVA5 = System.getProperty("java.version").startsWith("1.5.");
-    protected static boolean isJava5() {
-        return IS_JAVA5;
-    }
-    
     private static CImage.Creator getCImageCreatorInternal() {
         return java.security.AccessController.doPrivileged(new PrivilegedAction<CImage.Creator>() {
             public Creator run() {

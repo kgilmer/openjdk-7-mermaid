@@ -85,7 +85,6 @@ public class AquaTextPaneUI extends BasicTextPaneUI {
         
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
-        AquaKeyBindings.installFullWordDeleteAction(c);
     }
 
     protected Caret createCaret() {

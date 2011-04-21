@@ -66,7 +66,6 @@ public class AquaEditorPaneUI extends BasicEditorPaneUI {
         AquaKeyBindings.setDefaultAction(getKeymapName());
         final JTextComponent c = getComponent();
         AquaKeyBindings.installAquaUpDownActions(c);
-        AquaKeyBindings.installFullWordDeleteAction(c);
     }
     
     protected void uninstallListeners(){
