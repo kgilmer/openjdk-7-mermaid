@@ -23,32 +23,42 @@
 
 /*
  * @test
- * @summary <rdar://problem/1388007> EXT: Floating-point overflow or weirdness?
- * @summary com.apple.junit.java.lang.Double
+ * @summary <rdar://problem/2297115> File.mkdir() fails to make new folders
+ * @summary com.apple.junit.java.io.File
  */
 
 import junit.framework.*;
+import java.io.File;
 
-public class R1388007FloatOverflow extends TestCase
-{
-    protected double n1, n2;
-    
-    protected void setUp() {
-        n1 = -1;
-        n2 = (double) ((long) n1);
-    }
-    
-    public void testDoubleCastOverflow() throws Exception {
-        //! don't want to print this to System.out blindly; convert to assertion, use logwrapper, or drop it
-        //ref.println( "n1 = " + n1 + ", n2 = " + n2);
-        assertEquals(n2, -1.0, 0.0);
-    }
-
+public class R2297115File_mkdir extends TestCase {
     public static Test suite() {
-        return new TestSuite(R1388007FloatOverflow.class);
+        return new TestSuite(R2297115File_mkdir.class);
     }
-    
-    public static void main (String[] args) {
+
+    public static void main(String argv[]) {
         junit.textui.TestRunner.run(suite());
+    }
+
+    public void testR2297115() {
+        String FS = System.getProperty("file.separator");
+        String tmp = System.getProperty("java.io.tmpdir");
+        
+        File newFolder2 = new File(tmp + FS, "mySubFolder2" + FS);
+        if( newFolder2.exists() ) {
+            newFolder2.delete();
+        }
+
+        newFolder2.mkdir();
+        assertTrue( newFolder2.exists() );
+        newFolder2.delete();
+
+        File newFolder1 = new File(tmp + FS, "mySubFolder1");
+        if( newFolder1.exists() ) {
+            newFolder1.delete();
+        }
+        
+        newFolder1.mkdir();
+        assertTrue( newFolder1.exists() );
+        newFolder1.delete();
     }
 }

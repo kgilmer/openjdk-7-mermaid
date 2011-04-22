@@ -23,32 +23,35 @@
 
 /*
  * @test
- * @summary <rdar://problem/1388007> EXT: Floating-point overflow or weirdness?
- * @summary com.apple.junit.java.lang.Double
+ * @summary <rdar://problem/2254176> Some files are still not being closed after quitting MRJ
+ * @summary com.apple.junit.java.io.File
  */
 
 import junit.framework.*;
+import java.io.*;
 
-public class R1388007FloatOverflow extends TestCase
-{
-    protected double n1, n2;
-    
-    protected void setUp() {
-        n1 = -1;
-        n2 = (double) ((long) n1);
-    }
-    
-    public void testDoubleCastOverflow() throws Exception {
-        //! don't want to print this to System.out blindly; convert to assertion, use logwrapper, or drop it
-        //ref.println( "n1 = " + n1 + ", n2 = " + n2);
-        assertEquals(n2, -1.0, 0.0);
-    }
-
+public class R2254176FileClosing extends TestCase {
     public static Test suite() {
-        return new TestSuite(R1388007FloatOverflow.class);
+        return new TestSuite(R2254176FileClosing.class);
     }
-    
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run(suite());
+
+    public static void main(String argv[]) {
+      junit.textui.TestRunner.run(suite());
+    }
+
+    public void testLeaveFileOpen() throws Exception {
+        File testfile = File.createTempFile("TestFile", null);
+
+        if (!testfile.exists()) {
+            FileOutputStream outOne = new FileOutputStream(testfile);
+            PrintWriter myPrint = new PrintWriter(outOne);
+            assertNotNull(myPrint);
+            //myPrint.close();
+        }
+
+        // read some from it
+        FileInputStream testInputStream = new FileInputStream(testfile);
+        int testInt = testInputStream.read();
+        assertNotNull(new Integer(testInt));    // make trivial use of the result
     }
 }

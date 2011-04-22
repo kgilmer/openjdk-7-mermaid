@@ -23,32 +23,31 @@
 
 /*
  * @test
- * @summary <rdar://problem/1388007> EXT: Floating-point overflow or weirdness?
- * @summary com.apple.junit.java.lang.Double
+ * @summary <rdar://problem/2391232> java.io.File("..") doesn't work very well
+ * @summary com.apple.junit.java.io.File
  */
 
 import junit.framework.*;
+import java.io.File;
 
-public class R1388007FloatOverflow extends TestCase
-{
-    protected double n1, n2;
-    
-    protected void setUp() {
-        n1 = -1;
-        n2 = (double) ((long) n1);
-    }
-    
-    public void testDoubleCastOverflow() throws Exception {
-        //! don't want to print this to System.out blindly; convert to assertion, use logwrapper, or drop it
-        //ref.println( "n1 = " + n1 + ", n2 = " + n2);
-        assertEquals(n2, -1.0, 0.0);
-    }
+public class R2391232FileSlashDot extends TestCase {     
+    static final String[] paths = {"/", "./.", "../.", "./..", "../..", "..", "."};         
 
     public static Test suite() {
-        return new TestSuite(R1388007FloatOverflow.class);
+        return new TestSuite(R2391232FileSlashDot.class);
     }
-    
-    public static void main (String[] args) {
+
+    public static void main(String argv[]) {
         junit.textui.TestRunner.run(suite());
     }
+
+    public void testR2391232() throws Exception {
+        for (int i = 0; i < paths.length; i++) {
+            String list[] = new File(paths[i]).list();
+            assertNotNull( paths[i] +".list() should not be null)",  list );
+            assertTrue( paths[i] +".list() have non-zero elements)", list.length > 0 );
+        }
+    }   
 }
+
+
