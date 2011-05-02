@@ -373,6 +373,7 @@ GetJavaProperties(JNIEnv *env)
     /* Java 2D properties */
     sprops.graphics_env = "sun.awt.X11GraphicsEnvironment";
 
+    /* AWT properties */
 #ifdef JAVASE_EMBEDDED
     sprops.awt_toolkit = getEmbeddedToolkit();
     if (sprops.awt_toolkit == NULL) // default as below

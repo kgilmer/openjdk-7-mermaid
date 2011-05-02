@@ -48,6 +48,22 @@
 #include <thread.h>
 #endif
 
+#ifdef MACOSX
+/* Support Cocoa event loop on the main thread */
+#include <Security/AuthSession.h>
+#include <ApplicationServices/ApplicationServices.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <Cocoa/Cocoa.h>
+#include <objc/objc-runtime.h>
+#include <errno.h>
+#include <spawn.h>
+
+struct NSAppArgs {
+        int argc;
+        char **argv;
+};
+#endif
+
 #ifdef __APPLE__
 #define JVM_DLL "libjvm.dylib"
 #define JAVA_DLL "libjava.dylib"
@@ -192,7 +208,7 @@ static char *execname = NULL;
 
 static const char * SetExecname(char **argv);
 static jboolean GetJVMPath(const char *jrepath, const char *jvmtype,
-                           char *jvmpath, jint jvmpathsize, const char * arch);
+                           char *jvmpath, jint jvmpathsize, const char * arch, int bitsWanted);
 static jboolean GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative);
 
 
@@ -212,6 +228,125 @@ GetArchPath(int nbits)
             return LIBARCHNAME;
     }
 }
+
+#ifdef MACOSX
+
+static BOOL awtLoaded = NO;
+static pthread_mutex_t awtLoaded_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  awtLoaded_cv = PTHREAD_COND_INITIALIZER;
+
+JNIEXPORT void JNICALL
+JLI_NotifyAWTLoaded()
+{
+    pthread_mutex_lock(&awtLoaded_mutex);
+    awtLoaded = YES;
+    pthread_cond_signal(&awtLoaded_cv);
+    pthread_mutex_unlock(&awtLoaded_mutex);
+}
+
+static int (*main_fptr)(int argc, char **argv) = NULL;
+
+/*
+ * Unwrap the arguments and re-run main()
+ */
+static void *apple_main (void *arg)
+{
+    if (main_fptr == NULL) {
+        main_fptr = (int (*)())dlsym(RTLD_DEFAULT, "main");
+        if (main_fptr == NULL) {
+            fprintf(stderr, "error locating main entrypoint\n");
+            exit(1);
+        }
+    }
+
+    struct NSAppArgs *args = (struct NSAppArgs *) arg;
+    exit(main_fptr(args->argc, args->argv));
+}
+
+/*
+ * Mac OS X mandates that the GUI event loop run on very first thread of
+ * an application. This requires that we re-call Java's main() on a new
+ * thread, reserving the 'main' thread for Cocoa.
+ */
+static void DarwinStartup (int argc, char *argv[])
+{
+    struct NSAppArgs args;
+    pthread_t main_thr; 
+    SInt32 result;
+    static jboolean started = false;
+
+    // Thread already started?
+    if (started) {
+        return;
+    }
+    id app = [NSApplication sharedApplication];
+    started = true;
+
+    // Is the WindowServer available? If not, nothing to do.
+    OSStatus status;
+    SecuritySessionId session_id;
+    SessionAttributeBits session_info;
+    status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
+    if (status != noErr) {
+        fprintf(stderr, "Could not get security session info, err = %ld\n", (long)status);
+        exit(1);
+    }
+
+    if (!(session_info & sessionHasGraphicAccess)) {
+        return;
+    }
+
+    // Hand off arguments
+    args.argc = argc;
+    args.argv = argv;
+
+    // Fire up the main thread
+    if (pthread_create(&main_thr, NULL, &apple_main, &args) != 0) {
+        fprintf(stderr, "Could not create main thread: %s\n", strerror(errno));
+        exit(1);
+    }
+    if (pthread_detach(main_thr)) {
+        fprintf(stderr, "pthread_detach() failed: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    // Wait here for AWT to be loaded before we turn this into a full-fledged
+    // foreground application (and start the main event loop, etc)
+    pthread_mutex_lock(&awtLoaded_mutex);
+    while (awtLoaded == NO) {
+        //fprintf(stderr, "waiting for AWT to be loaded...");
+        pthread_cond_wait(&awtLoaded_cv, &awtLoaded_mutex);
+    }
+    pthread_mutex_unlock(&awtLoaded_mutex);
+    //fprintf(stderr, "done\n");
+
+    // Now run the Cocoa main application loop
+    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+
+    // The following is necessary to make the java process behave like a
+    // proper foreground application...
+    ProcessSerialNumber psn;
+    GetCurrentProcess(&psn);
+    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+
+    NSBundle *javaBundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/JavaVM.framework"];
+    NSString *defaultNibFile = [javaBundle pathForResource:@"DefaultApp" ofType:@"nib"];
+    [NSBundle loadNibFile:defaultNibFile externalNameTable: [NSDictionary dictionaryWithObject:app forKey:@"NSOwner"] withZone:nil];
+
+    // Need to activate the application explicitly here, otherwise it won't
+    // become active until the user clicks an application window
+    [NSApp activateIgnoringOtherApps: TRUE];
+
+    // Start the main event loop
+    [NSApp run];
+
+    [pool drain];
+
+    fprintf(stderr, "-[NSApp run] exited unexpectedly\n");
+    exit(1);
+}
+
+#endif
 
 void
 CreateExecutionEnvironment(int *pargc, char ***pargv,
@@ -325,17 +460,26 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
             exit(4);
         }
 
-        if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch )) {
+        if (!GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, arch, wanted)) {
           JLI_ReportErrorMessage(CFG_ERROR8, jvmtype, jvmpath);
           exit(4);
         }
+
+#ifdef MACOSX
+        /*
+         * Mac OS X requires the Cocoa event loop to be run on the "main"
+         * thread. Spawn off a new thread to run main() and pass
+         * this thread off to the Cocoa event loop.
+         */
+        DarwinStartup(argc, argv);
+#endif
         /*
          * we seem to have everything we need, so without further ado
          * we return back.
          */
         return;
       } else {  /* do the same speculatively or exit */
-#ifdef DUAL_MODE
+#if defined(DUAL_MODE) || defined(MACOSX)
         if (running != wanted) {
           /* Find out where the JRE is that we will be using. */
           if (!GetJREPath(jrepath, so_jrepath, GetArchPath(wanted), JNI_TRUE)) {
@@ -361,7 +505,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
           }
 
           /* exec child can do error checking on the existence of the path */
-          jvmpathExists = GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, GetArchPath(wanted));
+          jvmpathExists = GetJVMPath(jrepath, jvmtype, jvmpath, so_jvmpath, GetArchPath(wanted), wanted);
 
         }
 #else
@@ -403,10 +547,38 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
         JLI_TraceLauncher("TRACER_MARKER:About to EXEC\n");
         (void)fflush(stdout);
         (void)fflush(stderr);
+
+#ifdef MACOSX
+        /*
+         * Use posix_spawn() instead of execv() on Mac OS X.
+         * This allows us to choose which architecture the child process
+         * should run as.
+         */
+        {
+            posix_spawnattr_t attr;
+            size_t unused_size;
+            pid_t  unused_pid;
+
+#if defined(__i386__) || defined(__x86_64__)
+            cpu_type_t cpu_type[] = { (wanted == 64) ? CPU_TYPE_X86_64 : CPU_TYPE_X86,
+                                   (running== 64) ? CPU_TYPE_X86_64 : CPU_TYPE_X86 };
+#else
+            cpu_type_t cpu_type[] = { CPU_TYPE_ANY };
+#endif
+
+            posix_spawnattr_init(&attr);
+            posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETEXEC);
+            posix_spawnattr_setbinpref_np(&attr, sizeof(cpu_type) / sizeof(cpu_type_t),
+                                          cpu_type, &unused_size);
+
+            posix_spawn(&unused_pid, newexec, NULL, &attr, argv, environ);
+        }
+#else
         execv(newexec, argv);
+#endif
         JLI_ReportErrorMessageSys(JRE_ERROR4, newexec);
 
-#ifdef DUAL_MODE
+#if defined(DUAL_MODE) || defined(MACOSX)
         if (running != wanted) {
           JLI_ReportErrorMessage(JRE_ERROR5, wanted, running);
 #  ifdef __solaris__
@@ -415,8 +587,8 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
 #    else
           JLI_ReportErrorMessage(JRE_ERROR7);
 #    endif
-        }
 #  endif
+        }
 #endif
 
       }
@@ -430,14 +602,20 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
  */
 static jboolean
 GetJVMPath(const char *jrepath, const char *jvmtype,
-           char *jvmpath, jint jvmpathsize, const char * arch)
+           char *jvmpath, jint jvmpathsize, const char * arch, int bitsWanted)
 {
     struct stat s;
 
     if (JLI_StrChr(jvmtype, '/')) {
         JLI_Snprintf(jvmpath, jvmpathsize, "%s/" JVM_DLL, jvmtype);
     } else {
+#ifdef MACOSX
+        // macosx client library is built thin, i386 only.  64 bit client requests must load server library
+        const char *jvmtypeUsed = ((bitsWanted == 64) && (strcmp(jvmtype, "client") == 0)) ? "server" : jvmtype;
+        JLI_Snprintf(jvmpath, jvmpathsize, "%s/lib/%s/" JVM_DLL, jrepath, jvmtypeUsed);
+#else
         JLI_Snprintf(jvmpath, jvmpathsize, "%s/lib/%s/%s/" JVM_DLL, jrepath, arch, jvmtype);
+#endif
     }
 
     JLI_TraceLauncher("Does `%s' exist ... ", jvmpath);
@@ -460,6 +638,22 @@ GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative)
     char libjava[MAXPATHLEN];
 
     if (GetApplicationHome(path, pathsize)) {
+
+#ifdef MACOSX
+        /* Is JRE co-located with the application? */
+        JLI_Snprintf(libjava, sizeof(libjava), "%s/lib/" JAVA_DLL, path);
+        if (access(libjava, F_OK) == 0) {
+            return JNI_TRUE;
+        }
+
+        /* Does the app ship a private JRE in <apphome>/jre directory? */
+        JLI_Snprintf(libjava, sizeof(libjava), "%s/jre/lib/" JAVA_DLL, path);
+        if (access(libjava, F_OK) == 0) {
+            JLI_StrCat(path, "/jre");
+            JLI_TraceLauncher("JRE path is %s\n", path);
+            return JNI_TRUE;
+        }
+#else
         /* Is JRE co-located with the application? */
         JLI_Snprintf(libjava, sizeof(libjava), "%s/lib/%s/" JAVA_DLL, path, arch);
         if (access(libjava, F_OK) == 0) {
@@ -474,6 +668,7 @@ GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative)
             JLI_TraceLauncher("JRE path is %s\n", path);
             return JNI_TRUE;
         }
+#endif
     }
 
     if (!speculative)
@@ -692,7 +887,7 @@ static const char*
 SetExecname(char **argv)
 {
     char* exec_path = NULL;
-#if defined(__solaris__)
+#if defined(__solaris__) || defined(__APPLE__)
     {
         Dl_info dlinfo;
         int (*fptr)();
@@ -723,7 +918,7 @@ SetExecname(char **argv)
             exec_path = JLI_StringDup(buf);
         }
     }
-#else /* !__solaris__ && !__linux */
+#else /* !__solaris__ && !__APPLE__ && !__linux__ */
     {
         /* Not implemented */
     }

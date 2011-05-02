@@ -1159,7 +1159,6 @@ static netif *enumIPv6Interfaces(JNIEnv *env, int sock, netif *ifs) {
 }
 #endif
 
-
 static int getIndex(int sock, const char *name){
      /*
       * Try to get the interface index
