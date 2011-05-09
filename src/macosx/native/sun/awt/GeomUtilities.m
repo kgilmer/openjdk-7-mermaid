@@ -63,7 +63,7 @@ jobject NSToJavaRect(JNIEnv *env, NSRect rect) {
 }
 
 CGRect JavaToCGRect(JNIEnv *env, jobject rect) {
-	return CGRectMake(JNFCallDoubleMethod(env, rect, jm_rect_getX),
+    return CGRectMake(JNFCallDoubleMethod(env, rect, jm_rect_getX),
                       JNFCallDoubleMethod(env, rect, jm_rect_getY),
                       JNFCallDoubleMethod(env, rect, jm_rect_getWidth),
                       JNFCallDoubleMethod(env, rect, jm_rect_getHeight));
@@ -98,9 +98,19 @@ NSSize JavaToNSSize(JNIEnv *env, jobject dimension) {
                       JNFCallDoubleMethod(env, dimension, jm_sz_getHeight));
 }
 
+static NSScreen *primaryScreen(JNIEnv *env) {
+    NSScreen *primaryScreen = [[NSScreen screens] objectAtIndex:0];
+    if (primaryScreen != nil) return primaryScreen;
+    if (env != NULL) [JNFException raise:env as:kRuntimeException reason:"Failed to convert, no screen."];
+    return nil;
+}
+
 NSPoint ConvertNSScreenPoint(JNIEnv *env, NSPoint point) {
-    NSScreen *mainScreen = [NSScreen mainScreen];
-    if (mainScreen == nil) [JNFException raise:env as:kRuntimeException reason:"Failed to convert point, no screen."];
-    point.y = [mainScreen frame].size.height - point.y;
+    point.y = [primaryScreen(env) frame].size.height - point.y;
     return point;
+}
+
+NSRect ConvertNSScreenRect(JNIEnv *env, NSRect rect) {
+    rect.origin.y = [primaryScreen(env) frame].size.height - rect.origin.y - rect.size.height;
+    return rect;
 }

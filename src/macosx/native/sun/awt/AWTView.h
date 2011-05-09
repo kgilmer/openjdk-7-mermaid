@@ -23,17 +23,11 @@
  * questions.
  */
 
-#ifndef _AWTVIEW_H
-#define _AWTVIEW_H
-
-@class AWTWindow, AWTWindowDelegate;
-
-#import "AppKit/NSView.h"
+#import <Cocoa/Cocoa.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 @interface AWTView : NSView {
-
 @private
-
     jobject m_cPlatformView;
     NSMenu * popupMenu;
 
@@ -43,12 +37,10 @@
     // TODO: NSMenu *contextualMenu;
 }
 
-- (id) initWithRect: (NSRect) rect
-       platformView: (jobject) cPlatformView;
+- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
 - (void) deliverJavaMouseEvent: (NSEvent *) event;
 - (void) resetTrackingRect;
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;
 - (void) setContextMenu:(NSMenu *)aMenu;
 
 @end
-#endif _AWTVIEW_H

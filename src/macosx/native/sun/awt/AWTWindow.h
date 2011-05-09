@@ -26,33 +26,34 @@
 #ifndef _AWTWINDOW_H
 #define _AWTWINDOW_H
 
-#import <jni.h>
-#import <AppKit/NSWindow.h>
+#import <Cocoa/Cocoa.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "CMenuBar.h"
 #import "LWCToolkit.h"
 
-@class AWTView, AWTWindowDelegate;
 
-@interface AWTWindow : NSWindow {
+@class AWTView;
+
+@interface AWTWindow : NSPanel <NSWindowDelegate> {
 @private
-    NSView *m_view;
-    CMenuBar *_menuBar;
-    jobject m_cPlatformWindow;
-    NSSize _minSize;
+    JNFWeakJObjectWrapper *javaPlatformWindow;
+    CMenuBar *javaMenuBar;
+    NSSize javaMinSize;
+    NSSize javaMaxSize;
+    jint styleBits;
 }
 
-@property (nonatomic, retain) NSView *m_view;
-@property (nonatomic, retain) CMenuBar *_menuBar;
-@property (nonatomic) jobject m_cPlatformWindow;
-@property (nonatomic) NSSize _minSize;
+@property (nonatomic, retain) JNFWeakJObjectWrapper *javaPlatformWindow;
+@property (nonatomic, retain) CMenuBar *javaMenuBar;
+@property (nonatomic) NSSize javaMinSize;
+@property (nonatomic) NSSize javaMaxSize;
+@property (nonatomic) jint styleBits;
 
-- (id)initWithContentRect:(NSRect)contentRect
-                styleMask:(NSUInteger)windowStyle
-                  backing:(NSBackingStoreType)bufferingType
-                    defer:(BOOL)deferCreation
-           platformWindow:(jobject) cPlatformWindow
-              contentView:(NSView *)contentView;
+- (id) initWithPlatformWindow:(JNFWeakJObjectWrapper *)javaPlatformWindow
+                    styleBits:(jint)styleBits
+                    frameRect:(NSRect)frameRect
+                  contentView:(NSView *)contentView;
 
 @end
 

@@ -85,18 +85,11 @@
         NSUInteger modifiers = [currEvent modifierFlags];
         jint javaModifiers = 0;
 
-        if ((modifiers & NSCommandKeyMask) != 0) {
-            javaModifiers |= java_awt_Event_META_MASK;
-        }
-        if ((modifiers & NSShiftKeyMask) != 0) {
-            javaModifiers |= java_awt_Event_SHIFT_MASK;
-        }
-        if ((modifiers & NSControlKeyMask) != 0) {
-            javaModifiers |= java_awt_Event_CTRL_MASK;
-        }
-        if ((modifiers & NSAlternateKeyMask) != 0) {
-            javaModifiers |= java_awt_Event_ALT_MASK;
-        }
+        if ((modifiers & NSCommandKeyMask) != 0)   javaModifiers |= java_awt_Event_META_MASK;
+        if ((modifiers & NSShiftKeyMask) != 0)     javaModifiers |= java_awt_Event_SHIFT_MASK;
+        if ((modifiers & NSControlKeyMask) != 0)   javaModifiers |= java_awt_Event_CTRL_MASK;
+        if ((modifiers & NSAlternateKeyMask) != 0) javaModifiers |= java_awt_Event_ALT_MASK;
+        
         JNFCallVoidMethod(env, fPeer, jm_handleAction, UTC(currEvent), javaModifiers); // AWT_THREADING Safe (event)
     }
     JNF_COCOA_EXIT(env);
@@ -122,79 +115,59 @@
             modifiers &= ~java_awt_event_KeyEvent_SHIFT_MASK;
         }
 
-        if ((modifiers & java_awt_event_KeyEvent_SHIFT_MASK) != 0) {
-            modifierMask |= NSShiftKeyMask;
-        }
-        if ((modifiers & java_awt_event_KeyEvent_CTRL_MASK) != 0) {
-            modifierMask |= NSControlKeyMask;
-        }
-        if ((modifiers & java_awt_event_KeyEvent_ALT_MASK) != 0) {
-            modifierMask |= NSAlternateKeyMask;
-        }
-        if ((modifiers & java_awt_event_KeyEvent_META_MASK) != 0) {
-            modifierMask |= NSCommandKeyMask;
-        }
+        if ((modifiers & java_awt_event_KeyEvent_SHIFT_MASK) != 0) modifierMask |= NSShiftKeyMask;
+        if ((modifiers & java_awt_event_KeyEvent_CTRL_MASK) != 0)  modifierMask |= NSControlKeyMask;
+        if ((modifiers & java_awt_event_KeyEvent_ALT_MASK) != 0)   modifierMask |= NSAlternateKeyMask;
+        if ((modifiers & java_awt_event_KeyEvent_META_MASK) != 0)  modifierMask |= NSCommandKeyMask;
     }
-
-    NSNumber *a1 = [[NSNumber alloc] initWithUnsignedInteger:modifierMask];
-    NSArray *args = [[NSArray alloc] initWithObjects:theLabel, theKeyEquivalent, a1, nil];
-    [ThreadUtilities performOnMainThread:@selector(setNativeLabel_OnAppKitThread:) onObject:self withObject:args waitUntilDone:YES awtMode:YES];
-    [args release];
-    [a1 release];
-}
-
-- (void) setNativeLabel_OnAppKitThread:(NSArray *)args {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    NSString *label = (NSString *)[args objectAtIndex:0];
-    NSString *keyEquivalent = (NSString *)[args objectAtIndex:1];
-    NSUInteger modifierMask = [(NSNumber*)[args objectAtIndex:2] unsignedIntegerValue];
-
-    if (![keyEquivalent isEqualToString:@""]) {
-        [fMenuItem setKeyEquivalent:keyEquivalent];
-        [fMenuItem setKeyEquivalentModifierMask:modifierMask];
-    }
-    [fMenuItem setTitle:label];
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        if (![theKeyEquivalent isEqualToString:@""]) {
+            [fMenuItem setKeyEquivalent:theKeyEquivalent];
+            [fMenuItem setKeyEquivalentModifierMask:modifierMask];
+        }
+        [fMenuItem setTitle:theLabel];
+    }];
 }
 
 - (void) setJavaImage:(NSImage *)theImage {
     AWT_ASSERT_NOT_APPKIT_THREAD;
-    [ThreadUtilities performOnMainThread:@selector(setNativeImage_OnAppKitThread:) onObject:self withObject:theImage waitUntilDone:YES awtMode:YES];
+    
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [fMenuItem setImage:theImage];
+    }];
 }
-
-- (void) setNativeImage_OnAppKitThread:(NSImage *)theImage {
-    AWT_ASSERT_APPKIT_THREAD;
-    [fMenuItem setImage:theImage];
-}
-
 
 - (void) setJavaToolTipText:(NSString *)theText {
     AWT_ASSERT_NOT_APPKIT_THREAD;
-    [ThreadUtilities performOnMainThread:@selector(setNativeToolTipText_OnAppKitThread:) onObject:self withObject:theText waitUntilDone:YES awtMode:YES];
-}
-
-- (void) setNativeToolTipText_OnAppKitThread:(NSString *)theText {
-    AWT_ASSERT_APPKIT_THREAD;
-    [fMenuItem setToolTip:theText];
+    
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [fMenuItem setToolTip:theText];
+    }];
 }
 
 
 - (void)setJavaEnabled:(BOOL) enabled {
     AWT_ASSERT_NOT_APPKIT_THREAD;
-    [ThreadUtilities performOnMainThread:@selector(setNativeEnabled_OnAppKitThread:) onObject:self withObject:[NSNumber numberWithBool:enabled] waitUntilDone:YES awtMode:YES];
-}
-
-- (void)setNativeEnabled_OnAppKitThread:(NSNumber *)boolNumber {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    @synchronized(self) {
-        fIsEnabled = [boolNumber boolValue];
-	
-        // Warning:  This won't work if the parent menu is disabled.
-        // See [CMenu syncFromJava]. We still need to call it here so
-        // the NSMenuItem itself gets properly updated.
-        [fMenuItem setEnabled:fIsEnabled];
-    }
+    
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        @synchronized(self) {
+            fIsEnabled = enabled;
+            
+            // Warning:  This won't work if the parent menu is disabled.
+            // See [CMenu syncFromJava]. We still need to call it here so
+            // the NSMenuItem itself gets properly updated.
+            [fMenuItem setEnabled:fIsEnabled];
+        }
+    }];
 }
 
 - (BOOL)isEnabled {
@@ -210,14 +183,12 @@
 
 - (void)setJavaState:(BOOL)newState {
     AWT_ASSERT_NOT_APPKIT_THREAD;
-
-    [ThreadUtilities performOnMainThread:@selector(setNativeState_OnAppKitThread:) onObject:self withObject:[NSNumber numberWithBool:newState] waitUntilDone:YES awtMode:YES];
-}
-
-- (void)setNativeState_OnAppKitThread:(NSNumber *)stateNumber {
-    AWT_ASSERT_APPKIT_THREAD;
-
-    [fMenuItem setState:([stateNumber boolValue] ? NSOnState : NSOffState)];
+    
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        [fMenuItem setState:(newState ? NSOnState : NSOffState)];
+    }];
 }
 
 - (void)cleanup {

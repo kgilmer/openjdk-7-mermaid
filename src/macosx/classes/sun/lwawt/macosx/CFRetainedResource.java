@@ -25,7 +25,7 @@ public class CFRetainedResource {
 	 */
 	protected void setPtr(final long ptr) {
 	    synchronized (this) {
-	        dispose();
+	        if (this.ptr != 0) dispose();
 	        this.ptr = ptr;
         }
 	}

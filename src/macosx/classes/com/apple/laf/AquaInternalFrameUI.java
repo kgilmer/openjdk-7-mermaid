@@ -684,7 +684,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
                     setPalette(false);
                 }
                 // TODO: CPlatformWindow?
-            } else if ("windowModified".equals(name) || CPlatformWindow.DOCUMENT_MODIFIED.equals(name)) {
+            } else if ("windowModified".equals(name) || CPlatformWindow.WINDOW_DOCUMENT_MODIFIED.equals(name)) {
                 // repaint title bar
                 setDocumentEdited(((Boolean)e.getNewValue()).booleanValue());
                 frame.repaint(0, 0, frame.getWidth(), frame.getBorder().getBorderInsets(frame).top);

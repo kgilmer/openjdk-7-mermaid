@@ -25,18 +25,12 @@
 
 package sun.lwawt.macosx;
 
-import sun.lwawt.LWWindowPeer;
-import sun.lwawt.PlatformWindow;
-
-import java.awt.Component;
-import java.awt.Event;
-import java.awt.Frame;
-import java.awt.PopupMenu;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.peer.PopupMenuPeer;
 
-public class CPopupMenu extends CMenu implements PopupMenuPeer {
+import sun.lwawt.LWWindowPeer;
 
+public class CPopupMenu extends CMenu implements PopupMenuPeer {
     CPopupMenu(PopupMenu target) {
         super(target);
     }
@@ -59,11 +53,10 @@ public class CPopupMenu extends CMenu implements PopupMenuPeer {
         CPlatformWindow pWindow = (CPlatformWindow)lwPeer.getPlatformWindow();
 
         if (pWindow != null) {
-            return nativeCreatePopupMenu(pWindow.getAWTWindow());
-        } else {
-            throw new InternalError("Platform window for PopupMenu peer shouldn't be null.");
+            return nativeCreatePopupMenu(pWindow.getNSWindowPtr());
         }
         
+        throw new InternalError("Platform window for PopupMenu peer shouldn't be null.");
     }
 
     private native long nativeCreatePopupMenu(long managerPtr);

@@ -25,14 +25,10 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.Menu;
-import java.awt.MenuBar;
-import java.awt.MenuContainer;
-import java.awt.MenuItem;
+import java.awt.*;
 import java.awt.peer.MenuPeer;
 
 public class CMenu extends CMenuItem implements MenuPeer {
-
     public CMenu(Menu target) {
         super(target);
     }

@@ -132,7 +132,7 @@ public interface PlatformWindow {
     /*
      * Installs the images for particular window.
      */
-    public void updateTitleIconImages();
+    public void updateIconImages();
 
     public void setOpacity(float opacity);
 

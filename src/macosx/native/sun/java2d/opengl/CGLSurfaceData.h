@@ -38,7 +38,7 @@ typedef struct _CGLSDOps {
     AWTView               *peerData;
     GLclampf              argb[4]; // background clear color
     NSOpenGLPixelBuffer   *pbuffer;
-    CGLGraphicsConfigInfo *configInfo;	
+    CGLGraphicsConfigInfo *configInfo;    
 } CGLSDOps;
 
 #endif /* CGLSurfaceData_h_Included */

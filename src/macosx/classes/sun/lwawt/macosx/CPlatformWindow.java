@@ -27,81 +27,196 @@ package sun.lwawt.macosx;
 
 import java.awt.BufferCapabilities.FlipContents;
 import java.awt.*;
+import java.awt.Dialog.ModalityType;
 import java.awt.event.WindowEvent;
+import java.beans.*;
 import java.util.List;
+
+import javax.swing.*;
 
 import sun.java2d.SurfaceData;
 import sun.lwawt.*;
-import sun.util.logging.PlatformLogger;
+import sun.lwawt.LWWindowPeer.PeerType;
 
-public class CPlatformWindow implements PlatformWindow {
-	
-	// TODO: deal with these properties
-    public static final String DOCUMENT_MODIFIED = "Window.documentModified";
+import com.apple.laf.*;
+import com.apple.laf.ClientPropertyApplicator.Property;
+import com.sun.awt.AWTUtilities;
+
+public class CPlatformWindow extends CFRetainedResource implements PlatformWindow {
+    private native long nativeCreateNSWindow(long nsViewPtr, long styleBits, double x, double y, double w, double h);
+    private static native void nativeSetNSWindowStyleBits(long nsWindowPtr, int mask, int data);
+    private static native void nativeSetNSWindowMenuBar(long nsWindowPtr, long menuBarPtr);
+    private static native Insets nativeGetNSWindowInsets(long nsWindowPtr);
+    private static native void nativeSetNSWindowBounds(long nsWindowPtr, double x, double y, double w, double h);
+    private static native void nativeSetNSWindowMinMax(long nsWindowPtr, double minW, double minH, double maxW, double maxH);
+    private static native void nativePushNSWindowToBack(long nsWindowPtr);
+    private static native void nativePushNSWindowToFront(long nsWindowPtr);
+    private static native void nativeSetNSWindowTitle(long nsWindowPtr, String title);
+    private static native void nativeSetNSWindowAlpha(long nsWindowPtr, float alpha);
+    private static native void nativeRevalidateNSWindowShadow(long nsWindowPtr);
+    private static native void nativeSetNSWindowMinimizedIcon(long nsWindowPtr, long nsImage);
+    private static native void nativeSetNSWindowRepresentedFilename(long nsWindowPtr, String representedFilename);
+    private static native void nativeSetNSWindowSecurityWarningPositioning(long nsWindowPtr, double x, double y, float biasX, float biasY);
     
-    public static final String DRAGGABLE_WINDOW_BACKGROUND = "apple.awt.draggableWindowBackground";
+    private static native int nativeGetScreenNSWindowIsOn_AppKitThread(long nsWindowPtr);
     
+    // for client properties
+    public static final String WINDOW_BRUSH_METAL_LOOK = "apple.awt.brushMetalLook";
+    public static final String WINDOW_DRAGGABLE_BACKGROUND = "apple.awt.draggableWindowBackground";
+
     public static final String WINDOW_ALPHA = "Window.alpha";
     public static final String WINDOW_SHADOW = "Window.shadow";
-
+    
+    public static final String WINDOW_STYLE = "Window.style";
     public static final String WINDOW_SHADOW_REVALIDATE_NOW = "apple.awt.windowShadow.revalidateNow";
     
-	public static final String WINDOW_FADE_OUT = "";
-	public static final String WINDOW_FADE_DELEGATE = "";
-	
-    private static final PlatformLogger log = PlatformLogger.getLogger("sun.lwawt.macosx.CPlatformWindow");
-
-    private CPlatformView contentView = null;
+    public static final String WINDOW_DOCUMENT_MODIFIED = "Window.documentModified";
+    public static final String WINDOW_DOCUMENT_FILE = "Window.documentFile";
     
-    // Bounds of the native widget but in the Java coordinate system.
-	// In order to keep it up-to-date we will update them on
-	// 1) setting native bounds via nativeSetBounds() call
-	// 2) getting notification from the native level via deliverMoveResizeEvent()
-    private Rectangle nativeBounds;
+    public static final String WINDOW_CLOSEABLE = "Window.closeable";
+    public static final String WINDOW_MINIMIZABLE = "Window.minimizable";
+    public static final String WINDOW_ZOOMABLE = "Window.zoomable";
+    public static final String WINDOW_HIDES_ON_DEACTIVATE="Window.hidesOnDeactivate";
+    
+    public static final String WINDOW_DOC_MODAL_SHEET = "apple.awt.documentModalSheet";
+    public static final String WINDOW_FADE_DELEGATE = "apple.awt._windowFadeDelegate";
+    public static final String WINDOW_FADE_IN = "apple.awt._windowFadeIn";
+    public static final String WINDOW_FADE_OUT = "apple.awt._windowFadeOut";
+    
+    // Yeah, I know. But it's easier to deal with ints from JNI
+    static final int MODELESS = 0;
+    static final int DOCUMENT_MODAL = 1;
+    static final int APPLICATION_MODAL = 2;
+    static final int TOOLKIT_MODAL = 3;
+    
+    // window style bits
+    static final int _RESERVED_FOR_DATA = 1 << 0;
+    
+    // corresponds to native style mask bits
+    static final int DECORATED = 1 << 1;
+    static final int TEXTURED = 1 << 2;
+    static final int UNIFIED = 1 << 3;
+    static final int UTILITY = 1 << 4;
+    static final int HUD = 1 << 5;
+    static final int SHEET = 1 << 6;
+    
+    static final int CLOSEABLE = 1 << 7;
+    static final int MINIMIZABLE = 1 << 8;
+    
+    static final int RESIZABLE = 1 << 9; // both a style bit and prop bit
+    
+    static final int _STYLE_PROP_BITMASK = DECORATED | TEXTURED | UNIFIED | UTILITY | HUD | SHEET | CLOSEABLE | MINIMIZABLE | RESIZABLE;
+    
+    // corresponds to method-based properties
+    static final int HAS_SHADOW = 1 << 10;
+    static final int ZOOMABLE = 1 << 11;
+    
+    static final int ALWAYS_ON_TOP = 1 << 15;
+    static final int HIDES_ON_DEACTIVATE = 1 << 17;
+    static final int DRAGGABLE_BACKGROUND = 1 << 19;
+    static final int DOCUMENT_MODIFIED = 1 << 21;
+    
+    static final int _METHOD_PROP_BITMASK = RESIZABLE | HAS_SHADOW | ZOOMABLE | ALWAYS_ON_TOP | HIDES_ON_DEACTIVATE | DRAGGABLE_BACKGROUND | DOCUMENT_MODIFIED;
+    
+    // not sure
+    static final int POPUP = 1 << 14;
+    
+    // corresponds to callback-based properties
+    static final int SHOULD_BECOME_KEY = 1 << 12;
+    static final int SHOULD_BECOME_MAIN = 1 << 13;
+    static final int MODAL_EXCLUDED = 1 << 16;
+    
+    static final int _CALLBACK_PROP_BITMASK = SHOULD_BECOME_KEY | SHOULD_BECOME_MAIN | MODAL_EXCLUDED;
+    
+    static int SET(final int bits, final int mask, final boolean value) {
+        if (value) return (bits | mask);
+        return bits & ~mask;
+    }
+    
+    static boolean IS(final int bits, final int mask) {
+        return (bits & mask) != 0;
+    }
+    
+    @SuppressWarnings("unchecked")
+    static ClientPropertyApplicator<JRootPane, CPlatformWindow> CLIENT_PROPERTY_APPLICATOR = new ClientPropertyApplicator<JRootPane, CPlatformWindow>(new Property[] {
+        new Property<CPlatformWindow>(WINDOW_DOCUMENT_MODIFIED) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(DOCUMENT_MODIFIED, value == null ? false : Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_BRUSH_METAL_LOOK) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(TEXTURED, Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_ALPHA) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            AWTUtilities.setWindowOpacity(c.target, value == null ? 1.0f : Float.parseFloat(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_SHADOW) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(HAS_SHADOW, value == null ? true : Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_MINIMIZABLE) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(MINIMIZABLE, Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_CLOSEABLE) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(CLOSEABLE, Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_ZOOMABLE) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(ZOOMABLE, Boolean.parseBoolean(value.toString()));
+        }},
+        new Property<CPlatformWindow>(WINDOW_SHADOW_REVALIDATE_NOW) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            nativeRevalidateNSWindowShadow(c.getNSWindowPtr());
+        }},
+        new Property<CPlatformWindow>(WINDOW_DOCUMENT_FILE) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            if (value == null) {
+                nativeSetNSWindowRepresentedFilename(c.getNSWindowPtr(), "");
+                return;
+            }
+            
+            if (!(value instanceof java.io.File)) return;
+            String filename = ((java.io.File)value).getAbsolutePath();
+            nativeSetNSWindowRepresentedFilename(c.getNSWindowPtr(), filename);
+        }}
+    }) {
+        public CPlatformWindow convertJComponentToTarget(final JRootPane p) {
+            Component root = SwingUtilities.getRoot(p);
+            if (root == null) return null;
+            return (CPlatformWindow)((LWWindowPeer)root.getPeer()).getPlatformWindow();
+        }
+    };
     
     private static final Font defaultFont = new Font(Font.DIALOG, Font.PLAIN, 12);
-
-    protected Window target;
-    private CPlatformWindow ownerPlatformWindow;
-
-    private long _awtWindowPtr;
-
-    protected LWWindowPeer peer;
-
-    private boolean undecorated;
-
-    private volatile boolean isFocusable;
     
+    // Bounds of the native widget but in the Java coordinate system.
+    // In order to keep it up-to-date we will update them on
+    // 1) setting native bounds via nativeSetBounds() call
+    // 2) getting notification from the native level via deliverMoveResizeEvent()
+    private Rectangle nativeBounds;
     private volatile boolean isFullScreenMode = false;
+    
+    private Window target;
+    private LWWindowPeer peer;
+    private CPlatformView contentView;
+    private CPlatformWindow owner;
 
-    public CPlatformWindow(boolean undecorated) {
-        this.undecorated = undecorated;
+    public CPlatformWindow(final PeerType peerType) {
+        super(0, true);
+        assert (peerType == PeerType.SIMPLEWINDOW || peerType == PeerType.DIALOG || peerType == PeerType.FRAME);
     }
-
-//TODO: use Volatile image instead of buffered.
-//    private BufferCapabilities backBufferCaps;
-//    private VolatileImage backBuffer = null;
-//    private long backBufferPtr;
-
-    //TODO: add opacity
-    //private float opacity;
 
     /*
      * Delegate initialization (create native window and all the
      * related resources).
      */
     @Override // PlatformWindow
-    public void initialize(Window target, LWWindowPeer peer, PlatformWindow owner) {
-        this.peer = peer;
-        this.target = target;
-        this.ownerPlatformWindow = (CPlatformWindow)owner;
+    public void initialize(Window _target, LWWindowPeer _peer, PlatformWindow _owner) {
+        this.peer = _peer;
+        this.target = _target;
+        this.owner = (CPlatformWindow)_owner;
 
-        Font f = target.getFont();
-        if (f == null) {
+        final Font font = target.getFont();
+        if (font == null) {
             target.setFont(defaultFont);
         }
-        Color c = target.getBackground();
-        if (c == null) {
+        
+        final Color background = target.getBackground();
+        if (background == null) {
             target.setBackground(SystemColor.window);
         } else {
             // first we check if user provided alpha for background. This is
@@ -111,41 +226,175 @@ public class CPlatformWindow implements PlatformWindow {
             // System.out.println("Delegate assigns alpha (we ignore setOpacity()):"
             // +this.opacity);
         }
-        c = target.getForeground();
-        if (c == null) {
+        
+        Color foreground = target.getForeground();
+        if (foreground == null) {
             target.setForeground(SystemColor.windowText);
             // we should not call setForeground because it will call a repaint
             // which the peer may not be ready to do yet.
         }
-
-        isFocusable = isNativelyFocusableWindow();
+        
+        final int styleBits = getInitialStyleBits();
+        
+        // TODO: handle these misc properties
+        final long parentNSWindowPtr = (owner != null ? owner.getNSWindowPtr() : 0);
+        String warningString = target.getWarningString();
         
         contentView = new CPlatformView();
         contentView.initialize(peer);
-
-        _awtWindowPtr = nativeCreateWindow(contentView.getAWTView(),
-                                          !undecorated, //hasBorder 
-                                          0, 0, //x, y, width, height
-                                          0, 0
-                                          );
         
-        contentView.setWindow(_awtWindowPtr);
+        final long nativeWindowPtr = nativeCreateNSWindow(contentView.getAWTView(), styleBits, 0, 0, 0, 0);
+        setPtr(nativeWindowPtr);
+        
+        // TODO: implement on top of JObjC bridged class
+    //    NSWindow window = JObjC.getInstance().AppKit().NSWindow().getInstance(nativeWindowPtr, JObjCRuntime.getInstance());
 
         // Since JDK7 we have standard way to set opacity, so we should not pick
         // background's alpha.
         // TODO: set appropriate opacity value
         //        this.opacity = target.getOpacity();
         //        this.setOpacity(this.opacity);
+        
+        final float windowAlpha = target.getOpacity();
+        if (windowAlpha != 1.0f) {
+            nativeSetNSWindowAlpha(nativeWindowPtr, windowAlpha);
+        }
+        
+        if (target instanceof javax.swing.RootPaneContainer) {
+            final javax.swing.JRootPane rootpane = ((javax.swing.RootPaneContainer)target).getRootPane();
+            if (rootpane != null) rootpane.addPropertyChangeListener("ancestor", new PropertyChangeListener() {
+                public void propertyChange(final PropertyChangeEvent evt) {
+                    CLIENT_PROPERTY_APPLICATOR.attachAndApplyClientProperties(rootpane);
+                    rootpane.removePropertyChangeListener("ancestor", this);
+                }
+            });
+        }
+        
+        validateSurface();
     }
+    
+    protected int getInitialStyleBits() {
+        // defaults style bits
+        int styleBits = DECORATED | HAS_SHADOW | CLOSEABLE | MINIMIZABLE | ZOOMABLE | RESIZABLE;
+        
+        if (target.getName() == "###overrideRedirect###") {
+            styleBits = SET(styleBits, POPUP, true);
+        }
+        
+        if (isNativelyFocusableWindow()) {
+            styleBits = SET(styleBits, SHOULD_BECOME_KEY, true);
+            styleBits = SET(styleBits, SHOULD_BECOME_MAIN, true);
+        }
+        
+        final boolean isFrame = (target instanceof Frame);
+        final boolean isDialog = (target instanceof Dialog);
+        if (isDialog) {
+            styleBits = SET(styleBits, MINIMIZABLE, false);
+        }
 
-    private native void nativeSetMenuBar(long nsWindow, long menuBarPtr);
+        // Either java.awt.Frame or java.awt.Dialog can be undecorated, however java.awt.Window always is undecorated.
+        {
+            final boolean undecorated = isFrame ? ((Frame)target).isUndecorated() : (isDialog ? ((Dialog)target).isUndecorated() : true);
+            if (undecorated) styleBits = SET(styleBits, DECORATED, false);
+        }
+        
+        // Either java.awt.Frame or java.awt.Dialog can be resizable, however java.awt.Window is never resizable
+        {
+            final boolean resizable = isFrame ? ((Frame)target).isResizable() : (isDialog ? ((Dialog)target).isResizable() : false);
+            styleBits = SET(styleBits, RESIZABLE, resizable);
+            if (!resizable) {
+                styleBits = SET(styleBits, RESIZABLE, false);
+                styleBits = SET(styleBits, ZOOMABLE, false);
+            }
+        }
+        
+        if (target.isAlwaysOnTop()) {
+            styleBits = SET(styleBits, ALWAYS_ON_TOP, true);
+        }
+        
+        if (target.getModalExclusionType() == Dialog.ModalExclusionType.APPLICATION_EXCLUDE) {
+            styleBits = SET(styleBits, MODAL_EXCLUDED, true);
+        }
+        
+        // If the target is a dialog, popup or tooltip we want it to ignore the brushed metal look.
+        if (!isDialog && IS(styleBits, POPUP)) {
+            styleBits = SET(styleBits, TEXTURED, true);
+        }
+        
+        if (target instanceof javax.swing.RootPaneContainer) {
+            javax.swing.JRootPane rootpane = ((javax.swing.RootPaneContainer)target).getRootPane();
+            Object prop = null;
+
+            prop = rootpane.getClientProperty(WINDOW_BRUSH_METAL_LOOK);
+            if (prop != null) {
+                styleBits = SET(styleBits, TEXTURED, Boolean.parseBoolean(prop.toString()));
+            }
+
+            if (isDialog && ((Dialog)target).getModalityType() == ModalityType.DOCUMENT_MODAL) {
+                prop = rootpane.getClientProperty(WINDOW_DOC_MODAL_SHEET);
+                if (prop != null) {
+                    styleBits = SET(styleBits, SHEET, Boolean.parseBoolean(prop.toString()));
+                }
+            }
+
+            prop = rootpane.getClientProperty(WINDOW_STYLE);
+            if (prop != null) {
+                if ("small".equals(prop))  {
+                    styleBits = SET(styleBits, UTILITY, true);
+                    if (target.isAlwaysOnTop() && rootpane.getClientProperty(WINDOW_HIDES_ON_DEACTIVATE) == null) {
+                        styleBits = SET(styleBits, HIDES_ON_DEACTIVATE, true);  
+                    }
+                }
+                if ("textured".equals(prop)) styleBits = SET(styleBits, TEXTURED, true);
+                if ("unified".equals(prop)) styleBits = SET(styleBits, UNIFIED, true);
+                if ("hud".equals(prop)) styleBits = SET(styleBits, HUD, true);
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_HIDES_ON_DEACTIVATE);
+            if (prop != null) {
+                styleBits = SET(styleBits, HIDES_ON_DEACTIVATE, Boolean.parseBoolean(prop.toString()));
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_CLOSEABLE);
+            if (prop != null) {
+                styleBits = SET(styleBits, CLOSEABLE, Boolean.parseBoolean(prop.toString()));
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_MINIMIZABLE);
+            if (prop != null) {
+                styleBits = SET(styleBits, MINIMIZABLE, Boolean.parseBoolean(prop.toString()));
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_ZOOMABLE);
+            if (prop != null) {
+                styleBits = SET(styleBits, ZOOMABLE, Boolean.parseBoolean(prop.toString()));
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_SHADOW);
+            if (prop != null) {
+                styleBits = SET(styleBits, HAS_SHADOW, Boolean.parseBoolean(prop.toString()));
+            }
+            
+            prop = rootpane.getClientProperty(WINDOW_DRAGGABLE_BACKGROUND);
+            if (prop != null) {
+                styleBits = SET(styleBits, DRAGGABLE_BACKGROUND, Boolean.parseBoolean(prop.toString()));
+            }
+        }
+        
+        return styleBits;
+    }
+    
+    // this is the counter-point to -[CWindow _nativeSetStyleBit:]
+    protected void setStyleBits(final int mask, final boolean value) {
+        nativeSetNSWindowStyleBits(getNSWindowPtr(), mask, value ? mask : 0);
+    }
 
     @Override // PlatformWindow
     public void setMenuBar(MenuBar mb) {
-        final long awtWindowPtr = getAWTWindow();
-        CMenuBar mbPeer = (CMenuBar)LWCToolkit.targetToPeer(mb);
+        final long nsWindowPtr = getNSWindowPtr();
+        CMenuBar mbPeer = (CMenuBar)LWToolkit.targetToPeer(mb);
         if (mbPeer != null) {
-            nativeSetMenuBar(awtWindowPtr, mbPeer.getModel());
+            nativeSetNSWindowMenuBar(nsWindowPtr, mbPeer.getModel());
         }
     }
 
@@ -156,47 +405,44 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void dispose() {
-        final long awtWindowPtr = getAWTWindow();
-        if (ownerPlatformWindow != null) {
-            CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
+        if (owner != null) {
+            CWrapper.NSWindow.removeChildWindow(owner.getNSWindowPtr(), getNSWindowPtr());
         }
         contentView.dispose();
-
-        CWrapper.NSObject.release(awtWindowPtr);
-        _awtWindowPtr = 0L;
+        super.dispose();
     }
 
     @Override // PlatformWindow
     public void flip(int x1, int y1, int x2, int y2, FlipContents flipAction) {
         // TODO: not implemented
-        
+        (new RuntimeException("unimplemented")).printStackTrace();
     }
 
     @Override // PlatformWindow
     public FontMetrics getFontMetrics(Font f) {
         // TODO: not implemented
+        (new RuntimeException("unimplemented")).printStackTrace();
         return null;
     }
 
     @Override // PlatformWindow
     public Insets getInsets() {
-        final long awtWindowPtr = getAWTWindow();
-        return nativeGetInsets(awtWindowPtr);
+        final Insets insets = nativeGetNSWindowInsets(getNSWindowPtr());
+        return insets;
     }
 
     @Override // PlatformWindow
     public Point getLocationOnScreen() {
-    	return new Point(nativeBounds.x, nativeBounds.y);
+        return new Point(nativeBounds.x, nativeBounds.y);
     }
 
     @Override // PlatformWindow
     public int getScreenImOn() {
-        final long awtWindowPtr = getAWTWindow();
-	// REMIND: we could also acquire screenID from the
-	// graphicsConfig.getDevice().getCoreGraphicsScreen()
-	// which might look a bit less natural but don't
-	// require new native accessor.
-        return nativeScreenOn_AppKitThread(awtWindowPtr);
+    // REMIND: we could also acquire screenID from the
+    // graphicsConfig.getDevice().getCoreGraphicsScreen()
+    // which might look a bit less natural but don't
+    // require new native accessor.
+        return nativeGetScreenNSWindowIsOn_AppKitThread(getNSWindowPtr());
     }
 
     @Override // PlatformWindow
@@ -213,21 +459,18 @@ public class CPlatformWindow implements PlatformWindow {
     @Override // PlatformWindow
     public void setBounds(int x, int y, int w, int h) {
 //        assert CThreading.assertEventQueue();
-        final long awtWindowPtr = getAWTWindow();
-    	Rectangle newBounds = new Rectangle(x, y, w, h);
-        Rectangle cocoaBounds = convertCoreCoordinatesToNSWindow(newBounds);
-        nativeSetBounds(awtWindowPtr, cocoaBounds.x, cocoaBounds.y, cocoaBounds.width, cocoaBounds.height);
+        nativeSetNSWindowBounds(getNSWindowPtr(), x, y, w, h);
     }
 
     @Override // PlatformWindow
     public void setVisible(boolean visible) {
-        if (ownerPlatformWindow != null) {
+        if (owner != null) {
             if (!visible) {
-                CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
+                CWrapper.NSWindow.removeChildWindow(owner.getNSWindowPtr(), getNSWindowPtr());
             }
         }
 
-        updateTitleIconImages();
+        updateIconImages();
         updateFocusabilityForAutoRequestFocus(false);
 
         LWWindowPeer blocker = peer.getBlocker();
@@ -236,15 +479,14 @@ public class CPlatformWindow implements PlatformWindow {
             setVisibleHelper(visible);
         } else {
             // otherwise, put it in a proper z-order
-            CWrapper.NSWindow.orderWindow(getAWTWindow(), CWrapper.NSWindow.NSWindowBelow,
-                    ((CPlatformWindow)blocker.getPlatformWindow()).getAWTWindow());
+            CWrapper.NSWindow.orderWindow(getNSWindowPtr(), CWrapper.NSWindow.NSWindowBelow,
+                    ((CPlatformWindow)blocker.getPlatformWindow()).getNSWindowPtr());
         }
         updateFocusabilityForAutoRequestFocus(true);
 
-        if (ownerPlatformWindow != null) {
+        if (owner != null) {
             if (visible) {
-                CWrapper.NSWindow.addChildWindow(ownerPlatformWindow.getAWTWindow(),
-                         getAWTWindow(), CWrapper.NSWindow.NSWindowAbove);
+                CWrapper.NSWindow.addChildWindow(owner.getNSWindowPtr(), getNSWindowPtr(), CWrapper.NSWindow.NSWindowAbove);
             }
         }
         
@@ -256,24 +498,23 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override // PlatformWindow
     public void setTitle(String title) {
-        nativeSetTitle(getAWTWindow(), title);
+        nativeSetNSWindowTitle(getNSWindowPtr(), title);
     }
     
     // Should be called on every window key property change.
     @Override // PlatformWindow
-    public void updateTitleIconImages() {
-        final long awtWindowPtr = getAWTWindow();
-        CImage cImage = getImageForTarget();
-        if (cImage != null) {
-            nativeSetTitleIconImage(awtWindowPtr, cImage.ptr);
-        }
+    public void updateIconImages() {
+        final long nsWindowPtr = getNSWindowPtr();
+        final CImage cImage = getImageForTarget();
+        nativeSetNSWindowMinimizedIcon(nsWindowPtr, cImage == null ? 0L : cImage.ptr);
     }
 
-    public long getAWTWindow() {
-        if (_awtWindowPtr == 0L) {
-            (new Exception("Pointer to the native NSWindow is invalid. Disposed before?")).printStackTrace();
+    public long getNSWindowPtr() {
+        final long nsWindowPtr = ptr;
+        if (nsWindowPtr == 0L) {
+            (new Exception("Pointer to native NSWindow is invalid. Already disposed?")).printStackTrace();
         }
-        return _awtWindowPtr;
+        return nsWindowPtr;
     }    
     
     public SurfaceData getSurfaceData() {
@@ -282,61 +523,63 @@ public class CPlatformWindow implements PlatformWindow {
 
     @Override  // PlatformWindow
     public void toBack() {
-        final long awtWindowPtr = getAWTWindow();
-        nativeToBack(awtWindowPtr);
+        final long nsWindowPtr = getNSWindowPtr();
+        nativePushNSWindowToBack(nsWindowPtr);
     }
 
     @Override  // PlatformWindow
     public void toFront() {
-        final long awtWindowPtr = getAWTWindow();
+        final long nsWindowPtr = getNSWindowPtr();
         updateFocusabilityForAutoRequestFocus(false);
-        nativeToFront(awtWindowPtr);
+        nativePushNSWindowToFront(nsWindowPtr);
         updateFocusabilityForAutoRequestFocus(true);
     }
 
     @Override
     public void setResizable(boolean resizable) {
-        final long awtWindowPtr = getAWTWindow();
-        nativeSetResizable(awtWindowPtr, resizable);
+        setStyleBits(RESIZABLE, resizable);
     }
 
     @Override
     public void setMinimumSize(int width, int height) {
-        final long awtWindowPtr = getAWTWindow();
-        nativeSetMinSize(awtWindowPtr, width, height);
+        final long nsWindowPtr = getNSWindowPtr();
+        final Dimension min = target.getMinimumSize();
+        final Dimension max = target.getMaximumSize();
+        nativeSetNSWindowMinMax(nsWindowPtr, min.getWidth(), min.getHeight(), max.getWidth(), max.getHeight());
     }
 
     @Override
     public boolean requestWindowFocus(boolean isMouseEventCause) {
-//TODO: ask if the native system is to assign focus on the NSWindow.
+        // TODO: ask if the native system is to assign focus on the NSWindow.
         return true;
     }
 
     @Override
     public void updateFocusableWindowState() {
-        isFocusable = isNativelyFocusableWindow();
+        final boolean isFocusable = isNativelyFocusableWindow();
+        setStyleBits(SHOULD_BECOME_KEY | SHOULD_BECOME_MAIN, isFocusable); // set both bits at once
     }
 
     @Override
     public Graphics transformGraphics(Graphics g) {
+        // is this where we can inject a transform for HiDPI?
         return g;
     }
-	
+    
     @Override
     public void setAlwaysOnTop(boolean isAlwaysOnTop) {
-        final long awtWindowPtr = getAWTWindow();
-        nativeSetAlwaysOnTop(awtWindowPtr, isAlwaysOnTop);
+        setStyleBits(ALWAYS_ON_TOP, isAlwaysOnTop);
     }
 
     @Override
     public void setOpacity(float opacity) {
-        CWrapper.NSWindow.setAlphaValue(getAWTWindow(), opacity);
+        CWrapper.NSWindow.setAlphaValue(getNSWindowPtr(), opacity);
     }
 
     @Override
     public void enterFullScreenMode() {
         isFullScreenMode = true;
-        contentView.enterFullScreenMode();
+        contentView.enterFullScreenMode(getNSWindowPtr());
     }
     
     @Override
@@ -350,6 +593,7 @@ public class CPlatformWindow implements PlatformWindow {
         int prevWindowState = peer.getState();
         if (prevWindowState == windowState) return;
         
+        final long nsWindowPtr = getNSWindowPtr();
         switch (windowState) {
             case Frame.ICONIFIED:
                 if (!peer.isVisible()) {
@@ -360,27 +604,27 @@ public class CPlatformWindow implements PlatformWindow {
                 if (prevWindowState == Frame.MAXIMIZED_BOTH) {
                     // let's return into the normal states first
                     // the zoom call toggles between the normal and the max states
-                    CWrapper.NSWindow.zoom(getAWTWindow());
+                    CWrapper.NSWindow.zoom(nsWindowPtr);
                 }
-                CWrapper.NSWindow.miniaturize(getAWTWindow());
+                CWrapper.NSWindow.miniaturize(nsWindowPtr);
                 break;
             case Frame.MAXIMIZED_BOTH:
                 if (prevWindowState == Frame.ICONIFIED) {
                     // let's return into the normal states first
-                    CWrapper.NSWindow.deminiaturize(getAWTWindow());
+                    CWrapper.NSWindow.deminiaturize(nsWindowPtr);
                 }
-                CWrapper.NSWindow.zoom(getAWTWindow());
+                CWrapper.NSWindow.zoom(nsWindowPtr);
                 break;
             case Frame.NORMAL:
                 if (prevWindowState == Frame.ICONIFIED) {
-                    CWrapper.NSWindow.deminiaturize(getAWTWindow());
+                    CWrapper.NSWindow.deminiaturize(nsWindowPtr);
                 } else if (prevWindowState == Frame.MAXIMIZED_BOTH) {
                     // the zoom call toggles between the normal and the max states
-                    CWrapper.NSWindow.zoom(getAWTWindow());
+                    CWrapper.NSWindow.zoom(nsWindowPtr);
                 }
                 break;
             default:
-                throw new RuntimeException("Unknown window state: "+windowState);
+                throw new RuntimeException("Unknown window state: " + windowState);
         }
         
         // NOTE: the SWP.windowState field gets updated to the newWindowState
@@ -392,17 +636,18 @@ public class CPlatformWindow implements PlatformWindow {
     // ----------------------------------------------------------------------
 
     private void setVisibleHelper(boolean visible) {
+        final long nsWindowPtr = getNSWindowPtr();
         if (visible) {
-            CWrapper.NSWindow.makeFirstResponder(getAWTWindow(), contentView.getAWTView());
-            boolean isKeyWindow = CWrapper.NSWindow.isKeyWindow(getAWTWindow());
+            CWrapper.NSWindow.makeFirstResponder(nsWindowPtr, contentView.getAWTView());
+            boolean isKeyWindow = CWrapper.NSWindow.isKeyWindow(nsWindowPtr);
             if (!isKeyWindow) {
-                CWrapper.NSWindow.makeKeyAndOrderFront(getAWTWindow());
+                CWrapper.NSWindow.makeKeyAndOrderFront(nsWindowPtr);
             } else {
-                CWrapper.NSWindow.orderFront(getAWTWindow());
+                CWrapper.NSWindow.orderFront(nsWindowPtr);
             }
             if (target instanceof Frame) {
                 if (((Frame)target).getExtendedState() == Frame.ICONIFIED) {
-                    CWrapper.NSWindow.miniaturize(getAWTWindow());
+                    CWrapper.NSWindow.miniaturize(nsWindowPtr);
                 }
             }
             return;
@@ -410,10 +655,11 @@ public class CPlatformWindow implements PlatformWindow {
         
         if (target instanceof Frame) {
             if (((Frame)target).getExtendedState() == Frame.ICONIFIED) {
-                CWrapper.NSWindow.deminiaturize(getAWTWindow());
+                CWrapper.NSWindow.deminiaturize(nsWindowPtr);
             }
         }
-        CWrapper.NSWindow.orderOut(getAWTWindow());        
+        
+        CWrapper.NSWindow.orderOut(nsWindowPtr);        
     }
     
     /*
@@ -430,15 +676,8 @@ public class CPlatformWindow implements PlatformWindow {
         
         // TODO: need a walk-through to find the best image.
         // The best mean with higher resolution. Otherwise an icon looks bad.
-        Image image = icons.get(0);
-        CImage cImage = null;
-        try {
-            cImage = CImage.getCreator().createFromImage(image);
-        } catch (Exception ignore) {
-            log.fine("Invalid image.", ignore);
-        }
-
-        return cImage;
+        final Image image = icons.get(0);
+        return CImage.getCreator().createFromImage(image);
     }
 
     /*
@@ -452,23 +691,6 @@ public class CPlatformWindow implements PlatformWindow {
         return contentView;
     }
 
-    /**
-     * Convert CoreGraphics coordinates to NSWindow coordinates, on the given
-     * {@link GraphicsConfiguration}.
-     * <p/>
-     * CoreGraphics: 0,0 is top left corner.
-     * NSWindow: 0,0 is bottom left corner.
-     * 
-     * @param origBounds Rectangle using standard coordinates.
-     * @return Rectangle mapped to NSWindow coordinates.
-     */
-    protected Rectangle convertCoreCoordinatesToNSWindow(final Rectangle origBounds) {
-        final Rectangle bounds = peer.getGraphicsConfiguration().getBounds();
-        final int y = bounds.height - (origBounds.y + origBounds.height);
-        final Rectangle cocoaBounds = new Rectangle(origBounds.x, y, origBounds.width, origBounds.height);
-        return cocoaBounds; 
-    }
-
     private void validateSurface() {
         // on other platforms we create a new SurfaceData for every
         // live resize step, but on Mac OS X we just resize the onscreen
@@ -480,32 +702,11 @@ public class CPlatformWindow implements PlatformWindow {
         }
     }
     
-    /******************
-     * Native methods.
-     ******************/
-    private native int nativeScreenOn_AppKitThread(long awtWindow);
-    
-    private native long nativeCreateWindow(long viewPointer, boolean withBorder, int x, int y, int width, int height);
-    private native Insets nativeGetInsets(long awtWindow);
-    private native void nativeSetBounds(long awtWindow, int x, int y, int w, int h);
-    protected native void nativeToBack(long awtWindow);
-    protected native void nativeToFront(long awtWindow);
-    protected native void nativeSetTitle(long awtWindow, String title);
-    private native void nativeSetResizable(long awtWindow, boolean resizable);
-    private native void nativeSetMinSize(long awtWindow, int w, int h);
-    private native void nativeSetAlwaysOnTop(long awtWindow, boolean isAlwaysOnTop);
-    private native void nativeSetTitleIconImage(long awtWindow, long nsImage);
-    
     /*************************************************************
      * Callbacks from the AWTWindowDelegate, AWTWindow and AWTView objc classes.
      *************************************************************/
     private void deliverWindowFocusEvent(boolean gained){
         peer.notifyActivation(gained);
-
-        CImage image = getImageForTarget();
-        if (gained && image != null) {
-            ((LWCToolkit)Toolkit.getDefaultToolkit()).setApplicationIconImage(image);
-        }
     }
     
     private void deliverMoveResizeEvent(int x, int y, int width, int height) {
@@ -513,16 +714,17 @@ public class CPlatformWindow implements PlatformWindow {
         // move/resize notifications contain a bounds smaller than
         // the whole screen and therefore we ignore the native notifications
         // and the content view itself creates correct synthetic notifications
-        if (!isFullScreenMode) {
-            nativeBounds = new Rectangle(x, y, width, height);
-            peer.notifyReshape(x, y, width, height);
-        }
+        if (isFullScreenMode) return;
+        
+        nativeBounds = new Rectangle(x, y, width, height);
+        peer.notifyReshape(x, y, width, height);
     }
     
     private void deliverWindowClosingEvent() {
-        if (ownerPlatformWindow != null) {
-            CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
+        if (owner != null) {
+            CWrapper.NSWindow.removeChildWindow(owner.getNSWindowPtr(), getNSWindowPtr());
         }
+        
         peer.postEvent(new WindowEvent(target, WindowEvent.WINDOW_CLOSING));
     }
     
@@ -548,9 +750,8 @@ public class CPlatformWindow implements PlatformWindow {
      * circumstances.
      */
     private void updateFocusabilityForAutoRequestFocus(boolean isFocusable) {
-        if (!target.isAutoRequestFocus() && isNativelyFocusableWindow()) {
-            this.isFocusable = isFocusable;
-        }
+        if (target.isAutoRequestFocus() || !isNativelyFocusableWindow()) return;
+        setStyleBits(SHOULD_BECOME_KEY | SHOULD_BECOME_MAIN, isFocusable); // set both bits at once
     }
 
     private boolean checkBlocking() {
@@ -562,45 +763,45 @@ public class CPlatformWindow implements PlatformWindow {
         CPlatformWindow pWindow = (CPlatformWindow)blocker.getPlatformWindow();
 
         pWindow.orderAboveSiblings();
-
-        CWrapper.NSWindow.orderFrontRegardless(pWindow.getAWTWindow());
-        CWrapper.NSWindow.makeKeyAndOrderFront(pWindow.getAWTWindow());
-        CWrapper.NSWindow.makeMainWindow(pWindow.getAWTWindow());
+        
+        final long nsWindowPtr = pWindow.getNSWindowPtr();
+        CWrapper.NSWindow.orderFrontRegardless(nsWindowPtr);
+        CWrapper.NSWindow.makeKeyAndOrderFront(nsWindowPtr);
+        CWrapper.NSWindow.makeMainWindow(nsWindowPtr);
 
         return true;
     }
 
     private void orderAboveSiblings() {
-        if (ownerPlatformWindow == null) {
+        if (owner == null) {
             return;
         }
 
         // Recursively pop up the windows from the very bottom so that only
         // the very top-most one becomes the main window
-        ownerPlatformWindow.orderAboveSiblings();
+        owner.orderAboveSiblings();
 
         // Order the window to front of the stack of child windows
-        CWrapper.NSWindow.removeChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow());
-        CWrapper.NSWindow.addChildWindow(ownerPlatformWindow.getAWTWindow(), getAWTWindow(),
-                                         CWrapper.NSWindow.NSWindowAbove);
+        final long nsWindowSelfPtr = getNSWindowPtr();
+        final long nsWindowOwnerPtr = owner.getNSWindowPtr();
+        CWrapper.NSWindow.removeChildWindow(nsWindowOwnerPtr, nsWindowSelfPtr);
+        CWrapper.NSWindow.addChildWindow(nsWindowOwnerPtr, nsWindowSelfPtr, CWrapper.NSWindow.NSWindowAbove);
     }
 
     // ----------------------------------------------------------------------
     //                          NATIVE CALLBACKS
     // ----------------------------------------------------------------------
 
-    private boolean canBecomeKeyWindow() {
-        return isFocusable;
-    }
-
     private void windowDidBecomeMain() {
-        if (!checkBlocking()) {
-            // If it's not blocked, make sure it's above its siblings
-            orderAboveSiblings();
-        }
+        assert CThreading.assertAppKit();
+        
+        if (checkBlocking()) return;
+        // If it's not blocked, make sure it's above its siblings
+        orderAboveSiblings();
     }
 
     private boolean windowShouldClose() {
+        assert CThreading.assertAppKit();
         return peer.getBlocker() == null;
     }
 }

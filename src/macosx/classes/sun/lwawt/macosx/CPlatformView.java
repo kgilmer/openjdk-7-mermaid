@@ -29,29 +29,28 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.VolatileImage;
 
+import sun.awt.CGraphicsConfig;
 import sun.java2d.SurfaceData;
-
 import sun.lwawt.LWWindowPeer;
 import sun.lwawt.macosx.event.NSEvent;
 
-import sun.awt.CGraphicsConfig;
-
-public class CPlatformView {
-    private long awtViewPtr; // TODO: isValid check
+public class CPlatformView extends CFRetainedResource {
+    private native long nativeCreateView(int x, int y, int width, int height);
+    
     private LWWindowPeer peer;
-    
-    // the pointer to the enveloping window
-    // this might be a foreign window if it's an embedded view
-    private volatile long windowPtr = 0L;
-    
     private SurfaceData surfaceData;
     
-    public CPlatformView() {}
+    public CPlatformView() {
+        super(0, true);
+    }
     
     public void initialize(LWWindowPeer peer) {
         this.peer = peer;
-        
-        awtViewPtr = nativeCreateView(0, 0, 0, 0);
+        setPtr(nativeCreateView(0, 0, 0, 0));
+    }
+    
+    public long getAWTView() {
+        return ptr;
     }
     
     /*
@@ -59,7 +58,7 @@ public class CPlatformView {
      * Cocoa coordinates).
      */
     public void setBounds(int x, int y, int width, int height) {
-        CWrapper.NSView.setFrame(getAWTView(), x, y, width, height);
+        CWrapper.NSView.setFrame(ptr, x, y, width, height);
     }
     
     // REMIND: CGLSurfaceData expects top-level's size
@@ -67,38 +66,19 @@ public class CPlatformView {
         return peer.getBounds();
     }
     
-    public void dispose() {
-        CWrapper.NSObject.release(awtViewPtr);
-        awtViewPtr = 0L;
-    }
-    
-    private native long nativeCreateView(int x, int y, int width, int height);
-    
-    public long getAWTView() {
-        return awtViewPtr;
-    }
-    
     public Object getDestination() {
         return peer;
     }
     
-    public long getWindow() {
-        return windowPtr;
-    }
-    
-    public void setWindow(long windowPtr) {
-        this.windowPtr = windowPtr;
-    }
-    
-    public void enterFullScreenMode() {
-        CWrapper.NSView.enterFullScreenMode(awtViewPtr);
+    public void enterFullScreenMode(final long nsWindowPtr) {
+        CWrapper.NSView.enterFullScreenMode(ptr);
         
         // REMIND: CGLSurfaceData expects top-level's size
         // and therefore we need to account insets before
         // recreating the surface data
         Insets insets = peer.getInsets();
         
-        long screenPtr = CWrapper.NSWindow.screen(getWindow());
+        long screenPtr = CWrapper.NSWindow.screen(nsWindowPtr);
         Rectangle screenBounds = CWrapper.NSScreen.frame(screenPtr).getBounds();
         
         // the move/size notification from the underlying system comes
@@ -108,7 +88,7 @@ public class CPlatformView {
     }
     
     public void exitFullScreenMode() {
-        CWrapper.NSView.exitFullScreenMode(awtViewPtr);
+        CWrapper.NSView.exitFullScreenMode(ptr);
     }
     
     // ----------------------------------------------------------------------
@@ -211,9 +191,10 @@ public class CPlatformView {
                 
                 // shift+vertical wheel scroll produces horizontal scroll
                 // we convert it to vertical
-                if ((jModifiers & KeyEvent.SHIFT_DOWN_MASK) != 0) {
+                if ((jModifiers & InputEvent.SHIFT_DOWN_MASK) != 0) {
                     wheelDelta = wheelDeltaX;
                 }
+                
                 // Wheel amount "oriented" inside out
                 wheelDelta = -wheelDelta;
                 peer.dispatchMouseWheelEvent(System.currentTimeMillis(), jX, jY, jModifiers, MouseWheelEvent.WHEEL_UNIT_SCROLL, 3, // WHEEL_SCROLL_AMOUNT

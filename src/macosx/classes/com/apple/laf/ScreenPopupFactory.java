@@ -89,7 +89,7 @@ class ScreenPopupFactory extends PopupFactory {
             popupRootPane.putClientProperty(CPlatformWindow.WINDOW_FADE_DELEGATE, invoker);
             
             w.setBackground(WHITE_ALPHA);
-            popupRootPane.putClientProperty(CPlatformWindow.DRAGGABLE_WINDOW_BACKGROUND, Boolean.FALSE);
+            popupRootPane.putClientProperty(CPlatformWindow.WINDOW_DRAGGABLE_BACKGROUND, Boolean.FALSE);
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     popupRootPane.putClientProperty(CPlatformWindow.WINDOW_SHADOW_REVALIDATE_NOW, Double.valueOf(Math.random()));

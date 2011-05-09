@@ -220,23 +220,20 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public WindowPeer createWindow(Window target) {
-        PlatformWindow delegate = createPlatformWindow(true,
-						       LWWindowPeer.PeerType.SIMPLEWINDOW);
-        return (WindowPeer)createDelegatedPeer(target, delegate);
+        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.SIMPLEWINDOW);
+        return createDelegatedPeer(target, delegate);
     }
 
     @Override
     public FramePeer createFrame(Frame target) {
-        PlatformWindow delegate = createPlatformWindow(target.isUndecorated(),
-						       LWWindowPeer.PeerType.FRAME);
-        return (FramePeer)createDelegatedPeer(target, delegate);
+        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.FRAME);
+        return createDelegatedPeer(target, delegate);
     }
 
     @Override
     public DialogPeer createDialog(Dialog target) {
-        PlatformWindow delegate = createPlatformWindow(target.isUndecorated(),
-						       LWWindowPeer.PeerType.DIALOG);
-        return (DialogPeer)createDelegatedPeer(target, delegate);
+        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
+        return createDelegatedPeer(target, delegate);
     }
 
     @Override
@@ -448,8 +445,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     /*
      * Creates a delegate for the given peer type (window, frame, dialog, etc.)
      */
-    protected abstract PlatformWindow createPlatformWindow(boolean undecorated,
-							   LWWindowPeer.PeerType peerType);
+    protected abstract PlatformWindow createPlatformWindow(LWWindowPeer.PeerType peerType);
 
     protected abstract FileDialogPeer createFileDialogPeer(FileDialog target);
     

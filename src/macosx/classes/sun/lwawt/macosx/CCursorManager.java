@@ -68,6 +68,6 @@ public class CCursorManager extends LWCursorManager {
         if (window == null) return 0;
         final CPlatformWindow platformWindow = (CPlatformWindow)window.getPlatformWindow();
         if (platformWindow == null) return 0;
-        return platformWindow.getAWTWindow();
+        return platformWindow.getNSWindowPtr();
     }
 }

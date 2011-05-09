@@ -38,7 +38,7 @@
 - (id) initWithRect: (NSRect) rect
        platformView: (jobject) cPlatformView
 {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
     self = [super initWithFrame: rect];
     
@@ -52,7 +52,7 @@
 }
 
 - (void) dealloc {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
     (*env)->DeleteGlobalRef(env, m_cPlatformView);
@@ -62,9 +62,10 @@
 }
 
 - (void) viewDidMoveToWindow {
+AWT_ASSERT_APPKIT_THREAD;
+    
     [AWTToolkit eventCountPlusPlus];
     
-    AWT_ASSERT_APPKIT_THREAD;
     [[self window] makeFirstResponder: self];
     if ([self window] != NULL) {
         [self resetTrackingRect];
@@ -72,19 +73,19 @@
 }
 
 - (BOOL) acceptsFirstMouse: (NSEvent *)event {
-  return YES;
+    return YES;
 }
 
 - (BOOL) acceptsFirstResponder {
-  return YES;
+    return YES;
 }
 
 - (BOOL) becomeFirstResponder {
-  return YES;
+    return YES;
 }
 
 - (BOOL) preservesContentDuringLiveResize {
-  return YES;
+    return YES;
 }
 
 /*
@@ -96,27 +97,27 @@
  */
 
 - (void) mouseDown: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) mouseUp: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) rightMouseDown: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) rightMouseUp: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) otherMouseDown: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) otherMouseUp: (NSEvent *)event {
-  [self deliverJavaMouseEvent: event];
+    [self deliverJavaMouseEvent: event];
 }
 
 - (void) mouseMoved: (NSEvent *)event {
@@ -208,8 +209,8 @@
     jint clickCount;
     
     if ([event type] == NSMouseEntered ||
-	[event type] == NSMouseExited ||
-	[event type] == NSScrollWheel) {
+    [event type] == NSMouseExited ||
+    [event type] == NSScrollWheel) {
         clickCount = 0;
     } else {
         clickCount = [event clickCount];
@@ -247,9 +248,10 @@
 
 - (void) resetTrackingRect {
     [self clearTrackingRect];
-    rolloverTrackingRectTag =
-	[self addTrackingRect:[self visibleRect]
-					owner:self userData:NULL assumeInside:NO];
+    rolloverTrackingRectTag = [self addTrackingRect:[self visibleRect]
+                                              owner:self
+                                           userData:NULL
+                                       assumeInside:NO];
 }
 
 - (void) resetCursorRects {
@@ -285,19 +287,19 @@ AWT_ASSERT_APPKIT_THREAD;
     if (env != NULL) {
 /*
         if ([self inLiveResize]) {
-	    NSRect rs[4];
-	    NSInteger count;
-	    [self getRectsExposedDuringLiveResize:rs count:&count];
-	    for (int i = 0; i < count; i++) {
-	        JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformView],
-			     "deliverWindowDidExposeEvent", "(FFFF)V",
-			     (jfloat)rs[i].origin.x, (jfloat)rs[i].origin.y,
-			     (jfloat)rs[i].size.width, (jfloat)rs[i].size.height);
-		if ((*env)->ExceptionOccurred(env)) {
-		    (*env)->ExceptionDescribe(env);
-		    (*env)->ExceptionClear(env);
-		}
-	    }
+        NSRect rs[4];
+        NSInteger count;
+        [self getRectsExposedDuringLiveResize:rs count:&count];
+        for (int i = 0; i < count; i++) {
+            JNU_CallMethodByName(env, NULL, [m_awtWindow cPlatformView],
+                 "deliverWindowDidExposeEvent", "(FFFF)V",
+                 (jfloat)rs[i].origin.x, (jfloat)rs[i].origin.y,
+                 (jfloat)rs[i].size.width, (jfloat)rs[i].size.height);
+        if ((*env)->ExceptionOccurred(env)) {
+            (*env)->ExceptionDescribe(env);
+            (*env)->ExceptionClear(env);
+        }
+        }
         } else {
 */
         static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
@@ -309,7 +311,7 @@ AWT_ASSERT_APPKIT_THREAD;
     }
 }
 
-@end //AWTView
+@end // AWTView
 
 /*
  * Class:     sun_lwawt_macosx_CPlatformView

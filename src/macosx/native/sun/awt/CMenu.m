@@ -120,7 +120,7 @@ NSString *JAVA_MENU_NAME = @"JavaMenu";
 
     @synchronized(self) {
         fIsEnabled = [boolNumber boolValue];
-	
+    
         NSMenu* supermenu = [fMenu supermenu];
         [[supermenu itemAtIndex:[supermenu indexOfItemWithSubmenu:fMenu]] setEnabled:fIsEnabled];
     }

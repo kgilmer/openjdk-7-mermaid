@@ -261,43 +261,43 @@ Java_sun_lwawt_macosx_CRobot_nativeGetScreenPixels
     jint screenY = y;
     jint screenWidth = width;
     jint screenHeight = height;
-	
+    
     CGDirectDisplayID displayID =
-	FindCGDirectDisplayIDForScreenIndex(screenIndex);
+    FindCGDirectDisplayIDForScreenIndex(screenIndex);
     
     CGLContextObj glContextObj = InitContext(displayID);
     if (glContextObj == NULL) {
         return;
     }
-	
+    
     jint displayHeight = (jint) CGDisplayPixelsHigh(displayID);
-	
+    
     glReadBuffer(GL_FRONT);
-	
+    
     // Get a handle on the native int array.
     void* jPixelData = (*env)->GetPrimitiveArrayCritical(env, pixels, 0);
-	
+    
     // Finish all OpenGL commands.
     glFinish();
-	
+    
     // Read framebuffer into our bitmap.
     // Calculates the window coordinates of the lower left corner corresponding
     // to the Java rectangle.
-	
+    
     glReadPixels(screenX, displayHeight - screenY - screenHeight,
                  screenWidth, screenHeight,
                  GL_BGRA,
                  PIXEL_DATA_TYPE,
                  jPixelData);
-	
+    
     // Invert the pixels for Java's sake.
     SwizzleBitmap(jPixelData, screenWidth * sizeof(jint), screenHeight);
-	
+    
     cleanContext(glContextObj);
-	
+    
     // Get our pixels
     (*env)->ReleasePrimitiveArrayCritical(env, pixels, jPixelData, 0);
-	
+    
     JNF_COCOA_EXIT(env);
 }
 

@@ -23,17 +23,13 @@
  * questions.
  */
 
-#ifndef __LWCTOOLKIT_H
-#define __LWCTOOLKIT_H
-
-#import <jni.h>
 #import <pthread.h>
 #import <assert.h>
 
 #import <Cocoa/Cocoa.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <CoreServices/CoreServices.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <AvailabilityMacros.h>
 
 #define DEBUG 1
 
@@ -52,10 +48,4 @@ CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);
  */
 
 /** Macro to cast a jlong to an Objective-C object (id). Casts to long on 32-bit systems to quiesce the compiler. */
-#ifdef _LP64
-#define OBJC(jl) ((id) jl)
-#else
-#define OBJC(jl) ((id) (long) jl)
-#endif
-
-#endif /* __LWCTOOLKIT_H */
+#define OBJC(jl) ((id)jlong_to_ptr(jl))

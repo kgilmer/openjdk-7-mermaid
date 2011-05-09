@@ -48,7 +48,6 @@ public class CGraphicsConfig extends GraphicsConfiguration {
 
     @Override
     public Rectangle getBounds() {
-        final Rectangle2D.Double d = new Rectangle2D.Double();
         final Rectangle2D nativeBounds = nativeGetBounds(device.getCoreGraphicsScreen());
         return nativeBounds.getBounds(); // does integer rounding
     }

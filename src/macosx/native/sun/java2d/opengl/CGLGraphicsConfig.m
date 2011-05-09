@@ -48,7 +48,7 @@ void
 OGLGC_DestroyOGLGraphicsConfig(jlong pConfigInfo)
 {
     J2dTraceLn(J2D_TRACE_INFO, "OGLGC_DestroyOGLGraphicsConfig");
-	
+    
     CGLGraphicsConfigInfo *cglinfo =
         (CGLGraphicsConfigInfo *)jlong_to_ptr(pConfigInfo);
     if (cglinfo == NULL) {
@@ -56,11 +56,11 @@ OGLGC_DestroyOGLGraphicsConfig(jlong pConfigInfo)
                       "OGLGC_DestroyOGLGraphicsConfig: info is null");
         return;
     }
-	
+    
     OGLContext *oglc = (OGLContext*)cglinfo->context;
     if (oglc != NULL) {
         OGLContext_DestroyContextResources(oglc);
-		
+        
         CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
         if (ctxinfo != NULL) {
             [NSOpenGLContext clearCurrentContext];
@@ -72,7 +72,7 @@ OGLGC_DestroyOGLGraphicsConfig(jlong pConfigInfo)
             free(ctxinfo);
         }
     }
-	
+    
     free(cglinfo);
 }
 
@@ -96,11 +96,11 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_initCGL
     (JNIEnv *env, jclass cglgc)
 {
     J2dRlsTraceLn(J2D_TRACE_INFO, "CGLGraphicsConfig_initCGL");
-	
+    
     if (!OGLFuncs_OpenLibrary()) {
         return JNI_FALSE;
     }
-	
+    
     if (!OGLFuncs_InitPlatformFuncs() ||
         !OGLFuncs_InitBaseFuncs() ||
         !OGLFuncs_InitExtFuncs())
@@ -108,7 +108,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_initCGL
         OGLFuncs_CloseLibrary();
         return JNI_FALSE;
     }
-	
+    
     return JNI_TRUE;
 }
 
@@ -129,7 +129,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
      jint screennum, jint pixfmt, jint swapInterval)
 {
   jlong ret = 0L;
-  JNF_COCOA_ENTER(env);	
+  JNF_COCOA_ENTER(env);    
   NSMutableArray * retArray = [NSMutableArray arrayWithCapacity:3];
   [retArray addObject: [NSNumber numberWithInt: (int)screennum]];
   [retArray addObject: [NSNumber numberWithInt: (int)pixfmt]];
@@ -156,7 +156,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
     J2dRlsTraceLn(J2D_TRACE_INFO, "CGLGraphicsConfig_getCGLConfigInfo");
 
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-	
+    
     CGOpenGLDisplayMask glMask = (CGOpenGLDisplayMask)pixfmt;
     if (sharedContext == NULL) {
         if (glMask == 0) {
@@ -307,7 +307,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
     // 1: the buffers are swapped only during the vertical retrace
     GLint params = swapInterval;
     [context setValues: &params forParameter: NSOpenGLCPSwapInterval];
-	
+    
     CGLCtxInfo *ctxinfo = (CGLCtxInfo *)malloc(sizeof(CGLCtxInfo));
     if (ctxinfo == NULL) {
         J2dRlsTraceLn(J2D_TRACE_ERROR, "CGLGC_InitOGLContext: could not allocate memory for ctxinfo");
@@ -318,7 +318,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
     memset(ctxinfo, 0, sizeof(CGLCtxInfo));
     ctxinfo->context = context;
     ctxinfo->scratchSurface = scratchSurface;
-	
+    
     OGLContext *oglc = (OGLContext *)malloc(sizeof(OGLContext));
     if (oglc == 0L) {
         J2dRlsTraceLn(J2D_TRACE_ERROR, "CGLGC_InitOGLContext: could not allocate memory for oglc");
@@ -330,7 +330,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
     memset(oglc, 0, sizeof(OGLContext));
     oglc->ctxInfo = ctxinfo;
     oglc->caps = caps;
-	
+    
     // create the CGLGraphicsConfigInfo record for this config
     CGLGraphicsConfigInfo *cglinfo = (CGLGraphicsConfigInfo *)malloc(sizeof(CGLGraphicsConfigInfo));
     if (cglinfo == NULL) {
@@ -368,7 +368,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getOGLCapabilities
     (JNIEnv *env, jclass cglgc, jlong configInfo)
 {
     J2dTraceLn(J2D_TRACE_INFO, "CGLGraphicsConfig_getOGLCapabilities");
-	
+    
     CGLGraphicsConfigInfo *cglinfo =
         (CGLGraphicsConfigInfo *)jlong_to_ptr(configInfo);
     if ((cglinfo == NULL) || (cglinfo->context == NULL)) {

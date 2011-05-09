@@ -31,13 +31,6 @@
     BOOL fIsEnabled;
 }
 
-- (void) setNativeState_OnAppKitThread:(NSNumber *)stateNumber;
-- (void) setNativeLabel_OnAppKitThread:(NSArray *)args;
-- (void) setNativeImage_OnAppKitThread:(NSImage *)theImage;
-- (void) setNativeToolTipText_OnAppKitThread:(NSString *)theText;
-- (void) setNativeEnabled_OnAppKitThread:(NSNumber *)boolNumber;
-
-
 // Setup
 - (id) initWithPeer:(jobject)peer asSeparator: (NSNumber *) asSeparator;
 - (void) setIsCheckbox;

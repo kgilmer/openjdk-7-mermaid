@@ -97,7 +97,7 @@
     }
     
     if (thePanel != nil) {
-		[thePanel setTitle:fTitle];
+        [thePanel setTitle:fTitle];
         
         if (fNavigateApps) {
             [thePanel setTreatsFilePackagesAsDirectories:YES];
@@ -122,36 +122,36 @@
 }
 
 - (BOOL) askFilenameFilter:(NSString *)filename {
-	JNIEnv *env = [ThreadUtilities getJNIEnv];
-	jstring jString = JNFNormalizedJavaStringForPath(env, filename);
-	
-	static JNF_CLASS_CACHE(jc_CFileDialog, "apple/awt/CFileDialog");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jstring jString = JNFNormalizedJavaStringForPath(env, filename);
+    
+    static JNF_CLASS_CACHE(jc_CFileDialog, "apple/awt/CFileDialog");
     static JNF_MEMBER_CACHE(jm_queryFF, jc_CFileDialog, "queryFilenameFilter", "(Ljava/lang/String;)Z");
-	BOOL returnValue = JNFCallBooleanMethod(env, fFileDialog, jm_queryFF, jString); // AWT_THREADING Safe (AWTRunLoopMode)
-	(*env)->DeleteLocalRef(env, jString);
-	
-	return returnValue;
+    BOOL returnValue = JNFCallBooleanMethod(env, fFileDialog, jm_queryFF, jString); // AWT_THREADING Safe (AWTRunLoopMode)
+    (*env)->DeleteLocalRef(env, jString);
+    
+    return returnValue;
 }
 
 - (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
-	if (!fHasFileFilter) return YES; // no filter, no problem!
-	
-	// check if it's not a normal file
-	NSNumber *isFile = nil;
-	if ([url getResourceValue:&isFile forKey:NSURLIsRegularFileKey error:nil]) {
-		if (![isFile boolValue]) return YES; // always show directories and non-file entities (browsing servers/mounts, etc)
-	}
-	
-	// if in directory-browsing mode, don't offer files
-	if ((fMode != java_awt_FileDialog_LOAD) && (fMode != java_awt_FileDialog_SAVE)) {
-		return NO;
-	}
-	
-	// ask the file filter up in Java
-	CFStringRef filePath = CFURLCopyFileSystemPath((CFURLRef)url, kCFURLPOSIXPathStyle);
-	BOOL shouldEnableFile = [self askFilenameFilter:(NSString *)filePath];
-	CFRelease(filePath);
-	return shouldEnableFile;
+    if (!fHasFileFilter) return YES; // no filter, no problem!
+    
+    // check if it's not a normal file
+    NSNumber *isFile = nil;
+    if ([url getResourceValue:&isFile forKey:NSURLIsRegularFileKey error:nil]) {
+        if (![isFile boolValue]) return YES; // always show directories and non-file entities (browsing servers/mounts, etc)
+    }
+    
+    // if in directory-browsing mode, don't offer files
+    if ((fMode != java_awt_FileDialog_LOAD) && (fMode != java_awt_FileDialog_SAVE)) {
+        return NO;
+    }
+    
+    // ask the file filter up in Java
+    CFStringRef filePath = CFURLCopyFileSystemPath((CFURLRef)url, kCFURLPOSIXPathStyle);
+    BOOL shouldEnableFile = [self askFilenameFilter:(NSString *)filePath];
+    CFRelease(filePath);
+    return shouldEnableFile;
 }
 
 - (BOOL) userClickedOK {
@@ -178,8 +178,8 @@ Java_sun_lwawt_macosx_CFileDialog_nativeRunFileDialog
 JNF_COCOA_ENTER(env);
     NSString *dialogTitle = JNFJavaToNSString(env, title);
     if ([dialogTitle length] == 0) {
-		dialogTitle = @" ";
-	}
+        dialogTitle = @" ";
+    }
     
     CFileDialog *dialogDelegate = [[CFileDialog alloc] initWithFilter:hasFilter
                                                            fileDialog:peer
@@ -188,13 +188,12 @@ JNF_COCOA_ENTER(env);
                                                                  file:JNFJavaToNSString(env, file)
                                                                  mode:mode
                                                        shouldNavigate:navigateApps
-															  withEnv:env];
+                                                              withEnv:env];
 
-    [ThreadUtilities performOnMainThread:@selector(safeSaveOrLoad)
-                                onObject:dialogDelegate
-                              withObject:nil
-                           waitUntilDone:YES
-                                 awtMode:YES];
+    [JNFRunLoop performOnMainThread:@selector(safeSaveOrLoad)
+                                 on:dialogDelegate
+                         withObject:nil
+                      waitUntilDone:YES];
 
     if ([dialogDelegate userClickedOK]) {
         NSString *filename = [dialogDelegate filename];

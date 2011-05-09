@@ -43,7 +43,7 @@ public class CMouseInfoPeer extends LWMouseInfoPeer
         
         LWWindowPeer peer = (LWWindowPeer)w.getPeer();
         CPlatformWindow platformWindow = (CPlatformWindow)peer.getPlatformWindow();
-        return nativeIsWindowUnderMouse(platformWindow.getAWTWindow());
+        return nativeIsWindowUnderMouse(platformWindow.getNSWindowPtr());
     }
 
     private static native boolean nativeIsWindowUnderMouse(long ptr);

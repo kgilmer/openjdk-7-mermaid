@@ -59,9 +59,9 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
-    protected PlatformWindow createPlatformWindow(boolean undecorated, PeerType peerType) {
+    protected PlatformWindow createPlatformWindow(PeerType peerType) {
         // TODO: window type
-        return new CPlatformWindow(undecorated);
+        return new CPlatformWindow(peerType);
     }
 
     @Override

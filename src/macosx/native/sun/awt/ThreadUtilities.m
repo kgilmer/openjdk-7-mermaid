@@ -25,8 +25,9 @@
 
 #import <AppKit/AppKit.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+
 #import "ThreadUtilities.h"
-#import <ExceptionHandling/NSExceptionHandler.h>
+
 
 extern JavaVM* jvm;
 static JNIEnv *appKitEnv = NULL;
@@ -45,32 +46,6 @@ NSString *AWTRunLoopMode = @"AWTRunLoopMode";
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
 int sAWTThreadAsserts = 0;
 #endif /* AWT_THREAD_ASSERTS_ENV_ASSERT */
-
-//Adding a category to the standard class.
-//This is an essence of being able to take a look into the stack trace.
-@interface NSException (verbose)
-- (void)printStackTraceImpl;
-@end
-
-@implementation NSException (verbose)
-- (void)printStackTraceImpl {
-  NSString *stack = [[self userInfo] objectForKey:NSStackTraceKey];
-  NSTask *ls=[[NSTask alloc] init];
-  NSString *pid = [[NSNumber numberWithInt:getpid()] stringValue];
-  NSMutableArray *args = [NSMutableArray arrayWithCapacity:20];
-
-  [args addObject:@"-p"];
-  [args addObject:pid];
-  [args addObjectsFromArray:[stack componentsSeparatedByString:@"  "]];
-  // Note: function addresses are separated by double spaces, not a single space.                             
-
-  [ls setLaunchPath:@"/usr/bin/atos"];
-  [ls setArguments:args];
-  [ls launch];
-
-  [ls release];
-}
-@end
 
 
 // This is for backward compatibility for those people using CocoaComponent
@@ -175,10 +150,10 @@ NSUInteger sPerformCount = 0;
         // Do an asynchronous perform to the main thread.
         [self performSelectorOnMainThread:@selector(_performCompatible:)
               withObject:resultLock waitUntilDone:NO modes:sAWTPerformModes];
-		
+        
         // Wait for a little bit for it to finish
         [resultLock lockWhenCondition:READY beforeDate:[NSDate dateWithTimeIntervalSinceNow:sCocoaComponentCompatibilityTimeout]];
-		
+        
         // If the _performCompatible is actually in progress,
         // we should let it finish
         if ([resultLock condition] == IN_PROGRESS) {
@@ -210,7 +185,7 @@ NSUInteger sPerformCount = 0;
         // notify done!
         [resultLock lock];
         [resultLock unlockWithCondition:READY];
-		
+        
         // Clean up after ourselves
         [resultLock autorelease];
         [fTarget autorelease];
@@ -222,24 +197,6 @@ NSUInteger sPerformCount = 0;
 
 
 @implementation ThreadUtilities
-
-+ (void) printStackTrace {
-  NSExceptionHandler * handler = [NSExceptionHandler defaultExceptionHandler];
-  int origMask = [handler exceptionHandlingMask];
-  [handler setExceptionHandlingMask:NSLogAndHandleEveryExceptionMask];
-  NSException* myException = [NSException
-                        exceptionWithName:@"TRACK EXCEPTION"
-                                   reason:@"NO STATUS"
-                                 userInfo:nil];
-  NS_DURING
-    @throw myException;
-  NS_HANDLER
-    [myException printStackTraceImpl];
-  NS_ENDHANDLER
-
-//restore original handle mask
-  [handler setExceptionHandlingMask:origMask];
-}
 
 + (JNIEnv*)getJNIEnv {
     JNIEnv *env = pthread_getspecific(sJniEnvKey);
@@ -302,10 +259,6 @@ NSUInteger sPerformCount = 0;
         [performer performSelectorOnMainThread:@selector(perform) withObject:nil waitUntilDone:wait modes:((inAWT) ? sAWTPerformModes : sPerformModes)]; // AWT_THREADING Safe (cover method)
         [performer release];
     }
-}
-
-+ (void)perform:(SEL)aSelector onObject:(id)target withObject:(id)arg afterDelay:(NSTimeInterval)delay awtMode:(BOOL)inAWT {
-    [target performSelector:aSelector withObject:arg afterDelay:delay inModes:((inAWT) ? sAWTPerformModes: sPerformModes)];
 }
 
 @end

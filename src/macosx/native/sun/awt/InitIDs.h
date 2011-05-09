@@ -22,26 +22,3 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
-struct ComponentIDs {
-    jfieldID x;
-    jfieldID y;
-    jfieldID width;
-    jfieldID height;
-    jfieldID peer;
-    jfieldID background;
-    jfieldID foreground;
-    jfieldID isPacked;
-    jfieldID graphicsConfig;
-    jfieldID name;
-    jfieldID isProxyActive;
-    jfieldID appContext;
-    jmethodID getParent;
-    jmethodID getLocationOnScreen;
-} componentIDs;
-
-struct MenuComponentIDs {
-  jfieldID font;
-  jfieldID appContext;
-  jmethodID getParent;
-} menuComponentIDs;

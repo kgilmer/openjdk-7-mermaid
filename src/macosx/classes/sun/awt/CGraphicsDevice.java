@@ -105,7 +105,8 @@ public class CGraphicsDevice extends GraphicsDevice {
     }
 
     public int getScreenResolution() {
-        return (int)getXResolution();
+        // TODO: report non-72 value when HiDPI is turned on
+        return 72;
     }
 
     private static native double nativeGetXResolution(int displayID);

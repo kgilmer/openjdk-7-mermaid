@@ -55,13 +55,13 @@
 #ifdef AWT_THREAD_ASSERTS_MESSAGES
 
 #define AWT_THREAD_ASSERTS_NOT_APPKIT_MESSAGE \
-    NSLog(@"Cocoa AWT: Not running on AppKit thread 0 when expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
+    NSLog(@"Cocoa AWT: Not running on AppKit thread 0 when expected. (%s - %s:%d)", __FUNCTION__, __FILE__, __LINE__)
 
 #define AWT_THREAD_ASSERTS_ON_APPKIT_MESSAGE \
-    NSLog(@"Cocoa AWT: Running on AppKit thread 0 when not expected. (%s - %s : %d)", __FILE__, __FUNCTION__, __LINE__)
+    NSLog(@"Cocoa AWT: Running on AppKit thread 0 when not expected. (%s - %s:%d)", __FUNCTION__, __FILE__, __LINE__)
 
 #define AWT_THREAD_ASSERTS_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://developer.apple.com/java/ with this message and a reproducible test case.")
+    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
 
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
 
@@ -101,9 +101,9 @@ do {                                           \
 #define AWT_ASSERT_ANY_THREAD
 
 #endif /* AWT_THREAD_ASSERTS_MESSAGES */
-	
+    
 #ifdef AWT_THREAD_ASSERTS_WAIT
-	
+    
 #define AWT_ASSERT_APPKIT_THREAD      \
 do {                                  \
     while (pthread_main_np() == 0) {} \
@@ -133,14 +133,11 @@ do {                                  \
 __attribute__((visibility("default")))
 @interface ThreadUtilities : NSObject { }
 
-+ (void)initialize;
-+ (void) printStackTrace;
 + (JNIEnv*)getJNIEnv;
 + (JNIEnv*)getJNIEnvUncached;
 + (JNIEnv*)getAppKitJNIEnv;
 
 + (void)performOnMainThread:(SEL)aSelector onObject:(id)target withObject:(id)arg waitUntilDone:(BOOL)wait awtMode:(BOOL)inAWT;
-+ (void)perform:(SEL)aSelector onObject:(id)target withObject:(id)arg afterDelay:(NSTimeInterval)delay awtMode:(BOOL)inAWT;
 
 @end
 

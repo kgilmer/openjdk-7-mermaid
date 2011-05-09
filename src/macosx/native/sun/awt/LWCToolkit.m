@@ -73,11 +73,10 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     
-    [ThreadUtilities performOnMainThread:@selector(clearMenuBarExcludingAppleMenu_OnAppKitThread:)
-                                onObject:[CMenuBar class]
-                              withObject:NO
-                           waitUntilDone:NO
-                                 awtMode:YES];
+    [JNFRunLoop performOnMainThread:@selector(clearMenuBarExcludingAppleMenu_OnAppKitThread:)
+                                 on:[CMenuBar class]
+                         withObject:nil
+                      waitUntilDone:NO];
 
     // It's recommended to prepare the system for setting the dock image.
     // Although seem it works on available scenarios even without that.
@@ -172,6 +171,11 @@ Java_sun_lwawt_macosx_LWCToolkit_nativeSetApplicationIconImage
     }];
 }
 
+static JNF_CLASS_CACHE(jc_Component, "java/awt/Component");
+static JNF_MEMBER_CACHE(jf_Component_appContext, jc_Component, "appContext", "Lsun/awt/AppContext;");
+static JNF_CLASS_CACHE(jc_MenuComponent, "java/awt/MenuComponent");
+static JNF_MEMBER_CACHE(jf_MenuComponent_appContext, jc_MenuComponent, "appContext", "Lsun/awt/AppContext;");
+
 /*
  * Class:     sun_awt_SunToolkit
  * Method:    getAppContext
@@ -179,16 +183,20 @@ Java_sun_lwawt_macosx_LWCToolkit_nativeSetApplicationIconImage
  */
 JNIEXPORT jobject JNICALL
 Java_sun_awt_SunToolkit_getAppContext
-    (JNIEnv *env, jclass cls, jobject obj)
+(JNIEnv *env, jclass cls, jobject obj)
 {
     jobject appContext = NULL;
-
-    if ((*env)->IsInstanceOf(env, obj, GetComponentClass(env))) {
-        appContext = (*env)->GetObjectField(env, obj, componentIDs.appContext);
-    } else if ((*env)->IsInstanceOf(env, obj, GetMenuComponentClass(env))) {
-        appContext = (*env)->GetObjectField(env, obj,
-                                            menuComponentIDs.appContext);
+    
+JNF_COCOA_ENTER(env);
+    
+    if (JNFIsInstanceOf(env, obj, &jc_Component)) {
+        appContext = JNFGetObjectField(env, obj, jf_Component_appContext);
+    } else if (JNFIsInstanceOf(env, obj, &jc_MenuComponent)) {
+        appContext = JNFGetObjectField(env, obj, jf_MenuComponent_appContext);
     }
+    
+JNF_COCOA_EXIT(env);
+    
     return appContext;
 }
 
@@ -199,19 +207,22 @@ Java_sun_awt_SunToolkit_getAppContext
  */
 JNIEXPORT jboolean JNICALL
 Java_sun_awt_SunToolkit_setAppContext
-    (JNIEnv *env, jclass cls, jobject comp, jobject appContext)
+(JNIEnv *env, jclass cls, jobject obj, jobject appContext)
 {
     jboolean isComponent;
-    if ((*env)->IsInstanceOf(env, comp, GetComponentClass(env))) {
-        (*env)->SetObjectField(env, comp, componentIDs.appContext, appContext);
+    
+JNF_COCOA_ENTER(env);
+    
+    if (JNFIsInstanceOf(env, obj, &jc_Component)) {
+        JNFSetObjectField(env, obj, jf_Component_appContext, appContext);
         isComponent = JNI_TRUE;
-    } else if ((*env)->IsInstanceOf(env, comp, GetMenuComponentClass(env))) {
-        (*env)->SetObjectField(env, comp, menuComponentIDs.appContext,
-                               appContext);
-        isComponent = JNI_TRUE;
-    } else {
+    } else if (JNFIsInstanceOf(env, obj, &jc_MenuComponent)) {
+        JNFSetObjectField(env, obj, jf_MenuComponent_appContext, appContext);
         isComponent = JNI_FALSE;
     }
+    
+JNF_COCOA_EXIT(env);
+    
     return isComponent;
 }
 
@@ -232,7 +243,7 @@ FindCGDirectDisplayIDForScreenIndex(jint screenIndex)
 {
     // most common case - just one monitor
     CGDirectDisplayID screenID = CGMainDisplayID();
-	
+    
     CGDisplayCount displayCount = 0;
     CGGetOnlineDisplayList(0, NULL, &displayCount);
     
@@ -247,7 +258,7 @@ FindCGDirectDisplayIDForScreenIndex(jint screenIndex)
             screenID = (CGDirectDisplayID)onlineDisplays[screenIndex];
         } else {
             CGDirectDisplayID *onlineDisplays =
-			malloc(displayCount*sizeof(CGDirectDisplayID));
+            malloc(displayCount*sizeof(CGDirectDisplayID));
             if (onlineDisplays != NULL) {
                 CGGetOnlineDisplayList(displayCount, onlineDisplays,
                                        &displayCount);

@@ -40,3 +40,4 @@ jobject NSToJavaSize(JNIEnv *env, NSSize size);
 NSSize JavaToNSSize(JNIEnv *env, jobject);
 
 NSPoint ConvertNSScreenPoint(JNIEnv *env, NSPoint point);
+NSRect ConvertNSScreenRect(JNIEnv *env, NSRect rect);

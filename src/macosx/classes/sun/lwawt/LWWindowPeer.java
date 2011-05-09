@@ -389,7 +389,7 @@ public class LWWindowPeer
 
     @Override
     public void updateIconImages() {
-        getPlatformWindow().updateTitleIconImages();
+        getPlatformWindow().updateIconImages();
     }
 
     @Override
@@ -478,7 +478,7 @@ public class LWWindowPeer
 
         // REMIND: should we send it anyway if the state not changed since last
         // time?
-        WindowEvent iconifyEvent = new WindowEvent((Window) getTarget(),
+        WindowEvent iconifyEvent = new WindowEvent(getTarget(),
                 iconify ? WindowEvent.WINDOW_ICONIFIED
                         : WindowEvent.WINDOW_DEICONIFIED);
         postEvent(iconifyEvent);
@@ -495,7 +495,7 @@ public class LWWindowPeer
     }
 
     public void notifyZoom(boolean isZoomed) {
-        int newWindowState = isZoomed? Frame.MAXIMIZED_BOTH : Frame.NORMAL;
+        int newWindowState = isZoomed ? Frame.MAXIMIZED_BOTH : Frame.NORMAL;
         postWindowStateChangedEvent(newWindowState);
     }
 

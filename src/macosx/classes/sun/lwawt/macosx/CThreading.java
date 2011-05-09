@@ -20,9 +20,21 @@ public class CThreading {
         return isEventQueue;
     }
     
+    static boolean assertNotEventQueue() {
+        final boolean isNotEventQueue = isEventQueue();
+        assert isNotEventQueue : "Threading violation: EventQueue thread";
+        return isNotEventQueue;
+    }
+    
     static boolean assertAppKit() {
         final boolean isAppKitThread = isAppKit();
         assert isAppKitThread : "Threading violation: not AppKit thread";
         return isAppKitThread;
+    }
+    
+    static boolean assertNotAppKit() {
+        final boolean isNotAppKitThread = !isAppKit();
+        assert isNotAppKitThread : "Threading violation: AppKit thread";
+        return isNotAppKitThread;
     }
 }
