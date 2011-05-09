@@ -703,7 +703,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     }
     
     /*************************************************************
-     * Callbacks from the AWTWindowDelegate, AWTWindow and AWTView objc classes.
+     * Callbacks from the AWTWindow and AWTView objc classes.
      *************************************************************/
     private void deliverWindowFocusEvent(boolean gained){
         peer.notifyActivation(gained);

@@ -34,7 +34,6 @@ FILES_objc = \
 	AWTInsets.m \
 	AWTView.m \
 	AWTWindow.m \
-	AWTWindowDelegate.m \
 	CCursorManager.m \
 	CFileDialog.m \
 	CImage.m \
