@@ -141,8 +141,6 @@ ifeq ($(PLATFORM), windows)
 endif
 
 ifeq ($(PLATFORM), bsd)
-  FREE_SPACE := $(shell BLOCKSIZE=512 $(DF) $(OUTPUTDIR) | $(TAIL) -1 | $(NAWK) '{print $$2;}')
-  TEMP_FREE_SPACE := $(shell BLOCKSIZE=512 $(DF) $(TEMP_DISK) | $(TAIL) -1 | $(NAWK) '{print $$2;}')
 endif
 
 # Get the version numbers of what we are using

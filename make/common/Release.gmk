@@ -169,6 +169,7 @@ endif # linux
 ifeq ($(PLATFORM), bsd)
   MANBASEDIRS=$(JDK_TOPDIR)/src/bsd/doc $(IMPORTDOCDIR)
   MAN1SUBDIR = man
+  JA_DIRNAME=ja_JP.UTF-8
 endif
 
 define copy-man-pages
