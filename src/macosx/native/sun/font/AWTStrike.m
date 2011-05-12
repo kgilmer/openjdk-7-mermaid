@@ -24,14 +24,14 @@
  */
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
-
-#import "CGGlyphImages.h"
-#import "CGGlyphOutlines.h"
-#import "CStrike.h"
-#import "CoreTextSupport.h"
-
 #import "java_awt_geom_PathIterator.h"
 #import "sun_awt_SunHints.h"
+#import "sun_font_CStrike.h"
+#import "CGGlyphImages.h"
+#import "CGGlyphOutlines.h"
+#import "AWTStrike.h"
+#import "CoreTextSupport.h"
+//#import "jni_util.h"
 
 @implementation AWTStrike
 
@@ -40,14 +40,14 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
 - (id) initWithFont:(AWTFont *)awtFont
                  tx:(CGAffineTransform)tx
            invDevTx:(CGAffineTransform)invDevTx
-               mode:(jint)mode
-              style:(jint)style
-{
+              style:(JRSFontRenderingStyle)style
+            aaStyle:(jint)aaStyle {
+    
     self = [super init];
     if (self) {
         fAWTFont = [awtFont retain];
-        fMode = mode;
-        fAAStyle = style;
+        fStyle = style;
+        fAAStyle = aaStyle;
         
         fTx = tx; // composited glyph and device transform
         
@@ -55,15 +55,11 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
         fAltTx.b *= -1;
         fAltTx.d *= -1;
         
-        fInvDevTx = invDevTx;
-        
         invDevTx.b *= -1;
         invDevTx.c *= -1;
-        fFontTx =
-            CGAffineTransformConcat(CGAffineTransformConcat(tx, invDevTx),
-                                    sInverseTX);
+        fFontTx = CGAffineTransformConcat(CGAffineTransformConcat(tx, invDevTx), sInverseTX);
         
-       	// the "font size" is the square root of the determinate of the matrix
+        // the "font size" is the square root of the determinant of the matrix
         fSize = sqrt(abs(fFontTx.a * fFontTx.d - fFontTx.b * fFontTx.c));
     }
     return self;
@@ -79,12 +75,13 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
 + (AWTStrike *) awtStrikeForFont:(AWTFont *)awtFont
                               tx:(CGAffineTransform)tx
                         invDevTx:(CGAffineTransform)invDevTx
-                            mode:(jint)mode
-                           style:(jint)style
-{
-    return [[[AWTStrike alloc]
-                initWithFont:awtFont
-                tx:tx invDevTx:invDevTx mode:mode style:style] autorelease];
+                           style:(JRSFontRenderingStyle)style
+                         aaStyle:(jint)aaStyle {
+    
+    return [[[AWTStrike alloc] initWithFont:awtFont
+                                         tx:tx invDevTx:invDevTx
+                                      style:style
+                                    aaStyle:aaStyle] autorelease];
 }
 
 @end
@@ -92,7 +89,7 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
 
 #define AWT_FONT_CLEANUP_SETUP \
     BOOL _fontThrowJavaException = NO;
-	
+    
 #define AWT_FONT_CLEANUP_CHECK(a)                                       \
     if ((a) == NULL) {                                                  \
         _fontThrowJavaException = YES;                                  \
@@ -106,7 +103,7 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
     if (_fontThrowJavaException == YES) {                               \
         char s[512];                                                    \
         sprintf(s, "%s-%s:%d", __FILE__, __FUNCTION__, __LINE__);       \
-        [JNFException raise:env as:kNullPointerException reason:s];     \
+        JNU_ThrowNullPointerException(env, s);                          \
     }
 
 
@@ -120,7 +117,7 @@ GetTxFromDoubles(JNIEnv *env, jdoubleArray txArray)
     if (txArray == NULL) {
         return CGAffineTransformIdentity;
     }
-	
+    
     jdouble *txPtr = (*env)->GetPrimitiveArrayCritical(env, txArray, NULL);
 
     CGAffineTransform tx =
@@ -129,7 +126,7 @@ GetTxFromDoubles(JNIEnv *env, jdoubleArray txArray)
     tx = CGAffineTransformConcat(sInverseTX, tx);
 
     (*env)->ReleasePrimitiveArrayCritical(env, txArray, txPtr, JNI_ABORT);
-	
+    
     return tx;
 }
 
@@ -143,38 +140,17 @@ Java_sun_font_CStrike_getNativeGlyphAdvance
     (JNIEnv *env, jclass clazz, jlong awtStrikePtr, jint glyphCode)
 {
     CGSize advance;
-
-    JNF_COCOA_ENTER(env);
-
-    AWTStrike *awtStrike = (AWTStrike *)jlong_to_ptr(awtStrikePtr);
-    AWTFont *awtFont = awtStrike->fAWTFont;
-    CGFontRef cgFont = awtFont->fNativeCGFont;
-
-    // negative glyph codes are really unicodes, which were placed there
-    // by the mapper to indicate we should use CoreText to substitute
-    // the character
+JNF_COCOA_ENTER(env);
+    AWTFont *awtFont = ((AWTStrike *)jlong_to_ptr(awtStrikePtr))->fAWTFont;
+    
+    // negative glyph codes are really unicodes, which were placed there by the mapper
+    // to indicate we should use CoreText to substitute the character
     CGGlyph glyph;
-    cgFont = CTS_GetFontAndGlyphForJavaGlyphCode(awtFont->fFont,
-                                                 glyphCode, cgFont, &glyph);
-	
-    CGFS_FontRenderingMode mode =
-        CGFS_GetFontRenderingModeForHints(sun_awt_SunHints_INTVAL_FRACTIONALMETRICS_ON,
-                                          sun_awt_SunHints_INTVAL_TEXT_ANTIALIAS_ON);
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetAdvancesForGlyphs(cgFont, awtStrike->fSize,
-                              &CGAffineTransformIdentity,
-                              mode, &glyph, 1, &advance);
+    const CTFontRef fallback = CTS_CopyCTFallbackFontAndGlyphForJavaGlyphCode(awtFont, glyphCode, &glyph);
+    CTFontGetAdvancesForGlyphs(fallback, kCTFontDefaultOrientation, &glyph, &advance, 1);
+    CFRelease(fallback);
 
-    // WORKAROUND: following comment and line of code can be removed
-    // once we move to JRS
-    // TODO(cpc): it seems the old version of GetAdvancesForGlyphs() that
-    // relied on SPI used the identity transform to get the unscaled advance,
-    // but the new/temporary version uses fSize, so the following is a bit
-    // of a hack to get back to the unscaled advance...
-    advance.width /= awtStrike->fSize;
-
-    JNF_COCOA_EXIT(env);
-
+JNF_COCOA_EXIT(env);
     return advance.width;
 }
 
@@ -189,43 +165,34 @@ Java_sun_font_CStrike_getNativeGlyphImageBounds
      jlong awtStrikePtr, jint glyphCode,
      jobject result /*Rectangle*/, jdouble x, jdouble y)
 {
-    JNF_COCOA_ENTER(env);
-	
+JNF_COCOA_ENTER(env);
+    
     AWTStrike *awtStrike = (AWTStrike *)jlong_to_ptr(awtStrikePtr);
     AWTFont *awtFont = awtStrike->fAWTFont;
-
-    CGFontRef cgFont = awtFont->fNativeCGFont;
+    
     CGAffineTransform tx = awtStrike->fAltTx;
     tx.tx += x;
     tx.ty += y;
-
-    // negative glyph codes are really unicodes, which were placed
-    // there by the mapper to indicate we should use CoreText to
-    // substitute the character
+    
+    // negative glyph codes are really unicodes, which were placed there by the mapper
+    // to indicate we should use CoreText to substitute the character
     CGGlyph glyph;
-    cgFont = CTS_GetFontAndGlyphForJavaGlyphCode(awtFont->fFont,
-                                                 glyphCode, cgFont, &glyph);
+    const CTFontRef fallback = CTS_CopyCTFallbackFontAndGlyphForJavaGlyphCode(awtFont, glyphCode, &glyph);
     
     CGRect bbox;
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetBBoxesForGlyphs(cgFont, awtStrike->fSize,
-                            &tx, awtStrike->fMode, &glyph, 1, &bbox);
-
-    // the origin of this bounding box is relative to the bottom-left
-    // corner baseline
+    JRSFontGetBoundingBoxesForGlyphsAndStyle(fallback, &tx, awtStrike->fStyle, &glyph, 1, &bbox);
+    CFRelease(fallback);
+    
+    // the origin of this bounding box is relative to the bottom-left corner baseline
     CGFloat decender = -bbox.origin.y;
     bbox.origin.y = -bbox.size.height + decender;
-
+    
     // Rectangle2D.Float.setRect(float x, float y, float width, float height);
-    static JNF_CLASS_CACHE(sjc_Rectangle2D_Float,
-                           "java/awt/geom/Rectangle2D$Float");
-    static JNF_MEMBER_CACHE(sjr_Rectangle2DFloat_setRect,
-                            sjc_Rectangle2D_Float, "setRect", "(FFFF)V");
-    JNFCallVoidMethod(env, result, sjr_Rectangle2DFloat_setRect,
-                      (jfloat)bbox.origin.x, (jfloat)bbox.origin.y,
-                      (jfloat)bbox.size.width, (jfloat)bbox.size.height);
-
-    JNF_COCOA_EXIT(env);
+    static JNF_CLASS_CACHE(sjc_Rectangle2D_Float, "java/awt/geom/Rectangle2D$Float");    // cache class id for Rectangle
+    static JNF_MEMBER_CACHE(sjr_Rectangle2DFloat_setRect, sjc_Rectangle2D_Float, "setRect", "(FFFF)V");
+    JNFCallVoidMethod(env, result, sjr_Rectangle2DFloat_setRect, (jfloat)bbox.origin.x, (jfloat)bbox.origin.y, (jfloat)bbox.size.width, (jfloat)bbox.size.height);
+    
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -240,70 +207,57 @@ Java_sun_font_CStrike_getNativeGlyphOutline
 {
     jobject generalPath = NULL;
 
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 
     AWTPathRef path = NULL;
     jfloatArray pointCoords = NULL;
     jbyteArray pointTypes = NULL;
 
-    AWT_FONT_CLEANUP_SETUP;
+AWT_FONT_CLEANUP_SETUP;
 
     AWTStrike *awtStrike = (AWTStrike *)jlong_to_ptr(awtStrikePtr);
     AWTFont *awtfont = awtStrike->fAWTFont;
-	
-    AWT_FONT_CLEANUP_CHECK(awtfont);
-
-    NSFont *font = awtfont->fFont;
-    CGFontRef cgFont = awtfont->fNativeCGFont;
-	
-    // Inverting the shear order and sign to compensate for the
-    // flipped coordinate system
+    
+AWT_FONT_CLEANUP_CHECK(awtfont);
+    
+    // inverting the shear order and sign to compensate for the flipped coordinate system
     CGAffineTransform tx = awtStrike->fTx;
     tx.tx += xPos;
     tx.ty += yPos;
-
-    // Get the right CG font and glyph for this "Java GlyphCode"
-    // TODO(cpc): is the CGFontRef really needed any longer?
+    
+    // get the right font and glyph for this "Java GlyphCode"
+    
     CGGlyph glyph;
-    cgFont = CTS_GetFontAndGlyphForJavaGlyphCode(font, glyphCode,
-                                                 cgFont, &glyph);
-	
-    // Get the advance of this glyph
+    const CTFontRef font = CTS_CopyCTFallbackFontAndGlyphForJavaGlyphCode(awtfont, glyphCode, &glyph);
+    
+    // get the advance of this glyph
     CGSize advance;
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetAdvancesForGlyphs(cgFont, awtStrike->fSize, &tx, awtStrike->fMode,
-                              &glyph, 1, &advance);
-	
+    CTFontGetAdvancesForGlyphs(font, kCTFontDefaultOrientation, &glyph, &advance, 1);
+    
     // Create AWTPath 
     path = AWTPathCreate(CGSizeMake(xPos, yPos));
-    AWT_FONT_CLEANUP_CHECK(path);
-	
+AWT_FONT_CLEANUP_CHECK(path);
+    
     // Get the paths
     tx = awtStrike->fTx;
     tx = CGAffineTransformConcat(tx, sInverseTX);
     AWTGetGlyphOutline(&glyph, font, &advance, &tx, 0, 1, &path);
-	
+    CFRelease(font);
+    
     pointCoords = (*env)->NewFloatArray(env, path->fNumberOfDataElements);
-    AWT_FONT_CLEANUP_CHECK(pointCoords);
+AWT_FONT_CLEANUP_CHECK(pointCoords);
 
-    (*env)->SetFloatArrayRegion(env, pointCoords,
-                                0, path->fNumberOfDataElements,
-                                (jfloat*)path->fSegmentData);
+    (*env)->SetFloatArrayRegion(env, pointCoords, 0, path->fNumberOfDataElements, (jfloat*)path->fSegmentData);
     
     // Copy the pointTypes to the general path
     pointTypes = (*env)->NewByteArray(env, path->fNumberOfSegments);
-    AWT_FONT_CLEANUP_CHECK(pointTypes);
+AWT_FONT_CLEANUP_CHECK(pointTypes);
 
-    (*env)->SetByteArrayRegion(env, pointTypes,
-                               0, path->fNumberOfSegments,
-                               (jbyte*)path->fSegmentType);
+    (*env)->SetByteArrayRegion(env, pointTypes, 0, path->fNumberOfSegments, (jbyte*)path->fSegmentType);
 
     static JNF_CLASS_CACHE(jc_GeneralPath, "java/awt/geom/GeneralPath");
     static JNF_CTOR_CACHE(jc_GeneralPath_ctor, jc_GeneralPath, "(I[BI[FI)V");
-    generalPath = JNFNewObject(env, jc_GeneralPath_ctor,
-                               java_awt_geom_PathIterator_WIND_NON_ZERO,
-                               pointTypes, path->fNumberOfSegments,
-                               pointCoords, path->fNumberOfDataElements);
+    generalPath = JNFNewObject(env, jc_GeneralPath_ctor, java_awt_geom_PathIterator_WIND_NON_ZERO, pointTypes, path->fNumberOfSegments, pointCoords, path->fNumberOfDataElements); // AWT_THREADING Safe (known object)
 
     // Cleanup
 cleanup:
@@ -311,20 +265,19 @@ cleanup:
         AWTPathFree(path);
         path = NULL;
     }
-	
+    
     if (pointCoords != NULL) {
         (*env)->DeleteLocalRef(env, pointCoords);
         pointCoords = NULL;
     }
-	
+    
     if (pointTypes != NULL) {
         (*env)->DeleteLocalRef(env, pointTypes);
         pointTypes = NULL;
     }
-	
+    
     AWT_FONT_CLEANUP_FINISH;
-    JNF_COCOA_EXIT(env);
-
+JNF_COCOA_EXIT(env);
     return generalPath;
 }
 
@@ -339,10 +292,10 @@ Java_sun_font_CStrike_getGlyphImagePtrsNative
      jlong awtStrikePtr, jlongArray glyphInfoLongArray,
      jintArray glyphCodes, jint len)
 {
-    JNF_COCOA_ENTER(env);
-	
+JNF_COCOA_ENTER(env);
+    
     AWTStrike *awtStrike = (AWTStrike *)jlong_to_ptr(awtStrikePtr);
-	
+    
     jlong *glyphInfos =
         (*env)->GetPrimitiveArrayCritical(env, glyphInfoLongArray, NULL);
     jint *rawGlyphCodes =
@@ -350,7 +303,7 @@ Java_sun_font_CStrike_getGlyphImagePtrsNative
 
     CGGlyphImages_GetGlyphImagePtrs(glyphInfos, awtStrike,
                                     rawGlyphCodes, len);
-	
+    
     (*env)->ReleasePrimitiveArrayCritical(env, glyphCodes,
                                           rawGlyphCodes, JNI_ABORT);
     // Do not use JNI_COMMIT, as that will not free the buffer copy
@@ -358,40 +311,34 @@ Java_sun_font_CStrike_getGlyphImagePtrsNative
     (*env)->ReleasePrimitiveArrayCritical(env, glyphInfoLongArray,
                                           glyphInfos, 0);
     
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
  * Class:     sun_font_CStrike
  * Method:    createNativeStrikePtr
- * Signature: (J[DZZ)J
+ * Signature: (J[D[DII)J
  */
-JNIEXPORT jlong JNICALL
-Java_sun_font_CStrike_createNativeStrikePtr
-    (JNIEnv *env, jclass clazz,
-     jlong nativeFontPtr, jdoubleArray glyphTxArray,
-     jdoubleArray invDevTxArray, jint aaStyle, jint fmHint)
+JNIEXPORT jlong JNICALL Java_sun_font_CStrike_createNativeStrikePtr
+(JNIEnv *env, jclass clazz, jlong nativeFontPtr, jdoubleArray glyphTxArray, jdoubleArray invDevTxArray, jint aaStyle, jint fmHint)
 {
     AWTStrike *awtStrike = nil;
-
-    JNF_COCOA_ENTER(env);
-	
+JNF_COCOA_ENTER(env);
+    
     AWTFont *awtFont = (AWTFont *)jlong_to_ptr(nativeFontPtr);
-    CGFS_FontRenderingMode mode =
-        CGFS_GetFontRenderingModeForHints(fmHint, aaStyle);
-	
+    JRSFontRenderingStyle style = JRSFontGetRenderingStyleForHints(fmHint, aaStyle);
+    
     CGAffineTransform glyphTx = GetTxFromDoubles(env, glyphTxArray);
     CGAffineTransform invDevTx = GetTxFromDoubles(env, invDevTxArray);
-	
-    awtStrike = [AWTStrike awtStrikeForFont:awtFont
-        tx:glyphTx invDevTx:invDevTx mode:mode style:aaStyle]; // autoreleased
-	
-    if (awtStrike) {
+    
+    awtStrike = [AWTStrike awtStrikeForFont:awtFont tx:glyphTx invDevTx:invDevTx style:style aaStyle:aaStyle]; // autoreleased
+    
+    if (awtStrike) 
+    {
         CFRetain(awtStrike); // GC
     }
-	
-    JNF_COCOA_EXIT(env);
-
+    
+JNF_COCOA_EXIT(env);
     return ptr_to_jlong(awtStrike);
 }
 
@@ -404,13 +351,13 @@ JNIEXPORT void JNICALL
 Java_sun_font_CStrike_disposeNativeStrikePtr
     (JNIEnv *env, jclass clazz, jlong awtStrike)
 {
-    JNF_COCOA_ENTER(env);
-	
+JNF_COCOA_ENTER(env);
+    
     if (awtStrike) {
         CFRelease((AWTStrike *)jlong_to_ptr(awtStrike)); // GC
     }
-	
-    JNF_COCOA_EXIT(env);
+    
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -424,7 +371,7 @@ Java_sun_font_CStrike_getFontMetrics
 {
     jobject metrics = NULL;
 
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
     AWT_FONT_CLEANUP_SETUP;
 
     AWTFont *awtfont = ((AWTStrike *)jlong_to_ptr(awtStrikePtr))->fAWTFont;
@@ -436,7 +383,7 @@ Java_sun_font_CStrike_getFontMetrics
     int unitsPerEm = CGFontGetUnitsPerEm(cgFont);
     CGFloat scaleX = (1.0 / unitsPerEm);
     CGFloat scaleY = (1.0 / unitsPerEm);
-		
+        
     // Ascent
     ay = -(CGFloat)CGFontGetAscent(cgFont) * scaleY;
     
@@ -460,16 +407,16 @@ Java_sun_font_CStrike_getFontMetrics
      * leadingY: made-up number, but being compatible with what 1.4.x did.
      * advance:  no need to set yMaxLinearAdvanceWidth - it will be zero.
      */
-	
-    static JNF_CLASS_CACHE(sjc_StrikeMetrics, "sun/font/StrikeMetrics");
-    static JNF_CTOR_CACHE(strikeMetricsCtr, sjc_StrikeMetrics, "(FFFFFFFFFF)V");
+    
+    JNF_CLASS_CACHE(sjc_StrikeMetrics, "sun/font/StrikeMetrics");
+    JNF_CTOR_CACHE(strikeMetricsCtr, sjc_StrikeMetrics, "(FFFFFFFFFF)V");
     metrics = JNFNewObject(env, strikeMetricsCtr,
                            0.0, ay, 0.0, dy, 1.0,
                            0.0, 0.0, ly, mx, 0.0);
 
 cleanup:
     AWT_FONT_CLEANUP_FINISH;
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 
     return metrics;
 }

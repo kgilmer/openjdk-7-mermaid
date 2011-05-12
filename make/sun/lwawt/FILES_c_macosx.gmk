@@ -31,12 +31,12 @@ FILES_objc = \
 	CGraphicsDevice.m \
 	CGraphicsEnv.m \
 	CCharToGlyphMapper.m \
-	CFont.m \
+	AWTFont.m \
 	CGFontSupport.m \
 	CGGlyphOutlines.m \
 	CGGlyphImages.m \
 	CoreTextSupport.m \
-	CStrike.m \
+	AWTStrike.m \
 	InitIDs.m \
 	AWTEvent.m \
 	AWTView.m \

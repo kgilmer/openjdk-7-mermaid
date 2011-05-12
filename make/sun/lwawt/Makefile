@@ -79,6 +79,7 @@ OTHER_LDLIBS += \
 	-framework Cocoa \
 	-framework ExceptionHandling \
 	-framework JavaNativeFoundation \
+	-framework JavaRuntimeSupport \
 	-framework OpenGL
 
 CPPFLAGS += \

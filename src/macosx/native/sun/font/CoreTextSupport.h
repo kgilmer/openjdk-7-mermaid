@@ -23,60 +23,34 @@
  * questions.
  */
 
-#import <AppKit/NSFont.h>
+#import <Cocoa/Cocoa.h>
 #import <JavaVM/jni.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
-#include "CGFontSupport.h"
+#include "AWTFont.h"
 
-/*	
- * Transform Unicode characters into glyphs.
+#pragma mark --- CoreText Support ---
+
+#define HI_SURROGATE_START 0xD800
+#define LO_SURROGATE_START 0xDC00
+
+/*    
+ *    Transform Unicode characters into glyphs.
  *
- * Fills the "glyphsAsInts" array with the glyph codes for the current
- * font, or the negative unicode value if we know the character can
- * be hot-substituted.
+ *    Fills the "glyphsAsInts" array with the glyph codes for the current font,
+ *    or the negative unicode value if we know the character can be hot-substituted.
  *
- * This is the heart of "Universal Font Substitution" in Java.
+ *    This is the heart of "Universal Font Substitution" in Java.
  */
-void
-CTS_GetGlyphsAsIntsForCharacters(const NSFont *font,
-                                 const UniChar unicodes[],
-                                 CGGlyph glyphs[],
-                                 jint glyphsAsInts[], const size_t count);
+void CTS_GetGlyphsAsIntsForCharacters(const AWTFont *font, const UniChar unicodes[], CGGlyph glyphs[], jint glyphsAsInts[], const size_t count);
 
-/*
- * Translates a Java glyph code int (might be a negative unicode value)
- * into a CGGlyph/CGFontRef pair.  Returns the substituted font, and
- * places the appropriate glyph into "glyph".
- */
-CGFontRef
-CTS_GetFontAndGlyphForJavaGlyphCode(const NSFont *font,
-                                    const jint glyphCode,
-                                    const CGFontRef cgFont,
-                                    CGGlyph *glyphRef);
+// Translates a Java glyph code int (might be a negative unicode value) into a CGGlyph/CTFontRef pair
+// Returns the substituted font, and places the appropriate glyph into "glyph"
+CTFontRef CTS_CopyCTFallbackFontAndGlyphForJavaGlyphCode(const AWTFont *font, const jint glyphCode, CGGlyph *glyphRef);
 
-/*
- * Translates a Unicode into a CGGlyph/CGFontRef pair.  Returns the
- * substituted font, and places the appropriate glyph into "glyphRef".
- */
-CGFontRef
-CTS_GetFontAndGlyphForUnicode(const NSFont *font,
-                              const UniChar *uniCharRef,
-                              CGGlyph *glyphRef);
+// Translates a Unicode into a CGGlyph/CTFontRef pair
+// Returns the substituted font, and places the appropriate glyph into "glyphRef"
+CTFontRef CTS_CopyCTFallbackFontAndGlyphForUnicode(const AWTFont *font, const UTF16Char *charRef, CGGlyph *glyphRef, int count);
 
-/*
- * Retrieves advances for translated unicodes.  Uses "glyphs" as a
- * temporary buffer for the glyph-to-unicode translation.
- */
-void
-CTS_GetAdvancesForUnichars(const NSFont *font,
-                           const CGAffineTransform *tx,
-                           const CGFS_FontRenderingMode mode,
-                           const UniChar uniChars[],
-                           CGGlyph glyphs[], const size_t length,
-                           CGSize advances[]);
-
-/*
- * Returns the corresponding CGFont for a given NSFont.
- */
-CGFontRef
-CTS_GetCGFontForNSFont(const NSFont *font);
+// Breakup a 32 bit unicode value into the component surrogate pairs
+void CTS_BreakupUnicodeIntoSurrogatePairs(int uniChar, UTF16Char charRef[]);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -116,10 +116,17 @@ public abstract class FileFont extends PhysicalFont {
         return true;
     }
 
+    /* MACOSX begin -- Make this static so that we can pass in CFont
     void setFileToRemove(File file, CreatedFontTracker tracker) {
-        Disposer.addObjectRecord(this,
-                         new CreatedFontFileDisposerRecord(file, tracker));
+	Disposer.addObjectRecord(this,
+			 new CreatedFontFileDisposerRecord(file, tracker));
     }
+    */
+    static void setFileToRemove(Object font, File file, CreatedFontTracker tracker) {
+ 	Disposer.addObjectRecord(font,
+			 new CreatedFontFileDisposerRecord(file, tracker));
+    }
+    // MACOSX - end
 
     /* This is called when a font scaler is determined to
      * be unusable (ie bad).

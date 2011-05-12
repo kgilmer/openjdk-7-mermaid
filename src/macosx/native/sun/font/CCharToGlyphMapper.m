@@ -23,7 +23,7 @@
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
-#import "CFont.h"
+#import "AWTFont.h"
 #import "CoreTextSupport.h"
 
 #import "sun_font_CCharToGlyphMapper.h"
@@ -39,12 +39,12 @@ Java_sun_font_CCharToGlyphMapper_countGlyphs
 {
     jint numGlyphs = 0;
 
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 
     AWTFont *awtFont = (AWTFont *)jlong_to_ptr(awtFontPtr);
     numGlyphs = [awtFont->fFont numberOfGlyphs];
 
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 
     return numGlyphs;
 }	
@@ -53,12 +53,10 @@ static inline void
 GetGlyphsFromUnicodes(JNIEnv *env, AWTFont *awtFont,
                       jint count, UniChar *unicodes,
                       CGGlyph *cgGlyphs, jintArray glyphs)
-{	
-    NSFont *font = awtFont->fFont;
-    
+{	    
     jint *glyphCodeInts = (*env)->GetPrimitiveArrayCritical(env, glyphs, 0);
     
-    CTS_GetGlyphsAsIntsForCharacters(font, unicodes,
+    CTS_GetGlyphsAsIntsForCharacters(awtFont, unicodes,
                                      cgGlyphs, glyphCodeInts, count);
     
     // Do not use JNI_COMMIT, as that will not free the buffer copy
@@ -90,7 +88,7 @@ Java_sun_font_CCharToGlyphMapper_nativeCharsToGlyphs
     (JNIEnv *env, jclass clazz,
      jlong awtFontPtr, jint count, jcharArray unicodes, jintArray glyphs)
 {
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 
     AWTFont *awtFont = (AWTFont *)jlong_to_ptr(awtFontPtr);
 	
@@ -108,5 +106,5 @@ Java_sun_font_CCharToGlyphMapper_nativeCharsToGlyphs
     (*env)->ReleasePrimitiveArrayCritical(env, unicodes,
                                           unicodesAsChars, JNI_ABORT);
 
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }

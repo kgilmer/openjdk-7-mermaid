@@ -27,8 +27,7 @@
 #define __CGGLYPHIMAGES_H
 
 #import "jni.h"
-#import "CStrike.h"
-#import "CGFontSupport.h"
+#import "AWTStrike.h"
 
 void
 CGGlyphImages_GetGlyphImagePtrs(jlong glyphInfos[],

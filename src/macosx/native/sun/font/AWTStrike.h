@@ -23,27 +23,23 @@
  * questions.
  */
 
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
-#import "CFont.h"
-#import "CGFontSupport.h"
-#import "jni.h"
+#import "AWTFont.h"
 
 @interface AWTStrike : NSObject {
 @public
-    AWTFont               *fAWTFont;
-    CGFloat                fSize;
-    CGFS_FontRenderingMode fMode;
-    jint                   fAAStyle;
-	
-    CGAffineTransform fTx;
-    CGAffineTransform fAltTx; // alternate strike tx used in CGGlyphImages
-    CGAffineTransform fFontTx;
-    CGAffineTransform fInvDevTx;
+    AWTFont *                fAWTFont;
+    CGFloat                    fSize;
+    JRSFontRenderingStyle    fStyle;
+    jint                    fAAStyle;
+    
+    CGAffineTransform        fTx;
+    CGAffineTransform        fAltTx; // alternate strike tx used for Sun2D
+    CGAffineTransform        fFontTx;
 }
 
-+ (AWTStrike *) awtStrikeForFont:(AWTFont *)awtFont
-    tx:(CGAffineTransform)tx invDevTx:(CGAffineTransform)invDevTx
-    mode:(jint)mode style:(jint)style;
++ (AWTStrike *) awtStrikeForFont:(AWTFont *)awtFont tx:(CGAffineTransform)tx invDevTx:(CGAffineTransform)invDevTx style:(JRSFontRenderingStyle)style aaStyle:(jint)aaStyle;
 
 @end

@@ -217,7 +217,7 @@ AWTPathFree(AWTPathRef pathRef)
     
     free(pathRef->fSegmentData);
     //fprintf(stderr, "pathRef->fSegmentType (%d)\n",pathRef->fSegmentType);
-    free(pathRef->fSegmentType);	
+    free(pathRef->fSegmentType);
     //fprintf(stderr, "pathRef (%d)\n", pathRef);
     free(pathRef);
     //fprintf(stderr, "--E--AWTPathFree\n");

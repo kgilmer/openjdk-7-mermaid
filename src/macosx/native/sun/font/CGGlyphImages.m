@@ -167,7 +167,7 @@ PRINT_CGSTATES_INFO(const CGContextRef cgRef)
     CGFloat smoothness = CGContextGetSmoothness(cgRef);
     bool antialias = CGContextGetShouldAntialias(cgRef);
     bool smoothfont = CGContextGetShouldSmoothFonts(cgRef);
-    CGFS_FontRenderingMode fRendMode = CGContextGetFontRenderingMode(cgRef);
+    JRSFontRenderingStyle fRendMode = CGContextGetFontRenderingMode(cgRef);
     fprintf(stderr, "    [smoothness: %f] [antialias: %d] [smoothfont: %d] [fontrenderingmode: %d]\n",
             smoothness, antialias, smoothfont, fRendMode);
 #endif
@@ -303,7 +303,7 @@ typedef struct CGGI_GlyphInfoDescriptor {
 
 typedef struct CGGI_RenderingMode {
     CGGI_GlyphInfoDescriptor *glyphDescriptor;
-    CGFS_FontRenderingMode cgFontMode;
+    JRSFontRenderingStyle cgFontMode;
 } CGGI_RenderingMode;
 
 static CGGI_GlyphInfoDescriptor grey =
@@ -315,7 +315,7 @@ static inline CGGI_RenderingMode
 CGGI_GetRenderingMode(const AWTStrike *strike)
 {
     CGGI_RenderingMode mode;
-    mode.cgFontMode = strike->fMode;
+    mode.cgFontMode = strike->fStyle;
     
     switch (strike->fAAStyle) {
     case sun_awt_SunHints_INTVAL_TEXT_ANTIALIAS_DEFAULT:
@@ -362,7 +362,7 @@ CGGI_InitCanvas(CGGI_GlyphCanvas *canvas,
             reason:@"Failed to allocate memory for the buffer which backs the CGContext for glyph strikes." userInfo:nil] raise];
     }
     
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     canvas->context = CGBitmapContextCreate(canvas->image->data,
                                             width, height, 8, bytesPerRow,
                                             colorSpace,
@@ -403,8 +403,7 @@ CGGI_FreeCanvas(CGGI_GlyphCanvas *canvas)
  * Quick and easy inline to check if this canvas is big enough.
  */
 static inline void
-CGGI_SizeCanvas(CGGI_GlyphCanvas *canvas,
-                const vImagePixelCount width, const vImagePixelCount height)
+CGGI_SizeCanvas(CGGI_GlyphCanvas *canvas, const vImagePixelCount width, const vImagePixelCount height, const JRSFontRenderingStyle style)
 {
     if (canvas->image != NULL &&
         width  < canvas->image->width &&
@@ -419,6 +418,7 @@ CGGI_SizeCanvas(CGGI_GlyphCanvas *canvas,
     CGGI_InitCanvas(canvas,
                     width * CGGI_GLYPH_CANVAS_SLACK,
                     height * CGGI_GLYPH_CANVAS_SLACK);
+    JRSFontSetRenderingStyleOnContext(canvas->context, style);
 }
 
 /*
@@ -539,47 +539,53 @@ CGGI_CreateImageForUnicode
      const CGGI_RenderingMode *mode, const UniChar uniChar)
 {
     // save the state of the world
-    CGContextSaveGState(canvas->context);
+    CGFontRef oldFont = CGContextGetFont(canvas->context);
     
     // get the glyph, measure it using CG
     CGGlyph glyph;
-    CGFontRef substitutionFont =
-        CTS_GetFontAndGlyphForUnicode(strike->fAWTFont->fFont,
-                                      &uniChar, &glyph);
+    CTFontRef fallback;
+    if (uniChar > 0xFFFF) {
+        UTF16Char charRef[2];
+        CTS_BreakupUnicodeIntoSurrogatePairs(uniChar, charRef);
+        CGGlyph glyphTmp[2];
+        fallback = CTS_GetFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *)&charRef, (CGGlyph *)&glyphTmp, 2);
+        glyph = glyphTmp[0];
+    } else {
+        UTF16Char charRef;
+        charRef = (UTF16Char) uniChar; // truncate.
+        fallback = CTS_GetFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *) &charRef, &glyph, 1);
+    }
     
     CGAffineTransform tx = strike->fTx;
-    CGFS_FontRenderingMode bboxCGMode =
-        CGFS_AlignModeForFractionalMeasurement(strike->fMode);
+    JRSFontRenderingStyle style = JRSFontAlignStyleForFractionalMeasurement(strike->fStyle);
     
     CGRect bbox;
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetBBoxesForGlyphs(substitutionFont, strike->fSize, &tx,
-                            bboxCGMode, &glyph, 1, &bbox);
+    JRSFontGetBoundingBoxesForGlyphsAndStyle(fallback, &tx, style, &glyph, 1, &bbox);
     
     CGSize advance;
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetAdvancesForGlyphs(substitutionFont, strike->fSize, &tx,
-                              strike->fMode, &glyph, 1, &advance);
+    JRSFontGetAdvancesForGlyphsAndStyle(fallback, &tx, strike->fStyle, &glyph, 1, &advance);
     
-    // create the GlyphInfo we are going to strike into
+    // create the Sun2D GlyphInfo we are going to strike into
     GlyphInfo *info = CGGI_CreateNewGlyphInfoFrom(advance, bbox, mode);
     
-    // fix the context size, just in case the substituted character
-    // is unexpectedly large
-    CGGI_SizeCanvas(canvas, info->width, info->height);
+    // fix the context size, just in case the substituted character is unexpectedly large
+    CGGI_SizeCanvas(canvas, info->width, info->height, mode->cgFontMode);
     
     // align the transform for the real CoreText strike
     CGContextSetTextMatrix(canvas->context, strike->fAltTx);
-    CGContextSetFont(canvas->context, substitutionFont);
     
-    // clean the canvas - align, strike, and copy the glyph from the
-    // canvas into the info
+    const CGFontRef cgFallback = CTFontCopyGraphicsFont(fallback, NULL);
+    CGContextSetFont(canvas->context, cgFallback);
+    CFRelease(cgFallback);
+    
+    // clean the canvas - align, strike, and copy the glyph from the canvas into the info
     CGGI_CreateImageForGlyph(canvas, glyph, info, mode);
     
     // restore the state of the world
-    CGContextRestoreGState(canvas->context);
+    CGContextSetFont(canvas->context, oldFont);
     CGContextSetTextMatrix(canvas->context, strike->fAltTx);
     
+    CFRelease(fallback);    
 #ifdef CGGI_DEBUG
     DUMP_GLYPHINFO(info);
 #endif
@@ -615,7 +621,7 @@ CGGI_FillImagesForGlyphsWithSizedCanvas(CGGI_GlyphCanvas *canvas,
     CGContextSetTextMatrix(canvas->context, strike->fAltTx);
     
     CGContextSetFont(canvas->context, strike->fAWTFont->fNativeCGFont);
-    CGFS_SetFontRenderingModeOnContext(canvas->context, strike->fMode);
+    JRSFontSetRenderingStyleOnContext(canvas->context, strike->fStyle);
     
     CFIndex i;
     for (i = 0; i < len; i++) {
@@ -683,7 +689,7 @@ CGGI_FillImagesForGlyphs(jlong *glyphInfos, const AWTStrike *strike,
         [threadDict setObject:canvas forKey:threadLocalCanvasKey];
     }
     
-    CGGI_SizeCanvas(canvas, maxWidth, maxHeight);
+    CGGI_SizeCanvas(canvas, maxWidth, maxHeight, mode->cgFontMode);
     CGGI_FillImagesForGlyphsWithSizedCanvas(canvas, strike, mode,
                                             glyphInfos, uniChars, glyphs, len);
 }
@@ -706,37 +712,25 @@ CGGI_CreateGlyphInfos(jlong *glyphInfos, const AWTStrike *strike,
 {
     AWTFont *font = strike->fAWTFont;
     CGAffineTransform tx = strike->fTx;
-    CGFS_FontRenderingMode bboxCGMode =
-        CGFS_AlignModeForFractionalMeasurement(strike->fMode);
+    JRSFontRenderingStyle bboxCGMode = JRSFontAlignStyleForFractionalMeasurement(strike->fStyle);
     
-    // WORKAROUND: passing size should not be necessary once we move to JRS
-    CGFS_GetBBoxesForGlyphs(font->fNativeCGFont, strike->fSize, &tx,
-                            bboxCGMode, glyphs, len, bboxes);
-    CGFS_GetAdvancesForGlyphs(font->fNativeCGFont, strike->fSize, &tx,
-                              strike->fMode, glyphs, len, advances);
+    JRSFontGetBoundingBoxesForGlyphsAndStyle((CTFontRef)font->fFont, &tx, bboxCGMode, glyphs, len, bboxes);
+    JRSFontGetAdvancesForGlyphsAndStyle((CTFontRef)font->fFont, &tx, strike->fStyle, glyphs, len, advances);
     
     size_t maxWidth = 1;
     size_t maxHeight = 1;
     
     CFIndex i;
-    for (i = 0; i < len; i++) {
-        if (uniChars[i] != 0) {
+    for (i = 0; i < len; i++)
+    {
+        if (uniChars[i] != 0)
+        {
             glyphInfos[i] = 0L;
             continue; // will be handled later
         }
         
         CGSize advance = advances[i];
         CGRect bbox = bboxes[i];
-
-        // WORKAROUND: following comment and line of code can be removed
-        // once we move to JRS
-        // TODO(cpc): still not sure why the following is needed here, even
-        // though it wasn't needed in the "old" Apple JDK using SPI;
-        // maybe a subtle difference between the old SPI:
-        //   CGFontGetGlyphBBoxesForStyle()
-        // and the new one based on CTFont API?
-        //   CTFontGetBoundingRectsForGlyphs()
-        bbox.origin.y = -bbox.size.height - bbox.origin.y;
 
         GlyphInfo *glyphInfo = CGGI_CreateNewGlyphInfoFrom(advance, bbox, mode);
         

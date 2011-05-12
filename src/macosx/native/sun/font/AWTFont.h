@@ -23,9 +23,8 @@
  * questions.
  */
 
-#import <AppKit/AppKit.h>
-
-#import "jni.h"
+#import <Cocoa/Cocoa.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
 #define MAX_STACK_ALLOC_GLYPH_BUFFER_SIZE 256
 
