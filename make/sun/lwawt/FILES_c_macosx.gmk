@@ -32,7 +32,6 @@ FILES_objc = \
 	CGraphicsEnv.m \
 	CCharToGlyphMapper.m \
 	AWTFont.m \
-	CGFontSupport.m \
 	CGGlyphOutlines.m \
 	CGGlyphImages.m \
 	CoreTextSupport.m \

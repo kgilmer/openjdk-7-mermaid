@@ -116,12 +116,12 @@ public abstract class FileFont extends PhysicalFont {
         return true;
     }
 
-    /* MACOSX begin -- Make this static so that we can pass in CFont
     void setFileToRemove(File file, CreatedFontTracker tracker) {
 	Disposer.addObjectRecord(this,
 			 new CreatedFontFileDisposerRecord(file, tracker));
     }
-    */
+    
+    // MACOSX begin -- Make this static so that we can pass in CFont
     static void setFileToRemove(Object font, File file, CreatedFontTracker tracker) {
  	Disposer.addObjectRecord(font,
 			 new CreatedFontFileDisposerRecord(file, tracker));
