@@ -1,0 +1,80 @@
+/*
+ * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+
+package sun.lwawt;
+
+import java.awt.Button;
+import java.awt.AWTEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.peer.ButtonPeer;
+
+import javax.swing.JButton;
+
+class LWButtonPeer
+    extends LWComponentPeer<Button, LWButtonPeer.JButtonDelegate>
+    implements ButtonPeer, ActionListener
+{
+    public LWButtonPeer(Button target) {
+        super(target);
+    }
+
+    @Override
+    protected JButtonDelegate createDelegate() {
+        JButtonDelegate delegate = new JButtonDelegate();
+        delegate.setText(getTarget().getLabel());
+        delegate.addActionListener(this);
+        return delegate;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
+                getTarget().getActionCommand(), e.getWhen(), e.getModifiers()));
+    }
+
+    @Override
+    public void setLabel(String label) {
+        synchronized (getDelegateLock()) {
+            getDelegate().setText(label);
+        }
+        repaintPeer();
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return true;
+    }
+
+    class JButtonDelegate
+	extends JButton
+	implements ComponentDelegate
+    {
+	@Override
+        public void processAWTEvent(AWTEvent e) {
+            processEvent(e);
+        }
+    }
+}

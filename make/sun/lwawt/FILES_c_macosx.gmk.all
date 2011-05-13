@@ -1,0 +1,135 @@
+#
+# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+#
+# This code is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 2 only, as
+# published by the Free Software Foundation.  Oracle designates this
+# particular file as subject to the "Classpath" exception as provided
+# by Oracle in the LICENSE file that accompanied this code.
+#
+# This code is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# version 2 for more details (a copy is included in the LICENSE file that
+# accompanied this code).
+#
+# You should have received a copy of the GNU General Public License version
+# 2 along with this work; if not, write to the Free Software Foundation,
+# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+# or visit www.oracle.com if you need additional information or have any
+# questions.
+#
+
+FILES_objc = \
+	CGLGraphicsConfig.m \
+	CGLSurfaceData.m \
+	CGraphicsConfig.m \
+	CGraphicsDevice.m \
+	CGraphicsEnv.m \
+	InitIDs.m \
+	AWTEvent.m \
+	AWTInsets.m \
+	AWTView.m \
+	AWTWindow.m \
+	CCursorManager.m \
+	CFileDialog.m \
+	CImage.m \
+        CMenu.m \
+        CMenuBar.m \
+        CMenuComponent.m \
+        CMenuItem.m \
+        CPopupMenu.m \
+        CRobot.m \
+        CTrayIcon.m \
+        CWrapper.m \
+        LWCToolkit.m \
+        ThreadUtilities.m
+
+FILES_c = \
+	gifdecoder.c \
+	imageInitIDs.c \
+	img_colors.c \
+        img_globals.c \
+	SurfaceData.c \
+	Region.c \
+	BufImgSurfaceData.c \
+	Disposer.c \
+        Trace.c \
+	GraphicsPrimitiveMgr.c \
+	MapAccelFunc.c \
+	Blit.c \
+	BlitBg.c \
+	ScaledBlit.c \
+	FillRect.c \
+	FillSpans.c \
+	FillParallelogram.c \
+	DrawParallelogram.c \
+	DrawLine.c \
+	DrawRect.c \
+	DrawPolygons.c \
+        DrawPath.c \
+        FillPath.c \
+        ProcessPath.c \
+	MaskBlit.c \
+	MaskFill.c \
+	TransformHelper.c \
+        AlphaMath.c \
+	AlphaMacros.c \
+	AnyByte.c \
+        ByteBinary1Bit.c \
+        ByteBinary2Bit.c \
+        ByteBinary4Bit.c \
+	ByteIndexed.c \
+	ByteGray.c \
+	Index8Gray.c \
+	Index12Gray.c \
+	AnyShort.c \
+	Ushort555Rgb.c \
+	Ushort565Rgb.c \
+	Ushort4444Argb.c \
+	Ushort555Rgbx.c \
+	UshortGray.c \
+	UshortIndexed.c \
+	Any3Byte.c \
+	ThreeByteBgr.c \
+	AnyInt.c \
+	IntArgb.c \
+        IntArgbPre.c \
+        IntArgbBm.c \
+	IntRgb.c \
+	IntBgr.c \
+	IntRgbx.c \
+	Any4Byte.c \
+        FourByteAbgr.c \
+        FourByteAbgrPre.c \
+	BufferedMaskBlit.c \
+	BufferedRenderPipe.c \
+	ShapeSpanIterator.c \
+	SpanClipRenderer.c \
+	awt_ImageRep.c \
+        awt_ImagingLib.c \
+	awt_Mlib.c \
+        awt_parseImage.c \
+	DataBufferNative.c \
+	dither.c \
+	debug_assert.c \
+	debug_mem.c \
+	debug_trace.c \
+	debug_util.c \
+        OGLBlitLoops.c \
+        OGLBufImgOps.c \
+        OGLContext.c \
+        OGLFuncs.c \
+        OGLMaskBlit.c \
+        OGLMaskFill.c \
+        OGLPaints.c \
+        OGLRenderQueue.c \
+        OGLRenderer.c \
+        OGLSurfaceData.c \
+        OGLTextRenderer.c \
+        OGLVertexCache.c \
+        AccelGlyphCache.c
+
