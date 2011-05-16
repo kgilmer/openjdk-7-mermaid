@@ -137,6 +137,11 @@ JNIEXPORT void JNICALL Java_java_awt_ScrollPane_initIDs
 {
 }
 
+JNIEXPORT void JNICALL Java_java_awt_ScrollPaneAdjustable_initIDs
+(JNIEnv *env, jclass cls)
+{
+}
+
 JNIEXPORT void JNICALL Java_java_awt_Scrollbar_initIDs
 (JNIEnv *env, jclass cls)
 {
