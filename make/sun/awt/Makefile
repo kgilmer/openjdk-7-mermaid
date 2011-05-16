@@ -123,16 +123,35 @@ OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
 OTHER_LDLIBS = $(JVMLIB) $(LIBM) $(LIBDL)
 endif
 
-ifeq  ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 FILES_c = $(FILES_2D_c)
 FILES_c += awt_LoadLibrary.c
 OTHER_CFLAGS += -DMLIB_NO_LIBSUNMATH
 OTHER_LDLIBS = $(JVMLIB) $(LIBM)
 endif
 
-FILES_c += initIDs.c
-
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS/LINUX
+endif # PLATFORM 
+
+ifeq ($(PLATFORM), macosx)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv MAC OS X
+
+#
+# Files
+#
+include FILES_c_macosx.gmk
+include FILES_export_macosx.gmk
+
+FILES_objc = $(FILES_AWT_objc)
+OTHER_LDLIBS = -lmlib_image $(JVMLIB) $(LIBM) \
+    -framework Cocoa \
+    -framework OpenGL \
+    -framework JavaNativeFoundation \
+    -framework JavaRuntimeSupport \
+    -framework ApplicationServices \
+    -framework AudioToolbox
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ MAC OS X
 endif # PLATFORM 
 
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv SOLARIS-SPARC
@@ -153,11 +172,10 @@ vpath %.c  $(PLATFORM_SRC)/native/sun/java2d/loops
 vpath %.c  $(SHARE_SRC)/native/sun/awt/medialib
 vpath %.c  $(PLATFORM_SRC)/native/sun/awt/medialib
 vpath %.s  $(PLATFORM_SRC)/native/sun/awt/medialib
-
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS-SPARC
 else
   FILES_c += MapAccelFunc.c
 endif
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SOLARIS-SPARC
 
 #
 # Resources
@@ -254,6 +272,12 @@ vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/../java2d/opengl
 vpath %.c   $(PLATFORM_SRC)/native/$(PKGDIR)/../java2d/x11
 vpath %.c   $(SHARE_SRC)/native/$(PKGDIR)/../font
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ LINUX
+endif # PLATFORM
+
+ifeq ($(PLATFORM), macosx)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv MAC OS X
+vpath %.m   $(call NativeSrcDirList,,native/com/apple/resources)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ MAC OS X
 endif # PLATFORM
 
 ifeq ($(PLATFORM), windows)
@@ -409,6 +433,17 @@ FONTCONFIGS_SRC_PREFIX = $(PLATFORM).
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BSD
 endif # PLATFORM
 
+ifeq ($(PLATFORM), macosx)
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv MAC OS X
+
+FONTCONFIGS_SRC = $(JDK_TOPDIR)/src/macosx/classes/sun/awt/fontconfigs
+_FONTCONFIGS    = \
+        fontconfig.properties
+
+FONTCONFIGS_SRC_PREFIX = $(PLATFORM).
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ MAC OS X
+endif # PLATFORM
 
 FONTCONFIGS     = $(_FONTCONFIGS:%=$(LIBDIR)/%.src)
 BINARYFONTCONFIGS = $(_FONTCONFIGS:%.properties=$(LIBDIR)/%.bfc)
