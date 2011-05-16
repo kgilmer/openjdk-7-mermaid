@@ -117,6 +117,11 @@ JNIEXPORT void JNICALL Java_java_awt_Menu_initIDs
 {
 }
 
+JNIEXPORT void JNICALL Java_java_awt_MenuBar_initIDs
+(JNIEnv *env, jclass cls)
+{
+}
+
 JNIEXPORT void JNICALL Java_java_awt_MenuComponent_initIDs
 (JNIEnv *env, jclass cls)
 {
