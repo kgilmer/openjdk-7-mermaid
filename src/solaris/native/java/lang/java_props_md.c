@@ -42,6 +42,10 @@
 #include <time.h>
 #include <errno.h>
 
+#ifdef MACOSX
+#import <JavaRuntimeSupport/JRSProperties.h>
+#endif
+
 #if defined(_ALLBSD_SOURCE)
 #if !defined(P_tmpdir)
 #include <paths.h>
@@ -406,10 +410,15 @@ GetJavaProperties(JNIEnv *env)
 
     /* os properties */
     {
+#ifdef MACOSX
+        sprops.os_name = JRSCopyOSName();
+        sprops.os_version = JRSCopyOSVersion();
+#else
         struct utsname name;
         uname(&name);
         sprops.os_name = strdup(name.sysname);
         sprops.os_version = strdup(name.release);
+#endif
 
         sprops.os_arch = ARCHPROPNAME;
 

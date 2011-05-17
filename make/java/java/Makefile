@@ -96,6 +96,10 @@ endif # PLATFORM
 
 FILES_c    +=   java_props_md.c
 
+ifeq ($(PLATFORM), macosx)
+CFLAGS_$(VARIANT)/java_props_md.o = -Os -x objective-c
+endif
+
 #
 # Make sure first rule does 'all'
 #
