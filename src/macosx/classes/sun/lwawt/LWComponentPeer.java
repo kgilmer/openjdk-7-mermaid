@@ -945,7 +945,7 @@ abstract class LWComponentPeer<T extends Component, D extends JComponent & Compo
             if (e instanceof MouseWheelEvent) {
                 MouseWheelEvent me = (MouseWheelEvent) e;
                 MouseWheelEvent delegateEvent = new MouseWheelEvent(
-                        delegateContainer, me.getID(), me.getWhen(),
+                        delegate, me.getID(), me.getWhen(),
                         me.getModifiers(),
                         me.getX(), me.getY(),
                         me.getClickCount(),
@@ -953,14 +953,14 @@ abstract class LWComponentPeer<T extends Component, D extends JComponent & Compo
                         MouseWheelEvent.WHEEL_UNIT_SCROLL,
                         3, // TODO: wheel scroll amount
 			me.getWheelRotation());
-                delegateContainer.dispatchEvent(delegateEvent);
+                delegate.processAWTEvent(delegateEvent);
             } else if (e instanceof MouseEvent) {
                 MouseEvent me = (MouseEvent) e;
                 MouseEvent delegateEvent = new MouseEvent(
-                        delegateContainer, me.getID(), me.getWhen(), me.getModifiers(),
+                        delegate, me.getID(), me.getWhen(), me.getModifiers(),
                         me.getX(), me.getY(), me.getXOnScreen(), me.getYOnScreen(),
                         me.getClickCount(), me.isPopupTrigger(), me.getButton());
-                delegateContainer.dispatchEvent(delegateEvent);
+                delegate.processAWTEvent(delegateEvent);
             } else if (e instanceof KeyEvent) {
                 KeyEvent ke = (KeyEvent) e;
                 KeyEvent delegateEvent = new KeyEvent(delegate, ke.getID(), ke.getWhen(),
