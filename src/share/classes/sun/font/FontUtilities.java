@@ -73,8 +73,9 @@ public final class FontUtilities {
 	        isBSD = (osName.startsWith("FreeBSD") ||
 	                 osName.startsWith("NetBSD") ||
 	                 osName.startsWith("OpenBSD") ||
-	                 osName.startsWith("Darwin"));
-		isMacOSX = osName.equals("Darwin"); // TODO: MacOSX
+	                 osName.startsWith("Darwin") ||
+	                 osName.startsWith("Mac OS X"));
+		isMacOSX = osName.startsWith("Mac OS X"); // TODO: MacOSX
                 isWindows = osName.startsWith("Windows");
 
                 String t2kStr = System.getProperty("sun.java2d.font.scaler");
