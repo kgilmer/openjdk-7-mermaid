@@ -177,6 +177,17 @@ $(shell \
   fi)
 endef
 
+# Expand SRCDIR_LIST, which is used to automatically include various
+# platform and shared sources/headers.  This is mainly useful for the
+# Mac OS X build, which pulls its platform sources from the solaris and/or
+# macosx trees, depending on the component.
+define JavaSrcDirList
+$(JAVA_SRCDIR_LIST:%=$1$(JDK_TOPDIR)/%/$2)
+endef
+define NativeSrcDirList
+$(NATIVE_SRCDIR_LIST:%=$1$(JDK_TOPDIR)/%/$2)
+endef
+
 # Make sure certain variables are non-empty at this point
 _check_values:=\
 $(call CheckValue,ARCH,),\
@@ -377,7 +388,11 @@ OUTPUTDIR:=$(call AltCheckValue,OUTPUTDIR)
 include $(JDK_MAKE_SHARED_DIR)/Defs-versions.gmk
 
 # Get platform specific settings (defines COMPILER_PATH)
-include $(JDK_MAKE_SHARED_DIR)/Defs-$(PLATFORM).gmk
+ifeq ($(PLATFORM), macosx)
+ include $(JDK_MAKE_SHARED_DIR)/Defs-bsd.gmk
+else
+ include $(JDK_MAKE_SHARED_DIR)/Defs-$(PLATFORM).gmk
+endif
 
 # Components
 ifdef ALT_LANGTOOLS_DIST

@@ -32,6 +32,7 @@
 #define X_SOLARIS       2
 #define X_LINUX         3
 #define X_BSD           4
+#define X_MACOSX        5
 
 // types for X_ARCH
 #define X_I586          1
@@ -47,13 +48,23 @@
 // Make sure you set X_PLATFORM and X_ARCH defines correctly.
 // Everything depends upon this flag being setup correctly.
 // **********************************
+
+#if (X_PLATFORM == X_MACOSX) && !defined(X_ARCH)
+#if __x86_64__
+#define X_ARCH X_AMD64
+#endif
+#if __i386__
+#define X_ARCH X_I586
+#endif
+#endif
+
 #if (!defined(X_PLATFORM) || !defined(X_ARCH))
 #error "You need to define X_PLATFORM and X_ARCH outside of the source. Use the types above."
 #endif
 
 
 // following is needed for _LP64
-#if ((X_PLATFORM == X_SOLARIS) || (X_PLATFORM == X_LINUX) || (X_PLATFORM == X_BSD))
+#if ((X_PLATFORM == X_SOLARIS) || (X_PLATFORM == X_LINUX) || (X_PLATFORM == X_BSD) || (X_PLATFORM == X_MACOSX))
 #include <sys/types.h>
 #endif
 
@@ -133,7 +144,7 @@ typedef char            SBYTE;
 #endif
 
 
-#if X_PLATFORM == X_BSD
+#if (X_PLATFORM == X_BSD) || (X_PLATFORM == X_MACOSX)
 #define INLINE          inline
 #endif
 

@@ -53,6 +53,12 @@ ifndef PLATFORM_SRC
   PLATFORM_SRC = $(BUILDDIR)/../src/solaris
 endif # PLATFORM_SRC
 
+# Linux build pulls its platform sources from the solaris tree.
+SRCDIR_LIST = src/solaris src/share
+#(dav) needed for Linux build
+JAVA_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
+NATIVE_SRCDIR_LIST = src/$(PLATFORM) src/solaris src/share
+
 # Platform specific closed sources
 ifndef OPENJDK
   ifndef CLOSED_PLATFORM_SRC
