@@ -63,7 +63,7 @@ CFLAGS += -DSPLASHSCREEN
 
 ifneq ($(PLATFORM), windows)
   CFLAGS += -DWITH_X11
-  ifeq ($(PLATFORM), bsd)
+  ifneq (,$(findstring $(PLATFORM), bsd macosx))
     ifeq ($(OS_VENDOR), Apple)
       OTHER_LDLIBS += -liconv
     else

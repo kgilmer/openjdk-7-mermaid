@@ -1639,11 +1639,18 @@ ReadKnownVMs(const char *jrepath, const char * arch, jboolean speculative)
     char *altVMName = NULL;
     char *serverClassVMName = NULL;
     static char *whiteSpace = " \t";
+    const char *arch_path;
     if (JLI_IsTraceLauncher()) {
         start = CounterGet();
     }
+
     JLI_Snprintf(jvmCfgName, sizeof(jvmCfgName), "%s%slib%s%s%sjvm.cfg",
-        jrepath, FILESEP, FILESEP, arch, FILESEP);
+        jrepath, FILESEP, FILESEP,
+#ifdef MACOSX
+        "", "");
+#else
+        arch, FILESEP);
+#endif
 
     jvmCfg = fopen(jvmCfgName, "r");
     if (jvmCfg == NULL) {
@@ -1922,7 +1929,7 @@ ContinueInNewThread(InvocationFunctions* ifn, int argc, char **argv,
 #ifdef __APPLE__
 static int
 ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv,
-		     int mode, char *what, int ret)
+                    int mode, char *what, int ret)
 {
         
     /*
