@@ -30,9 +30,11 @@ JDK_BUNDLE_DIR = $(ABS_OUTPUTDIR)/j2sdk-bundle/$(THIS_JDK_VERSION).jdk/Contents
 MACOSX_SRC     = $(JDK_TOPDIR)/src/macosx
 AQUA_PROPERTIES= $(MACOSX_SRC)/classes/com/apple/laf/resources/aqua.properties
 
+JDK_BUNDLE_VENDOR ?= UNDEFINED
+
 jre-bundle-dir:
 	$(MKDIR) -p $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
-	$(CP) $(MACOSX_SRC)/bundle/Info.plist $(JRE_IMAGE_DIR)/bundle
+	$(SED) -e "s/@@VENDOR@@/$(JDK_BUNDLE_VENDOR)/g" < $(MACOSX_SRC)/bundle/Info.plist > $(JRE_IMAGE_DIR)/bundle/Info.plist
 	$(CP) $(AQUA_PROPERTIES) $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
 
 jdk-bundle-setup:

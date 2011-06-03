@@ -35,7 +35,7 @@
 		<key>JVMPlatformVersion</key>
 		<string>1.7</string>
 		<key>JVMVendor</key>
-		<string>UNDEFINED</string>
+		<string>@@VENDOR@@</string>
 		<key>JVMVersion</key>
 		<string>1.7.0</string>
 	</dict>
