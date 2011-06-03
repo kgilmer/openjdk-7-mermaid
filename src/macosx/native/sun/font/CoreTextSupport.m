@@ -94,33 +94,6 @@ ReleaseCTStateDictionary(CFDictionaryRef ctStateDict)
     CFRelease(ctStateDict); // GC
 }
 
-static CGFontRef
-GetCTFallbackFont(const NSFont *nsFont, const UniChar *uniChar)
-{
-    CFStringRef str = CFStringCreateWithCharacters(NULL, uniChar, 1);
-    
-    CTFontRef fallbackFont =
-        CTFontCreateForString((CTFontRef)nsFont, str, CFRangeMake(0, 1));
-    CFRelease(str);
-    
-    CGFontRef fallbackCGFont = CTFontCopyGraphicsFont(fallbackFont, NULL);
-    CFRelease(fallbackFont);
-    
-    [(id)fallbackCGFont autorelease];
-    return fallbackCGFont;
-}
-
-/*
- * Pass-though to get individual glyphs for unicode values, given
- * this particular font (no hot-character-substitution).
- */
-static void
-CTS_GetGlyphsForCharacters(const NSFont *font,
-                           const UniChar u[], CGGlyph glyphs[], size_t count)
-{
-    CTFontGetGlyphsForCharacters((CTFontRef)font, u, glyphs, count);
-}
-
 /*    
  *    Transform Unicode characters into glyphs.
  *
@@ -155,43 +128,6 @@ void CTS_GetGlyphsAsIntsForCharacters
             glyphsAsInts[i] = 0; // CoreText couldn't find a glyph for this character either
         }
     }
-}
-
-/*
- * Translates a Unicode into a CGGlyph/CGFontRef pair.
- * Returns the substituted font, and places the appropriate glyph
- * into "glyphRef".
- */
-CGFontRef
-CTS_GetFontAndGlyphForUnicode(const NSFont *font,
-                              const UniChar *uniCharRef, CGGlyph *glyphRef)
-{
-    CGFontRef cgFont = GetCTFallbackFont(font, uniCharRef);
-    CTS_GetGlyphsForCharacters(font, uniCharRef, glyphRef, 1);
-    return cgFont;
-}
-
-/*
- * Translates a Java glyph code int (might be a negative unicode value) 
- * into a CGGlyph/CGFontRef pair.
- * Returns the substituted font, and places the appropriate glyph into "glyph".
- */
-CGFontRef
-CTS_GetFontAndGlyphForJavaGlyphCode(const NSFont *font,
-                                    const jint glyphCode,
-                                    const CGFontRef cgFont,
-                                    CGGlyph *glyphRef)
-{
-    // negative glyph codes are really unicodes, which were placed there
-    // by the mapper to indicate we should use CoreText to substitute
-    // the character
-    if (glyphCode >= 0) {
-        *glyphRef = glyphCode;
-        return cgFont;
-    }
-    
-    UniChar uniChar = -glyphCode;
-    return CTS_GetFontAndGlyphForUnicode(font, &uniChar, glyphRef);
 }
 
 /*

@@ -118,7 +118,7 @@
         return nil;
     }
     
-    // if it's not an CFont, it's likely one of TTF or OTF fonts
+    // if it's not a CFont, it's likely one of TTF or OTF fonts
     // from the Sun rendering loops
     static JNF_CLASS_CACHE(jc_CFont, "sun/font/CFont");
     if (!JNFIsInstanceOf(env, font2d, &jc_CFont)) {

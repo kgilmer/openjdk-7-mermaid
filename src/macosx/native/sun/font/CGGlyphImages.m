@@ -370,6 +370,7 @@ CGGI_InitCanvas(CGGI_GlyphCanvas *canvas,
     
     CGContextSetRGBFillColor(canvas->context, 0.0f, 0.0f, 0.0f, 1.0f);
     CGContextSetFontSize(canvas->context, 1);
+    CGContextSaveGState(canvas->context);
     
     CGColorSpaceRelease(colorSpace);
 }
@@ -539,7 +540,7 @@ CGGI_CreateImageForUnicode
      const CGGI_RenderingMode *mode, const UniChar uniChar)
 {
     // save the state of the world
-    CGFontRef oldFont = CGContextGetFont(canvas->context);
+    CGContextSaveGState(canvas->context);
     
     // get the glyph, measure it using CG
     CGGlyph glyph;
@@ -548,12 +549,12 @@ CGGI_CreateImageForUnicode
         UTF16Char charRef[2];
         CTS_BreakupUnicodeIntoSurrogatePairs(uniChar, charRef);
         CGGlyph glyphTmp[2];
-        fallback = CTS_GetFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *)&charRef, (CGGlyph *)&glyphTmp, 2);
+        fallback = CTS_CopyCTFallbackFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *)&charRef, (CGGlyph *)&glyphTmp, 2);
         glyph = glyphTmp[0];
     } else {
         UTF16Char charRef;
         charRef = (UTF16Char) uniChar; // truncate.
-        fallback = CTS_GetFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *) &charRef, &glyph, 1);
+        fallback = CTS_CopyCTFallbackFontAndGlyphForUnicode(strike->fAWTFont, (const UTF16Char *)&charRef, &glyph, 1);
     }
     
     CGAffineTransform tx = strike->fTx;
@@ -582,8 +583,7 @@ CGGI_CreateImageForUnicode
     CGGI_CreateImageForGlyph(canvas, glyph, info, mode);
     
     // restore the state of the world
-    CGContextSetFont(canvas->context, oldFont);
-    CGContextSetTextMatrix(canvas->context, strike->fAltTx);
+    CGContextRestoreGState(canvas->context);
     
     CFRelease(fallback);    
 #ifdef CGGI_DEBUG
