@@ -176,7 +176,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     }) {
         public CPlatformWindow convertJComponentToTarget(final JRootPane p) {
             Component root = SwingUtilities.getRoot(p);
-            if (root == null) return null;
+            if (root == null || (LWWindowPeer)root.getPeer() == null) return null;
             return (CPlatformWindow)((LWWindowPeer)root.getPeer()).getPlatformWindow();
         }
     };
