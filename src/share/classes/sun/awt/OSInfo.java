@@ -105,7 +105,7 @@ public class OSInfo {
                 return BSD;
             }
 
-            if (osName.contains("Darwin")) {
+            if (osName.equals("Darwin") || osName.startsWith("Mac OS X")) {
                 return BSD;
             }
 

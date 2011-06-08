@@ -147,7 +147,7 @@ OTHER_INCLUDES += \
 # Rules
 #
 CLASSDESTDIR = $(TEMPDIR)/classes
-JAVAHFLAGS += -classpath $(CLASSDESTDIR)
+JAVAHFLAGS += -Xbootclasspath/p:$(CLASSDESTDIR)
 
 include $(BUILDDIR)/common/Mapfile-vers.gmk
 
@@ -156,7 +156,7 @@ include $(BUILDDIR)/common/Library.gmk
 #
 # Libraries to link
 #
-ifneq ($(PLATFORM), windows)
+ifeq ($(PLATFORM), windows)
   OTHER_LDLIBS = $(JVMLIB)
 else
   OTHER_LDLIBS = $(LIBDL) $(JVMLIB)
