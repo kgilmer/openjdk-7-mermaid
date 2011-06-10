@@ -41,6 +41,7 @@ import sun.lwawt.LWWindowPeer.PeerType;
 import com.apple.laf.*;
 import com.apple.laf.ClientPropertyApplicator.Property;
 import com.sun.awt.AWTUtilities;
+import sun.util.logging.PlatformLogger;
 
 public class CPlatformWindow extends CFRetainedResource implements PlatformWindow {
     private native long nativeCreateNSWindow(long nsViewPtr, long styleBits, double x, double y, double w, double h);
@@ -59,6 +60,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     private static native void nativeSetNSWindowSecurityWarningPositioning(long nsWindowPtr, double x, double y, float biasX, float biasY);
     
     private static native int nativeGetScreenNSWindowIsOn_AppKitThread(long nsWindowPtr);
+
+    // Loger to report issues happened during execution but that do not affect functionality
+    private static final PlatformLogger logger = PlatformLogger.getLogger("sun.lwawt.macosx.CPlatformWindow");
     
     // for client properties
     public static final String WINDOW_BRUSH_METAL_LOOK = "apple.awt.brushMetalLook";
@@ -512,7 +516,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     public long getNSWindowPtr() {
         final long nsWindowPtr = ptr;
         if (nsWindowPtr == 0L) {
-            (new Exception("Pointer to native NSWindow is invalid. Already disposed?")).printStackTrace();
+            if(logger.isLoggable(PlatformLogger.FINE)) {
+                logger.fine("NSWindow already disposed?", new Exception("Pointer to native NSWindow is invalid."));
+            }
         }
         return nsWindowPtr;
     }    
