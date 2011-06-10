@@ -1,27 +1,4 @@
 // !$*UTF8*$!
-/*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- *
- */
 {
 	archiveVersion = 1;
 	classes = {
@@ -97,6 +74,55 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2CC7556013A1322100B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB9FD8610AEECCF5008E157E;
+			remoteInfo = "build-core-java";
+		};
+		2CC7556213A1322800B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5F3B1530E39927900B771AE;
+			remoteInfo = "build-test-java";
+		};
+		2CC7556413A1323700B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89D7CA160CDBA94D00472EA2;
+			remoteInfo = "build-generator-java";
+		};
+		2CC7556613A1324300B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89D7CC600CDE75EC00472EA2;
+			remoteInfo = "build-additions-java";
+		};
+		2CC7556813A1325700B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89D7CB870CDC4ED000472EA2;
+			remoteInfo = "run-generator";
+		};
+		2CC7556A13A132AF00B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4CEBA78E08679EF10015D03E;
+			remoteInfo = "build-core-native";
+		};
+		2CC7556C13A132B200B09D1B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB9FD8610AEECCF5008E157E;
+			remoteInfo = "build-core-java";
+		};
 		89D7CB9B0CDC64F800472EA2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 00E6828EFEC88D1A11DB9C8B /* Project object */;
@@ -348,6 +374,8 @@
 			);
 			buildToolPath = /usr/bin/ant;
 			dependencies = (
+				2CC7556D13A132B200B09D1B /* PBXTargetDependency */,
+				2CC7556B13A132AF00B09D1B /* PBXTargetDependency */,
 			);
 			name = "build-generator-java";
 			passBuildSettingsInEnvironment = 1;
@@ -361,6 +389,7 @@
 			);
 			buildToolPath = /usr/bin/ant;
 			dependencies = (
+				2CC7556513A1323700B09D1B /* PBXTargetDependency */,
 			);
 			name = "run-generator";
 			passBuildSettingsInEnvironment = 1;
@@ -374,6 +403,7 @@
 			);
 			buildToolPath = /usr/bin/ant;
 			dependencies = (
+				2CC7556913A1325700B09D1B /* PBXTargetDependency */,
 			);
 			name = "build-generated-java";
 			passBuildSettingsInEnvironment = 1;
@@ -446,6 +476,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2CC7556113A1322100B09D1B /* PBXTargetDependency */,
 			);
 			name = "build-core-native";
 			productName = DylibN;
@@ -462,6 +493,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2CC7556713A1324300B09D1B /* PBXTargetDependency */,
 				C5D197DB0DFB77E4006F9FB9 /* PBXTargetDependency */,
 			);
 			name = "build-additions-native";
@@ -480,6 +512,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2CC7556313A1322800B09D1B /* PBXTargetDependency */,
 			);
 			name = "build-test-native";
 			productName = "build-tests-native";
@@ -491,6 +524,9 @@
 /* Begin PBXProject section */
 		00E6828EFEC88D1A11DB9C8B /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0410;
+			};
 			buildConfigurationList = 4CEBA75C08679E4D0015D03E /* Build configuration list for PBXProject "JObjC" */;
 			compatibilityVersion = "Xcode 3.0";
 			developmentRegion = English;
@@ -576,6 +612,41 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2CC7556113A1322100B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB9FD8610AEECCF5008E157E /* build-core-java */;
+			targetProxy = 2CC7556013A1322100B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556313A1322800B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5F3B1530E39927900B771AE /* build-test-java */;
+			targetProxy = 2CC7556213A1322800B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556513A1323700B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89D7CA160CDBA94D00472EA2 /* build-generator-java */;
+			targetProxy = 2CC7556413A1323700B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556713A1324300B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89D7CC600CDE75EC00472EA2 /* build-additions-java */;
+			targetProxy = 2CC7556613A1324300B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556913A1325700B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89D7CB870CDC4ED000472EA2 /* run-generator */;
+			targetProxy = 2CC7556813A1325700B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556B13A132AF00B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4CEBA78E08679EF10015D03E /* build-core-native */;
+			targetProxy = 2CC7556A13A132AF00B09D1B /* PBXContainerItemProxy */;
+		};
+		2CC7556D13A132B200B09D1B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB9FD8610AEECCF5008E157E /* build-core-java */;
+			targetProxy = 2CC7556C13A132B200B09D1B /* PBXContainerItemProxy */;
+		};
 		89D7CB9C0CDC64F800472EA2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 89D7CB870CDC4ED000472EA2 /* run-generator */;
@@ -701,7 +772,6 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = JObjC;
 				SECTORDER_FLAGS = "";
 				VALID_ARCHS = "ppc7400 ppc970 i386 x86_64 ppc";
@@ -782,7 +852,6 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = JObjC;
 				SECTORDER_FLAGS = "";
 				VALID_ARCHS = "ppc7400 ppc970 i386 x86_64 ppc";
@@ -820,7 +889,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "build-generator";
 				ZERO_LINK = NO;
 			};
@@ -841,7 +909,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "run-generator";
 				ZERO_LINK = NO;
 			};
@@ -862,7 +929,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "build-generated";
 				ZERO_LINK = NO;
 			};
@@ -883,7 +949,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "build-additions";
 				ZERO_LINK = NO;
 			};
@@ -904,7 +969,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "assemble-product";
 				ZERO_LINK = NO;
 			};
@@ -970,7 +1034,6 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = JObjC;
 				SECTORDER_FLAGS = "";
 				VALID_ARCHS = "ppc7400 ppc970 i386 x86_64 ppc";
@@ -1053,7 +1116,6 @@
 				MACH_O_TYPE = mh_dylib;
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = JObjC;
 				SECTORDER_FLAGS = "";
 				VALID_ARCHS = "ppc7400 ppc970 i386 x86_64 ppc";
@@ -1091,7 +1153,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "B&I";
 				ZERO_LINK = NO;
 			};
@@ -1117,7 +1178,6 @@
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaVM.framework/Versions/A/Frameworks\"";
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaVM.framework/Versions/A/Frameworks\"";
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = (
@@ -1134,7 +1194,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
-				PREBINDING = NO;
 				PRODUCT_NAME = "JObjC-tests";
 				SKIP_INSTALL = YES;
 			};
@@ -1159,7 +1218,6 @@
 				);
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaVM.framework/Versions/A/Frameworks\"";
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/Frameworks/JavaVM.framework/Versions/A/Frameworks\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				HEADER_SEARCH_PATHS = (
 					"$(HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
@@ -1175,7 +1233,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
-				PREBINDING = NO;
 				PRODUCT_NAME = "JObjC-tests";
 				SKIP_INSTALL = YES;
 				ZERO_LINK = NO;
@@ -1197,7 +1254,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = "build-test";
 				ZERO_LINK = NO;
 			};
@@ -1218,7 +1274,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				PRODUCT_NAME = "build-core";
 				ZERO_LINK = NO;

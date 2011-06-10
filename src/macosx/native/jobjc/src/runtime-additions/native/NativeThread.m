@@ -28,15 +28,8 @@
 #import <AppKit/AppKit.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
-@interface JObjCRunnable : NSObject
-{
-}
 
-+ (void) performRunnable:(JNFJObjectWrapper *)runnableWrapper;
-@end
-
-@interface JObjCCallable : NSObject
-{
+@interface JObjCCallable : NSObject {
     @public jobject returnValue;
     @public jthrowable exception;
 }
@@ -44,8 +37,6 @@
 @property jthrowable exception;
 - (void) performCallable:(JNFJObjectWrapper *)callableWrapper;
 @end
-
-#define jboolean_to_BOOL(b) ((BOOL)(b))
 
 /*
  * Class:     com_apple_jobjc_Utils_Threads
@@ -55,9 +46,11 @@
 JNIEXPORT void JNICALL Java_com_apple_jobjc_Utils_00024Threads_performRunnableOnMainThread
 (JNIEnv *env, jclass clazz, jobject runnable, jboolean jWaitUntilDone)
 {
-    JNFJObjectWrapper *runnableWrapper = [[JNFJObjectWrapper alloc] initWithJObject:runnable withEnv:env];
-    [JObjCRunnable performSelectorOnMainThread:@selector(performRunnable:)
-        withObject:runnableWrapper waitUntilDone:jboolean_to_BOOL(jWaitUntilDone)];
+JNF_COCOA_ENTER(env);
+    [JNFRunLoop performOnMainThreadWaiting:jWaitUntilDone
+                                 withBlock:[JNFRunnable blockWithRunnable:runnable
+                                                                  withEnv:env]];
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -68,42 +61,27 @@ JNIEXPORT void JNICALL Java_com_apple_jobjc_Utils_00024Threads_performRunnableOn
 JNIEXPORT jobject JNICALL Java_com_apple_jobjc_Utils_00024Threads_performCallableOnMainThread
 (JNIEnv *env, jclass clazz, jobject callable)
 {
+    jobject returnValue = NULL;
+    
+JNF_COCOA_ENTER(env);
     JNFJObjectWrapper *callableWrapper = [[JNFJObjectWrapper alloc] initWithJObject:callable withEnv:env];
     JObjCCallable *ncallable = [JObjCCallable alloc];
     
     [ncallable performSelectorOnMainThread:@selector(performCallable:)
-        withObject:callableWrapper waitUntilDone:true];
+                                withObject:callableWrapper
+                             waitUntilDone:true];
     
-    jobject returnValue = ncallable.returnValue;
+    returnValue = ncallable.returnValue;
     jthrowable exception = ncallable.exception;
     
     [ncallable release];
     if(exception) (*env)->Throw(env, exception);
+    
+JNF_COCOA_EXIT(env);
+    
     return returnValue;
 }
 
-
-
-@implementation JObjCRunnable
-
-+ (void) performRunnable:(JNFJObjectWrapper *)runnableWrapper {
-    static JNF_CLASS_CACHE(jc_Runnable, "java/lang/Runnable");
-    static JNF_MEMBER_CACHE(jm_Runnable_run, jc_Runnable, "run", "()V");
-    
-    JNFThreadContext threadWasAttached = JNFThreadDetachOnThreadDeath;
-    JNIEnv *env = JNFObtainEnv(&threadWasAttached);
-    jobject runnable = [runnableWrapper jObject];
-    
-    JNFCallVoidMethod(env, runnable, jm_Runnable_run);
-    
-    if((*env)->ExceptionOccurred(env))
-        (*env)->ExceptionClear(env);
-    
-    [runnableWrapper release];
-    JNFReleaseEnv(env, &threadWasAttached);
-}
-
-@end
 
 @implementation JObjCCallable
 @synthesize returnValue;

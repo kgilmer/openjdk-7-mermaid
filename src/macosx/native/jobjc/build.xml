@@ -139,8 +139,8 @@
     <!-- Compile PrimitiveCoder first to work around javac bug. -->
     <javac srcdir="${core.src}" destdir="${core.bin}" source="1.5" target="1.5" debug="${compile.debug}"
            includes="**/PrimitiveCoder.java"
-           />
-    <javac srcdir="${core.src}" destdir="${core.bin}" source="1.5" target="1.5" debug="${compile.debug}" />
+           includeantruntime="false" />
+    <javac srcdir="${core.src}" destdir="${core.bin}" source="1.5" target="1.5" debug="${compile.debug}" includeantruntime="false" />
     
     <exec executable="${src}/extract_classes.pl" outputproperty="core.classes" failonerror="true">
       <arg path="${core.bin}"/>
@@ -170,7 +170,7 @@
   <!-- macosx jdk 7 puts jobjc core classes on the bootclasspath by default -->
   <target name="build-generator" description="Compile and assemble the generator">
     <mkdir dir="${generator.bin}"/>
-    <javac srcdir="${generator.src}" destdir="${generator.bin}" source="1.5" target="1.5" debug="${compile.debug}">
+    <javac srcdir="${generator.src}" destdir="${generator.bin}" source="1.5" target="1.5" debug="${compile.debug}" includeantruntime="false">
       <compilerarg value="-version"/>
       <compilerarg value="-Xbootclasspath/p:${core.bin}"/>
     </javac>
@@ -207,7 +207,7 @@
   
   <target name="build-generated" description="Build and assemble the JObjC core and all generated frameworks">
     <mkdir dir="${generated.bin}"/>
-    <javac srcdir="${generated.src}" destdir="${generated.bin}" source="1.5" target="1.5" fork="yes" memoryMaximumSize="512m" debug="${compile.debug}">
+    <javac srcdir="${generated.src}" destdir="${generated.bin}" source="1.5" target="1.5" fork="yes" memoryMaximumSize="512m" debug="${compile.debug}" includeantruntime="false">
       <classpath>
         <path location="${core.bin}"/>
       </classpath>
@@ -217,7 +217,7 @@
   
   <target name="build-additions" depends="build-generated">
     <mkdir dir="${additions.bin}"/>
-    <javac srcdir="${additions.src}" destdir="${additions.bin}" source="1.5" target="1.5" debug="${compile.debug}">
+    <javac srcdir="${additions.src}" destdir="${additions.bin}" source="1.5" target="1.5" debug="${compile.debug}" includeantruntime="false">
       <classpath>
         <path location="${core.bin}"/>
         <path location="${generated.bin}"/>
@@ -276,7 +276,7 @@
 
   <target name="build-test" description="compile unit tests">
     <mkdir dir="${test.bin}"/>
-    <javac srcdir="${test.src}" destdir="${test.bin}" debug="false">
+    <javac srcdir="${test.src}" destdir="${test.bin}" debug="false" includeantruntime="false">
       <classpath>
         <pathelement location="${core.bin}"/>
         <pathelement location="${generator.bin}"/>
@@ -305,7 +305,7 @@
 
   <target name="build-test-installed" description="compile unit tests">
     <mkdir dir="${test.bin}"/>
-    <javac srcdir="${test.src}" destdir="${test.bin}" debug="false">
+    <javac srcdir="${test.src}" destdir="${test.bin}" debug="false" includeantruntime="false">
       <compilerarg value="-verbose"/>
       <classpath>
         <pathelement location="${generator.bin}"/>
