@@ -34,11 +34,6 @@
 #import "CGLGraphicsConfig.h"
 #import "CGLSurfaceData.h"
 
-// for some reason, the pbuffers fail sometimes when less or equal to 32
-// in any of their dimensions
-// see <rdar://problem/4566762>
-#define GL_MIN_TEXTURE_SIZE 64
-
 /**
  * The methods in this file implement the native windowing system specific
  * layer (CGL) for the OpenGL-based Java 2D pipeline.
@@ -458,11 +453,6 @@ Java_sun_java2d_opengl_CGLSurfaceData_initPbuffer
         pbWidth = OGLSD_NextPowerOfTwo(width, pbMax);
         pbHeight = OGLSD_NextPowerOfTwo(height, pbMax);
     }
-    // for some reason, the pbuffers fail sometimes when less or equal to 32
-    // in any of their dimensions
-    // see <rdar://problem/4566762>
-    if (pbWidth  < GL_MIN_TEXTURE_SIZE) pbWidth  = GL_MIN_TEXTURE_SIZE;
-    if (pbHeight < GL_MIN_TEXTURE_SIZE) pbHeight = GL_MIN_TEXTURE_SIZE;
     
     J2dTraceLn3(J2D_TRACE_VERBOSE, "  desired pbuffer dimensions: w=%d h=%d max=%d", pbWidth, pbHeight, pbMax);
 
