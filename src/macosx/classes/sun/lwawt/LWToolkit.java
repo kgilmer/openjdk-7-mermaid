@@ -356,7 +356,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ColorModel getColorModel() throws HeadlessException {
-        throw new RuntimeException("not implemented");
+        return GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().getColorModel();
     }
 
     //Used by a delegate to check if it ought to bring the 
