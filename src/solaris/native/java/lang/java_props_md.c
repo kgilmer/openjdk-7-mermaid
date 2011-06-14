@@ -410,17 +410,22 @@ GetJavaProperties(JNIEnv *env)
 
     /* os properties */
     {
+        sprops.os_arch = ARCHPROPNAME;
+
 #ifdef MACOSX
         sprops.os_name = JRSCopyOSName();
         sprops.os_version = JRSCopyOSVersion();
+#ifdef __x86_64__
+        sprops.os_arch = "x86_64";
+#elif defined(__i386__)
+        sprops.os_arch = "i386";
+#endif
 #else
         struct utsname name;
         uname(&name);
         sprops.os_name = strdup(name.sysname);
         sprops.os_version = strdup(name.release);
 #endif
-
-        sprops.os_arch = ARCHPROPNAME;
 
         if (getenv("GNOME_DESKTOP_SESSION_ID") != NULL) {
             sprops.desktop = "gnome";
