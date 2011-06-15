@@ -806,10 +806,7 @@ DeliverKeyTypedEvents(JNIEnv *env, NSEvent *nsEvent, jobject peer)
     jint javaModifiers = NsKeyModifiersToJavaModifiers([nsEvent modifierFlags]);
 
     if (javaModifiers == 0) {
-        // TODO: uses SPI...
-        //if (TSMGetDeadKeyState() != 0) {
-        //    testDeadChar = [nsEvent deadKeyCharacter];
-        //}
+        testDeadChar = [nsEvent deadKeyCharacter];
     }
     
     NSString *theChars = [nsEvent characters];
