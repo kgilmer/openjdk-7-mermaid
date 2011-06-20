@@ -292,7 +292,22 @@ public class LWCToolkit extends LWToolkit {
             default:
                 return false;
         }
-    }   
+    }
+
+    @Override
+    public Image getImage(final String filename) {
+        final Image nsImage = checkForNSImage(filename);
+        if (nsImage != null) return nsImage;
+
+        return super.getImage(filename);
+    }
+
+    static final String nsImagePrefix = "NSImage://";
+    protected Image checkForNSImage(final String imageName) {
+        if (imageName == null) return null;
+        if (!imageName.startsWith(nsImagePrefix)) return null;
+        return CImage.getCreator().createImageFromName(imageName.substring(nsImagePrefix.length()));
+    }
     
     /************************
      * Native methods section
