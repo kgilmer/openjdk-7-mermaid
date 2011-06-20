@@ -114,18 +114,18 @@ AWT_OnLoad(JavaVM *vm, void *reserved)
     /* Check if toolkit is specified in env variable */
 #ifdef MACOSX
     envvar = getenv("AWT_TOOLKIT");
-    if (envvar && strstr(envvar, "CToolkit")) {
-        toolkit = (*env)->NewStringUTF(env, "sun.lwawt.macosx.LWCToolkit");
-	grenv = (*env)->NewStringUTF(env, "sun.awt.CGraphicsEnvironment");
-	fmanager = (*env)->NewStringUTF(env, "sun.font.CFontManager");
-	tk = "/lwawt/liblwawt";
-    } else {
+    if (envvar && strstr(envvar, "XToolkit")) {
 #endif
-        toolkit = (*env)->NewStringUTF(env, "sun.awt.X11.XToolkit");
+    toolkit = (*env)->NewStringUTF(env, "sun.awt.X11.XToolkit");
 	grenv = (*env)->NewStringUTF(env, "sun.awt.X11GraphicsEnvironment");
 	fmanager = (*env)->NewStringUTF(env, "sun.awt.X11FontManager");
 	tk = "/xawt/libmawt";
 #ifdef MACOSX
+    } else {
+    toolkit = (*env)->NewStringUTF(env, "sun.lwawt.macosx.LWCToolkit");
+	grenv = (*env)->NewStringUTF(env, "sun.awt.CGraphicsEnvironment");
+	fmanager = (*env)->NewStringUTF(env, "sun.font.CFontManager");
+	tk = "/lwawt/liblwawt";
     }
 #endif
     if (toolkit && tkProp) {
