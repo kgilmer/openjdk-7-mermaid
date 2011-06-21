@@ -51,6 +51,9 @@ include Exportedfiles.gmk
 ifeq ($(PLATFORM), solaris)
 OTHER_LDLIBS += -ldoor
 endif
+ifeq ($(PLATFORM), windows)
+EXTRA_LIBS += psapi.lib
+endif
 
 vpath %.c $(PLATFORM_SRC)/native/sun/tools/attach
 
