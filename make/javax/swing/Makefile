@@ -41,16 +41,7 @@ SUBDIRS = html32dtd plaf
 include $(BUILDDIR)/common/Classes.gmk
 include $(BUILDDIR)/common/Subdirs.gmk
 
-ifeq ($(PLATFORM), macosx)
-$(LIBDIR)/swing.properties: $(JDK_TOPDIR)/src/macosx/lib/swing.properties
-	$(install-file)
-
-SWING_PROPERTIES = $(LIBDIR)/swing.properties
-else
-SWING_PROPERTIES =
-endif
-
-build: other_files $(SWING_PROPERTIES)
+build: other_files
 	$(SUBDIRS-loop)
 
 clean clobber::

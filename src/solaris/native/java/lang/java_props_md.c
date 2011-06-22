@@ -375,14 +375,31 @@ GetJavaProperties(JNIEnv *env)
     sprops.patch_level = "unknown";
 
     /* Java 2D properties */
+#ifdef MACOSX
+    char *envvar = getenv("AWT_TOOLKIT");
+    char useXToolkit = (envvar && strstr(envvar, "XToolkit"));
+    if (!useXToolkit) {
+        sprops.graphics_env = "sun.awt.CGraphicsEnvironment";
+    } else {
+#endif
     sprops.graphics_env = "sun.awt.X11GraphicsEnvironment";
-
+#ifdef MACOSX
+    }  
+#endif
     /* AWT properties */
 #ifdef JAVASE_EMBEDDED
     sprops.awt_toolkit = getEmbeddedToolkit();
     if (sprops.awt_toolkit == NULL) // default as below
 #endif
+#ifdef MACOSX
+    if (!useXToolkit) {
+        sprops.awt_toolkit = "sun.lwawt.macosx.LWCToolkit";
+    } else {
+#endif
     sprops.awt_toolkit = "sun.awt.X11.XToolkit";
+#ifdef MACOSX
+    }
+#endif
 
     /* This is used only for debugging of font problems. */
     v = getenv("JAVA2D_FONTPATH");

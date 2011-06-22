@@ -1221,6 +1221,11 @@ public class UIManager implements Serializable
             java.security.AccessController.doPrivileged(
                 new java.security.PrivilegedAction<Object>() {
                 public Object run() {
+                	OSInfo.OSType osType = AccessController.doPrivileged(OSInfo.getOSTypeAction());
+                	if (osType == OSInfo.OSType.MACOSX) {
+                		props.put(defaultLAFKey, getSystemLookAndFeelClassName());
+                	}
+                    
                     try {
                         File file = new File(makeSwingPropertiesFilename());
 

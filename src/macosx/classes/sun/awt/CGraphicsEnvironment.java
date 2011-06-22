@@ -57,6 +57,7 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
     public static void init() { }
     
     static {
+        java.security.AccessController.doPrivileged(new sun.security.action.LoadLibraryAction("awt"));
         java.security.AccessController.doPrivileged(new java.security.PrivilegedAction<Object>() {
             public Object run() {
                 if (isHeadless()) return null;
