@@ -42,6 +42,10 @@
 #include <time.h>
 #include <errno.h>
 
+#ifdef MACOSX
+#import <JavaRuntimeSupport/JRSProperties.h>
+#endif
+
 #if defined(_ALLBSD_SOURCE)
 #if !defined(P_tmpdir)
 #include <paths.h>
@@ -371,13 +375,31 @@ GetJavaProperties(JNIEnv *env)
     sprops.patch_level = "unknown";
 
     /* Java 2D properties */
+#ifdef MACOSX
+    char *envvar = getenv("AWT_TOOLKIT");
+    char useXToolkit = (envvar && strstr(envvar, "XToolkit"));
+    if (!useXToolkit) {
+        sprops.graphics_env = "sun.awt.CGraphicsEnvironment";
+    } else {
+#endif
     sprops.graphics_env = "sun.awt.X11GraphicsEnvironment";
-
+#ifdef MACOSX
+    }  
+#endif
+    /* AWT properties */
 #ifdef JAVASE_EMBEDDED
     sprops.awt_toolkit = getEmbeddedToolkit();
     if (sprops.awt_toolkit == NULL) // default as below
 #endif
+#ifdef MACOSX
+    if (!useXToolkit) {
+        sprops.awt_toolkit = "sun.lwawt.macosx.LWCToolkit";
+    } else {
+#endif
     sprops.awt_toolkit = "sun.awt.X11.XToolkit";
+#ifdef MACOSX
+    }
+#endif
 
     /* This is used only for debugging of font problems. */
     v = getenv("JAVA2D_FONTPATH");
@@ -405,12 +427,22 @@ GetJavaProperties(JNIEnv *env)
 
     /* os properties */
     {
+        sprops.os_arch = ARCHPROPNAME;
+
+#ifdef MACOSX
+        sprops.os_name = JRSCopyOSName();
+        sprops.os_version = JRSCopyOSVersion();
+#ifdef __x86_64__
+        sprops.os_arch = "x86_64";
+#elif defined(__i386__)
+        sprops.os_arch = "i386";
+#endif
+#else
         struct utsname name;
         uname(&name);
         sprops.os_name = strdup(name.sysname);
         sprops.os_version = strdup(name.release);
-
-        sprops.os_arch = ARCHPROPNAME;
+#endif
 
         if (getenv("GNOME_DESKTOP_SESSION_ID") != NULL) {
             sprops.desktop = "gnome";

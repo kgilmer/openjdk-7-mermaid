@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -109,10 +109,9 @@ FILES_cpp_shared = \
         FontInstanceAdapter.cpp
 
 
-ifeq ($(PLATFORM),windows)
+ifeq ($(PLATFORM), windows)
 FILES_c_platform = fontpath.c \
                    lcdglyph.c
-
 FILES_cpp_platform =
 else
 FILES_c_platform = X11FontScaler.c \
@@ -120,5 +119,6 @@ FILES_c_platform = X11FontScaler.c \
 FILES_cpp_platform =
 endif
 
-FILES_c = $(FILES_c_shared)  $(FILES_c_platform)
 FILES_cpp = $(FILES_cpp_shared) $(FILES_cpp_platform)
+FILES_c = $(FILES_c_shared)  $(FILES_c_platform)
+
