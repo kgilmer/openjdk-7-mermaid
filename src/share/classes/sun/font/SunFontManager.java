@@ -1239,8 +1239,8 @@ public abstract class SunFontManager implements FontSupport, FontManagerForSGE {
         return defaultPhysicalFont;
     }
 
-    public CompositeFont getDefaultLogicalFont(int style) {
-        return (CompositeFont)findFont2D("dialog", style, NO_FALLBACK);
+    public Font2D getDefaultLogicalFont(int style) {
+        return findFont2D("dialog", style, NO_FALLBACK);
     }
 
     /*
