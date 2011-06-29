@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Locale;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import javax.swing.plaf.FontUIResource;
@@ -130,6 +131,17 @@ public class CFontManager extends SunFontManager {
         System.arraycopy(genericFonts, 0, allFonts, regFonts.length, genericFonts.length);
         
         return allFonts;
+    }
+    
+    @Override
+    protected void addNativeFontFamilyNames(TreeMap<String, String> familyNames, Locale requestedLocale) {
+        Font2D[] genericfonts = getGenericFonts();
+        for (int i=0; i < genericfonts.length; i++) {
+            if (!(genericfonts[i] instanceof NativeFont)) {
+                String name = genericfonts[i].getFamilyName(requestedLocale);
+                familyNames.put(name.toLowerCase(requestedLocale), name);
+            }
+        }
     }
 	
     // createFont2D goes through native code to load fonts from files

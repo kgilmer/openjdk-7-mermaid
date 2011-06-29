@@ -3780,6 +3780,9 @@ public abstract class SunFontManager implements FontSupport, FontManagerForSGE {
             }
         }
 
+        // Add any native font family names here
+        addNativeFontFamilyNames(familyNames, requestedLocale);
+        
         String[] retval =  new String[familyNames.size()];
         Object [] keyNames = familyNames.keySet().toArray();
         for (int i=0; i < keyNames.length; i++) {
@@ -3793,6 +3796,9 @@ public abstract class SunFontManager implements FontSupport, FontManagerForSGE {
         return retval;
     }
 
+    // Provides an aperture to add native font family names to the map
+    protected void addNativeFontFamilyNames(TreeMap<String, String> familyNames, Locale requestedLocale) { }
+    
     public void register1dot0Fonts() {
         java.security.AccessController.doPrivileged(
                             new java.security.PrivilegedAction() {
