@@ -166,4 +166,29 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
     public boolean isDisplayLocal() {
        return true;
     }
+    
+    private Font[] allFontsWithLogical;
+    static String[] sLogicalFonts = { "Serif", "SansSerif", "Monospaced", "Dialog", "DialogInput" };
+    
+    @Override
+    public Font[] getAllFonts() {
+        if (allFontsWithLogical == null)
+        {
+            Font[] newFonts;
+            Font[] superFonts = super.getAllFonts();
+            
+            int numLogical = sLogicalFonts.length;
+            int numOtherFonts = superFonts.length;
+            
+            newFonts = new Font[numOtherFonts + numLogical];
+            System.arraycopy(superFonts,0,newFonts,numLogical,numOtherFonts);
+            
+            for (int i = 0; i < numLogical; i++)
+            {
+                newFonts[i] = new Font(sLogicalFonts[i], Font.PLAIN, 1);
+            }
+            allFontsWithLogical = newFonts;
+        }
+        return allFontsWithLogical;
+    }
 }

@@ -119,6 +119,19 @@ public class CFontManager extends SunFontManager {
 		}
     }
     
+    @Override
+    public Font2D[] getRegisteredFonts() {
+        Font2D[] regFonts = super.getRegisteredFonts();
+        
+        // Add in the Mac OS X native fonts
+        Font2D[] genericFonts = getGenericFonts();
+        Font2D[] allFonts = new Font2D[regFonts.length+genericFonts.length];
+        System.arraycopy(regFonts, 0, allFonts, 0, regFonts.length);
+        System.arraycopy(genericFonts, 0, allFonts, regFonts.length, genericFonts.length);
+        
+        return allFonts;
+    }
+	
     // createFont2D goes through native code to load fonts from files
 	static native Font2D loadFileFont(String fontPath);
 
