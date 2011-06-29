@@ -172,13 +172,13 @@ else # PLATFORM
 # Libraries to link, and other C flags.
 #
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
 OTHER_INCLUDES += -I$(X11_PATH)/include
 OTHER_LDLIBS  += -lawt $(LIBM) $(LIBCXX)
  ifeq ($(OS_VENDOR),Apple)
    # XXXDARWIN Match BSD/Linux behavior -- the mawt.dylib symbols will
    # be available at runtime.
-   OTHER_LDLIBS += -flat_namespace -undefined suppress
+   OTHER_LDLIBS += -undefined dynamic_lookup
  endif
 else
 ifeq ($(PLATFORM), solaris)
@@ -197,16 +197,18 @@ endif # PLATFORM
 
 # set up compile flags..
 
-CPPFLAGS += -I$(SHARE_SRC)/native/$(PKGDIR) \
-            -I$(SHARE_SRC)/native/$(PKGDIR)/layout \
-	    -I$(SHARE_SRC)/native/sun/awt/image/cvutils \
-	    -I$(PLATFORM_SRC)/native/sun/awt \
-	    -I$(SHARE_SRC)/native/sun/awt/debug \
-	    -I$(SHARE_SRC)/native/sun/java2d/loops \
-	    -I$(SHARE_SRC)/native/sun/java2d/pipe \
-            -I$(PLATFORM_SRC)/native/sun/java2d \
-	    -I$(SHARE_SRC)/native/sun/java2d \
-	    -I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders
+CPPFLAGS += \
+        -I$(CLASSHDRDIR) \
+	-I$(SHARE_SRC)/native/$(PKGDIR) \
+        -I$(SHARE_SRC)/native/$(PKGDIR)/layout \
+	-I$(SHARE_SRC)/native/sun/awt/image/cvutils \
+	-I$(PLATFORM_SRC)/native/sun/awt \
+	-I$(SHARE_SRC)/native/sun/awt/debug \
+	-I$(SHARE_SRC)/native/sun/java2d/loops \
+	-I$(SHARE_SRC)/native/sun/java2d/pipe \
+        -I$(PLATFORM_SRC)/native/sun/java2d \
+	-I$(SHARE_SRC)/native/sun/java2d \
+	-I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders
 
 ifeq ($(PLATFORM), windows)
 CPPFLAGS += -I$(PLATFORM_SRC)/native/sun/windows

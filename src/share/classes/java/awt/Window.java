@@ -392,8 +392,6 @@ public class Window extends Container implements Accessible {
     private transient float securityWarningAlignmentY = TOP_ALIGNMENT;
 
     static {
-        /* ensure that the necessary native libraries are loaded */
-        Toolkit.loadLibraries();
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
