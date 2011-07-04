@@ -176,8 +176,7 @@ public abstract class GraphicsEnvironment {
                                                 "SunOS".equals(osName) ||
                                                 "FreeBSD".equals(osName) ||
                                                 "NetBSD".equals(osName) ||
-                                                "OpenBSD".equals(osName) ||
-                                                "Mac OS X".equals(osName)) &&
+                                                "OpenBSD".equals(osName) &&
                                                 (System.getenv("DISPLAY") == null));
                         }
                     } else if (nm.equals("true")) {
