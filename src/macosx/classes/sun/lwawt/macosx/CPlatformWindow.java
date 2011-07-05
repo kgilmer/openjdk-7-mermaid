@@ -724,6 +724,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         
         nativeBounds = new Rectangle(x, y, width, height);
         peer.notifyReshape(x, y, width, height);
+        validateSurface();
     }
     
     private void deliverWindowClosingEvent() {

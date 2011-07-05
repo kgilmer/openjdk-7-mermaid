@@ -296,9 +296,7 @@ public class LWWindowPeer
         if ((op & SET_CLIENT_SIZE) != 0) {
             // SET_CLIENT_SIZE is only applicable to window peers, so handle it here
             // instead of pulling 'insets' field up to LWComponentPeer
-            Insets is = getInsets();
-            w += is.left + is.right;
-            h += is.top + is.bottom;
+            // no need to add insets since Window's notion of width and height includes insets.
             op &= ~SET_CLIENT_SIZE;
             op |= SET_SIZE;
         }

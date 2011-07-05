@@ -81,8 +81,8 @@ class LoadNativeBundleAction implements PrivilegedExceptionAction {
             stream = new java.io.BufferedInputStream(stream);
             macOSrb = new MacOSXResourceBundle(stream);
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to create resources from application bundle.  Using Java-based resources.");
+            //e.printStackTrace();
+            //System.out.println("Failed to create resources from application bundle.  Using Java-based resources.");
         } finally {
             try {
                 if (stream != null) stream.close();
