@@ -1968,7 +1968,11 @@ static int getFlags(int sock, const char *ifname) {
       return -1;
   }
 
-  return if2.ifr_flags;
+#ifdef __FreeBSD__
+  return ((if2.ifr_flags & 0xffff) | (if2.ifr_flagshigh << 16));
+#else
+  return (((int) if2.ifr_flags) & 0xffff);
+#endif
 }
 
 #endif
