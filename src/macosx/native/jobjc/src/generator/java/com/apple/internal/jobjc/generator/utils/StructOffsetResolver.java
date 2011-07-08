@@ -188,7 +188,7 @@ public class StructOffsetResolver {
     protected static String compileObjC(String nativeSrc, Width arch) throws Exception {
         String execPath = nativeSrc.replace(".mm", "");
         Process p = Runtime.getRuntime().exec(new String[]{
-                "g++", "-Wall", gccFlag.get(arch), "-ObjC++", "-o", execPath, nativeSrc
+                "g++", "-Wall", gccFlag.get(arch), "-ObjC++", "-framework", "Foundation", "-o", execPath, nativeSrc
         });
         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
         BufferedReader stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
@@ -223,9 +223,11 @@ public class StructOffsetResolver {
     static void printHeaderLines(Framework fw, Width arch, PrintWriter out) throws Exception {
         Collection<String> always = alwaysHeaders.get(arch);
         Collection<String> banned = bannedHeaders.get(arch);
+        out.println("#define COREFOUNDATION_CFPLUGINCOM_SEPARATE 0");
         for(String header : always)
             out.println("#import " + header);
 
+        out.println("#undef COREFOUNDATION_CFPLUGINCOM_SEPARATE");
         String umbrella = fw.path + "/Headers/" + fw.name;
         if(new File(umbrella).exists())
             out.println("#import \"" + umbrella + "\"");
