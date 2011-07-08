@@ -140,9 +140,6 @@ ifeq ($(PLATFORM), windows)
     $(EGREP) "\#define" | $(NAWK) '{print $$3}')
 endif
 
-ifeq ($(PLATFORM), bsd)
-endif
-
 # Get the version numbers of what we are using
 _MAKE_VER  :=$(shell $(MAKE) --version 2>&1 | $(HEAD) -n 1)
 _ZIP_VER   :=$(shell $(ZIPEXE) -help 2>&1 | $(HEAD) -n 4 | $(EGREP) '^Zip')

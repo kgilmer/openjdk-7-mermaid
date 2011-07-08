@@ -52,11 +52,12 @@ $(CLASSDESTDIR) $(CLASSHDRDIR) $(OBJDIR) $(OUTPUTDIR) $(BINDIR) $(LIBDIR) $(LIBD
 # All source tree areas for java/properties files (a few may be closed)
 #
 ifdef OPENJDK
-  ALL_CLASSES_SRC = $(SHARE_SRC)/classes $(PLATFORM_SRC)/classes
+  ALL_CLASSES_SRC = $(call JavaSrcDirList,,classes)
 else
+  # TODO(cpc): maybe we should modify JavaSrcDirList macro instead...
   ALL_CLASSES_SRC = \
 	$(CLOSED_SHARE_SRC)/classes $(CLOSED_PLATFORM_SRC)/classes \
-	$(SHARE_SRC)/classes $(PLATFORM_SRC)/classes
+	$(call JavaSrcDirList,,classes)
 endif
 
 #
@@ -199,6 +200,9 @@ $(CLASSDESTDIR)/%.class: $(CLOSED_SHARE_SRC)/classes/%.java
 endif
 
 $(CLASSDESTDIR)/%.class: $(GENSRCDIR)/%.java
+	@$(add-java-file)
+# TODO(cpc): need to document why this is necessary...
+$(CLASSDESTDIR)/%.class: $(JDK_TOPDIR)/src/macosx/classes/%.java
 	@$(add-java-file)
 $(CLASSDESTDIR)/%.class: $(PLATFORM_SRC)/classes/%.java
 	@$(add-java-file)
