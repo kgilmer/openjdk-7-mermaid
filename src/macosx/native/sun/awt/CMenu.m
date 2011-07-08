@@ -24,14 +24,14 @@
  */
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
+
 
 #import "CMenu.h"
 #import "CMenuBar.h"
 #import "ThreadUtilities.h"
 
 #import "sun_lwawt_macosx_CMenu.h"
-
-NSString *JAVA_MENU_NAME = @"JavaMenu";
 
 @implementation CMenu
 
@@ -40,9 +40,9 @@ NSString *JAVA_MENU_NAME = @"JavaMenu";
     // Create the new NSMenu
     self = [super initWithPeer:peer];
     if (self) {
-        fMenu = [[NSMenu alloc] init];
+        fMenu = [NSMenu javaMenuWithTitle:@""];
+        [fMenu retain];
         [fMenu setAutoenablesItems:NO];
-        [fMenu _setMenuName:JAVA_MENU_NAME];
     }
     return self;
 }
@@ -107,6 +107,7 @@ NSString *JAVA_MENU_NAME = @"JavaMenu";
 }
 
 - (void)addNSMenuItemToMenu:(NSMenu *)inMenu {
+    if (fMenuItem == nil) return;
     [fMenuItem setSubmenu:fMenu];
     [inMenu addItem:fMenuItem];
 }

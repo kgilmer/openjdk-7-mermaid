@@ -285,7 +285,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) windowDidBecomeKey: (NSNotification *) notification {
 AWT_ASSERT_APPKIT_THREAD;
     [AWTToolkit eventCountPlusPlus];
-    //  [CMenuBar activate:_menuBar modallyDisabled:showMenuBarDisabled];
+    [CMenuBar activate:self.javaMenuBar modallyDisabled:NO];
     [self _deliverWindowFocusEvent:YES];
 }
 
@@ -293,7 +293,7 @@ AWT_ASSERT_APPKIT_THREAD;
     // TODO: check why sometimes at start is invoked *not* on AppKit main thread.
 AWT_ASSERT_APPKIT_THREAD;
     [AWTToolkit eventCountPlusPlus];
-    //TODO: deactivate menubar
+    [self.javaMenuBar deactivate];
     [self _deliverWindowFocusEvent:NO];
 }
 

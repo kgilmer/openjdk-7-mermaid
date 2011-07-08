@@ -34,18 +34,16 @@ import javax.swing.plaf.basic.BasicMenuBarUI;
 import sun.security.action.GetPropertyAction;
 
 // MenuBar implementation for Mac L&F
-// TODO: no screen menu bar for now
-public class AquaMenuBarUI extends BasicMenuBarUI /*implements ScreenMenuBarProvider*/ {
+public class AquaMenuBarUI extends BasicMenuBarUI implements ScreenMenuBarProvider {
     // Utilities
     public void uninstallUI(final JComponent c) {
-        // TODO: no screen menu bar for now
-        /*if (fScreenMenuBar != null) {
+        if (fScreenMenuBar != null) {
             final JFrame frame = (JFrame)(c.getTopLevelAncestor());
             if (frame.getMenuBar() == fScreenMenuBar) {
                 frame.setMenuBar((MenuBar)null);
             }
             fScreenMenuBar = null;
-        }*/
+        }
         super.uninstallUI(c);
     }
 
@@ -88,8 +86,7 @@ public class AquaMenuBarUI extends BasicMenuBarUI /*implements ScreenMenuBarProv
     }
 
     boolean setScreenMenuBar(final JFrame frame) {
-        // TODO: no screen menu bar for now
-        /*if (useScreenMenuBar) {
+        if (useScreenMenuBar) {
             try {
                 getScreenMenuBar();
             } catch(final Throwable t) {
@@ -97,26 +94,25 @@ public class AquaMenuBarUI extends BasicMenuBarUI /*implements ScreenMenuBarProv
             }
 
             frame.setMenuBar(fScreenMenuBar);
-        }*/
+        }
 
         return true;
     }
 
-    /*public ScreenMenuBar getScreenMenuBar() {
+    public ScreenMenuBar getScreenMenuBar() {
         // Lazy init of member variables means we should use a synchronized block.
         synchronized(this) {
             if (fScreenMenuBar == null) fScreenMenuBar = new ScreenMenuBar(this.menuBar);
         }
         return fScreenMenuBar;
-    }*/
+    }
 
     // JMenuBars are in frame unless we're using ScreenMenuBars *and* it's
     //   been set by JFrame.setJMenuBar
     // unless the JFrame has a normal java.awt.MenuBar (it's possible!)
     // Other JMenuBars appear where the programmer puts them - top of window or elsewhere
     public static final boolean isScreenMenuBar(final JMenuBar c) {
-        // TODO: no screen menu bar for now
-        /*final javax.swing.plaf.ComponentUI ui = c.getUI();
+        final javax.swing.plaf.ComponentUI ui = c.getUI();
         if (ui instanceof AquaMenuBarUI) {
             if (!((AquaMenuBarUI)ui).useScreenMenuBar) return false;
 
@@ -127,13 +123,12 @@ public class AquaMenuBarUI extends BasicMenuBarUI /*implements ScreenMenuBarProv
                 if (mb == null) return thisIsTheJMenuBar;
                 return (mb instanceof ScreenMenuBar && thisIsTheJMenuBar);
             }
-        }*/
+        }
         return false;
     }
 
-    // TODO: no screen menu bar for now
-    //ScreenMenuBar fScreenMenuBar;
-    boolean useScreenMenuBar = false; //getScreenMenuBarProperty();
+    ScreenMenuBar fScreenMenuBar;
+    boolean useScreenMenuBar = getScreenMenuBarProperty();
 
     private static String getPrivSysProp(final String propName) {
         return java.security.AccessController.doPrivileged(new GetPropertyAction(propName));

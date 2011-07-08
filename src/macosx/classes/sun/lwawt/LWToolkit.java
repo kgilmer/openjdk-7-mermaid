@@ -492,4 +492,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     public LWKeyboardFocusManagerPeer getKeyboardFocusManagerPeer(KeyboardFocusManager manager) {
         return LWKeyboardFocusManagerPeer.getInstance(manager);
     }
+        
+    public static void postEvent(AWTEvent event) {
+        postEvent(targetToAppContext(event.getSource()), event);    
+    }
 }

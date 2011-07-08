@@ -25,6 +25,8 @@
 
 #import <AppKit/AppKit.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
+
 
 #import "CMenuBar.h"
 #import "CMenu.h"
@@ -48,17 +50,17 @@ static BOOL sSetupHelpMenu = NO;
 
 + (void)clearMenuBarExcludingAppleMenu_OnAppKitThread:(BOOL) excludingAppleMenu {
     AWT_ASSERT_APPKIT_THREAD;
-    // Remove all menus that are named JAVA_MENU_NAME from the main bar.
+    // Remove all Java menus from the main bar.
     NSMenu *theMainMenu = [NSApp mainMenu];
     NSUInteger i, menuCount = [theMainMenu numberOfItems];
 
-    for (i = menuCount; i > 0; i--) {
+    for (i = menuCount; i > 1; i--) {
         NSUInteger index = i-1;
 
         NSMenuItem *currItem = [theMainMenu itemAtIndex:index];
         NSMenu *currMenu = [currItem submenu];
 
-        if (excludingAppleMenu && [currMenu _menuName] != JAVA_MENU_NAME) {
+        if (excludingAppleMenu && [currMenu isJavaMenu]) {
             continue;
         }
 
@@ -119,7 +121,7 @@ static BOOL sSetupHelpMenu = NO;
         NSMenuItem *currItem = [theMainMenu itemAtIndex:menuIndex];
         NSMenu *currMenu = [currItem submenu];
 
-        if ([currMenu _menuName] == JAVA_MENU_NAME) {
+        if ([currMenu isJavaMenu]) {
             // Ready to replace, find next candidate
             CMenu *newMenu = nil;
             if (cmenuIndex < cmenuCount) {
@@ -240,7 +242,7 @@ static BOOL sSetupHelpMenu = NO;
                 NSMenuItem *currItem = [theMainMenu itemAtIndex:i];
                 NSMenu *currMenu = [currItem submenu];
 
-                if ([currMenu _menuName] == JAVA_MENU_NAME) {
+                if ([currMenu isJavaMenu]) {
                     if (javaIndex == currJavaMenuIndex) {
                         returnValue = i;
                         break;

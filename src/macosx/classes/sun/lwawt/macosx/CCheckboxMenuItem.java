@@ -26,12 +26,17 @@
 package sun.lwawt.macosx;
 
 import java.awt.CheckboxMenuItem;
+import java.awt.EventQueue;
 import java.awt.event.ItemEvent;
 import java.awt.peer.CheckboxMenuItemPeer;
 
 import sun.awt.SunToolkit;
 
-class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer {
+public class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer {
+	
+    boolean fAutoToggle = true;
+    boolean fIsIndeterminate = false;
+	
     private native void nativeSetState(long modelPtr, boolean state);
     private native void nativeSetIsCheckbox(long modelPtr);
     
@@ -49,8 +54,24 @@ class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer {
     
     public void handleAction(final boolean state) {
         final CheckboxMenuItem target = (CheckboxMenuItem)getTarget();
-        target.setState(state);
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                target.setState(state);				
+            }
+        });
         ItemEvent event = new ItemEvent(target, ItemEvent.ITEM_STATE_CHANGED, target.getLabel(), state ? ItemEvent.SELECTED : ItemEvent.DESELECTED);
         SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
+    }
+    
+    public void setIsIndeterminate(final boolean indeterminate) {
+        fIsIndeterminate = indeterminate;
+    }
+    
+    private boolean isAutoToggle() {
+        return fAutoToggle;
+    }
+    
+    public void setAutoToggle(boolean b) {
+        fAutoToggle = b;
     }
 }

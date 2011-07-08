@@ -42,7 +42,8 @@ FILES_objc = \
         $(TARGDIR)JRSUIConstantSync.m \
         $(TARGDIR)JRSUIController.m \
         $(TARGDIR)JRSUIFocus.m \
-        $(TARGDIR)ScreenPopupFactory.m
+        $(TARGDIR)ScreenPopupFactory.m \
+        $(TARGDIR)ScreenMenu.m
 
 FILES_export = \
 	apple/laf/JRSUIConstants.java \
@@ -53,7 +54,15 @@ FILES_export = \
 	apple/laf/JRSUIUtils.java \
 	com/apple/laf/AquaFileView.java \
 	com/apple/laf/AquaNativeResources.java \
-	com/apple/laf/ScreenPopupFactory.java
+	com/apple/laf/ScreenPopupFactory.java \
+	com/apple/laf/ScreenMenu.java \
+	com/apple/laf/ScreenMenuBar.java \
+	com/apple/laf/ScreenMenuBarProvider.java \
+	com/apple/laf/ScreenMenuItem.java \
+	com/apple/laf/ScreenMenuItemCheckbox.java \
+	com/apple/laf/ScreenMenuItemUI.java \
+	com/apple/laf/ScreenMenuPropertyHandler.java \
+	com/apple/laf/ScreenMenuPropertyListener.java
 
 #RESOURCE_BUNDLES_COMPILED_PROPERTIES += \
 #	com/apple/laf/resources/aqua.properties \
@@ -81,10 +90,12 @@ vpath %.m   $(call NativeSrcDirList,,native/com/apple/laf)
 CPPFLAGS += \
 	$(call NativeSrcDirList,-I,native/com/apple/laf) \
 	$(call NativeSrcDirList,-I,native/apple/awt) \
+	$(call NativeSrcDirList,-I,native/sun/awt) \
 	-I$(TEMPDIR)/../../sun.awt/awt/CClassHeaders
 
 OTHER_LDLIBS = \
     -lawt \
+    -llwawt -L$(LIBDIR)/lwawt -Xlinker -rpath -Xlinker @loader_path/lwawt \
     -framework Cocoa \
     -framework Carbon \
     -framework ApplicationServices \
