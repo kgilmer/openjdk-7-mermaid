@@ -154,6 +154,8 @@
 
   <target name="build-core-native" depends="build-core">
     <exec executable="xcodebuild" failonerror="true">
+      <env key="CC" value=""/>
+      <env key="CXX" value=""/>
       <arg value="-configuration"/>
       <arg value="${cfg}"/>
       <arg value="-target"/>
@@ -241,6 +243,8 @@
   
   <target name="build-additions-native">
     <exec executable="xcodebuild" failonerror="true">
+      <env key="CC" value=""/>
+      <env key="CXX" value=""/>
       <arg value="-configuration"/>
       <arg value="${cfg}"/>
       <arg value="-target"/>
@@ -333,6 +337,8 @@
   
   <target name="build-test-native" depends="build-test">
     <exec executable="xcodebuild" failonerror="true">
+      <env key="CC" value=""/>
+      <env key="CXX" value=""/>
       <arg value="-configuration"/>
       <arg value="${cfg}"/>
       <arg value="-target"/>
@@ -348,6 +354,8 @@
 
   <target name="build-test-native-installed" depends="build-test-installed">
     <exec executable="xcodebuild" failonerror="true">
+      <env key="CC" value=""/>
+      <env key="CXX" value=""/>
       <arg value="-configuration"/>
       <arg value="${cfg}"/>
       <arg value="-target"/>
