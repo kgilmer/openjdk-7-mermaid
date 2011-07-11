@@ -60,7 +60,7 @@ static BOOL sSetupHelpMenu = NO;
         NSMenuItem *currItem = [theMainMenu itemAtIndex:index];
         NSMenu *currMenu = [currItem submenu];
 
-        if (excludingAppleMenu && [currMenu isJavaMenu]) {
+        if (excludingAppleMenu && ![currMenu isJavaMenu]) {
             continue;
         }
 

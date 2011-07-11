@@ -399,6 +399,8 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         CMenuBar mbPeer = (CMenuBar)LWToolkit.targetToPeer(mb);
         if (mbPeer != null) {
             nativeSetNSWindowMenuBar(nsWindowPtr, mbPeer.getModel());
+        } else {
+            nativeSetNSWindowMenuBar(nsWindowPtr, 0);
         }
     }
 
