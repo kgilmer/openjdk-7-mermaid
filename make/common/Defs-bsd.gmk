@@ -154,11 +154,14 @@ endif
 
 # If this is a --hash-style=gnu system, use --hash-style=both
 #   The gnu .hash section won't work on some Linux systems like SuSE 10.
+# macosx never falls under this and clang does not even have specs, so just skip this
+ifneq ($(PLATFORM), macosx)
 _HAS_HASH_STYLE_GNU:=$(shell $(CC) -dumpspecs | $(GREP) -- '--hash-style=gnu')
 ifneq ($(_HAS_HASH_STYLE_GNU),)
   LDFLAGS_HASH_STYLE = -Wl,--hash-style=both
 endif
 LDFLAGS_COMMON          += $(LDFLAGS_HASH_STYLE)
+endif
 
 #
 # Selection of warning messages
