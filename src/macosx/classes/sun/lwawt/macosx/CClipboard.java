@@ -25,46 +25,89 @@
 
 package sun.lwawt.macosx;
 
-import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.*;
 import java.io.IOException;
-import sun.awt.datatransfer.SunClipboard;
+import java.util.*;
+
+import sun.awt.datatransfer.*;
+
+
+/**
+* A class which interfaces with Cocoa's pasteboard in order to support
+ * data transfer via Clipboard operations. Most of the work is provided by
+ * sun.awt.datatransfer.DataTransferer.
+ */
 
 public class CClipboard extends SunClipboard {
-
+    
     public CClipboard(String name) {
         super(name);
     }
 
     public long getID() {
-        return 0L;
+        return 0;
     }
 
     protected void clearNativeContext() {
-
+        // Leaving Empty, as WClipboard.clearNativeContext is empty as well.
     }
 
-    protected void unregisterClipboardViewerChecked() {
-
-    }
-
-    protected void registerClipboardViewerChecked() {
-
-    }
-
-    @Override
-    protected byte[] getClipboardData(long format) throws IOException {
-        // TODO: not implemented
-        return null;
-    }
-
-    @Override
     protected void setContentsNative(Transferable contents) {
-        // TODO: not implemented
+
+        // Don't use delayed Clipboard rendering for the Transferable's data.
+        // If we did that, we would call Transferable.getTransferData on
+        // the Toolkit thread, which is a security hole.
+        //
+        // Get all of the target formats into which the Transferable can be
+        // translated. Then, for each format, translate the data and post
+        // it to the Clipboard.
+    	DataTransferer dataTransferer = DataTransferer.getInstance();
+        long[] formatArray = dataTransferer.getFormatsForTransferableAsArray(contents, flavorMap);
+        declareTypes(formatArray, this);
+
+        Map<Long, DataFlavor> formatMap = DataTransferer.getInstance().getFormatsForTransferable(contents, flavorMap);
+
+        for (Iterator<Long> iter = formatMap.keySet().iterator(); iter.hasNext(); ) {
+            Long lFormat = iter.next();
+            long format = lFormat.longValue();
+            DataFlavor flavor = formatMap.get(lFormat);
+
+            try {
+                byte[] bytes = DataTransferer.getInstance().translateTransferable(contents, flavor, format);
+                setData(bytes, format);
+            } catch (IOException e) {
+                // Fix 4696186: don't print exception if data with
+                // javaJVMLocalObjectMimeType failed to serialize.
+                // May remove this if-check when 5078787 is fixed.
+                if (!(flavor.isMimeTypeEqual(DataFlavor.javaJVMLocalObjectMimeType) && 
+                      e instanceof java.io.NotSerializableException)) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
-    @Override
-    protected long[] getClipboardFormats() {
-        // TODO: not implemented
-        return null;
+    private void lostSelectionOwnershipImpl() {
+        lostOwnershipImpl();
     }
+    
+    protected native long[] getClipboardFormats();
+    protected native byte[] getClipboardData(long format) throws IOException;
+    
+    // 1.5 peer method        
+    protected void unregisterClipboardViewerChecked() {
+        // no-op because we lack OS support. This requires 4048791, which requires 4048792
+    }
+            
+    // 1.5 peer method        
+    protected void registerClipboardViewerChecked()    {
+        // no-op because we lack OS support. This requires 4048791, which requires 4048792
+    }                
+
+    // 1.5 peer method        
+    // no-op. This appears to be win32 specific. Filed 4048790 for investigation
+    //protected Transferable createLocaleTransferable(long[] formats) throws IOException;
+    
+    public native void declareTypes(long[] formats, SunClipboard newOwner);
+    public native void setData(byte[] data, long format);
 }

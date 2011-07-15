@@ -95,6 +95,7 @@ FILES_export = \
 	sun/lwawt/macosx/CFRetainedResource.java \
 	sun/lwawt/macosx/CCheckboxMenuItem.java \
 	sun/lwawt/macosx/CClipboard.java \
+	sun/lwawt/macosx/CDataTransferer.java \
 	sun/lwawt/macosx/CCursorManager.java \
 	sun/lwawt/macosx/CFileDialog.java \
 	sun/lwawt/macosx/CImage.java \

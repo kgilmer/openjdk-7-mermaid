@@ -58,6 +58,10 @@ public class LWCToolkit extends LWToolkit {
         initIDs();
     }
 
+    public LWCToolkit() {
+    	SunToolkit.setDataTransfererClassName("sun.lwawt.macosx.CDataTransferer");
+    }
+    
     @Override
     protected PlatformWindow createPlatformWindow(PeerType peerType) {
         // TODO: window type

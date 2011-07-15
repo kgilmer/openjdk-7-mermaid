@@ -41,6 +41,8 @@ FILES_objc = \
 	AWTView.m \
 	AWTWindow.m \
 	CCursorManager.m \
+	CClipboard.m \
+	CDataTransferer.m \
 	CFileDialog.m \
 	CImage.m \
        	CMenu.m \
