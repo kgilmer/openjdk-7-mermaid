@@ -28,10 +28,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <locale.h>
-#ifndef __OpenBSD__
-#define HAVE_NL_LANGINFO
 #include <langinfo.h>
-#endif
 #include <iconv.h>
 
 /* Routines to convert back and forth between Platform Encoding and UTF-8 */
@@ -66,7 +63,6 @@ utfInitialize(void)
     /* Set the locale from the environment */
     (void)setlocale(LC_ALL, "");
 
-#ifdef HAVE_NL_LANGINFO
     /* Get the codeset name */
     codeset = (char*)nl_langinfo(CODESET);
     if ( codeset == NULL || codeset[0] == 0 ) {
@@ -81,9 +77,6 @@ utfInitialize(void)
         UTF_DEBUG(("NO iconv() being used because it is not needed\n"));
         return;
     }
-#else
-    codeset = "ISO-8859-1";
-#endif
 
     /* Open conversion descriptors */
     iconvToPlatform   = iconv_open(codeset, "UTF-8");

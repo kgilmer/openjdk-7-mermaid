@@ -47,13 +47,6 @@ else # PLATFORM
 # Register Microsoft CryptoAPI provider only on Windows platform.
 ifeq ($(PLATFORM), windows)
   PROPS_SRC   = $(TOPDIR)/src/share/lib/security/java.security-windows
-else # windows
-
-ifeq ($(PLATFORM), bsd)
-  ifeq ($(OS_VENDOR), OpenBSD)
-    PROPS_SRC   = $(TOPDIR)/src/share/lib/security/java.security-openbsd
-  endif
-endif # bsd
 endif # windows
 endif # PLATFORM
 

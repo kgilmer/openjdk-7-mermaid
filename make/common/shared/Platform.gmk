@@ -249,7 +249,7 @@ ifeq ($(SYSTEM_UNAME), OpenBSD)
   PLATFORM = bsd
   OS_NAME = openbsd
   OS_VENDOR = OpenBSD
-  REQUIRED_OS_VERSION = 4.2
+  REQUIRED_OS_VERSION = 4.9
 endif
 
 # Platform settings specific to BSD
@@ -553,18 +553,6 @@ ifeq ($(JDK_HAS_MEM_INFO),)
   export LOW_MEMORY_MACHINE
   export MAX_VM_MEMORY
   export MIN_VM_MEMORY
-endif
-
-# for OpenBSD/i386 limit to 736 max
-ifeq ($(OS_VENDOR), OpenBSD)
-  ifeq ($(ARCH_DATA_MODEL), 32)
-    MAX_VM_MEMORY := $(shell \
-      if [ $(MAX_VM_MEMORY) -gt 736 ] ; then \
-        echo "736"; \
-      else \
-        echo "$(MAX_VM_MEMORY)" ; \
-      fi)
-  endif
 endif
 
 # If blanks in the username, use the first 4 words and pack them together
