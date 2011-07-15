@@ -255,6 +255,7 @@ ifeq ($(PLATFORM),bsd)
   endif
   ifeq ($(OS_VENDOR), OpenBSD)
     NAWK       = $(UTILS_USR_BIN_PATH)awk
+    OBJDUMP    = $(UTILS_USR_BIN_PATH)objdump
   else
     CPIO       = $(UTILS_USR_BIN_PATH)cpio
     TAR        = $(UTILS_USR_BIN_PATH)tar
