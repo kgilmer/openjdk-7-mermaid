@@ -52,6 +52,9 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
     
     protected int pressedTab = -3; // -2 is right scroller, -1 is left scroller
     protected boolean popupSelectionChanged;
+    
+    protected Boolean isDefaultFocusReceiver = null;
+    protected boolean hasAvoidedFirstFocus = false;
 
     // Create PLAF
     public static ComponentUI createUI(final JComponent c) {
@@ -110,6 +113,10 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
 
     protected LayoutManager createLayoutManager() {
         return new AquaTruncatingTabbedPaneLayout();
+    }
+    
+    protected boolean shouldRepaintSelectedTabOnMouseDown() {
+        return false;
     }
 
     // Paint Methods
@@ -445,6 +452,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         painter.state.set(state);
         painter.state.set(isSelected || (state == State.INACTIVE && frameActive) ? BooleanValue.YES : BooleanValue.NO);
         painter.state.set(getSegmentPosition(first, last, isLeftToRight));
+        painter.state.set(getSegmentTrailingSeparator(nonRectIndex, tabPane.getSelectedIndex(), isLeftToRight));
         painter.state.set(tabPane.hasFocus() && isSelected ? Focused.YES : Focused.NO);
         painter.paint(g, tabPane, tabRect.x, tabRect.y, tabRect.width, tabRect.height);
         
@@ -478,6 +486,16 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         return SegmentPosition.MIDDLE;
     }
 
+    protected SegmentTrailingSeparator getSegmentTrailingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
+        return SegmentTrailingSeparator.YES;
+    }
+    
+    protected boolean isTabBeforeSelectedTab(final int index, final int selectedIndex, final boolean isLeftToRight) {
+        if (index == -2 && visibleTabState.getIndex(0) == selectedIndex) return true;
+        int indexBeforeSelectedIndex = isLeftToRight ? selectedIndex - 1 : selectedIndex + 1;
+        return index == indexBeforeSelectedIndex ? true : false;
+    }
+    
     protected State getState(final int index, final boolean frameActive, final boolean isSelected) {
         if (!frameActive) return State.INACTIVE;
         if (!tabPane.isEnabled()) return State.DISABLED;
@@ -757,6 +775,10 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         Rectangle sWorkingRect = new Rectangle();
         
         public void focusGained(final FocusEvent e) {
+            if (isDefaultFocusReceiver(tabPane) && !hasAvoidedFirstFocus) {
+                KeyboardFocusManager.getCurrentKeyboardFocusManager().focusNextComponent();
+                hasAvoidedFirstFocus = true;
+            }
             adjustPaintingRectForFocusRing(e);
         }
 
@@ -774,6 +796,22 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
                 sWorkingRect.grow(4, 4);
                 pane.repaint(sWorkingRect);
             }
+        }
+        
+        boolean isDefaultFocusReceiver(final JComponent component) {
+            if (isDefaultFocusReceiver == null) {
+                Component defaultFocusReceiver = KeyboardFocusManager.getCurrentKeyboardFocusManager().getDefaultFocusTraversalPolicy().getDefaultComponent(getTopLevelFocusCycleRootAncestor(component));
+                isDefaultFocusReceiver = new Boolean(defaultFocusReceiver != null && defaultFocusReceiver.equals(component));
+            }
+            return isDefaultFocusReceiver.booleanValue();
+        }
+        
+        Container getTopLevelFocusCycleRootAncestor(Container container) {
+            Container ancestor;
+            while ((ancestor = container.getFocusCycleRootAncestor()) != null) {
+                container = ancestor;
+            }
+            return container;
         }
     }
     
@@ -794,7 +832,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
             
             final Point p = e.getPoint();
             trackingTab = getCurrentTab(pane, p);
-            if (trackingTab == -3 || trackingTab == pane.getSelectedIndex()) {
+            if (trackingTab == -3 || (!shouldRepaintSelectedTabOnMouseDown() && trackingTab == pane.getSelectedIndex())) {
                 trackingTab = -3;
                 return;
             }

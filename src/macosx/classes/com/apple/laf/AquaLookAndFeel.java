@@ -38,6 +38,7 @@ import sun.awt.SunHints;
 import sun.swing.SwingLazyValue;
 import sun.swing.SwingUtilities2;
 import apple.laf.JRSUIControl;
+import apple.laf.JRSUIUtils;
 
 import com.apple.resources.MacOSXResourceBundle;
 
@@ -1033,7 +1034,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "RootPaneUI", PKG_PREFIX + "AquaRootPaneUI",
             "SliderUI", PKG_PREFIX + "AquaSliderUI",
             "ScrollBarUI", PKG_PREFIX + "AquaScrollBarUI",
-            "TabbedPaneUI", PKG_PREFIX + "AquaTabbedPaneUI",
+            "TabbedPaneUI", PKG_PREFIX + (JRSUIUtils.TabbedPane.shouldUseTabbedPaneContrastUI() ? "AquaTabbedPaneContrastUI" : "AquaTabbedPaneUI"),
             "TableUI", PKG_PREFIX + "AquaTableUI",
             "ToggleButtonUI", PKG_PREFIX + "AquaButtonToggleUI",
             "ToolBarUI", PKG_PREFIX + "AquaToolBarUI",

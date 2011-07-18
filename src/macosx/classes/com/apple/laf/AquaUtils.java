@@ -210,6 +210,14 @@ public class AquaUtils {
         public void paint(final Graphics g, int x, int y, int w, int h);
     }
     
+    public static void paintDropShadowText(final Graphics g, final Font font, final FontMetrics metrics, final int x, final int y, final int offsetX, final int offsetY, final Color textColor, final Color shadowColor, final String text) {
+        g.setFont(font);
+        g.setColor(shadowColor);
+        g.drawString(text, x + offsetX, y + offsetY + metrics.getAscent());
+        g.setColor(textColor);
+        g.drawString(text, x, y + metrics.getAscent());
+    }
+    
     public static class ShadowBorder implements Border {
         final Painter prePainter;
         final Painter postPainter;

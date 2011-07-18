@@ -1,0 +1,94 @@
+package com.apple.laf;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.UIResource;
+import javax.swing.text.View;
+
+import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
+import apple.laf.JRSUIConstants.State;
+
+public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
+    protected static Color selectedTabTitlePressedColor = new Color(240, 240, 240);
+    protected static Color selectedTabTitleDisabledColor = new Color(1, 1, 1, 0.55f);
+    protected static Color selectedTabTitleNormalColor = Color.white;
+    protected static Color selectedTabTitleShadowDisabledColor = new Color(0, 0, 0, 0.25f);
+    protected static Color selectedTabTitleShadowNormalColor = new Color(0, 0, 0, 0.4f);
+    
+    protected static Color nonSelectedTabTitleNormalColor = Color.black;
+    
+    public static ComponentUI createUI(final JComponent c) {
+        return new AquaTabbedPaneContrastUI();
+    }
+    
+    public AquaTabbedPaneContrastUI() { }
+    
+    protected void paintTitle(final Graphics2D g2d, final Font font, final FontMetrics metrics, final Rectangle textRect, final int tabIndex, final String title) {        
+        final View v = getTextViewForTab(tabIndex);
+        if (v != null) {
+            v.paint(g2d, textRect);
+            return;
+        }
+        
+        if (title == null) return;
+        
+        final Color color = tabPane.getForegroundAt(tabIndex);
+        if (color instanceof UIResource) {
+            g2d.setColor(getNonSelectedTabTitleColor());
+            if (tabPane.getSelectedIndex() == tabIndex) {
+                boolean pressed = isPressedAt(tabIndex);
+                boolean enabled = tabPane.isEnabled() && tabPane.isEnabledAt(tabIndex);
+                Color textColor = getSelectedTabTitleColor(enabled, pressed);
+                Color shadowColor = getSelectedTabTitleShadowColor(enabled);
+                AquaUtils.paintDropShadowText(g2d, font, metrics, textRect.x, textRect.y, 0, 1, textColor, shadowColor, title);
+            } 
+        } else {
+            g2d.setColor(color);
+        }
+        g2d.setFont(font);
+        g2d.drawString(title, textRect.x, textRect.y + metrics.getAscent());
+    }
+    
+    protected static Color getSelectedTabTitleColor(boolean enabled, boolean pressed) {
+        if (enabled && pressed) {
+            return selectedTabTitlePressedColor;
+        } else if (!enabled) {
+            return selectedTabTitleDisabledColor;
+        } else {
+            return selectedTabTitleNormalColor;
+        }
+    }
+    
+    protected static Color getSelectedTabTitleShadowColor(boolean enabled) {
+        return enabled ? selectedTabTitleShadowNormalColor : selectedTabTitleShadowDisabledColor;
+    }
+    
+    protected static Color getNonSelectedTabTitleColor() {
+        return nonSelectedTabTitleNormalColor;
+    }
+    
+    protected boolean isPressedAt(int index) {
+        return ((MouseHandler)mouseListener).trackingTab == index;
+    }
+    
+    protected boolean shouldRepaintSelectedTabOnMouseDown() {
+        return true;
+    }
+    
+    protected State getState(final int index, final boolean frameActive, final boolean isSelected) {
+        if (!frameActive) return State.INACTIVE;
+        if (!tabPane.isEnabled()) return State.DISABLED;
+        if (pressedTab == index) return State.PRESSED;
+        return State.ACTIVE;
+    }
+    
+    protected SegmentTrailingSeparator getSegmentTrailingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
+        if (isTabBeforeSelectedTab(index, selectedIndex, isLeftToRight)) return SegmentTrailingSeparator.NO;
+        return SegmentTrailingSeparator.YES;
+    }
+}
