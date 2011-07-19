@@ -36,7 +36,8 @@ FILES_linux =
 
 FILES_bsd =
 
-FILES_macosx =
+FILES_macosx = \
+    PLATFORM_API_MacOSX_Ports.c
 
 FILES_windows = \
 	PLATFORM_API_WinOS_MidiIn.c \

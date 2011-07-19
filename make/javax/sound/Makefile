@@ -105,6 +105,19 @@ ifeq ($(PLATFORM), linux)
   #MXSPP_ADD = $(PLATFORM)-$(ARCH)/
 endif # PLATFORM linux
 
+ifeq ($(PLATFORM), macosx)
+  CPPFLAGS += -DUSE_PORTS=TRUE
+
+  # Ports is implemented
+  INCLUDE_PORTS = TRUE
+
+  # MIDI and direct audio are empty
+  INCLUDE_MIDI = TRUE
+  INCLUDE_DAUDIO = TRUE
+
+  LDFLAGS += -framework CoreAudio -framework CoreFoundation
+endif
+
 # XXXBSD: ???
 ifeq ($(PLATFORM), bsd)
 ifeq ($(OS_VENDOR), FreeBSD)
@@ -163,9 +176,8 @@ CPPFLAGS += \
 #
 # Add to the ambient VPATH.
 #
-vpath %.c $(SHARE_SRC)/native/com/sun/media/sound
-vpath %.c $(PLATFORM_SRC)/native/com/sun/media/sound
-vpath %.cpp $(PLATFORM_SRC)/native/com/sun/media/sound
+vpath %.c   $(call NativeSrcDirList,,native/com/sun/media/sound)
+vpath %.cpp $(call NativeSrcDirList,,native/com/sun/media/sound)
 
 
 #
