@@ -43,7 +43,7 @@
 #include <errno.h>
 
 #ifdef MACOSX
-#import <JavaRuntimeSupport/JRSProperties.h>
+#include <dlfcn.h>
 #endif
 
 #if defined(_ALLBSD_SOURCE)
@@ -430,8 +430,16 @@ GetJavaProperties(JNIEnv *env)
         sprops.os_arch = ARCHPROPNAME;
 
 #ifdef MACOSX
-        sprops.os_name = JRSCopyOSName();
-        sprops.os_version = JRSCopyOSVersion();
+        // need dlopen/dlsym trick to avoid pulling in JavaRuntimeSupport before libjava.dylib is loaded
+        
+        void *jrsFwk = dlopen("/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/JavaRuntimeSupport", RTLD_LAZY | RTLD_LOCAL);
+        
+        char (*copyOSName)() = dlsym(jrsFwk, "JRSCopyOSName");
+        sprops.os_name = copyOSName ? copyOSName() : "Unknown";
+        
+        char (*copyOSVersion)() = dlsym(jrsFwk, "JRSCopyOSVersion");
+        sprops.os_version = copyOSVersion ? copyOSVersion() : "Unknown";
+        
 #ifdef __x86_64__
         sprops.os_arch = "x86_64";
 #elif defined(__i386__)

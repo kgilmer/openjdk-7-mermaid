@@ -220,8 +220,7 @@ OTHER_LDLIBS += $(JVMLIB) -lverify $(LIBSOCKET) $(LIBNSL) $(LIBDL) \
 ifeq ($(PLATFORM), macosx)
 OTHER_LDLIBS += \
 	-framework CoreFoundation \
-	-framework SystemConfiguration \
-	-framework JavaRuntimeSupport
+	-framework SystemConfiguration
 endif
 endif
 
