@@ -42,10 +42,8 @@ import com.apple.internal.jobjc.generator.model.Framework.FrameworkDependency;
 import com.apple.internal.jobjc.generator.utils.Fp;
 
 public class Utils {
-    public static boolean isLeopard = "Mac OS X".equals(System.getProperty("os.name"))
-    && System.getProperty("os.version").startsWith("10.5");
-    public static boolean isSnowLeopard = "Mac OS X".equals(System.getProperty("os.name"))
-    && System.getProperty("os.version").startsWith("10.6");
+    public static boolean isLeopard = System.getProperty("os.version").startsWith("10.5");
+    public static boolean isSnowLeopard = System.getProperty("os.version").startsWith("10.6");
     
     @SuppressWarnings("unchecked")
     public static <T> List<T> list(final Object...args) {
