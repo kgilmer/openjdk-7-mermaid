@@ -35,9 +35,12 @@
 /*
  TODO
 
- Handle devices with >2 channels. Check isInput=1 as well as =0.
+ Check isInput=1 as well as =0 for properties.
+ Test devices with >2 channels or multiple streams.
  Test that this works properly with device plug/unplug.
- Compare control names to other platforms.
+ Test some audio hardware that exports controls on its streams.
+ Compare control names and tree structure to other platforms.
+ Implement virtual controls (balance, pan, master volume).
  */
 
 typedef struct {
@@ -45,9 +48,13 @@ typedef struct {
 
     AudioObjectID control;
     AudioClassID class; // kAudioVolumeControlClassID etc.
+
+    void *jcontrol;
     char *jcontrolType; // CONTROL_TYPE_VOLUME etc.
 
     int channel; // master = 0, channels = 1 2 ...
+
+    AudioValueRange range;
 } PortControl;
 
 typedef struct {
@@ -69,13 +76,8 @@ typedef struct {
     int numDeviceControls;
     PortControl *deviceControls;
 
-    /*
-     TODO these
-     */
-    /*
     int *numStreamControls;
     PortControl **streamControls;
-    */
 } PortMixer;
 
 static PortsContext ports_ctx;
@@ -175,6 +177,7 @@ INT32 PORT_GetPortCount(void* id) {
     TRACE0("> PORT_GetPortCount\n");
     PortMixer *mixer = id;
     int numStreams = mixer->numInputStreams + mixer->numOutputStreams;
+
     TRACE1("< PORT_GetPortCount = %d\n", numStreams);
     return numStreams;
 }
@@ -294,26 +297,27 @@ exit:
     return FALSE;
 }
 
-static void *CreateVolumeControl(PortControlCreator *creator, PortControl *control)
+static void CreateVolumeControl(PortControlCreator *creator, PortControl *control)
 {
     Float32 min = 0, max = 1, precision;
+    AudioValueRange *range = &control->range;
     UInt32 size;
+
     control->jcontrolType = CONTROL_TYPE_VOLUME;
 
     const AudioObjectPropertyAddress rangeAddress = {kAudioLevelControlPropertyDecibelRange, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster};
-    AudioValueRange range;
 
-    size = sizeof(range);
-    AudioObjectGetPropertyData(control->control, &rangeAddress, 0, NULL, &size, &range);
-    precision = 1. / (range.mMaximum - range.mMinimum);
+    size = sizeof(control->range);
+    AudioObjectGetPropertyData(control->control, &rangeAddress, 0, NULL, &size, range);
+    precision = 1. / (range->mMaximum - range->mMinimum);
 
-    return creator->newFloatControl(creator, control, CONTROL_TYPE_VOLUME, min, max, precision, "dB");
+    control->jcontrol = creator->newFloatControl(creator, control, CONTROL_TYPE_VOLUME, min, max, precision, "");
 }
 
-static void *CreateMuteControl(PortControlCreator *creator, PortControl *control)
+static void CreateMuteControl(PortControlCreator *creator, PortControl *control)
 {
     control->jcontrolType = CONTROL_TYPE_MUTE;
-    return creator->newBooleanControl(creator, control, CONTROL_TYPE_MUTE);
+    control->jcontrol = creator->newBooleanControl(creator, control, CONTROL_TYPE_MUTE);
 }
 
 void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
@@ -321,102 +325,85 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     PortMixer *mixer = id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
-    const AudioObjectPropertyAddress ownedAddress = { kAudioObjectPropertyOwnedObjects, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+    const AudioObjectPropertyAddress ownedAddress   = { kAudioObjectPropertyOwnedObjects, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+    const AudioObjectPropertyAddress controlAddress = { kAudioObjectPropertyClass, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+    const AudioObjectPropertyAddress elementAddress = { kAudioControlPropertyElement, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+
     UInt32 size;
     OSStatus err;
     int i;
 
-    // numDeviceControls / numStreamControls are overestimated
-    // because we don't actually filter by if the owned objects are controls
-
-    err = AudioObjectGetPropertyDataSize(mixer->deviceID, &ownedAddress, 0, NULL, &size);
-    if (err) goto exit;
-
-    mixer->numDeviceControls = size / sizeof(AudioObjectID);
-
-    err = AudioObjectGetPropertyDataSize(streamID, &ownedAddress, 0, NULL, &size);
-    if (err) goto exit;
-
-    TRACE2("%d controls on device, %d on stream\n", mixer->numDeviceControls, size / sizeof(AudioObjectID));
-
-    if (mixer->numDeviceControls) {
-        AudioObjectID *controlIDs = calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
-        mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortMixer));
-
-        size = mixer->numDeviceControls * sizeof(AudioObjectID);
-        err = AudioObjectGetPropertyData(mixer->deviceID, &ownedAddress, 0, NULL, &size, controlIDs);
-        for (i = 0; i < mixer->numDeviceControls; i++)
-            mixer->deviceControls[i].control = controlIDs[i];
-    }
-
-    /*
-     TODO
-     Add Balance for stereo devices
-     Always add a Master Gain control for master volume?
-     */
-
     int numVolumeControls = 0, numMuteControls = 0; // not counting the master
     int hasChannelVolume  = 0, hasChannelMute  = 0;
     PortControl *masterVolume = NULL, *masterMute = NULL;
-    PortControl *noiseReduction = NULL;
 
-    // setup all the device control structs, count volume and mute devices
-    for (i = 0; i < mixer->numDeviceControls; i++) {
-        const AudioObjectPropertyAddress controlAddress = {kAudioObjectPropertyClass, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster};
-        const AudioObjectPropertyAddress elementAddress = {kAudioControlPropertyElement, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster};
+    // initialize the device controls if this is the first stream
+    if (!mixer->numDeviceControls) {
+        // numDeviceControls / numStreamControls are overestimated
+        // because we don't actually filter by if the owned objects are controls
+        err = AudioObjectGetPropertyDataSize(mixer->deviceID, &ownedAddress, 0, NULL, &size);
+        if (err) goto exit;
 
-        PortControl *control = &mixer->deviceControls[i];
-        size = sizeof(control->class);
-        AudioObjectGetPropertyData(control->control, &controlAddress, 0, NULL, &size, &control->class);
-        control->mixer = mixer;
+        mixer->numDeviceControls = size / sizeof(AudioObjectID);
 
-        size = sizeof(control->channel);
-        err = AudioObjectGetPropertyData(control->control, &elementAddress, 0, NULL, &size, &control->channel);
+        if (mixer->numDeviceControls) {
+            AudioObjectID *controlIDs = calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
+            mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortMixer));
 
-        if (err) continue; // not a control
+            size = mixer->numDeviceControls * sizeof(AudioObjectID);
+            err = AudioObjectGetPropertyData(mixer->deviceID, &ownedAddress, 0, NULL, &size, controlIDs);
 
-        switch (control->class) {
-            case kAudioVolumeControlClassID:
-                if (control->channel == 0)
-                    masterVolume = control;
-                else {
-                    numVolumeControls++;
-                    hasChannelVolume = 1;
+            for (i = 0; i < mixer->numDeviceControls; i++) {
+                PortControl *control = &mixer->deviceControls[i];
+
+                control->control = controlIDs[i];
+                control->mixer = mixer;
+
+                size = sizeof(control->class);
+                AudioObjectGetPropertyData(control->control, &controlAddress, 0, NULL, &size, &control->class);
+
+                size = sizeof(control->channel);
+                err = AudioObjectGetPropertyData(control->control, &elementAddress, 0, NULL, &size, &control->channel);
+
+                if (err) continue; // not a control
+
+                TRACE2("%.4s control, channel %d\n", &control->class, control->channel);
+
+                switch (control->class) {
+                    case kAudioVolumeControlClassID:
+                        if (control->channel == 0)
+                            masterVolume = control;
+                        else {
+                            numVolumeControls++;
+                            hasChannelVolume = 1;
+                        }
+                        break;
+
+                    case kAudioMuteControlClassID:
+                        if (control->channel == 0)
+                            masterMute = control;
+                        else {
+                            numMuteControls++;
+                            hasChannelMute = 1;
+                        }
+                        break;
                 }
-                break;
-
-            case kAudioMuteControlClassID:
-                if (control->channel == 0)
-                    masterMute = control;
-                else {
-                    numMuteControls++;
-                    hasChannelMute = 1;
-                }
-                break;
-
-            case 'nzca':
-                noiseReduction = control;
-                break;
+            }
         }
     }
 
-    AudioObjectShow(mixer->deviceID);
     TRACE4("volume: channel %d master %d, mute: channel %d master %d\n", hasChannelVolume, masterVolume != NULL, hasChannelMute, masterMute != NULL);
 
     if (masterVolume) {
-        void *jControl = CreateVolumeControl(creator, masterVolume);
-        creator->addControl(creator, jControl);
+        if (!masterVolume->jcontrol)
+            CreateVolumeControl(creator, masterVolume);
+        creator->addControl(creator, masterVolume->jcontrol);
     }
 
     if (masterMute) {
-        void *jControl = CreateMuteControl(creator, masterMute);
-        creator->addControl(creator, jControl);
-    }
-
-    if (noiseReduction) {
-        noiseReduction->jcontrolType = "Noise Reduction";
-        void *jControl = creator->newBooleanControl(creator, noiseReduction, "Noise Reduction");
-        creator->addControl(creator, jControl);
+        if (!masterMute->jcontrol)
+            CreateMuteControl(creator, masterMute);
+        creator->addControl(creator, masterMute->jcontrol);
     }
 
     if (numVolumeControls) {
@@ -428,7 +415,9 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
             if (control->class != kAudioVolumeControlClassID || control->channel == 0)
                 continue;
 
-            jControls[j++] = CreateVolumeControl(creator, control);
+            if (!control->jcontrol)
+                CreateVolumeControl(creator, control);
+            jControls[j++] = control->jcontrol;
         }
 
         void *compoundControl = creator->newCompoundControl(creator, "Volume", jControls, numVolumeControls);
@@ -445,7 +434,9 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
             if (control->class != kAudioMuteControlClassID || control->channel == 0)
                 continue;
 
-            jControls[j++] = CreateMuteControl(creator, control);
+            if (!control->jcontrol)
+                CreateMuteControl(creator, control);
+            jControls[j++] = control->jcontrol;
         }
 
         void *compoundControl = creator->newCompoundControl(creator, "Mute", jControls, numMuteControls);
@@ -453,35 +444,150 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
         free(jControls);
     }
 
+    if (!mixer->numStreamControls)
+        mixer->numStreamControls = calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(int));
+
+    err = AudioObjectGetPropertyDataSize(streamID, &ownedAddress, 0, NULL, &size);
+    if (err) goto exit;
+
+    mixer->numStreamControls[portIndex] = size / sizeof(AudioObjectID);
+
+    TRACE2("%d controls on device, %d on stream\n", mixer->numDeviceControls, mixer->numStreamControls[portIndex]);
+
 exit:
     if (err) {
-        ERROR1("PORT_GetControls err %.4s\n", err);
+        ERROR1("PORT_GetControls err %.4s\n", &err);
+        free(mixer->deviceControls);
     }
-    free(mixer->deviceControls);
 
     TRACE0("< PORT_GetControls\n");
 }
 
 INT32 PORT_GetIntValue(void* controlIDV) {
     TRACE0("> PORT_GetIntValue\n");
+    PortControl *control = controlIDV;
+    UInt32 value = 0;
+    OSStatus err = 0;
+    UInt32 size;
 
+    switch (control->class) {
+        case kAudioMuteControlClassID:
+        {
+            const AudioObjectPropertyAddress address =
+            { kAudioBooleanControlPropertyValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+            size = sizeof(value);
+            err = AudioObjectGetPropertyData(control->control, &address, 0, NULL, &size, &value);
+            if (err) goto exit;
+        }
+            break;
+
+        default:
+            ERROR0("SetIntValue requested for non-Int control\n");
+            goto exit;
+    }
+
+    TRACE1("< PORT_GetIntValue = %d\n", value);
+    return value;
+
+exit:
+    if (err) {
+        ERROR1("PORT_GetIntValue err %d\n", err);
+    }
     return FALSE;
 }
 
 void PORT_SetIntValue(void* controlIDV, INT32 value) {
     TRACE1("> PORT_SetIntValue = %d\n", value);
+    PortControl *control = controlIDV;
+    OSStatus err = 0;
 
+    switch (control->class) {
+        case kAudioMuteControlClassID:
+        {
+            const AudioObjectPropertyAddress address =
+            { kAudioBooleanControlPropertyValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+            err = AudioObjectSetPropertyData(control->control, &address, 0, NULL, sizeof(value), &value);
+            if (err) goto exit;
+        }
+            break;
+
+        default:
+            ERROR0("SetIntValue requested for non-Int control\n");
+    }
+
+    TRACE0("< PORT_SetIntValue\n");
+    return;
+
+exit:
+    if (err) {
+        ERROR1("PORT_SetIntValue err %d\n", err);
+    }
 }
 
 float PORT_GetFloatValue(void* controlIDV) {
     TRACE0("> PORT_GetFloatValue\n");
+    PortControl *control = controlIDV;
+    Float32 value = 0;
+    OSStatus err = 0;
+    UInt32 size;
 
+    switch (control->class) {
+        case kAudioVolumeControlClassID:
+        {
+            const AudioObjectPropertyAddress address =
+            { kAudioLevelControlPropertyDecibelValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+            size = sizeof(value);
+            err = AudioObjectGetPropertyData(control->control, &address, 0, NULL, &size, &value);
+            if (err) goto exit;
+
+            // convert decibel to 0-1 logarithmic
+            value = (value - control->range.mMinimum) / (control->range.mMaximum - control->range.mMinimum);
+        }
+            break;
+
+        default:
+            ERROR0("GetFloatValue requested for non-Float control\n");
+            break;
+    }
+
+    TRACE1("< PORT_GetFloatValue = %f\n", value);
+    return value;
+
+exit:
+    if (err) {
+        ERROR1("PORT_GetFloatValue err %d\n", err);
+    }
     return 0;
 }
 
 void PORT_SetFloatValue(void* controlIDV, float value) {
     TRACE1("> PORT_SetFloatValue = %f\n", value);
+    PortControl *control = controlIDV;
+    OSStatus err = 0;
 
+    switch (control->class) {
+        case kAudioVolumeControlClassID:
+        {
+            const AudioObjectPropertyAddress address =
+            { kAudioLevelControlPropertyDecibelValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+
+            value = (value * (control->range.mMaximum - control->range.mMinimum)) + control->range.mMinimum;
+            err = AudioObjectSetPropertyData(control->control, &address, 0, NULL, sizeof(value), &value);
+            if (err) goto exit;
+        }
+            break;
+
+        default:
+            ERROR0("SetFloatValue requested for non-Float control\n");
+            break;
+    }
+
+    return;
+
+exit:
+    if (err) {
+        ERROR1("PORT_GetFloatValue err %d\n", err);
+    }
 }
 
 #endif // USE_PORTS
