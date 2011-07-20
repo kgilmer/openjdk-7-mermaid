@@ -434,10 +434,10 @@ GetJavaProperties(JNIEnv *env)
         
         void *jrsFwk = dlopen("/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/JavaRuntimeSupport", RTLD_LAZY | RTLD_LOCAL);
         
-        char (*copyOSName)() = dlsym(jrsFwk, "JRSCopyOSName");
+        char *(*copyOSName)() = dlsym(jrsFwk, "JRSCopyOSName");
         sprops.os_name = copyOSName ? copyOSName() : "Unknown";
         
-        char (*copyOSVersion)() = dlsym(jrsFwk, "JRSCopyOSVersion");
+        char *(*copyOSVersion)() = dlsym(jrsFwk, "JRSCopyOSVersion");
         sprops.os_version = copyOSVersion ? copyOSVersion() : "Unknown";
         
 #ifdef __x86_64__
