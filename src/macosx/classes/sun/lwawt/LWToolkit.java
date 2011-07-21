@@ -341,7 +341,10 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public TextAreaPeer createTextArea(TextArea target) {
-	throw new RuntimeException("not implemented");
+        LWTextAreaPeer peer = new LWTextAreaPeer(target);
+        targetCreatedPeer(target, peer);
+        peer.initialize();
+        return peer;
     }
 
     @Override
