@@ -39,7 +39,7 @@
 #import <AppKit/NSAccessibility.h>
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
-#import <JavaRuntimeSupport/JRSAccessibility.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
 #import "JavaAccessibilityAction.h"
 #import "JavaAccessibilityUtilities.h"
