@@ -127,6 +127,8 @@ do {                                  \
 #endif /* AWT_THREAD_ASSERTS */
 // --------------------------------------------------------------------------
 
+// This tracks if we are current inside of a performOnMainThread that is both waiting and in the AWTRunLoopMode
+extern BOOL sInPerformFromJava;
 
 // This is an empty Obj-C object just so that -performSelectorOnMainThread
 // can be used, and to use the Obj-C +initialize feature.

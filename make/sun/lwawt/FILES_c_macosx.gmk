@@ -53,6 +53,10 @@ FILES_objc = \
         CRobot.m \
         CTrayIcon.m \
         CWrapper.m \
+        JavaAccessibilityAction.m \
+        JavaAccessibilityUtilities.m \
+        JavaComponentAccessibility.m \
+        JavaTextAccessibility.m \
         LWCToolkit.m \
         ThreadUtilities.m \
         GeomUtilities.m

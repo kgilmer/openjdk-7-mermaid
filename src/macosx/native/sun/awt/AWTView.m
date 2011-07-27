@@ -30,7 +30,8 @@
 #import "AWTEvent.h"
 #import "AWTWindow.h"
 #import "LWCToolkit.h"
-
+#import "JavaComponentAccessibility.h"
+#import "JavaTextAccessibility.h"
 
 @implementation AWTView
 
@@ -309,6 +310,179 @@ AWT_ASSERT_APPKIT_THREAD;
         }    
 */      
     }
+}
+
+// NSAccessibility support
+- (jobject)awtComponent:(JNIEnv*)env
+{
+    static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
+    static JNF_MEMBER_CACHE(jf_Peer, jc_CPlatformView, "peer", "Lsun/lwawt/LWWindowPeer;");
+    if ((env == NULL) || (m_cPlatformView == NULL)) {
+        NSLog(@"Apple AWT : Error AWTView:awtComponent given bad parameters.");
+        if (env != NULL)
+        {
+            JNFDumpJavaStack(env);
+        }
+        return NULL;
+    }
+    jobject peer = JNFGetObjectField(env, m_cPlatformView, jf_Peer);
+    static JNF_CLASS_CACHE(jc_LWWindowPeer, "sun/lwawt/LWWindowPeer");
+    static JNF_MEMBER_CACHE(jf_Target, jc_LWWindowPeer, "target", "Ljava/awt/Component;");
+    if (peer == NULL) {
+        NSLog(@"Apple AWT : Error AWTView:awtComponent got null peer from CPlatformView");
+        JNFDumpJavaStack(env);
+        return NULL;
+    }
+    return JNFGetObjectField(env, peer, jf_Target);
+}
+
+- (id)getAxData:(JNIEnv*)env
+{
+    return [[[JavaComponentAccessibility alloc] initWithParent:self withEnv:env withAccessible:[self awtComponent:env] withIndex:-1 withView:self withJavaRole:nil] autorelease];
+}
+
+- (NSArray *)accessibilityAttributeNames
+{
+    return [[super accessibilityAttributeNames] arrayByAddingObject:NSAccessibilityChildrenAttribute];
+}
+
+// NSAccessibility messages
+// attribute methods
+- (id)accessibilityAttributeValue:(NSString *)attribute
+{
+    AWT_ASSERT_APPKIT_THREAD;
+    
+    if ([attribute isEqualToString:NSAccessibilityChildrenAttribute])
+    {
+        JNIEnv *env = [ThreadUtilities getJNIEnv];
+        
+        (*env)->PushLocalFrame(env, 4);
+        
+        id result = NSAccessibilityUnignoredChildrenForOnlyChild([self getAxData:env]);
+        
+        (*env)->PopLocalFrame(env, NULL);
+        
+        return result;
+    }
+    else
+    {
+        return [super accessibilityAttributeValue:attribute];
+    }
+}
+- (BOOL)accessibilityIsIgnored
+{
+    return YES;
+}
+
+- (id)accessibilityHitTest:(NSPoint)point
+{
+    AWT_ASSERT_APPKIT_THREAD;
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    
+    (*env)->PushLocalFrame(env, 4);
+    
+    id result = [[self getAxData:env] accessibilityHitTest:point withEnv:env];
+    
+    (*env)->PopLocalFrame(env, NULL);
+
+    return result;
+}
+
+- (id)accessibilityFocusedUIElement
+{
+    AWT_ASSERT_APPKIT_THREAD;
+    
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    
+    (*env)->PushLocalFrame(env, 4);
+    
+    id result = [[self getAxData:env] accessibilityFocusedUIElement];
+    
+    (*env)->PopLocalFrame(env, NULL);
+    
+    return result;
+}
+
+// --- Services menu support for lightweights ---
+
+// finds the focused accessable element, and if it's a text element, obtains the text from it
+- (NSString *)accessibleSelectedText
+{
+    id focused = [self accessibilityFocusedUIElement];
+    if (![focused isKindOfClass:[JavaTextAccessibility class]]) return nil;
+    return [(JavaTextAccessibility *)focused accessibilitySelectedTextAttribute];
+}
+
+// same as above, but converts to RTFD
+- (NSData *)accessibleSelectedTextAsRTFD
+{
+    NSString *selectedText = [self accessibleSelectedText];
+    NSAttributedString *styledText = [[NSAttributedString alloc] initWithString:selectedText];
+    NSData *rtfdData = [styledText RTFDFromRange:NSMakeRange(0, [styledText length]) documentAttributes:nil];
+    [styledText release];
+    return rtfdData;
+}
+
+// finds the focused accessable element, and if it's a text element, sets the text in it
+- (BOOL)replaceAccessibleTextSelection:(NSString *)text
+{
+    id focused = [self accessibilityFocusedUIElement];
+    if (![focused isKindOfClass:[JavaTextAccessibility class]]) return NO;
+    [(JavaTextAccessibility *)focused accessibilitySetSelectedTextAttribute:text];
+    return YES;
+}
+
+// called for each service in the Services menu - only handle text for now
+- (id)validRequestorForSendType:(NSString *)sendType returnType:(NSString *)returnType
+{
+    if ([[self window] firstResponder] != self) return nil; // let AWT components handle themselves
+    
+    if ([sendType isEqual:NSStringPboardType] || [returnType isEqual:NSStringPboardType]) {
+        NSString *selectedText = [self accessibleSelectedText];
+        if (selectedText) return self;
+    }
+    
+    return nil;
+}
+
+// fetch text from Java and hand off to the service
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types
+{
+    if ([types containsObject:NSStringPboardType])
+    {
+        [pboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+        return [pboard setString:[self accessibleSelectedText] forType:NSStringPboardType];
+    }
+    
+    if ([types containsObject:NSRTFDPboardType])
+    {
+        [pboard declareTypes:[NSArray arrayWithObject:NSRTFDPboardType] owner:nil];
+        return [pboard setData:[self accessibleSelectedTextAsRTFD] forType:NSRTFDPboardType];
+    }
+    
+    return NO;
+}
+
+// write text back to Java from the service
+- (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
+{
+    if ([[pboard types] containsObject:NSStringPboardType])
+    {
+        NSString *text = [pboard stringForType:NSStringPboardType];
+        return [self replaceAccessibleTextSelection:text];
+    }
+    
+    if ([[pboard types] containsObject:NSRTFDPboardType])
+    {
+        NSData *rtfdData = [pboard dataForType:NSRTFDPboardType];
+        NSAttributedString *styledText = [[NSAttributedString alloc] initWithRTFD:rtfdData documentAttributes:nil];
+        NSString *text = [styledText string];
+        [styledText release];
+        
+        return [self replaceAccessibleTextSelection:text];
+    }
+    
+    return NO;
 }
 
 @end // AWTView

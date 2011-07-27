@@ -23,37 +23,41 @@
  * questions.
  */
 
-#import <pthread.h>
-#import <assert.h>
-
-#import <Cocoa/Cocoa.h>
-#import <JavaNativeFoundation/JavaNativeFoundation.h>
-#import <CoreServices/CoreServices.h>
-#import <AudioToolbox/AudioToolbox.h>
-
-#define DEBUG 1
+#import <AppKit/AppKit.h>
+#import <jni.h>
 
 
-const char *kInternalError;
+@protocol JavaAccessibilityAction
 
-@interface AWTToolkit : NSObject { }
-+ (long) getEventCount;
-+ (void) eventCountPlusPlus;
+- (NSString *)getDescription;
+- (void)perform;
+
 @end
 
-@interface AWTRunLoopObject : NSObject {
-    BOOL _shouldEndRunLoop;
+
+@interface JavaAxAction : NSObject <JavaAccessibilityAction> {
+    jobject fAccessibleAction;
+    jint fIndex;
+    jobject fComponent;
 }
-- (id) init;
-- (BOOL) shouldEndRunLoop;
-- (void) endRunLoop;
+
+- (id)initWithEnv:(JNIEnv *)env withAccessibleAction:(jobject)accessibleAction withIndex:(jint)index withComponent:(jobject)component;
+
+- (NSString *)getDescription;
+- (void)perform;
+
 @end
 
-CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);
 
-/*
- * Utility Macros
- */
+@interface TabGroupAction : NSObject <JavaAccessibilityAction> {
+    jobject fTabGroup;
+    jint fIndex;
+    jobject fComponent;
+}
 
-/** Macro to cast a jlong to an Objective-C object (id). Casts to long on 32-bit systems to quiesce the compiler. */
-#define OBJC(jl) ((id)jlong_to_ptr(jl))
+- (id)initWithEnv:(JNIEnv *)env withTabGroup:(jobject)tabGroup withIndex:(jint)index withComponent:(jobject)component;
+
+- (NSString *)getDescription;
+- (void)perform;
+
+@end

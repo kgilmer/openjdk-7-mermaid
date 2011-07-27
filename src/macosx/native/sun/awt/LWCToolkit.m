@@ -31,6 +31,7 @@
 #import "LWCToolkit.h"
 #import "ThreadUtilities.h"
 
+#import "sun_lwawt_macosx_LWCToolkit.h"
 
 const char *kInternalError = "java/lang/InternalError";
 
@@ -45,7 +46,25 @@ static long eventCount;
 + (void) eventCountPlusPlus{
     eventCount++;
 }
+@end
 
+@implementation AWTRunLoopObject
+
+- (id) init {
+    self = [super init];
+    if (self != nil) {
+        _shouldEndRunLoop = NO;
+    }
+    return self;
+}
+
+- (BOOL) shouldEndRunLoop {
+    return _shouldEndRunLoop;
+}
+
+- (void) endRunLoop {
+    _shouldEndRunLoop = YES;
+}
 @end
 
 JavaVM *jvm = NULL;
@@ -288,6 +307,92 @@ Java_sun_lwawt_macosx_LWCToolkit_initIDs
         static JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
         JNFCallStaticVoidMethod(env, jsm_installToolkitThreadNameInJava);
     });
+}
+
+/*
+ * Class:     sun_lwawt_macosx_LWCToolkit
+ * Method:    createAWTRunLoopMediator
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_LWCToolkit_createAWTRunLoopMediator
+(JNIEnv *env, jclass clz)
+{
+    AWT_ASSERT_APPKIT_THREAD;
+    
+    AWTRunLoopObject *o = nil;
+    
+    // We double retain because this object is owned by both main thread and "other" thread
+    // We release in both doAWTRunLoop and stopAWTRunLoop
+    o = [[AWTRunLoopObject alloc] init];
+    if (o) {
+        CFRetain(o); // GC
+        CFRetain(o); // GC
+        [o release];
+    }
+    return ptr_to_jlong(o);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_LWCToolkit
+ * Method:    doAWTRunLoop
+ * Signature: (JZZ)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_doAWTRunLoop
+(JNIEnv *env, jclass clz, jlong mediator, jboolean awtMode, jboolean detectDeadlocks)
+{
+    AWT_ASSERT_APPKIT_THREAD;
+    
+    JNF_COCOA_ENTER(env);
+    
+    AWTRunLoopObject* mediatorObject = (AWTRunLoopObject*)jlong_to_ptr(mediator);
+    
+    if (mediatorObject == nil) return;
+    
+    if (!sInPerformFromJava || !detectDeadlocks) {
+        
+        NSRunLoop *currentRunLoop = [NSRunLoop currentRunLoop];
+        NSDate *distantFuture = [NSDate distantFuture];
+        NSString *mode = (awtMode) ? [JNFRunLoop javaRunLoopMode] : NSDefaultRunLoopMode;
+        
+        BOOL isRunning = YES;
+        while (isRunning && ![mediatorObject shouldEndRunLoop]) {
+            // Don't use acceptInputForMode because that doesn't setup autorelease pools properly
+            isRunning = [currentRunLoop runMode:mode beforeDate:distantFuture];
+        }
+        
+    }
+#ifndef PRODUCT_BUILD
+    if (sInPerformFromJava) {
+        NSLog(@"Apple AWT: Short-circuiting CToolkit.invokeAndWait trampoline deadlock!!!!!");
+        NSLog(@"\tPlease file a bug report with this message and a reproducible test case.");
+    }
+#endif
+    
+    
+    CFRelease(mediatorObject);
+    
+    JNF_COCOA_EXIT(env);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_LWCToolkit
+ * Method:    stopAWTRunLoop
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_stopAWTRunLoop
+(JNIEnv *env, jclass clz, jlong mediator)
+{
+    AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    JNF_COCOA_ENTER(env);
+    
+    AWTRunLoopObject* mediatorObject = (AWTRunLoopObject*)jlong_to_ptr(mediator);
+    
+    [ThreadUtilities performOnMainThread:@selector(endRunLoop) onObject:mediatorObject withObject:nil waitUntilDone:NO awtMode:YES];
+    
+    CFRelease(mediatorObject);
+    
+    JNF_COCOA_EXIT(env);
 }
 
 /*

@@ -31,7 +31,10 @@ import java.awt.font.TextAttribute;
 import java.awt.im.InputMethodHighlight;
 import java.awt.im.spi.InputMethodDescriptor;
 import java.awt.peer.*;
+import java.awt.event.*;
+import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import sun.awt.*;
 import sun.lwawt.*;
@@ -313,9 +316,136 @@ public class LWCToolkit extends LWToolkit {
         return CImage.getCreator().createImageFromName(imageName.substring(nsImagePrefix.length()));
     }
     
+    // Kicks an event over to the appropriate eventqueue and waits for it to finish
+    // To avoid deadlocking, we manually run the NSRunLoop while waiting
+    // Any selector invoked using ThreadUtilities performOnMainThread will be processed in doAWTRunLoop
+    // The CInvocationEvent will call LWCToolkit.stopAWTRunLoop() when finished, which will stop our manual runloop
+    public static void invokeAndWait(Runnable event, Component component) throws InterruptedException, InvocationTargetException {
+        invokeAndWait(event, component, true);
+    }
+    
+    public static <T> T invokeAndWait(final Callable<T> callable, Component component) throws Exception {
+        final CallableWrapper<T> wrapper = new CallableWrapper<T>(callable);
+        invokeAndWait(wrapper, component);
+        return wrapper.getResult();
+    }
+    
+    static final class CallableWrapper<T> implements Runnable {
+        final Callable<T> callable;
+        T object;
+        Exception e;
+        
+        public CallableWrapper(final Callable<T> callable) {
+            this.callable = callable;
+        }
+        
+        public void run() {
+            try {
+                object = callable.call();
+            } catch (final Exception e) {
+                this.e = e;
+            }
+        }
+        
+        public T getResult() throws Exception {
+            if (e != null) throw e;
+            return object;
+        }
+    }
+    
+    public static void invokeAndWait(Runnable event, Component component, boolean detectDeadlocks) throws InterruptedException, InvocationTargetException {
+        long mediator = createAWTRunLoopMediator();
+        
+        InvocationEvent invocationEvent = new CPeerEvent(event, mediator);
+        
+        if (component != null) {
+            AppContext appContext = SunToolkit.targetToAppContext(component);
+            SunToolkit.postEvent(appContext, invocationEvent);
+            
+            // 3746956 - flush events from PostEventQueue to prevent them from getting stuck and causing a deadlock
+            sun.awt.SunToolkitSubclass.flushPendingEvents(appContext);
+        } else {
+            // This should be the equivalent to EventQueue.invokeAndWait
+            ((LWCToolkit)Toolkit.getDefaultToolkit()).getSystemEventQueueForInvokeAndWait().postEvent(invocationEvent);
+        }
+        
+        doAWTRunLoop(mediator, true, detectDeadlocks);
+        
+        Throwable eventException = invocationEvent.getException();
+        if (eventException != null) {
+            if (eventException instanceof UndeclaredThrowableException) {
+                eventException = ((UndeclaredThrowableException)eventException).getUndeclaredThrowable();
+            }
+            throw new InvocationTargetException(eventException);
+        }
+    }
+    
+    public static void invokeLater(Runnable event, Component component) throws InvocationTargetException {
+        final InvocationEvent invocationEvent = new CPeerEvent(event, 0);
+        
+        if (component != null) {
+            final AppContext appContext = SunToolkit.targetToAppContext(component);
+            SunToolkit.postEvent(appContext, invocationEvent);
+            
+            // 3746956 - flush events from PostEventQueue to prevent them from getting stuck and causing a deadlock
+            sun.awt.SunToolkitSubclass.flushPendingEvents(appContext);
+        } else {
+            // This should be the equivalent to EventQueue.invokeAndWait
+            ((LWCToolkit)Toolkit.getDefaultToolkit()).getSystemEventQueueForInvokeAndWait().postEvent(invocationEvent);
+        }
+        
+        final Throwable eventException = invocationEvent.getException();
+        if (eventException == null) return;
+        
+        if (eventException instanceof UndeclaredThrowableException) {
+            throw new InvocationTargetException(((UndeclaredThrowableException)eventException).getUndeclaredThrowable());
+        }
+        throw new InvocationTargetException(eventException);
+    }
+    
+    // This exists purely to get around permissions issues with getSystemEventQueueImpl
+    EventQueue getSystemEventQueueForInvokeAndWait() {
+        return getSystemEventQueueImpl();
+    }
+    
+    
+    
+    // Extends PeerEvent because we want to pass long an ObjC mediator object and because we want these events to be posted early
+    // Typically, rather than relying on the notifier to call notifyAll(), we use the mediator to stop the runloop
+    public static class CPeerEvent extends PeerEvent {
+        private long _mediator = 0;
+        
+        public CPeerEvent(Runnable runnable, long mediator) {
+            super(Toolkit.getDefaultToolkit(), runnable, null, true, 0);
+            _mediator = mediator;
+        }
+        
+        public void dispatch() {
+            try {
+                super.dispatch();
+            } finally {
+                if (_mediator != 0) {
+                    LWCToolkit.stopAWTRunLoop(_mediator);
+                }
+            }
+        }
+    }
+    
+    // Call through to native methods
+    public static void doAWTRunLoop(long mediator, boolean awtMode) { doAWTRunLoop(mediator, awtMode, true); }
+    public static void doAWTRunLoop(long mediator) { doAWTRunLoop(mediator, true); }
+    
     /************************
      * Native methods section
      ************************/
+    
+    // These are public because they are accessed from WebKitPluginObject in JavaDeploy
+    // Basic usage: 
+    // createAWTRunLoopMediator. Start client code on another thread. doAWTRunLoop. When client code is finished, stopAWTRunLoop.
+    public static native long createAWTRunLoopMediator();
+    public static native void doAWTRunLoop(long mediator, boolean awtMode, boolean detectDeadlocks);
+    public static native void stopAWTRunLoop(long mediator);
+    
     private native boolean nativeSyncQueue(long timeout);
 
     private native void nativeSetApplicationIconImage(long imagePtr);

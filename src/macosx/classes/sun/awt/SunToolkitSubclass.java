@@ -23,37 +23,16 @@
  * questions.
  */
 
-#import <pthread.h>
-#import <assert.h>
+package sun.awt;
 
-#import <Cocoa/Cocoa.h>
-#import <JavaNativeFoundation/JavaNativeFoundation.h>
-#import <CoreServices/CoreServices.h>
-#import <AudioToolbox/AudioToolbox.h>
-
-#define DEBUG 1
-
-
-const char *kInternalError;
-
-@interface AWTToolkit : NSObject { }
-+ (long) getEventCount;
-+ (void) eventCountPlusPlus;
-@end
-
-@interface AWTRunLoopObject : NSObject {
-    BOOL _shouldEndRunLoop;
+// This class exists only so we can flush the PostEventQueue for the right AppContext
+// The default flushPendingEvents only flushes the thread-local context, which is wrong.
+// c.f. 3746956
+public abstract class SunToolkitSubclass extends SunToolkit {
+    public static void flushPendingEvents(AppContext appContext) {
+        PostEventQueue postEventQueue = (PostEventQueue)appContext.get("PostEventQueue");
+        if (postEventQueue != null) {
+            postEventQueue.flush();
+        }
+    }
 }
-- (id) init;
-- (BOOL) shouldEndRunLoop;
-- (void) endRunLoop;
-@end
-
-CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);
-
-/*
- * Utility Macros
- */
-
-/** Macro to cast a jlong to an Objective-C object (id). Casts to long on 32-bit systems to quiesce the compiler. */
-#define OBJC(jl) ((id)jlong_to_ptr(jl))

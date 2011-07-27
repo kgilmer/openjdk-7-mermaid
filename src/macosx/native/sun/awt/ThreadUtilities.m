@@ -41,8 +41,6 @@ static BOOL sCocoaComponentCompatibility = NO;
 static NSTimeInterval sCocoaComponentCompatibilityTimeout = 0.5;
 static BOOL sLoggingEnabled = YES;
 
-NSString *AWTRunLoopMode = @"AWTRunLoopMode";
-
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
 int sAWTThreadAsserts = 0;
 #endif /* AWT_THREAD_ASSERTS_ENV_ASSERT */
@@ -238,7 +236,7 @@ NSUInteger sPerformCount = 0;
         // The default performSelector, with no mode argument, runs in Default,
         // ModalPanel, and EventTracking modes
         sPerformModes =    [[NSArray alloc] initWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode, nil];
-        sAWTPerformModes = [[NSArray alloc] initWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode, NSEventTrackingRunLoopMode, AWTRunLoopMode, nil];
+        sAWTPerformModes = [[NSArray alloc] initWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode, NSEventTrackingRunLoopMode, [JNFRunLoop javaRunLoopMode], nil];
         
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
         sAWTThreadAsserts = (getenv("COCOA_AWT_DISABLE_THREAD_ASSERTS") == NULL);

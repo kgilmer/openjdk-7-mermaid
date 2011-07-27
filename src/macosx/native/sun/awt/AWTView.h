@@ -42,5 +42,6 @@
 - (void) resetTrackingRect;
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;
 - (void) setContextMenu:(NSMenu *)aMenu;
+- (jobject) awtComponent:(JNIEnv *)env;
 
 @end
