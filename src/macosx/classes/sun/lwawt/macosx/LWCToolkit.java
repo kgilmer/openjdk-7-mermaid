@@ -217,6 +217,19 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
+    public Insets getScreenInsets(final GraphicsConfiguration gc) {
+        final CGraphicsConfig cgc = (CGraphicsConfig) gc;
+        final int displayId = cgc.getDevice().getCoreGraphicsScreen();
+        final long screen = CWrapper.NSScreen.screenByDisplayId(displayId);
+        Rectangle fullScreen = CWrapper.NSScreen.frame(screen).getBounds();
+        Rectangle workArea = CWrapper.NSScreen.visibleFrame(screen).getBounds();
+        // Convert between Cocoa's coordinate system and Java.
+        return new Insets(fullScreen.height - workArea.height - workArea.y,
+                          workArea.x, workArea.y,
+                          fullScreen.width - workArea.width - workArea.x);
+    }
+
+    @Override
     public Map<TextAttribute, ?> mapInputMethodHighlight(
             InputMethodHighlight highlight) throws HeadlessException {
         // TODO Auto-generated method stub

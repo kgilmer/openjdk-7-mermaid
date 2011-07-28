@@ -79,5 +79,7 @@ public final class CWrapper {
     
     public static final class NSScreen {
         public static native Rectangle2D frame(long screen);
+        public static native Rectangle2D visibleFrame(long screen);
+        public static native long screenByDisplayId(int displayID);
     }
 }
