@@ -329,6 +329,19 @@ public class LWCToolkit extends LWToolkit {
         return CImage.getCreator().createImageFromName(imageName.substring(nsImagePrefix.length()));
     }
     
+    // Thread-safe Object.equals() called from native
+    public static boolean doEquals(final Object a, final Object b, Component c) {
+        if (a == b) return true;
+        
+        final boolean[] ret = new boolean[1];
+        
+        try {  invokeAndWait(new Runnable() { public void run() { synchronized(ret) {
+            ret[0] = a.equals(b);
+        }}}, c); } catch (Exception e) { e.printStackTrace(); }
+        
+        synchronized(ret) { return ret[0]; }
+    }
+    
     // Kicks an event over to the appropriate eventqueue and waits for it to finish
     // To avoid deadlocking, we manually run the NSRunLoop while waiting
     // Any selector invoked using ThreadUtilities performOnMainThread will be processed in doAWTRunLoop

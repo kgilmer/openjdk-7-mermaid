@@ -33,10 +33,12 @@
 
 #import "sun_lwawt_macosx_CAccessibility.h"
 
-#import <AppKit/NSAccessibility.h>
+#import <AppKit/AppKit.h>
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <JavaRuntimeSupport/JavaRuntimeSupport.h>
+
+#import <dlfcn.h>
 
 #import "JavaAccessibilityAction.h"
 #import "JavaAccessibilityUtilities.h"
@@ -59,10 +61,10 @@ static JNF_STATIC_MEMBER_CACHE(sjm_getAccessibleDescription, sjc_CAccessibility,
 static JNF_STATIC_MEMBER_CACHE(sjm_isFocusTraversable, sjc_CAccessibility, "isFocusTraversable", "(Ljavax/accessibility/Accessible;Ljava/awt/Component;)Z");
 static JNF_STATIC_MEMBER_CACHE(sjm_getAccessibleIndexInParent, sjc_CAccessibility, "getAccessibleIndexInParent", "(Ljavax/accessibility/Accessible;Ljava/awt/Component;)I");
 
-static JNF_CLASS_CACHE(sjc_CAccessible, "apple/awt/CAccessible");
+static JNF_CLASS_CACHE(sjc_CAccessible, "sun/lwawt/macosx/CAccessible");
 
 static JNF_MEMBER_CACHE(jf_ptr, sjc_CAccessible, "ptr", "J");
-static JNF_STATIC_MEMBER_CACHE(sjm_getCAccessible, sjc_CAccessible, "getCAccessible", "(Ljavax/accessibility/Accessible;)Lapple/awt/CAccessible;");
+static JNF_STATIC_MEMBER_CACHE(sjm_getCAccessible, sjc_CAccessible, "getCAccessible", "(Ljavax/accessibility/Accessible;)Lsun/lwawt/macosx/CAccessible;");
 
 
 static jobject sAccessibilityClass = NULL;
@@ -149,8 +151,13 @@ static NSObject *sAttributeNamesLOCK = nil;
 - (void)unregisterFromCocoaAXSystem
 {
     AWT_ASSERT_APPKIT_THREAD;
-    
-    // TODO: actually unregister
+    static dispatch_once_t initialize_unregisterUniqueId_once;
+    static void (*unregisterUniqueId)(id);
+    dispatch_once(&initialize_unregisterUniqueId_once, ^{
+        void *jrsFwk = dlopen("/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/JavaRuntimeSupport", RTLD_LAZY | RTLD_LOCAL);
+        unregisterUniqueId = dlsym(jrsFwk, "JRSAccessibilityUnregisterUniqueIdForUIElement");
+    });
+    if (unregisterUniqueId) unregisterUniqueId(self);
 }
 
 - (void)dealloc
@@ -1133,11 +1140,11 @@ static NSObject *sAttributeNamesLOCK = nil;
 @end
 
 /*
- * Class:     apple_awt_CAccessibility
+ * Class:     sun_lwawt_macosx_CAccessibility
  * Method:    focusChanged
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_apple_awt_CAccessibility_focusChanged
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CAccessibility_focusChanged
 (JNIEnv *env, jobject jthis)
 {
     AWT_ASSERT_NOT_APPKIT_THREAD;
@@ -1150,11 +1157,11 @@ JNF_COCOA_EXIT(env);
 
 
 /*
- * Class:     apple_awt_CAccessible
+ * Class:     sun_lwawt_macosx_CAccessible
  * Method:    valueChanged
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_apple_awt_CAccessible_valueChanged
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CAccessible_valueChanged
 (JNIEnv *env, jclass jklass, jlong element)
 {
     AWT_ASSERT_NOT_APPKIT_THREAD;
@@ -1164,11 +1171,11 @@ JNF_COCOA_EXIT(env);
 }
 
 /*
- * Class:     apple_awt_CAccessible
+ * Class:     sun_lwawt_macosx_CAccessible
  * Method:    selectionChanged
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_apple_awt_CAccessible_selectionChanged
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CAccessible_selectionChanged
 (JNIEnv *env, jclass jklass, jlong element)
 {
     AWT_ASSERT_NOT_APPKIT_THREAD;
@@ -1179,11 +1186,11 @@ JNF_COCOA_EXIT(env);
 
 
 /*
- * Class:     apple_awt_CAccessible
+ * Class:     sun_lwawt_macosx_CAccessible
  * Method:    unregisterFromCocoaAXSystem
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_apple_awt_CAccessible_unregisterFromCocoaAXSystem
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CAccessible_unregisterFromCocoaAXSystem
 (JNIEnv *env, jclass jklass, jlong element)
 {
     AWT_ASSERT_NOT_APPKIT_THREAD;
@@ -1540,7 +1547,7 @@ static BOOL ObjectEquals(JNIEnv *env, jobject a, jobject b, jobject component);
 
 /*
  * Returns Object.equals for the two items
- * This may use CToolkit.invokeAndWait; don't call while holding fLock
+ * This may use LWCToolkit.invokeAndWait(); don't call while holding fLock
  * and try to pass a component so the event happens on the correct thread.
  */
 static JNF_CLASS_CACHE(sjc_Object, "java/lang/Object");
@@ -1553,8 +1560,8 @@ static BOOL ObjectEquals(JNIEnv *env, jobject a, jobject b, jobject component)
     
     if (pthread_main_np() != 0) {
         // If we are on the AppKit thread
-        static JNF_CLASS_CACHE(sjc_Utilities, "apple/awt/Utilities");
-        static JNF_STATIC_MEMBER_CACHE(jm_doEquals, sjc_Utilities, "doEquals", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/awt/Component;)Z");
+        static JNF_CLASS_CACHE(sjc_LWCToolkit, "sun/lwawt/macosx/LWCToolkit");
+        static JNF_STATIC_MEMBER_CACHE(jm_doEquals, sjc_LWCToolkit, "doEquals", "(Ljava/lang/Object;Ljava/lang/Object;Ljava/awt/Component;)Z");
         return JNFCallStaticBooleanMethod(env, jm_doEquals, a, b, component); // AWT_THREADING Safe (AWTRunLoopMode)
     }
     

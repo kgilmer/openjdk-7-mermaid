@@ -393,6 +393,8 @@ public abstract class AccessibleContext {
      */
     private AccessibleRelationSet relationSet
         = new AccessibleRelationSet();
+    
+    private Object nativeAXResource;
 
     /**
      * Gets the accessibleName property of this object.  The accessibleName
