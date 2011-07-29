@@ -25,6 +25,7 @@
 
 #import <AppKit/AppKit.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <objc/message.h>
 
 #import "ThreadUtilities.h"
 

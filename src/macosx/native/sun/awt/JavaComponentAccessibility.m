@@ -29,9 +29,6 @@
 // <http://www-106.ibm.com/developerworks/library/j-access/?n-j-10172>
 // <http://archives.java.sun.com/archives/java-access.html> (Sun's mailing list for Java accessibility)
 
-// Internal notes on Mac OSX Java Accessibility:
-// <http://web.java.apple.com/?Accessibility_Notes>
-
 #import "JavaComponentAccessibility.h"
 
 #import "sun_lwawt_macosx_CAccessibility.h"
@@ -663,7 +660,7 @@ static NSObject *sAttributeNamesLOCK = nil;
             return child;
         }
     }
-    return [(id)super accessibilityArrayAttributeValues:attribute index:index maxCount:maxCount];
+    return [super accessibilityArrayAttributeValues:attribute index:index maxCount:maxCount];
 }
 
 // Flag indicating enabled state of element (NSNumber)
@@ -1368,7 +1365,7 @@ JNF_COCOA_EXIT(env);
             }
         }
     } else {
-        result = [(id)super accessibilityArrayAttributeValues:attribute index:index maxCount:maxCount];
+        result = [super accessibilityArrayAttributeValues:attribute index:index maxCount:maxCount];
     }
     return result;
 }
