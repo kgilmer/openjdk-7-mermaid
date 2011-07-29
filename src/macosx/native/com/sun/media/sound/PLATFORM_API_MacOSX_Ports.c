@@ -26,9 +26,10 @@
 //#define USE_ERROR
 //#define USE_TRACE
 
-#include "Ports.h"
 #include <CoreAudio/CoreAudio.h>
 #include <IOKit/audio/IOAudioTypes.h>
+#include "Ports.h"
+#include "PLATFORM_API_MacOSX_Utils.h"
 
 #if USE_PORTS == TRUE
 
@@ -58,11 +59,6 @@ typedef struct {
 } PortControl;
 
 typedef struct {
-    int numDevices; // = # port mixers
-    AudioDeviceID *devices;
-} PortsContext;
-
-typedef struct {
     AudioDeviceID deviceID;
 
     // = # of ports on the mixer
@@ -80,81 +76,48 @@ typedef struct {
     PortControl **streamControls;
 } PortMixer;
 
-static PortsContext ports_ctx;
-
 INT32 PORT_GetPortMixerCount() {
-    UInt32 size;
-
     TRACE0("> PORT_GetPortMixerCount\n");
+    int count = GetAudioDeviceCount();
+    TRACE1("< PORT_GetPortMixerCount = %d\n", count);
 
-    AudioHardwareGetPropertyInfo(kAudioHardwarePropertyDevices, &size, NULL);
-    ports_ctx.numDevices = size / sizeof(AudioDeviceID);
-
-    if (ports_ctx.numDevices) {
-        ports_ctx.devices = calloc(ports_ctx.numDevices, sizeof(AudioDeviceID));
-        size = ports_ctx.numDevices * sizeof(AudioDeviceID);
-        AudioHardwareGetProperty(kAudioHardwarePropertyDevices, &size, ports_ctx.devices);
-        ports_ctx.numDevices = size / sizeof(AudioDeviceID); // in case it changed
-    }
-
-    TRACE1("< PORT_GetPortMixerCount = %d\n", ports_ctx.numDevices);
-
-    return ports_ctx.numDevices;
+    return count;
 }
 
-INT32 PORT_GetPortMixerDescription(INT32 mixerIndex, PortMixerDescription* description) {
-    TRACE0("> PORT_GetPortMixerDescription\n");
+INT32 PORT_GetPortMixerDescription(INT32 mixerIndex, PortMixerDescription* mixerDescription) {
+    AudioDeviceDescription description;
 
-    AudioDeviceID deviceID = ports_ctx.devices[mixerIndex];
-    CFStringRef name = NULL, vendor = NULL;
-    OSStatus err = noErr;
-    UInt32 size;
-
-    size = sizeof(name);
-    err = AudioDeviceGetProperty(deviceID, 0, 0, kAudioObjectPropertyName, &size, &name);
-    if (err) goto exit;
-
-    size = sizeof(vendor);
-    err = AudioDeviceGetProperty(deviceID, 0, 0, kAudioObjectPropertyManufacturer, &size, &vendor);
-    if (err) goto exit;
-
-    CFStringGetCString(name, description->name, PORT_STRING_LENGTH, kCFStringEncodingUTF8);
-    CFStringGetCString(vendor, description->vendor, PORT_STRING_LENGTH, kCFStringEncodingUTF8);
+    description.strLen = PORT_STRING_LENGTH;
+    description.name   = mixerDescription->name;
+    description.vendor = mixerDescription->vendor;
+    description.description = NULL;
 
     /*
      We can't fill out the 'version' and 'description' fields.
      */
 
-exit:
-    if (name)   CFRelease(name);
-    if (vendor) CFRelease(vendor);
-
-    TRACE0("< PORT_GetPortMixerDescription\n");
-
-    return err ? FALSE : TRUE;
+    return GetAudioDeviceDescription(mixerIndex, &description);
 }
 
 void* PORT_Open(INT32 mixerIndex) {
     TRACE1("> PORT_Open %d\n", mixerIndex);
+
+    AudioDeviceDescription description = {0};
     PortMixer *mixer = calloc(1, sizeof(PortMixer));
-    mixer->deviceID = ports_ctx.devices[mixerIndex];
 
-    UInt32 size;
-
-    AudioDeviceGetPropertyInfo(mixer->deviceID, 0, 1, kAudioDevicePropertyStreams, &size, NULL);
-    mixer->numInputStreams  = size / sizeof(AudioStreamID);
-
-    AudioDeviceGetPropertyInfo(mixer->deviceID, 0, 0, kAudioDevicePropertyStreams, &size, NULL);
-    mixer->numOutputStreams = size / sizeof(AudioStreamID);
+    GetAudioDeviceDescription(mixerIndex, &description);
+    mixer->deviceID = description.deviceID;
+    mixer->numInputStreams  = description.numInputStreams;
+    mixer->numOutputStreams = description.numOutputStreams;
 
     if (mixer->numInputStreams || mixer->numOutputStreams) {
         mixer->streams = calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(AudioStreamID));
 
-        size = mixer->numInputStreams * sizeof(AudioStreamID);
-        AudioDeviceGetProperty(mixer->deviceID, 0, 1, kAudioDevicePropertyStreams, &size, mixer->streams);
+        GetAudioObjectProperty(mixer->deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
+                               mixer->numInputStreams * sizeof(AudioStreamID), mixer->streams, 0);
 
-        size = mixer->numOutputStreams * sizeof(AudioStreamID);
-        AudioDeviceGetProperty(mixer->deviceID, 0, 0, kAudioDevicePropertyStreams, &size, mixer->streams + mixer->numInputStreams);
+        GetAudioObjectProperty(mixer->deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
+                               mixer->numOutputStreams * sizeof(AudioStreamID), mixer->streams, 0);
     }
 
     TRACE1("< PORT_Open %p\n", mixer);
@@ -189,16 +152,15 @@ INT32 PORT_GetPortType(void* id, INT32 portIndex) {
     AudioStreamID streamID = mixer->streams[portIndex];
     UInt32 direction;
     UInt32 terminalType;
-    OSStatus err;
-    int size;
-    int ret;
+    UInt32 size;
+    int err, ret;
 
-    size = sizeof(terminalType);
-    err = AudioStreamGetProperty(streamID, 0, kAudioStreamPropertyTerminalType, &size, &terminalType);
+    err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyTerminalType,
+                                 sizeof(terminalType), &terminalType, 1);
     if (err) goto exit;
 
-    size = sizeof(direction);
-    err = AudioStreamGetProperty(streamID, 0, kAudioStreamPropertyDirection, &size, &direction);
+    err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyDirection,
+                                 sizeof(direction), &direction, 1);
     if (err) goto exit;
 
     /*
@@ -273,16 +235,15 @@ INT32 PORT_GetPortName(void* id, INT32 portIndex, char* name, INT32 len) {
 
     CFStringRef cfname = NULL;
     OSStatus err = noErr;
-    UInt32 size;
 
-    size = sizeof(cfname);
-    err = AudioStreamGetProperty(streamID, 0, kAudioObjectPropertyName, &size, &cfname);
+    err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyName,
+                                 sizeof(cfname), &cfname, 1);
     if (err && err != kAudioHardwareUnknownPropertyError) goto exit;
 
     if (!cfname) {
         // use the device's name if the stream has no name (usually the case)
-        size = sizeof(cfname);
-        err = AudioDeviceGetProperty(mixer->deviceID, 0, 0, kAudioObjectPropertyName, &size, &cfname);
+        err = GetAudioObjectProperty(mixer->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyName,
+                                     sizeof(cfname), &cfname, 1);
     }
 
     if (cfname) {
@@ -305,10 +266,8 @@ static void CreateVolumeControl(PortControlCreator *creator, PortControl *contro
 
     control->jcontrolType = CONTROL_TYPE_VOLUME;
 
-    const AudioObjectPropertyAddress rangeAddress = {kAudioLevelControlPropertyDecibelRange, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster};
-
-    size = sizeof(control->range);
-    AudioObjectGetPropertyData(control->control, &rangeAddress, 0, NULL, &size, range);
+    GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioLevelControlPropertyDecibelRange,
+                           sizeof(control->range), &control->range, 1);
     precision = 1. / (range->mMaximum - range->mMinimum);
 
     control->jcontrol = creator->newFloatControl(creator, control, CONTROL_TYPE_VOLUME, min, max, precision, "");
@@ -326,8 +285,6 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     AudioStreamID streamID = mixer->streams[portIndex];
 
     const AudioObjectPropertyAddress ownedAddress   = { kAudioObjectPropertyOwnedObjects, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-    const AudioObjectPropertyAddress controlAddress = { kAudioObjectPropertyClass, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-    const AudioObjectPropertyAddress elementAddress = { kAudioControlPropertyElement, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
 
     UInt32 size;
     OSStatus err;
@@ -350,8 +307,9 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
             AudioObjectID *controlIDs = calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
             mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortMixer));
 
-            size = mixer->numDeviceControls * sizeof(AudioObjectID);
-            err = AudioObjectGetPropertyData(mixer->deviceID, &ownedAddress, 0, NULL, &size, controlIDs);
+            err = GetAudioObjectProperty(mixer->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
+                                         mixer->numDeviceControls * sizeof(AudioObjectID), controlIDs, 1);
+            if (err) goto exit;
 
             for (i = 0; i < mixer->numDeviceControls; i++) {
                 PortControl *control = &mixer->deviceControls[i];
@@ -359,12 +317,10 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
                 control->control = controlIDs[i];
                 control->mixer = mixer;
 
-                size = sizeof(control->class);
-                AudioObjectGetPropertyData(control->control, &controlAddress, 0, NULL, &size, &control->class);
-
-                size = sizeof(control->channel);
-                err = AudioObjectGetPropertyData(control->control, &elementAddress, 0, NULL, &size, &control->channel);
-
+                GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyClass,
+                                       sizeof(control->class), &control->class, 1);
+                GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyElement,
+                                       sizeof(control->channel), &control->channel, 1);
                 if (err) continue; // not a control
 
                 TRACE2("%.4s control, channel %d\n", &control->class, control->channel);
@@ -473,10 +429,8 @@ INT32 PORT_GetIntValue(void* controlIDV) {
     switch (control->class) {
         case kAudioMuteControlClassID:
         {
-            const AudioObjectPropertyAddress address =
-            { kAudioBooleanControlPropertyValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-            size = sizeof(value);
-            err = AudioObjectGetPropertyData(control->control, &address, 0, NULL, &size, &value);
+            err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal,
+                                         kAudioBooleanControlPropertyValue, sizeof(value), &value, 1);
             if (err) goto exit;
         }
             break;
@@ -534,10 +488,8 @@ float PORT_GetFloatValue(void* controlIDV) {
     switch (control->class) {
         case kAudioVolumeControlClassID:
         {
-            const AudioObjectPropertyAddress address =
-            { kAudioLevelControlPropertyDecibelValue, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-            size = sizeof(value);
-            err = AudioObjectGetPropertyData(control->control, &address, 0, NULL, &size, &value);
+            err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal,
+                                             kAudioLevelControlPropertyDecibelValue, sizeof(value), &value, 1);
             if (err) goto exit;
 
             // convert decibel to 0-1 logarithmic

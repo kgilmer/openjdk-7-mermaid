@@ -106,16 +106,18 @@ ifeq ($(PLATFORM), linux)
 endif # PLATFORM linux
 
 ifeq ($(PLATFORM), macosx)
-  CPPFLAGS += -DUSE_PORTS=TRUE
+  CPPFLAGS += -DUSE_PORTS=TRUE \
+              -DUSE_DAUDIO=TRUE
 
-  # Ports is implemented
+  # Ports and direct audio are implemented
   INCLUDE_PORTS = TRUE
-
-  # MIDI and direct audio are empty
-  INCLUDE_MIDI = TRUE
   INCLUDE_DAUDIO = TRUE
 
-  LDFLAGS += -framework CoreAudio -framework CoreFoundation
+  # MIDI is empty
+  INCLUDE_MIDI = TRUE
+
+  LDFLAGS += -framework CoreAudio -framework CoreFoundation \
+             -framework CoreServices -framework AudioUnit
 endif
 
 # XXXBSD: ???
