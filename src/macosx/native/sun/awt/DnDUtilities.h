@@ -26,7 +26,7 @@
 #ifndef DnDUtilities_h
 #define DnDUtilities_h
 
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 #include <jni.h>
 
 @interface DnDUtilities : NSObject {
@@ -54,7 +54,6 @@
 + (jint)currentJavaExtKeyModifiers;
 
 // Getting the state of the current Drag
-+ (NSUInteger) currentModifiers;
 + (NSDragOperation)nsDragOperationForModifiers:(NSUInteger)modifiers;
 + (jint) javaKeyModifiersForNSDragOperation:(NSDragOperation)dragOp;
 @end

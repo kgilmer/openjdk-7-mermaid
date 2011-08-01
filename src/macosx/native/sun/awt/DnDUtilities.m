@@ -35,8 +35,7 @@ There are several problems with Drag and Drop - notably, the mismatch between Ja
  The reason we can't just set the CoreDrag(G/S)etAllowableActions directly (while ignoring the modifier keys) is because Carbon apps traditionally don't pay any attention - they only look at the modifier keys.
  */
 
-#import <AppKit/AppKit.h>
-#import <CoreGraphics/CGSEvent.h>
+#import <Cocoa/Cocoa.h>
 #import "DnDUtilities.h"
 #import "java_awt_dnd_DnDConstants.h"
 #import "java_awt_event_InputEvent.h"
@@ -244,45 +243,6 @@ There are several problems with Drag and Drop - notably, the mismatch between Ja
     
     // Get results
     return modifiers & mask;
-}
-
-+ (jint)currentJavaExtKeyModifiers
-{
-    jint modifiers = 0;
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierShift ) ) {
-        modifiers |= java_awt_event_InputEvent_SHIFT_DOWN_MASK;
-    }
-    
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierControl ) ) {
-        modifiers |= java_awt_event_InputEvent_CTRL_DOWN_MASK;
-    }
-    
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierAlternate ) ) {
-        modifiers |= java_awt_event_InputEvent_ALT_DOWN_MASK;
-    }
-    
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierCommand ) ) {
-        modifiers |= java_awt_event_InputEvent_META_DOWN_MASK;
-    }
-    
-    return modifiers;
-}
-
-+ (NSUInteger) currentModifiers {
-    NSUInteger modifiers = 0;
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierShift ) ) {
-        modifiers |= NSShiftKeyMask;
-    }
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierControl ) ) {
-        modifiers |= NSControlKeyMask;
-    }
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierAlternate ) ) {
-        modifiers |= NSAlternateKeyMask;
-    }
-    if( CGSInputModifierKeyState( kCGSPrimaryKeyboardDevice, kCGSModifierCommand ) ) {
-        modifiers |= NSCommandKeyMask;
-    }
-    return modifiers;
 }
 
 + (NSDragOperation) nsDragOperationForModifiers:(NSUInteger)modifiers {

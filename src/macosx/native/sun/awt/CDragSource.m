@@ -25,18 +25,16 @@
 
 //#define DND_DEBUG TRUE
 
-#import "CDragSource.h"
-
 #import "java_awt_dnd_DnDConstants.h"
 
-#import <AppKit/AppKit.h>
-#import <AppKit/NSBitmapImageRep.h>
+#import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "AWTEvent.h"
 #import "AWTView.h"
 #import "CDataTransferer.h"
 #import "CDropTarget.h"
+#import "CDragSource.h"
 #import "DnDUtilities.h"
 #import "ThreadUtilities.h"
 
@@ -660,7 +658,7 @@ JNF_COCOA_ENTER(env);
     }
 
     // b) drag actions (key modifiers) have changed:
-    jint modifiers = [DnDUtilities currentJavaExtKeyModifiers];
+    jint modifiers = [NSEvent modifierFlags];
     if (fDragKeyModifiers != modifiers) {
         NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:[DnDUtilities currentModifiers]];
         NSDragOperation allowedOp = [DnDUtilities mapJavaDragOperationToNS:fSourceActions] & currentOp;

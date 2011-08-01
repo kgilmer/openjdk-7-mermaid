@@ -26,7 +26,7 @@
 #ifndef CDragSource_h
 #define CDragSource_h
 
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 #include <jni.h>
 
 @interface CDragSource : NSObject {
