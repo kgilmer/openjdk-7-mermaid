@@ -25,7 +25,6 @@
 
 package sun.lwawt;
 
-import com.sun.jarsigner.ContentSigner;
 import com.sun.xml.internal.bind.v2.runtime.output.SAXOutput;
 
 import java.awt.*;

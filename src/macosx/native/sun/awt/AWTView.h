@@ -26,6 +26,9 @@
 #import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
+#import "CDragSource.h"
+#import "CDropTarget.h"
+
 @interface AWTView : NSView {
 @private
     jobject m_cPlatformView;
@@ -35,6 +38,11 @@
     NSTrackingRectTag rolloverTrackingRectTag;
 
     // TODO: NSMenu *contextualMenu;
+	
+    // dnd support (see AppKit/NSDragging.h, NSDraggingSource/Destination):
+    CDragSource *fDragSource;
+    CDropTarget *fDropTarget;
+	
 }
 
 - (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
@@ -43,5 +51,13 @@
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;
 - (void) setContextMenu:(NSMenu *)aMenu;
 - (jobject) awtComponent:(JNIEnv *)env;
+
+// dnd API (see AppKit/NSDragging.h, NSDraggingSource/Destination):
+- (void) setDragSource:(CDragSource *)source;
+- (CDragSource *) dragSource;
+
+- (void) setDropTarget:(CDropTarget *)target;
+- (CDropTarget *) dropTarget;
+
 
 @end

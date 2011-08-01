@@ -35,6 +35,8 @@ import java.awt.peer.*;
 import java.security.*;
 import java.util.*;
 
+import sun.lwawt.macosx.CDragSourceContextPeer;
+
 import sun.awt.*;
 
 public abstract class LWToolkit extends SunToolkit implements Runnable {
@@ -381,7 +383,9 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public DragSourceContextPeer createDragSourceContextPeer(DragGestureEvent dge) {
-        throw new RuntimeException("not implemented");
+        DragSourceContextPeer dscp = CDragSourceContextPeer.createDragSourceContextPeer(dge);
+
+        return dscp;
     }
 
     @Override

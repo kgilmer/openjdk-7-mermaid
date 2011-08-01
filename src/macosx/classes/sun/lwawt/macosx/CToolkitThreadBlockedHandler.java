@@ -27,32 +27,23 @@ package sun.lwawt.macosx;
 
 import sun.awt.datatransfer.ToolkitThreadBlockedHandler;
 
-final class CToolkitThreadBlockedHandler extends sun.awt.Mutex implements ToolkitThreadBlockedHandler {
-    long mediator = 0;
+// TODO:BG this class is really a NOOP right now, but should be filled in if needed.
 
+final class CToolkitThreadBlockedHandler implements ToolkitThreadBlockedHandler {
+    public void lock() {
+    }
+
+    public void unlock() {
+    }
+
+    protected boolean isOwned() {
+       return false;
+    }
+    
     public void enter() {
-        if (!isOwned()) {
-            throw new IllegalMonitorStateException();
-        }
-        
-        // TODO: BG
-        /*
-        // Make sure we do this before we unlock
-        // There is a window where stop can be called after unlock, before create.
-        mediator = CToolkit.createAWTRunLoopMediator();
-        unlock();
-        CToolkit.doAWTRunLoop(mediator); */
-        lock();
     }
     
     public void exit() {
-        if (!isOwned()) {
-            throw new IllegalMonitorStateException();
-        }
-        // TODO: BG
-        /*
-        CToolkit.stopAWTRunLoop(mediator); 
-        */
     }
     
 }

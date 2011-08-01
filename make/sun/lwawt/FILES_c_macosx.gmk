@@ -43,6 +43,11 @@ FILES_objc = \
 	CCursorManager.m \
 	CClipboard.m \
 	CDataTransferer.m \
+	CDragSource.m \
+	CDragSourceContextPeer.m \
+	CDropTarget.m \
+	CDropTargetContextPeer.m \
+	DnDUtilities.m \
 	CFileDialog.m \
 	CImage.m \
        	CMenu.m \

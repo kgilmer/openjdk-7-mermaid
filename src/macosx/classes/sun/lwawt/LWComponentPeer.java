@@ -42,6 +42,8 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.peer.DropTargetPeer;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.InputEvent;
@@ -73,6 +75,7 @@ import sun.awt.image.SunVolatileImage;
 import sun.awt.image.ToolkitImage;
 
 import sun.java2d.pipe.Region;
+import sun.lwawt.macosx.CPlatformWindow;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -80,10 +83,12 @@ import javax.swing.RepaintManager;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 
+import sun.lwawt.macosx.CDropTarget;
+
 import com.sun.java.swing.SwingUtilities3;
 
-abstract class LWComponentPeer<T extends Component, D extends JComponent & ComponentDelegate>
-    implements ComponentPeer
+public abstract class LWComponentPeer<T extends Component, D extends JComponent & ComponentDelegate>
+    implements ComponentPeer, DropTargetPeer
 {
     // State lock is to be used for modifications to this
     // peer's fields (e.g. bounds, background, font, etc.)
@@ -145,6 +150,9 @@ abstract class LWComponentPeer<T extends Component, D extends JComponent & Compo
 
     private final D delegate;
     private Container delegateContainer;
+    
+    private int fNumDropTargets = 0;
+    private CDropTarget fDropTarget = null;
 
     private static final Object APPLICATION_LAF_KEY = new Object();
 
@@ -296,6 +304,11 @@ abstract class LWComponentPeer<T extends Component, D extends JComponent & Compo
         if (parent != null) {
             containerPeer = (LWContainerPeer)LWToolkit.targetToPeer(parent);
         }
+    }
+    
+    public PlatformWindow getPlatformWindow() {
+        LWWindowPeer windowPeer = getWindowPeer();
+        return windowPeer.getPlatformWindow();
     }
 
     // ---- PEER METHODS ---- //
@@ -786,6 +799,40 @@ abstract class LWComponentPeer<T extends Component, D extends JComponent & Compo
         // TODO: not implemented
     }
 
+    
+    // DropTargetPeer Method
+    public synchronized void addDropTarget(DropTarget dt) {
+        // 10-14-02 VL: Windows WComponentPeer would add (or remove) the drop target only
+        // if it's the first (or last) one for the component. Otherwise this call is a no-op.
+        if (++fNumDropTargets == 1) {
+            // Having a non-null drop target would be an error but let's check just in case:
+            if (fDropTarget != null)
+                System.err.println("CComponent.addDropTarget(): current drop target is non-null.");
+
+            // Create a new drop target:
+            fDropTarget = CDropTarget.createDropTarget(dt, target, this);
+        }
+    }
+
+    // DropTargetPeer Method
+    public synchronized void removeDropTarget(DropTarget dt) {
+        // 10-14-02 VL: Windows WComponentPeer would add (or remove) the drop target only
+        // if it's the first (or last) one for the component. Otherwise this call is a no-op.
+        if (--fNumDropTargets == 0) {
+            // Having a null drop target would be an error but let's check just in case:
+            if (fDropTarget != null) {
+                // Dispose of the drop target:
+                fDropTarget.dispose();
+                fDropTarget = null;
+            }
+
+            else
+                System.err.println("CComponent.removeDropTarget(): current drop target is null.");
+        }
+    }
+
+    
+    
     // ---- PEER NOTIFICATIONS ---- //
 
     /*
