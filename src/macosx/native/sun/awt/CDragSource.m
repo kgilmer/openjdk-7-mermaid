@@ -93,7 +93,7 @@ static BOOL                sNeedsEnter;
     self = [super init];
     DLog2(@"[CDragSource init]: %@\n", self);
 
-    fControl = nil;
+    fView = nil;
     fComponent = nil;
 
     // Construct the object if we have a valid model for it:
@@ -123,7 +123,7 @@ static BOOL                sNeedsEnter;
         // Set this object as a dragging source:
 		
 		AWTView *awtView = [((NSWindow *) control) contentView];
-		fControl = [awtView retain];
+		fView = [awtView retain];
         [awtView setDragSource:self];
 
         // Let AWTEvent know Java drag is getting underway:
@@ -143,7 +143,7 @@ static BOOL                sNeedsEnter;
     DLog2(@"[CDragSource removeFromView]: %@\n", self);
 
     // Remove this dragging source from the view:
-	[((AWTView *) fControl) setDragSource:nil];
+	[((AWTView *) fView) setDragSource:nil];
     
     // Clean up JNI refs
     if (fComponent != NULL) {
@@ -194,8 +194,8 @@ static BOOL                sNeedsEnter;
     DLog2(@"[CDragSource dealloc]: %@\n", self);
 
     // Delete or release local data:
-    [fControl release];
-    fControl = nil;
+    [fView release];
+    fView = nil;
 
     [fDragImage release];
     fDragImage = nil;
@@ -438,15 +438,14 @@ static BOOL                sNeedsEnter;
 - (NSEvent*)nsDragEvent:(BOOL)isDrag
 {
     // Get NSView for the drag source:
-    NSWindow* window = [fControl window];
-	NSView* view = fControl;
+    NSWindow* window = [fView window];
 					
     NSInteger windowNumber = [window windowNumber];
     NSGraphicsContext* graphicsContext = [NSGraphicsContext graphicsContextWithWindow:window];
 
     // Convert mouse coordinates to NS:
     NSPoint location = NSMakePoint(fDragPos.x, fDragPos.y);
-    NSPoint eventLocation = [view convertPoint:location toView:nil];
+    NSPoint eventLocation = [fView convertPoint:location toView:nil];
 
     // Convert fTriggerEventTimeStamp to NS - AWTEvent.h defines UTC(nsEvent) as ((jlong)[event timestamp] * 1000):
     NSTimeInterval timeStamp = fTriggerEventTimeStamp / 1000;
@@ -492,7 +491,7 @@ static BOOL                sNeedsEnter;
     NSEvent *dragEvent = [self nsDragEvent:YES];
 
     // Get NSView for the drag source:
-    NSView *view = fControl;
+    NSView *view = fView;
 
     // Make sure we have a valid drag image:
     [self validateDragImage];
@@ -707,7 +706,7 @@ JNF_COCOA_EXIT(env);
 - (void) postDragEnter {
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     sNeedsEnter = NO;
-    
+	
     jint targetActions = fSourceActions;
     if ([CDropTarget currentDropTarget]) targetActions = [[CDropTarget currentDropTarget] currentJavaActions];
 

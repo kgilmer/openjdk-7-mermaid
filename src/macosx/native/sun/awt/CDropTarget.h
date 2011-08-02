@@ -33,7 +33,7 @@
 
 @interface CDropTarget : NSObject {
 @private
-    NSView*        fControl;
+    NSView*        fView;
     jobject            fComponent;
     jobject            fDropTarget;
     jobject            fDropTargetContextPeer;

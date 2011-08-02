@@ -33,6 +33,7 @@
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <JavaRuntimeSupport/JavaRuntimeSupport.h>
+#include <objc/objc-runtime.h>
 
 
 #import "CDragSource.h"
@@ -69,7 +70,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     self = [super init];
     DLog2(@"[CDropTarget init]: %@\n", self);	
 	
-	fControl = nil;
+	fView = nil;
     fComponent = nil;
     fDropTarget = nil;
     fDropTargetContextPeer = nil;
@@ -81,7 +82,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
         fDropTarget = JNFNewGlobalRef(env, jdropTarget);
 		
 		AWTView *awtView = [((NSWindow *) control) contentView];
-		fControl = [awtView retain];
+		fView = [awtView retain];
 		[awtView setDropTarget:self];
 		
 		
@@ -93,7 +94,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     return self;
 }
 
-// When [CDropTarget init] is called the ControlModel's fControl may not have been set up yet. ControlModel
+// When [CDropTarget init] is called the ControlModel's fView may not have been set up yet. ControlModel
 // (soon after) calls [CDropTarget controlModelControlValid] on the native event thread, once per CDropTarget,
 // to let it know it's been set up now.
 - (void)controlModelControlValid
@@ -114,7 +115,6 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
         NSColorPboardType,
         NSRTFDPboardType,
         NSHTMLPboardType,
-        NSPICTPboardType,
         NSURLPboardType,
         NSPDFPboardType,
         NSVCardPboardType,
@@ -123,7 +123,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
         nil];
 
     // Enable dragging events over this object:
-    [fControl registerForDraggedTypes:dataTypes];
+    [fView registerForDraggedTypes:dataTypes];
 	
     [dataTypes release];
 }
@@ -154,7 +154,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     DLog2(@"[CDropTarget removeFromView]: %@\n", self);
 
     // Remove this dragging destination from the view:
-	[((AWTView *) fControl) setDropTarget:nil];
+	[((AWTView *) fView) setDropTarget:nil];
     
     // Clean up JNI refs
     if (fComponent != NULL) {
@@ -177,8 +177,8 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 {
     DLog2(@"[CDropTarget dealloc]: %@\n", self);
 
-    [fControl release];
-    fControl = nil;
+    [fView release];
+    fView = nil;
     
     [super dealloc];
 }
@@ -381,7 +381,6 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 - (void)javaDraggingEnded:(jlong)draggingSequenceNumber success:(BOOL)jsuccess action:(jint)jdropaction
 {
     NSNumber *draggingSequenceNumberID = [NSNumber numberWithLongLong:draggingSequenceNumber];
-        
         // Report back actual Swing success, not what AppKit thinks
         sDraggingError = !jsuccess;
         sDragOperation = [DnDUtilities mapJavaDragOperationToNS:jdropaction];
@@ -403,23 +402,26 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 - (void) calculateCurrentSourceActions:(jint *)actions dropAction:(jint *)dropAction
 {
     // Get the raw (unmodified by keys) source actions
-    NSDragOperation rawDragActions = [JRSDrag currentAllowableActions];
-    if (rawDragActions != NSDragOperationNone) {
-        // Both actions and dropAction default to the rawActions
-        *actions = [DnDUtilities mapNSDragOperationMaskToJava:rawDragActions];
-        *dropAction = *actions;
-		
-        // Get the current key modifiers.
-        NSUInteger dragModifiers = [JRSDrag currentModifiers];
-		// Either the drop action is narrowed as per Java rules (MOVE, COPY, LINK, NONE) or by the drag modifiers
-        if (dragModifiers) {
-			// Get the user selected operation based on the drag modifiers, then return the intersection
-            NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:dragModifiers];
-            NSDragOperation allowedOp = rawDragActions & currentOp;
+	id jrsDrag = objc_lookUpClass("JRSDrag");
+	if (jrsDrag != nil) {
+		NSDragOperation rawDragActions = (NSDragOperation) [jrsDrag performSelector:@selector(currentAllowableActions)];
+		if (rawDragActions != NSDragOperationNone) {
+			// Both actions and dropAction default to the rawActions
+			*actions = [DnDUtilities mapNSDragOperationMaskToJava:rawDragActions];
+			*dropAction = *actions;
 			
-            *dropAction = [DnDUtilities mapNSDragOperationToJava:allowedOp];
-        }
-    }
+			// Get the current key modifiers.
+			NSUInteger dragModifiers = (NSUInteger) [jrsDrag performSelector:@selector(currentModifiers)];
+			// Either the drop action is narrowed as per Java rules (MOVE, COPY, LINK, NONE) or by the drag modifiers
+			if (dragModifiers) {
+				// Get the user selected operation based on the drag modifiers, then return the intersection
+				NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:dragModifiers];
+				NSDragOperation allowedOp = rawDragActions & currentOp;
+				
+				*dropAction = [DnDUtilities mapNSDragOperationToJava:allowedOp];
+			}
+		}
+	}
     *dropAction = [DnDUtilities narrowJavaDropActions:*dropAction];
 }
 
@@ -437,7 +439,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
         sJavaDropOperation = java_awt_dnd_DnDConstants_ACTION_NONE;
         
     // We could probably special-case some stuff if drag and drop objects match:
-    //if ([sender dragSource] == fControl)
+    //if ([sender dragSource] == fView)
 
     if (draggingSequenceNumber != sDraggingSequenceNumber) {
         sDraggingSequenceNumber = draggingSequenceNumber;
@@ -469,7 +471,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     if (sDraggingError == FALSE) {
         sDraggingExited = FALSE;
         sDraggingLocation = [sender draggingLocation];
-        NSPoint javaLocation = [fControl convertPoint:sDraggingLocation fromView:nil];
+        NSPoint javaLocation = [fView convertPoint:sDraggingLocation fromView:nil];
         DLog5(@"+ dragEnter: loc native %f, %f, java %f, %f\n", sDraggingLocation.x, sDraggingLocation.y, javaLocation.x, javaLocation.y);
                 
                 ////////// BEGIN Calculate the current drag actions //////////
@@ -564,7 +566,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 
     // Should we notify Java things have changed?
     if (sDraggingError == FALSE && notifyJava) {
-        NSPoint javaLocation = [fControl convertPoint:sDraggingLocation fromView:nil];
+        NSPoint javaLocation = [fView convertPoint:sDraggingLocation fromView:nil];
         //DLog5(@"  : dragMoved: loc native %f, %f, java %f, %f\n", sDraggingLocation.x, sDraggingLocation.y, javaLocation.x, javaLocation.y);
 
         jlongArray formats = sDraggingFormats;
@@ -640,7 +642,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 
     if (sDraggingError == FALSE) {
         sDraggingLocation = [sender draggingLocation];
-        NSPoint javaLocation = [fControl convertPoint:sDraggingLocation fromView:nil];
+        NSPoint javaLocation = [fView convertPoint:sDraggingLocation fromView:nil];
 
         jint actions = [DnDUtilities mapNSDragOperationMaskToJava:[sender draggingSourceOperationMask]];
         jint dropAction = sJavaDropOperation;
@@ -666,10 +668,8 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
         [self draggingExited:sender];
     }
 
-        
-    // KCH - 3532610 Somewhere in here, javaDraggingEnded should have been invoked which will set sDraggingError. 
-    // Set the drag operation explicitly based on javaDraggingEnded
-    [(id)sender _setLastDragDestinationOperation:sDragOperation];
+// TODO:BG
+//   [(id)sender _setLastDragDestinationOperation:sDragOperation];
 
         
     DLog2(@"[CDropTarget performDragOperation]: returning %@\n", (sDraggingError ? @"NO" : @"YES"));

@@ -31,7 +31,7 @@
 
 @interface CDragSource : NSObject {
 @private
-    NSObject*        fControl;
+    NSView*        fView;
     jobject            fComponent;
     jobject            fComponentPeer;
     jobject            fDragSourceContextPeer;
