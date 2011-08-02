@@ -245,6 +245,32 @@ There are several problems with Drag and Drop - notably, the mismatch between Ja
     return modifiers & mask;
 }
 
+
++ (jint)currentJavaExtKeyModifiers
+{
+	NSUInteger modifiers = [NSEvent modifierFlags];
+	jint jmodifiers = 0;
+	
+    if(modifiers & NSShiftKeyMask) {
+        jmodifiers |= java_awt_event_InputEvent_SHIFT_DOWN_MASK;
+    }
+    
+    if(modifiers & NSControlKeyMask) {
+        jmodifiers |= java_awt_event_InputEvent_CTRL_DOWN_MASK;
+    }
+    
+    if(modifiers & NSAlternateKeyMask) {
+        jmodifiers |= java_awt_event_InputEvent_ALT_DOWN_MASK;
+    }
+    
+    if(modifiers & NSCommandKeyMask) {
+        jmodifiers |= java_awt_event_InputEvent_META_DOWN_MASK;
+    }
+    
+    return jmodifiers;
+}
+
+
 + (NSDragOperation) nsDragOperationForModifiers:(NSUInteger)modifiers {
 
     // Java first

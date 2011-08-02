@@ -658,9 +658,9 @@ JNF_COCOA_ENTER(env);
     }
 
     // b) drag actions (key modifiers) have changed:
-    jint modifiers = [NSEvent modifierFlags];
+    jint modifiers = [DnDUtilities currentJavaExtKeyModifiers];
     if (fDragKeyModifiers != modifiers) {
-        NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:[DnDUtilities currentModifiers]];
+        NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:[NSEvent modifierFlags]];
         NSDragOperation allowedOp = [DnDUtilities mapJavaDragOperationToNS:fSourceActions] & currentOp;
         
         fDragKeyModifiers = modifiers;
