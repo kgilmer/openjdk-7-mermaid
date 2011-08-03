@@ -40,8 +40,8 @@
     // TODO: NSMenu *contextualMenu;
 	
     // dnd support (see AppKit/NSDragging.h, NSDraggingSource/Destination):
-    CDragSource *fDragSource;
-    CDropTarget *fDropTarget;
+    CDragSource *_dragSource;
+    CDropTarget *_dropTarget;
 	
 }
 
@@ -52,12 +52,7 @@
 - (void) setContextMenu:(NSMenu *)aMenu;
 - (jobject) awtComponent:(JNIEnv *)env;
 
-// dnd API (see AppKit/NSDragging.h, NSDraggingSource/Destination):
 - (void) setDragSource:(CDragSource *)source;
-- (CDragSource *) dragSource;
-
 - (void) setDropTarget:(CDropTarget *)target;
-- (CDropTarget *) dropTarget;
-
 
 @end
