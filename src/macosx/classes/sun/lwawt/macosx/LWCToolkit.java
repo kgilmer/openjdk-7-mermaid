@@ -57,8 +57,9 @@ public class LWCToolkit extends LWToolkit {
                 return null;
             }
         });
-        
-        initIDs();
+        if (!GraphicsEnvironment.isHeadless()) {
+            initIDs();
+        }
     }
 
     public LWCToolkit() {
