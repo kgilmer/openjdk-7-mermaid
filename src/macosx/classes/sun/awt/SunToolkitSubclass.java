@@ -30,9 +30,11 @@ package sun.awt;
 // c.f. 3746956
 public abstract class SunToolkitSubclass extends SunToolkit {
     public static void flushPendingEvents(AppContext appContext) {
+        flushLock.lock();
         PostEventQueue postEventQueue = (PostEventQueue)appContext.get("PostEventQueue");
         if (postEventQueue != null) {
             postEventQueue.flush();
         }
+        flushLock.unlock();
     }
 }
