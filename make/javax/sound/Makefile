@@ -27,6 +27,11 @@ BUILDDIR = ../..
 PACKAGE = javax.sound
 LIBRARY = jsound
 PRODUCT = sun
+
+ifeq ($(PLATFORM),macosx)
+CPLUSPLUSLIBRARY = true
+endif
+
 include $(BUILDDIR)/common/Defs.gmk
 
 # include defines for sound
@@ -77,6 +82,7 @@ FILES_copydirs = \
 	$(FILES_mkdirs)
 
 FILES_c += $(FILES_$(PLATFORM))
+FILES_cpp += $(FILES_cpp_$(PLATFORM))
 
 
 #
@@ -117,7 +123,8 @@ ifeq ($(PLATFORM), macosx)
   INCLUDE_MIDI = TRUE
 
   LDFLAGS += -framework CoreAudio -framework CoreFoundation \
-             -framework CoreServices -framework AudioUnit
+             -framework CoreServices -framework AudioUnit -lstdc++
+  CXXFLAGS += -I`xcode-select -print-path`/Extras/CoreAudio/PublicUtility
 endif
 
 # XXXBSD: ???

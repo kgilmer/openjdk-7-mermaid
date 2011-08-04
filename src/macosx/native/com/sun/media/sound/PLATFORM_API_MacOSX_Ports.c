@@ -117,7 +117,8 @@ void* PORT_Open(INT32 mixerIndex) {
                                mixer->numInputStreams * sizeof(AudioStreamID), mixer->streams, 0);
 
         GetAudioObjectProperty(mixer->deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
-                               mixer->numOutputStreams * sizeof(AudioStreamID), mixer->streams, 0);
+                               mixer->numOutputStreams * sizeof(AudioStreamID),
+                               mixer->streams + mixer->numInputStreams, 0);
     }
 
     TRACE1("< PORT_Open %p\n", mixer);
