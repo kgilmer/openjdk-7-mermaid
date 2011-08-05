@@ -41,7 +41,8 @@ FILES_macosx = \
     PLATFORM_API_MacOSX_Utils.c
 
 FILES_cpp_macosx = \
-    PLATFORM_API_MacOSX_PCM.cpp
+    PLATFORM_API_MacOSX_PCM.cpp \
+    CARingBuffer.cpp
 
 FILES_windows = \
 	PLATFORM_API_WinOS_MidiIn.c \

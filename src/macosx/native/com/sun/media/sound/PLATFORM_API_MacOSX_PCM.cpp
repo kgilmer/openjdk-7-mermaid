@@ -29,7 +29,11 @@
 #include <AudioUnit/AudioUnit.h>
 #include <CoreServices/CoreServices.h>
 #include <CoreAudio/CoreAudio.h>
-#include <CARingBuffer.cpp>
+#include <libkern/OSAtomic.h>
+#include <algorithm>
+
+#include <CABitOperations.h>
+#include "CARingBuffer.h"
 
 extern "C" {
 #include "DirectAudio.h"
