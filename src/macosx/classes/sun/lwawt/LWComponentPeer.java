@@ -109,8 +109,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
      * The lock synchronizes access to the delegate
      * internal state. Think of it as a 'virtual EDT'.
      */
-    private final Object delegateTreeLock =
-        new StringBuilder("LWComponentPeer.delegateTreeLock");
+//    private final Object delegateTreeLock =
+//        new StringBuilder("LWComponentPeer.delegateTreeLock");
 
     private T target;
 
@@ -270,7 +270,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     // AWT tree lock, using a new separate lock to synchronize
     // access to delegates may lead deadlocks                      
     final Object getDelegateLock() {
-        return delegateTreeLock;
+        //return delegateTreeLock;
+        return getTarget().getTreeLock();
     }
 
     protected final static Object getPeerTreeLock() {
