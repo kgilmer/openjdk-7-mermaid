@@ -34,8 +34,9 @@ typedef struct OSXAudioDevice {
     int numInputStreams;
     int numOutputStreams;
 
-    /* May actually be different for different streams on a device */
+    /* It is possible, but unlikely, for either of these to be changed by the user. */
     int numChannels;
+    Float64 nominalSampleRate;
 } OSXAudioDevice;
 
 typedef struct {
@@ -45,8 +46,9 @@ typedef struct {
 
 static AudioDeviceContext deviceCtx;
 
-static int GetDeviceChannelCount(AudioDeviceID deviceID)
+static int UpdateAudioDeviceInfo(OSXAudioDevice *device)
 {
+    AudioDeviceID deviceID = device->deviceID;
     int streamID;
     OSStatus err;
     UInt32 size;
@@ -61,7 +63,7 @@ static int GetDeviceChannelCount(AudioDeviceID deviceID)
             GetAudioObjectProperty(deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
                                    sizeof(streamID), &streamID, 1);
         } else {
-            ERROR1("GetDeviceChannelCount error %.4s\n", &err);
+            ERROR1("UpdateAudioDeviceInfo error %.4s\n", &err);
             return 0;
         }
     }
@@ -71,10 +73,11 @@ static int GetDeviceChannelCount(AudioDeviceID deviceID)
     err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyVirtualFormat,
                                  sizeof(asbd), &asbd, 1);
     if (err)
-        return 0;
-    TRACE3("by AudioStream: samplerate %f channels %d bits %d\n", asbd.mSampleRate, (int)asbd.mChannelsPerFrame, (int)asbd.mBitsPerChannel);
+        return err;
 
-    return asbd.mChannelsPerFrame;
+    device->numChannels = asbd.mChannelsPerFrame;
+    device->nominalSampleRate = asbd.mSampleRate;
+    return noErr;
 }
 
 int GetAudioDeviceCount()
@@ -108,7 +111,7 @@ int GetAudioDeviceCount()
                                            &size);
                 device->numOutputStreams = size / sizeof(AudioStreamID);
 
-                device->numChannels = GetDeviceChannelCount(device->deviceID);
+                UpdateAudioDeviceInfo(device);
             }
         }
     }
@@ -127,6 +130,7 @@ int GetAudioDeviceDescription(int index, AudioDeviceDescription *description)
     description->numInputStreams  = device->numInputStreams;
     description->numOutputStreams = device->numOutputStreams;
     description->numChannels      = device->numChannels;
+    description->nominalSampleRate= device->nominalSampleRate;
 
     if (description->name) {
         err = GetAudioObjectProperty(device->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyName,

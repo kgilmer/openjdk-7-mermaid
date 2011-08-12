@@ -36,6 +36,7 @@ typedef struct AudioDeviceDescription {
     int numInputStreams;
     int numOutputStreams;
     int numChannels;
+    Float64 nominalSampleRate;
 } AudioDeviceDescription;
 
 int GetAudioDeviceCount();
