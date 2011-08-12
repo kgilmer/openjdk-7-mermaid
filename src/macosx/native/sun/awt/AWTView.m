@@ -108,26 +108,32 @@ AWT_ASSERT_APPKIT_THREAD;
 
 - (void) mouseDown: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask |= NSLeftMouseDownMask;
 }
 
 - (void) mouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask &= ~NSLeftMouseDownMask;
 }
 
 - (void) rightMouseDown: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask |= NSRightMouseDownMask;
 }
 
 - (void) rightMouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask &= ~NSRightMouseDownMask;
 }
 
 - (void) otherMouseDown: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask |= NSOtherMouseDownMask;
 }
 
 - (void) otherMouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
+    mouseDownButtonMask &= ~NSOtherMouseDownMask;
 }
 
 - (void) mouseMoved: (NSEvent *)event {
@@ -198,16 +204,6 @@ AWT_ASSERT_APPKIT_THREAD;
     
     NSPoint eventLocation = [event locationInWindow];
     NSPoint localPoint = [self convertPoint: eventLocation fromView: nil];
-
-    // TODO: sometimes "illegal" events are coming to NSView
-    // it results in NPE on Java level
-    NSRect bounds = [self bounds];
-    if (localPoint.x < 0 || localPoint.x > bounds.size.width ||
-        localPoint.y < 0 || localPoint.y > bounds.size.height)
-    {
-        return;
-    }    
-    
     NSPoint absP = [NSEvent mouseLocation];
     
     // Convert global numbers between Cocoa's coordinate system and Java.
@@ -226,7 +222,7 @@ AWT_ASSERT_APPKIT_THREAD;
         clickCount = [event clickCount];
     }
 
-    jint modifiers = GetJavaMouseModifiers(event);
+    jint modifiers = GetJavaMouseModifiers(event, mouseDownButtonMask);
     static JNF_CLASS_CACHE(jc_NSEvent, "sun/lwawt/macosx/event/NSEvent");
     static JNF_CTOR_CACHE(jctor_NSEvent, jc_NSEvent, "(IIIIIIIIDD)V");
     jobject jEvent = JNFNewObject(env, jctor_NSEvent,

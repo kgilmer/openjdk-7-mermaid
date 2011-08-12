@@ -703,7 +703,7 @@ NsMouseModifiersToJavaModifiers(NSEvent *event)
     }
 }
 
-jint GetJavaMouseModifiers(NSEvent *event)
+jint GetJavaMouseModifiers(NSEvent *event, NSInteger mouseDownButtonMask)
 {
     // Mousing needs the key modifiers
     jint modifiers = NsKeyModifiersToJavaModifiers([event modifierFlags]);
@@ -712,6 +712,12 @@ jint GetJavaMouseModifiers(NSEvent *event)
     modifiers |= NsMouseModifiersToJavaModifiers(event);
 
     NSUInteger nsEventMask = NSEventMaskFromType([event type]);
+
+    // mouseEntered/mouseExited events don't know about the pressed mouse buttons
+    if ([event type] == NSMouseEntered || [event type] == NSMouseExited) {
+       nsEventMask |= mouseDownButtonMask;
+    }
+
     if (nsEventMask & (NSLeftMouseDownMask | NSLeftMouseDraggedMask)) {
         modifiers |= java_awt_event_InputEvent_BUTTON1_DOWN_MASK;
     } else if (nsEventMask & (NSRightMouseDownMask | NSRightMouseDraggedMask)) {
@@ -769,7 +775,7 @@ DeliverMouseClickedEvent(JNIEnv *env, NSEvent *event, jobject peer)
     NSPoint pt = [event locationInWindow];
     NSPoint pOnScreen = [NSEvent mouseLocation];
     jint etype = java_awt_event_MouseEvent_MOUSE_CLICKED;
-    jint modifiers = GetJavaMouseModifiers(event);
+    jint modifiers = GetJavaMouseModifiers(event, 0);
     jint clickCount = [event clickCount];
     jint button = NSButtonToJavaButton([event buttonNumber]);
 

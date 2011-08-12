@@ -42,7 +42,9 @@
     // dnd support (see AppKit/NSDragging.h, NSDraggingSource/Destination):
     CDragSource *_dragSource;
     CDropTarget *_dropTarget;
-	
+
+    // mask used to set the correct modifiers for java mouseEntered/mouseExited
+    NSInteger mouseDownButtonMask;
 }
 
 - (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;

@@ -638,12 +638,14 @@ public class LWWindowPeer
                     }
                 }
                 lastMouseEventPeer = targetPeer;
-                Point newp = targetPeer.windowToLocal(x, y, curWindowPeer);
-                postEvent(new MouseEvent(targetPeer.getTarget(),
-                                         MouseEvent.MOUSE_ENTERED,
-                                         when, modifiers,
-                                         newp.x, newp.y, screenX, screenY,
-                                         clickCount, popupTrigger, button));
+                if (targetPeer != null) {
+                    Point newp = targetPeer.windowToLocal(x, y, curWindowPeer);
+                    postEvent(new MouseEvent(targetPeer.getTarget(),
+                                             MouseEvent.MOUSE_ENTERED,
+                                             when, modifiers,
+                                             newp.x, newp.y, screenX, screenY,
+                                             clickCount, popupTrigger, button));
+                }
             }
             // TODO: fill "bdata" member of AWTEvent
 
