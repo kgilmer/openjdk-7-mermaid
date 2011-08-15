@@ -36,10 +36,8 @@
 /*
  TODO
 
- Check isInput=1 as well as =0 for properties.
- Test devices with >2 channels or multiple streams.
+ Test devices with >2 channels.
  Test that this works properly with device plug/unplug.
- Test some audio hardware that exports controls on its streams.
  Compare control names and tree structure to other platforms.
  Implement virtual controls (balance, pan, master volume).
  */
@@ -77,7 +75,6 @@ typedef struct {
 } PortMixer;
 
 INT32 PORT_GetPortMixerCount() {
-    TRACE0("> PORT_GetPortMixerCount\n");
     int count = GetAudioDeviceCount();
     TRACE1("< PORT_GetPortMixerCount = %d\n", count);
 
@@ -100,8 +97,6 @@ INT32 PORT_GetPortMixerDescription(INT32 mixerIndex, PortMixerDescription* mixer
 }
 
 void* PORT_Open(INT32 mixerIndex) {
-    TRACE1("> PORT_Open %d\n", mixerIndex);
-
     AudioDeviceDescription description = {0};
     PortMixer *mixer = calloc(1, sizeof(PortMixer));
 
@@ -133,12 +128,9 @@ void PORT_Close(void* id) {
         free(mixer->streams);
         free(mixer);
     }
-
-    TRACE0("< PORT_Close\n");
 }
 
 INT32 PORT_GetPortCount(void* id) {
-    TRACE0("> PORT_GetPortCount\n");
     PortMixer *mixer = id;
     int numStreams = mixer->numInputStreams + mixer->numOutputStreams;
 
@@ -147,7 +139,6 @@ INT32 PORT_GetPortCount(void* id) {
 }
 
 INT32 PORT_GetPortType(void* id, INT32 portIndex) {
-    TRACE0("> PORT_GetPortType\n");
     PortMixer *mixer = id;
 
     AudioStreamID streamID = mixer->streams[portIndex];
@@ -229,8 +220,6 @@ exit:
 }
 
 INT32 PORT_GetPortName(void* id, INT32 portIndex, char* name, INT32 len) {
-    TRACE0("> PORT_GetPortName\n");
-
     PortMixer *mixer = id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
@@ -254,7 +243,7 @@ INT32 PORT_GetPortName(void* id, INT32 portIndex, char* name, INT32 len) {
 exit:
     if (cfname) CFRelease(cfname);
 
-    TRACE0("< PORT_GetPortName\n");
+    TRACE1("< PORT_GetPortName %s\n", name);
 
     return FALSE;
 }
@@ -281,7 +270,6 @@ static void CreateMuteControl(PortControlCreator *creator, PortControl *control)
 }
 
 void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
-    TRACE0("> PORT_GetControls\n");
     PortMixer *mixer = id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
@@ -318,11 +306,25 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
                 control->control = controlIDs[i];
                 control->mixer = mixer;
 
+                AudioObjectID controlScope;
+                UInt32 controlVariant;
+
                 GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyClass,
                                        sizeof(control->class), &control->class, 1);
-                GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyElement,
+                err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyElement,
                                        sizeof(control->channel), &control->channel, 1);
-                if (err) continue; // not a control
+                if (err) { // not a control
+                    control->class = 0;
+                    continue;
+                }
+
+                GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyScope,
+                                       sizeof(controlScope), &controlScope, 1);
+                if (controlScope == kAudioDevicePropertyScopePlayThrough) {
+                    // filter out unwanted controls
+                    control->class = 0;
+                    continue;
+                }
 
                 TRACE2("%.4s control, channel %d\n", &control->class, control->channel);
 
@@ -349,7 +351,7 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
         }
     }
 
-    TRACE4("volume: channel %d master %d, mute: channel %d master %d\n", hasChannelVolume, masterVolume != NULL, hasChannelMute, masterMute != NULL);
+    TRACE4("volume: channel %d master %d, mute: channel %d master %d\n", numVolumeControls, masterVolume != NULL, numMuteControls, masterMute != NULL);
 
     if (masterVolume) {
         if (!masterVolume->jcontrol)
@@ -421,7 +423,6 @@ exit:
 }
 
 INT32 PORT_GetIntValue(void* controlIDV) {
-    TRACE0("> PORT_GetIntValue\n");
     PortControl *control = controlIDV;
     UInt32 value = 0;
     OSStatus err = 0;
@@ -470,7 +471,6 @@ void PORT_SetIntValue(void* controlIDV, INT32 value) {
             ERROR0("SetIntValue requested for non-Int control\n");
     }
 
-    TRACE0("< PORT_SetIntValue\n");
     return;
 
 exit:
@@ -480,7 +480,6 @@ exit:
 }
 
 float PORT_GetFloatValue(void* controlIDV) {
-    TRACE0("> PORT_GetFloatValue\n");
     PortControl *control = controlIDV;
     Float32 value = 0;
     OSStatus err = 0;

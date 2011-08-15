@@ -67,7 +67,6 @@ typedef struct OSXDirectAudioDevice {
 } OSXDirectAudioDevice;
 
 INT32 DAUDIO_GetDirectAudioDeviceCount() {
-    TRACE0("> DAUDIO_GetDirectAudioDeviceCount\n");
     int count = GetAudioDeviceCount();
     TRACE1("< DAUDIO_GetDirectAudioDeviceCount = %d\n", count);
 
@@ -75,7 +74,6 @@ INT32 DAUDIO_GetDirectAudioDeviceCount() {
 }
 
 INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDeviceDescription* daudioDescription) {
-    TRACE0("> DAUDIO_GetDirectAudioDeviceDescription\n");
     AudioDeviceDescription description;
 
     description.strLen = DAUDIO_STRING_LENGTH;
@@ -101,8 +99,10 @@ INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDevice
  Philosophical differences here -
 
  Sample rate -
- Audio Output Unit has a current sample rate, but will accept any sample rate.
- The device has a list of nominal sample rates, but we don't want to get into changing those.
+ Audio Output Unit has a current sample rate, but will accept any sample rate for output.
+ For input, the sample rate of the unit must be the current hardware sample rate.
+ It is possible for the user to change this, but there is no way to notify Java of it
+ happening, so this is not handled.
 
  Integer format -
  Core Audio uses floats. Audio Output Unit will accept anything.
@@ -110,7 +110,7 @@ INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDevice
  */
 
 void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* creator) {
-	TRACE3("> DAUDIO_GetFormats %d %d isSource=%d\n", (int)mixerIndex, (int)deviceID, isSource);
+	TRACE3("> DAUDIO_GetFormats mixer=%d deviceID=%#x isSource=%d\n", (int)mixerIndex, (int)deviceID, isSource);
     AudioDeviceDescription description = {0};
     OSStatus err = noErr;
     Float64 sampleRate;
@@ -129,7 +129,7 @@ void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* cre
 
     /*
      For output, register 16-bit for any sample rate with either 1ch/2ch.
-     For input, we need to be more restrictive.
+     For input, we must use the real sample rate.
      */
 
     int maxChannelIndex;
@@ -223,7 +223,6 @@ static void AllocateInputBufferList(OSXDirectAudioDevice *device)
     for (int i = 0; i < channels; i++) {
         list->mBuffers[i].mNumberChannels = 1;
         list->mBuffers[i].mDataByteSize   = audioUnitBufferSize;
-        // list->mBuffers[i].mData = malloc(audioUnitBufferSize);
     }
 
     device->inputBufferList = list;
@@ -455,7 +454,7 @@ int DAUDIO_Read(void* id, char* data, int byteSize) {
 
     SInt64 firstAvailableSampleTime, lastWrittenSampleTime, lastReadSampleTime = device->lastReadSampleTime;
     int numRequestedFrames = byteSize / device->asbd.mBytesPerFrame, numAvailableFrames = 0;
-    int spins = 0;
+    int waits = 0;
 
     while (1) {
         device->buffer.GetTimeBounds(firstAvailableSampleTime, lastWrittenSampleTime);
@@ -469,7 +468,7 @@ int DAUDIO_Read(void* id, char* data, int byteSize) {
         pthread_mutex_lock(&device->inputMutex);
         pthread_cond_wait(&device->inputCond, &device->inputMutex);
         pthread_mutex_unlock(&device->inputMutex);
-        spins++;
+        waits++;
     }
 
     AudioBufferList bufferList;
@@ -485,22 +484,20 @@ int DAUDIO_Read(void* id, char* data, int byteSize) {
     CARingBufferError err = device->buffer.Fetch(&bufferList, numRequestedFrames, timeToRead);
     device->lastReadSampleTime = timeToRead + numRequestedFrames;
 
-    TRACE4("> DAUDIO_Read read %d frames (%lld-%lld), spun %d times\n", numRequestedFrames, lastReadSampleTime, device->lastReadSampleTime, spins);
+    TRACE4("> DAUDIO_Read read %d frames (%lld-%lld), waited %d times\n", numRequestedFrames, lastReadSampleTime, device->lastReadSampleTime, waits);
 
     return err == kCARingBufferError_OK ? numRequestedFrames * device->asbd.mBytesPerFrame : -1;
 }
 
 int DAUDIO_GetBufferSize(void* id, int isSource) {
-    TRACE0("> DAUDIO_GetBufferSize\n");
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)id;
     int bufferSizeInBytes = device->bufferSizeInFrames * device->asbd.mBytesPerFrame;
 
-    TRACE1("< %d\n", bufferSizeInBytes);
+    TRACE1("< DAUDIO_GetBufferSize %d\n", bufferSizeInBytes);
     return bufferSizeInBytes;
 }
 
 int DAUDIO_StillDraining(void* id, int isSource) {
-    TRACE0("> DAUDIO_StillDraining\n");
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)id;
     SInt64 startTime, endTime;
     int draining;
@@ -509,7 +506,7 @@ int DAUDIO_StillDraining(void* id, int isSource) {
 
     draining = device->lastReadSampleTime < endTime;
 
-    TRACE1("< %d\n", draining);
+    TRACE1("< DAUDIO_StillDraining %d\n", draining);
     return draining;
 }
 
@@ -529,13 +526,28 @@ int DAUDIO_Flush(void* id, int isSource) {
 }
 
 int DAUDIO_GetAvailable(void* id, int isSource) {
-    TRACE0("> DAUDIO_GetAvailable\n");
+    OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)id;
+    SInt64 firstAvailableSampleTime, lastWrittenSampleTime, lastReadSampleTime = device->lastReadSampleTime;
+    CARingBufferError err;
 
-    return 0;
+    err = device->buffer.GetTimeBounds(firstAvailableSampleTime, lastWrittenSampleTime);
+    if (err)
+        return FALSE;
+
+    int numUsedFrames = lastWrittenSampleTime - firstAvailableSampleTime;
+    int numFreeFrames = (lastReadSampleTime - firstAvailableSampleTime) + (device->bufferSizeInFrames - numUsedFrames);
+
+    if (isSource) {
+        // free bytes in the output buffer
+        return numFreeFrames * device->asbd.mBytesPerFrame;
+    } else {
+        // used bytes in the input buffer
+        return numUsedFrames * device->asbd.mBytesPerFrame;
+    }
 }
 
 INT64 DAUDIO_GetBytePosition(void* id, int isSource, INT64 javaBytePos) {
-    TRACE0("> DAUDIO_GetBytePosition\n");
+    //TRACE0("> DAUDIO_GetBytePosition\n");
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)id;
     INT64 position;
 
@@ -548,21 +560,18 @@ INT64 DAUDIO_GetBytePosition(void* id, int isSource, INT64 javaBytePos) {
         position = (endTime * device->asbd.mBytesPerFrame) - javaBytePos;
     }
 
-    TRACE1("< %lld\n", position);
+    TRACE1("< DAUDIO_GetBytePosition %lld\n", position);
     return position;
 }
 
 void DAUDIO_SetBytePosition(void* id, int isSource, INT64 javaBytePos) {
-    TRACE0("> DAUDIO_SetBytePosition\n");
 }
 
 int DAUDIO_RequiresServicing(void* id, int isSource) {
-    TRACE0("> DAUDIO_RequiresServicing\n");
     return FALSE;
 }
 
 void DAUDIO_Service(void* id, int isSource) {
-    // Nothing to do
 }
 
 #endif
