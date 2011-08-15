@@ -99,6 +99,7 @@ FILES_export = \
 	sun/lwawt/macosx/CClipboard.java \
 	sun/lwawt/macosx/CDataTransferer.java \
 	sun/lwawt/macosx/CDragSourceContextPeer.java \
+	sun/lwawt/macosx/CMouseDragGestureRecognizer.java \
 	sun/lwawt/macosx/CDropTarget.java \
 	sun/lwawt/macosx/CDropTargetContextPeer.java \
 	sun/lwawt/macosx/CCursorManager.java \

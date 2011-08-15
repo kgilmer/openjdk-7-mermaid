@@ -27,6 +27,13 @@ package sun.lwawt.macosx;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragGestureRecognizer;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.dnd.MouseDragGestureRecognizer;
+import java.awt.dnd.peer.DragSourceContextPeer;
 import java.awt.font.TextAttribute;
 import java.awt.im.InputMethodHighlight;
 import java.awt.im.spi.InputMethodDescriptor;
@@ -433,6 +440,25 @@ public class LWCToolkit extends LWToolkit {
     // This exists purely to get around permissions issues with getSystemEventQueueImpl
     EventQueue getSystemEventQueueForInvokeAndWait() {
         return getSystemEventQueueImpl();
+    }
+    
+    
+// DnD support 
+    
+    public DragSourceContextPeer createDragSourceContextPeer(DragGestureEvent dge) throws InvalidDnDOperationException {
+        DragSourceContextPeer dscp = CDragSourceContextPeer.createDragSourceContextPeer(dge);
+
+        return dscp;
+    }
+    
+    public <T extends DragGestureRecognizer> T createDragGestureRecognizer(Class<T> abstractRecognizerClass, DragSource ds, Component c, int srcActions, DragGestureListener dgl) {
+        DragGestureRecognizer dgr = null;
+
+        // Create a new mouse drag gesture recognizer if we have a class match:
+        if (MouseDragGestureRecognizer.class.equals(abstractRecognizerClass))
+            dgr = new CMouseDragGestureRecognizer(ds, c, srcActions, dgl);
+
+        return (T)dgr;
     }
     
     
