@@ -46,6 +46,7 @@ FILES_objc = \
         $(TARGDIR)ScreenMenu.m
 
 FILES_export = \
+	apple/laf/AquaLookAndFeel.java \
 	apple/laf/JRSUIConstants.java \
 	apple/laf/JRSUIControl.java \
 	apple/laf/JRSUIFocus.java \
