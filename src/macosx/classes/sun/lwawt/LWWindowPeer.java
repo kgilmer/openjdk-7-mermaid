@@ -673,6 +673,12 @@ public class LWWindowPeer
                 // after MOUSE_CLICK is sent
             }
 
+            // check if we receive mouseEvent from outside the window's bounds
+            // it can be either mouseDragged or mouseReleased
+            if (curWindowPeer == null) {
+                curWindowPeer = this;
+            }
+
             Point lp = targetPeer.windowToLocal(x, y, curWindowPeer);
             MouseEvent event = new MouseEvent(targetPeer.getTarget(), id, when, modifiers,
                                               lp.x, lp.y, screenX, screenY,
