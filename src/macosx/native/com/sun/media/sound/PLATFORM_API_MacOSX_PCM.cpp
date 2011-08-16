@@ -42,13 +42,6 @@ extern "C" {
 
 #if USE_DAUDIO == TRUE
 
-/*
- TODO
-
- Add the default input/output as the first device.
- Support devices with multiple streams.
- */
-
 typedef struct OSXDirectAudioDevice {
     AudioUnit    unit;
     CARingBuffer buffer;
@@ -64,10 +57,18 @@ typedef struct OSXDirectAudioDevice {
     OSXDirectAudioDevice() : unit(NULL), asbd(), lastReadSampleTime(0), bufferSizeInFrames(0),
                              inputMutex((pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER), inputCond((pthread_cond_t)PTHREAD_COND_INITIALIZER),
                              isDraining(0) {}
+
+    ~OSXDirectAudioDevice() {
+        pthread_cond_destroy(&inputCond);
+        pthread_mutex_destroy(&inputMutex);
+        free(inputBufferList);
+        buffer.Deallocate();
+        CloseComponent(unit);
+    }
 } OSXDirectAudioDevice;
 
 INT32 DAUDIO_GetDirectAudioDeviceCount() {
-    int count = GetAudioDeviceCount();
+    int count = 1 + GetAudioDeviceCount();
     TRACE1("< DAUDIO_GetDirectAudioDeviceCount = %d\n", count);
 
     return count;
@@ -85,7 +86,7 @@ INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDevice
      We can't fill out the version field.
      */
 
-    int err = GetAudioDeviceDescription(mixerIndex, &description);
+    int err = GetAudioDeviceDescription(mixerIndex - 1, &description);
 
     daudioDescription->deviceID = description.deviceID;
     daudioDescription->maxSimulLines = description.numInputStreams + description.numOutputStreams;
@@ -114,18 +115,21 @@ void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* cre
     AudioDeviceDescription description = {0};
     OSStatus err = noErr;
     Float64 sampleRate;
-    int numStreams;
+    int numStreams, numChannels;
     UInt32 size;
 
-    GetAudioDeviceDescription(mixerIndex, &description);
+    GetAudioDeviceDescription(mixerIndex - 1, &description);
 
-    int channels[] = {1, 2, description.numChannels};
+    numChannels = isSource ? description.numOutputChannels : description.numInputChannels;
+
+    int channels[] = {1, 2, numChannels};
     int i;
 
     numStreams = isSource ? description.numOutputStreams : description.numInputStreams;
 
-    if (numStreams == 0)
+    if (numStreams == 0) {
         goto exit;
+    }
 
     /*
      For output, register 16-bit for any sample rate with either 1ch/2ch.
@@ -134,14 +138,14 @@ void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* cre
 
     int maxChannelIndex;
 
-    if (!isSource && description.numChannels == 1)
+    if (!isSource && numChannels == 1)
         maxChannelIndex = 0;
-    else if (description.numChannels <= 2)
+    else if (numChannels <= 2)
         maxChannelIndex = 1;
     else
         maxChannelIndex = 2;
 
-    sampleRate = isSource ? -1 : description.nominalSampleRate;
+    sampleRate = isSource ? -1 : description.inputSampleRate;
 
     for (i = 0; i <= maxChannelIndex; i++) {
         DAUDIO_AddAudioFormat(creator,
@@ -168,7 +172,7 @@ static AudioUnit CreateOutputUnit(AudioDeviceID deviceID, int isSource)
 
 	ComponentDescription desc;
 	desc.componentType         = kAudioUnitType_Output;
-	desc.componentSubType      = kAudioUnitSubType_HALOutput;
+	desc.componentSubType      = (deviceID == 0 && isSource) ? kAudioUnitSubType_DefaultOutput : kAudioUnitSubType_HALOutput;
 	desc.componentManufacturer = kAudioUnitManufacturer_Apple;
 	desc.componentFlags        = 0;
 	desc.componentFlagsMask    = 0;
@@ -183,18 +187,28 @@ static AudioUnit CreateOutputUnit(AudioDeviceID deviceID, int isSource)
 
     if (!isSource) {
         int enableIO = 0;
-        AudioUnitSetProperty(unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output,
+        err = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output,
                              0, &enableIO, sizeof(enableIO));
+        if (err) ERROR1("SetProperty 1 err %d\n", err);
         enableIO = 1;
-        AudioUnitSetProperty(unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input,
+        err = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input,
                              1, &enableIO, sizeof(enableIO));
+        if (err) ERROR1("SetProperty 2 err %d\n", err);
     }
 
-    err = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
-                               0, &deviceID, sizeof(deviceID));
-    if (err) {
-        ERROR1("SetProperty err %d\n", err);
-        goto exit;
+    if (deviceID || !isSource) {
+        UInt32 inputDeviceID;
+
+        /* There is no "default input unit", so get the current input device. */
+        GetAudioObjectProperty(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal, kAudioHardwarePropertyDefaultInputDevice,
+                               sizeof(inputDeviceID), &inputDeviceID, 1);
+
+        err = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
+                                   0, deviceID ? &deviceID : &inputDeviceID, sizeof(deviceID));
+        if (err) {
+            ERROR1("SetProperty 3 err %d\n", err);
+            goto exit;
+        }
     }
 
     return unit;
@@ -319,7 +333,7 @@ void* DAUDIO_Open(INT32 mixerIndex, INT32 deviceID, int isSource,
                   int frameSize, int channels,
                   int isSigned, int isBigEndian, int bufferSizeInBytes)
 {
-	TRACE0("> DAUDIO_Open\n");
+	TRACE2("> DAUDIO_Open mixerIndex=%d deviceID=%#x\n", mixerIndex, deviceID);
 
     AudioUnitScope scope = isSource ? kAudioUnitScope_Input : kAudioUnitScope_Output;
     int element = isSource ? 0 : 1;
@@ -328,7 +342,7 @@ void* DAUDIO_Open(INT32 mixerIndex, INT32 deviceID, int isSource,
     OSStatus err = noErr;
 
 #ifdef USE_TRACE
-    AudioObjectShow(deviceID);
+    if (deviceID) AudioObjectShow(deviceID);
 #endif
 
     device->unit = CreateOutputUnit(deviceID, isSource);
@@ -338,7 +352,7 @@ void* DAUDIO_Open(INT32 mixerIndex, INT32 deviceID, int isSource,
 
     FillOutASBDForLPCM(device->asbd, sampleRate, channels, sampleSizeInBits, sampleSizeInBits, 0, isBigEndian);
 
-    err = AudioUnitSetProperty(device->unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, element, &device->asbd, sizeof(device->asbd));
+    err = AudioUnitSetProperty(device->unit, kAudioUnitProperty_StreamFormat, scope, element, &device->asbd, sizeof(device->asbd));
     if (err) {
         ERROR1("Setting stream format err %d\n", err);
         goto exit;
@@ -396,11 +410,6 @@ void DAUDIO_Close(void* id, int isSource) {
     TRACE0("> DAUDIO_Close\n");
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)id;
 
-    pthread_cond_destroy(&device->inputCond);
-    pthread_mutex_destroy(&device->inputMutex);
-    free(device->inputBufferList);
-    device->buffer.Deallocate();
-    CloseComponent(device->unit);
     delete device;
 }
 

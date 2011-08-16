@@ -34,50 +34,83 @@ typedef struct OSXAudioDevice {
     int numInputStreams;
     int numOutputStreams;
 
-    /* It is possible, but unlikely, for either of these to be changed by the user. */
-    int numChannels;
-    Float64 nominalSampleRate;
+    int numInputChannels;
+    int numOutputChannels;
+    Float64 inputSampleRate;
 } OSXAudioDevice;
 
 typedef struct {
     int numDevices;
     OSXAudioDevice *devices;
+
+    OSXAudioDevice defaultAudioDevice;
 } AudioDeviceContext;
 
 static AudioDeviceContext deviceCtx;
 
 static int UpdateAudioDeviceInfo(OSXAudioDevice *device)
 {
-    AudioDeviceID deviceID = device->deviceID;
-    int streamID;
-    OSStatus err;
+    AudioStreamBasicDescription asbd = {0};
+    AudioDeviceID deviceID, inputDeviceID;
+    int streamID, inputStreamID;
+    OSStatus err = noErr;
     UInt32 size;
 
-    err = GetAudioObjectPropertySize(deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams, &size);
-    if (!err && size) {
-        GetAudioObjectProperty(deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
-                               sizeof(streamID), &streamID, 1);
+    if (device->deviceID == 0) {
+        err = GetAudioObjectProperty(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal, kAudioHardwarePropertyDefaultOutputDevice,
+                               sizeof(deviceID), &deviceID, 1);
+        if (err) goto exit;
+        err = GetAudioObjectProperty(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal, kAudioHardwarePropertyDefaultInputDevice,
+                               sizeof(inputDeviceID), &inputDeviceID, 1);
+        if (err) goto exit;
     } else {
-        err = GetAudioObjectPropertySize(deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams, &size);
-        if (!err && size) {
-            GetAudioObjectProperty(deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
-                                   sizeof(streamID), &streamID, 1);
-        } else {
-            ERROR1("UpdateAudioDeviceInfo error %.4s\n", &err);
-            return 0;
+        inputDeviceID = deviceID = device->deviceID;
+    }
+
+    err = GetAudioObjectPropertySize(inputDeviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
+                               &size);
+    device->numInputStreams  = size / sizeof(AudioStreamID);
+    if (err) goto exit;
+
+    err = GetAudioObjectPropertySize(deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
+                               &size);
+    device->numOutputStreams = size / sizeof(AudioStreamID);
+    if (err) goto exit;
+
+    if (device->numOutputStreams) {
+        err = GetAudioObjectProperty(deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
+                                     sizeof(streamID), &streamID, 1);
+        if (err) goto exit;
+
+        if (streamID) {
+            err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyVirtualFormat,
+                                         sizeof(asbd), &asbd, 1);
+            if (err) goto exit;
+
+            device->numOutputChannels = asbd.mChannelsPerFrame;
         }
     }
 
-    AudioStreamBasicDescription asbd = {0};
+    if (device->numInputStreams) {
+        err = GetAudioObjectProperty(inputDeviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
+                                     sizeof(inputStreamID), &inputStreamID, 1);
+        if (err) goto exit;
 
-    err = GetAudioObjectProperty(streamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyVirtualFormat,
-                                 sizeof(asbd), &asbd, 1);
-    if (err)
-        return err;
+        if (streamID) {
+            err = GetAudioObjectProperty(inputStreamID, kAudioObjectPropertyScopeGlobal, kAudioStreamPropertyVirtualFormat,
+                                         sizeof(asbd), &asbd, 1);
+            if (err) goto exit;
 
-    device->numChannels = asbd.mChannelsPerFrame;
-    device->nominalSampleRate = asbd.mSampleRate;
+            device->numInputChannels = asbd.mChannelsPerFrame;
+            device->inputSampleRate  = asbd.mSampleRate;
+        }
+    }
+
     return noErr;
+
+exit:
+    ERROR1("UpdateAudioDeviceInfo err %#x\n", err);
+    return err;
 }
 
 int GetAudioDeviceCount()
@@ -87,7 +120,8 @@ int GetAudioDeviceCount()
     int i;
 
     if (!deviceCtx.numDevices) {
-        AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &devicesAddress, 0, NULL, &size);
+        GetAudioObjectPropertySize(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal, kAudioHardwarePropertyDevices,
+                                   &size);
         deviceCtx.numDevices = size / sizeof(AudioDeviceID);
 
         if (deviceCtx.numDevices) {
@@ -96,24 +130,17 @@ int GetAudioDeviceCount()
 
             size = deviceCtx.numDevices * sizeof(AudioDeviceID);
             AudioObjectGetPropertyData(kAudioObjectSystemObject, &devicesAddress, 0, NULL, &size, deviceIDs);
-            deviceCtx.numDevices = size / sizeof(AudioDeviceID); // in case it changed
+            deviceCtx.numDevices = size / sizeof(AudioDeviceID); // in case of an unplug
 
             for (i = 0; i < deviceCtx.numDevices; i++) {
                 OSXAudioDevice *device = &deviceCtx.devices[i];
 
                 device->deviceID = deviceIDs[i];
-
-                GetAudioObjectPropertySize(device->deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
-                                           &size);
-                device->numInputStreams  = size / sizeof(AudioStreamID);
-
-                GetAudioObjectPropertySize(device->deviceID, kAudioDevicePropertyScopeOutput, kAudioDevicePropertyStreams,
-                                           &size);
-                device->numOutputStreams = size / sizeof(AudioStreamID);
-
                 UpdateAudioDeviceInfo(device);
             }
         }
+
+        UpdateAudioDeviceInfo(&deviceCtx.defaultAudioDevice);
     }
 
     return deviceCtx.numDevices;
@@ -121,33 +148,44 @@ int GetAudioDeviceCount()
 
 int GetAudioDeviceDescription(int index, AudioDeviceDescription *description)
 {
-    OSXAudioDevice *device = &deviceCtx.devices[index];
+    OSXAudioDevice *device;
     CFStringRef name = NULL, vendor = NULL;
     OSStatus err = noErr;
+    int isDefault = index == -1;
     UInt32 size;
+
+    device = isDefault ? &deviceCtx.defaultAudioDevice : &deviceCtx.devices[index];
 
     description->deviceID         = device->deviceID;
     description->numInputStreams  = device->numInputStreams;
     description->numOutputStreams = device->numOutputStreams;
-    description->numChannels      = device->numChannels;
-    description->nominalSampleRate= device->nominalSampleRate;
+    description->numInputChannels = device->numInputChannels;
+    description->numOutputChannels= device->numOutputChannels;
+    description->inputSampleRate  = device->inputSampleRate;
 
-    if (description->name) {
-        err = GetAudioObjectProperty(device->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyName,
-                                     sizeof(name), &name, 1);
-        if (err) goto exit;
-
-        CFStringGetCString(name, description->name, description->strLen, kCFStringEncodingUTF8);
+    if (isDefault) {
+        if (description->name)
+            strncpy(description->name, "Default Audio Device", description->strLen);
         if (description->description)
-            CFStringGetCString(name, description->description, description->strLen, kCFStringEncodingUTF8);
-    }
+            strncpy(description->description, "Default Audio Device", description->strLen);
+    } else {
+        if (description->name) {
+            err = GetAudioObjectProperty(device->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyName,
+                                         sizeof(name), &name, 1);
+            if (err) goto exit;
 
-    if (description->vendor) {
-        err = GetAudioObjectProperty(device->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyManufacturer,
-                                     sizeof(vendor), &vendor, 1);
-        if (err) goto exit;
+            CFStringGetCString(name, description->name, description->strLen, kCFStringEncodingUTF8);
+            if (description->description)
+                CFStringGetCString(name, description->description, description->strLen, kCFStringEncodingUTF8);
+        }
 
-        CFStringGetCString(vendor, description->vendor, description->strLen, kCFStringEncodingUTF8);
+        if (description->vendor) {
+            err = GetAudioObjectProperty(device->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyManufacturer,
+                                         sizeof(vendor), &vendor, 1);
+            if (err) goto exit;
+
+            CFStringGetCString(vendor, description->vendor, description->strLen, kCFStringEncodingUTF8);
+        }
     }
 
 exit:

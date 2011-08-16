@@ -37,7 +37,6 @@
  TODO
 
  Test devices with >2 channels.
- Test that this works properly with device plug/unplug.
  Compare control names and tree structure to other platforms.
  Implement virtual controls (balance, pan, master volume).
  */
@@ -47,6 +46,7 @@ typedef struct {
 
     AudioObjectID control;
     AudioClassID class; // kAudioVolumeControlClassID etc.
+    UInt32 scope; // input, output
 
     void *jcontrol;
     char *jcontrolType; // CONTROL_TYPE_VOLUME etc.
@@ -273,8 +273,6 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     PortMixer *mixer = id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
-    const AudioObjectPropertyAddress ownedAddress   = { kAudioObjectPropertyOwnedObjects, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-
     UInt32 size;
     OSStatus err;
     int i;
@@ -283,18 +281,21 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     int hasChannelVolume  = 0, hasChannelMute  = 0;
     PortControl *masterVolume = NULL, *masterMute = NULL;
 
+    UInt32 wantedScope = portIndex < mixer->numInputStreams ? kAudioDevicePropertyScopeInput : kAudioDevicePropertyScopeOutput;
+
     // initialize the device controls if this is the first stream
     if (!mixer->numDeviceControls) {
         // numDeviceControls / numStreamControls are overestimated
         // because we don't actually filter by if the owned objects are controls
-        err = AudioObjectGetPropertyDataSize(mixer->deviceID, &ownedAddress, 0, NULL, &size);
+        err = GetAudioObjectPropertySize(mixer->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
+                                         &size);
         if (err) goto exit;
 
         mixer->numDeviceControls = size / sizeof(AudioObjectID);
 
         if (mixer->numDeviceControls) {
             AudioObjectID *controlIDs = calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
-            mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortMixer));
+            mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortControl));
 
             err = GetAudioObjectProperty(mixer->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
                                          mixer->numDeviceControls * sizeof(AudioObjectID), controlIDs, 1);
@@ -306,47 +307,50 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
                 control->control = controlIDs[i];
                 control->mixer = mixer;
 
-                AudioObjectID controlScope;
-                UInt32 controlVariant;
-
                 GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyClass,
                                        sizeof(control->class), &control->class, 1);
                 err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyElement,
                                        sizeof(control->channel), &control->channel, 1);
+
                 if (err) { // not a control
                     control->class = 0;
                     continue;
                 }
 
                 GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyScope,
-                                       sizeof(controlScope), &controlScope, 1);
-                if (controlScope == kAudioDevicePropertyScopePlayThrough) {
-                    // filter out unwanted controls
-                    control->class = 0;
-                    continue;
-                }
+                                       sizeof(control->scope), &control->scope, 1);
 
-                TRACE2("%.4s control, channel %d\n", &control->class, control->channel);
+                TRACE3("%.4s control, channel %d scope %.4s\n", &control->class, control->channel, &control->scope);
+            }
+        }
+    }
 
-                switch (control->class) {
-                    case kAudioVolumeControlClassID:
-                        if (control->channel == 0)
-                            masterVolume = control;
-                        else {
-                            numVolumeControls++;
-                            hasChannelVolume = 1;
-                        }
-                        break;
+    // count the number of device controls with the appropriate scope
+    if (mixer->numDeviceControls) {
+        for (i = 0; i < mixer->numDeviceControls; i++) {
+            PortControl *control = &mixer->deviceControls[i];
 
-                    case kAudioMuteControlClassID:
-                        if (control->channel == 0)
-                            masterMute = control;
-                        else {
-                            numMuteControls++;
-                            hasChannelMute = 1;
-                        }
-                        break;
-                }
+            if (control->scope != wantedScope)
+                continue;
+
+            switch (control->class) {
+                case kAudioVolumeControlClassID:
+                    if (control->channel == 0)
+                        masterVolume = control;
+                    else {
+                        numVolumeControls++;
+                        hasChannelVolume = 1;
+                    }
+                    break;
+
+                case kAudioMuteControlClassID:
+                    if (control->channel == 0)
+                        masterMute = control;
+                    else {
+                        numMuteControls++;
+                        hasChannelMute = 1;
+                    }
+                    break;
             }
         }
     }
@@ -371,7 +375,7 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
         for (i = 0; i < mixer->numDeviceControls && j < numVolumeControls; i++) {
             PortControl *control = &mixer->deviceControls[i];
 
-            if (control->class != kAudioVolumeControlClassID || control->channel == 0)
+            if (control->class != kAudioVolumeControlClassID || control->channel == 0 || control->scope != wantedScope)
                 continue;
 
             if (!control->jcontrol)
@@ -390,7 +394,7 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
         for (i = 0; i < mixer->numDeviceControls && j < numMuteControls; i++) {
             PortControl *control = &mixer->deviceControls[i];
 
-            if (control->class != kAudioMuteControlClassID || control->channel == 0)
+            if (control->class != kAudioMuteControlClassID || control->channel == 0 || control->scope != wantedScope)
                 continue;
 
             if (!control->jcontrol)
@@ -406,7 +410,8 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     if (!mixer->numStreamControls)
         mixer->numStreamControls = calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(int));
 
-    err = AudioObjectGetPropertyDataSize(streamID, &ownedAddress, 0, NULL, &size);
+    err = GetAudioObjectPropertySize(streamID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
+                                     &size);
     if (err) goto exit;
 
     mixer->numStreamControls[portIndex] = size / sizeof(AudioObjectID);
