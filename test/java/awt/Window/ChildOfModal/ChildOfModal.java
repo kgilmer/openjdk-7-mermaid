@@ -89,7 +89,6 @@ public class ChildOfModal extends TestCase {
             childOfChildWindow.setVisible(true);
             
             // Click the button!
-//            RobotUtilities robot = new RobotUtilities();
             RobotUtilities.click(childOfChildButton);
             pause(1000);
             assertTrue("Failed to click childOfChildOfModal button!", result);
