@@ -733,3 +733,25 @@ JNF_COCOA_EXIT(env);
     
     return underMouse;
 }
+
+JNIEXPORT jboolean JNICALL
+Java_sun_lwawt_macosx_CMouseInfoPeer_nativeIsWindowUnderMouse
+(JNIEnv *env, jclass clazz, jlong windowPtr)
+{
+    __block jboolean underMouse = JNI_FALSE;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    AWTWindow *aWindow = OBJC(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^() {
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        NSPoint pt = [aWindow mouseLocationOutsideOfEventStream];
+        underMouse = [aWindow.m_view hitTest:pt] != nil;
+    }];
+    
+JNF_COCOA_EXIT(env);
+    
+    return underMouse;
+}
