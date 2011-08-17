@@ -27,6 +27,7 @@
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "AWTWindow.h"
+#import "AWTView.h"
 #import "CPopupMenu.h"
 #import "ThreadUtilities.h"
 #import "LWCToolkit.h"
@@ -70,7 +71,7 @@ JNF_COCOA_ENTER(env);
         CFRetain(aCPopupMenu);
         [aCPopupMenu release];
         
-        [[awtWindow contentView] setContextMenu:[aCPopupMenu menu]];
+        [((AWTView *)[awtWindow contentView]) setContextMenu:[aCPopupMenu menu]];
     }];
 
 JNF_COCOA_EXIT(env);

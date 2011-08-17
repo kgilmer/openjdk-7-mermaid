@@ -24,6 +24,7 @@
  */
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 #import <sys/time.h>
 
 #import "LWCToolkit.h"

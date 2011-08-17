@@ -103,7 +103,7 @@ static CGAffineTransform sInverseTX = { 1, 0, 0, -1, 0, 0 };
     if (_fontThrowJavaException == YES) {                               \
         char s[512];                                                    \
         sprintf(s, "%s-%s:%d", __FILE__, __FUNCTION__, __LINE__);       \
-        JNU_ThrowNullPointerException(env, s);                          \
+        [JNFException raise:env as:kRuntimeException reason:s];         \
     }
 
 
@@ -241,7 +241,7 @@ AWT_FONT_CLEANUP_CHECK(path);
     // Get the paths
     tx = awtStrike->fTx;
     tx = CGAffineTransformConcat(tx, sInverseTX);
-    AWTGetGlyphOutline(&glyph, font, &advance, &tx, 0, 1, &path);
+    AWTGetGlyphOutline(&glyph, (NSFont *)font, &advance, &tx, 0, 1, &path);
     CFRelease(font);
     
     pointCoords = (*env)->NewFloatArray(env, path->fNumberOfDataElements);

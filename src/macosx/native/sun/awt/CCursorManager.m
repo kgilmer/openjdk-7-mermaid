@@ -79,7 +79,7 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
         AWT_ASSERT_APPKIT_THREAD;
         
-        [[[NSCursor class] performSelector:cursorSelector] set];
+        [((NSCursor *)[[NSCursor class] performSelector:cursorSelector]) set];
     }];
 
 JNF_COCOA_EXIT(env);

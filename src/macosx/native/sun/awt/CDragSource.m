@@ -410,23 +410,15 @@ static BOOL                sNeedsEnter;
 
 - (void)validateDragImage
 {
-    NSUInteger i;
-
     // Make a small blank image if we don't have a drag image:
     if (fDragImage == nil) {
         // 9-30-02 Note: keep this around for debugging:
         fDragImage = [[NSImage alloc] initWithSize:NSMakeSize(21, 21)];
-        UInt32 fillColorVal = 0xFF00007F; // RGBA format.
-      //  fDragImage = [[NSImage alloc] initWithSize:NSMakeSize(1, 1)];
-       // UInt32 fillColorVal = 0L;
-
-        //dragImage = [[NSImage alloc] initWithContentsOfFile:@"/Proj/Cocoa-DnDExamples/DragAndDrop/Image.icns"];
         NSSize imageSize = [fDragImage size];
 		
         NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
             pixelsWide:imageSize.width pixelsHigh:imageSize.height bitsPerSample:8 samplesPerPixel:4
             hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:32];
-        UInt32* bitmapData = (UInt32*) [imageRep bitmapData];
 
         [fDragImage addRepresentation:imageRep];
         fDragImageOffset = NSMakePoint(0, 0);

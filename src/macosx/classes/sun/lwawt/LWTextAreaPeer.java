@@ -25,8 +25,6 @@
 
 package sun.lwawt;
 
-import com.sun.xml.internal.bind.v2.runtime.output.SAXOutput;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.im.InputMethodRequests;

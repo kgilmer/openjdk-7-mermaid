@@ -52,7 +52,7 @@ public class CImage extends CFRetainedResource {
         // This is used to create a CImage with an NSImage pointer. It MUST be a CFRetained
         // NSImage, and the CImage takes ownership of the non-GC retain. If callers need the
         // NSImage themselves, they MUST call retain on the NSImage themselves.
-        BufferedImage createImageUsingNativeSize(final long image) {
+        public BufferedImage createImageUsingNativeSize(final long image) {
             if (image == 0) return null;
             final Dimension2D size = nativeGetNSImageSize(image);
             return createBufferedImage(image, size.getWidth(), size.getHeight());
