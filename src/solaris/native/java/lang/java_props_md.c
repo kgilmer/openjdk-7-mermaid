@@ -367,6 +367,14 @@ GetJavaProperties(JNIEnv *env)
 
     /* tmp dir */
     sprops.tmp_dir = P_tmpdir;
+#ifdef __APPLE__
+    /* darwin has a per-user temp dir */
+    static char tmp_path[PATH_MAX];
+    int pathSize = confstr(_CS_DARWIN_USER_TEMP_DIR, tmp_path, PATH_MAX);
+    if (pathSize > 0 && pathSize <= PATH_MAX) {
+        sprops.tmp_dir = tmp_path;
+    }
+#endif /* __APPLE__ */
 
     /* Printing properties */
     sprops.printerJob = "sun.print.PSPrinterJob";
