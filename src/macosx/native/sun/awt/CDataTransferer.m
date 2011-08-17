@@ -201,13 +201,13 @@ static jobject getImageForByteStream(JNIEnv *env, jbyteArray sourceData)
     if (newImage == nil) return NULL;
     
     // The ownership of the NSImage is passed to the new CImage jobject. No need to release it.
-    static JNF_CLASS_CACHE(jc_CImage, "apple/awt/CImage");
-    static JNF_STATIC_MEMBER_CACHE(jm_CImage_getCreator, jc_CImage, "getCreator", "()Lapple/awt/CImage$Creator;");
+    static JNF_CLASS_CACHE(jc_CImage, "sun/lwawt/macosx/CImage");
+    static JNF_STATIC_MEMBER_CACHE(jm_CImage_getCreator, jc_CImage, "getCreator", "()Lsun/lwawt/macosx/CImage$Creator;");
     jobject creator = JNFCallStaticObjectMethod(env, jm_CImage_getCreator);
     
-    static JNF_CLASS_CACHE(jc_CImage_Generator, "apple/awt/CImage$Creator");
-    static JNF_MEMBER_CACHE(jm_CImage_Generator_createImage, jc_CImage_Generator, "createImage", "(J)Ljava/awt/image/BufferedImage;");
-    return JNFCallObjectMethod(env, creator, jm_CImage_Generator_createImage, ptr_to_jlong(newImage)); // AWT_THREADING Safe (known object)
+    static JNF_CLASS_CACHE(jc_CImage_Generator, "sun/lwawt/macosx/CImage$Creator");
+    static JNF_MEMBER_CACHE(jm_CImage_Generator_createImageUsingNativeSize, jc_CImage_Generator, "createImageUsingNativeSize", "(J)Ljava/awt/image/BufferedImage;");
+    return JNFCallObjectMethod(env, creator, jm_CImage_Generator_createImageUsingNativeSize, ptr_to_jlong(newImage)); // AWT_THREADING Safe (known object)
 }
 
 /*

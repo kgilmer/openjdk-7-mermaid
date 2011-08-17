@@ -245,7 +245,7 @@ static NSObject *sAttributeNamesLOCK = nil;
     }
 
     if (sAccessibilityClass == NULL) {
-        JNF_STATIC_MEMBER_CACHE(jm_getAccessibility, sjc_CAccessibility, "getAccessibility", "([Ljava/lang/String;)Lapple/awt/CAccessibility;");
+        JNF_STATIC_MEMBER_CACHE(jm_getAccessibility, sjc_CAccessibility, "getAccessibility", "([Ljava/lang/String;)Lsun/lwawt/macosx/CAccessibility;");
         
 #ifdef JAVA_AX_NO_IGNORES
         NSArray *ignoredKeys = [NSArray array];

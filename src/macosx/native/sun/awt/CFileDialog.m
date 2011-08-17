@@ -125,7 +125,7 @@
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     jstring jString = JNFNormalizedJavaStringForPath(env, filename);
     
-    static JNF_CLASS_CACHE(jc_CFileDialog, "apple/awt/CFileDialog");
+    static JNF_CLASS_CACHE(jc_CFileDialog, "sun/lwawt/macosx/CFileDialog");
     static JNF_MEMBER_CACHE(jm_queryFF, jc_CFileDialog, "queryFilenameFilter", "(Ljava/lang/String;)Z");
     BOOL returnValue = JNFCallBooleanMethod(env, fFileDialog, jm_queryFF, jString); // AWT_THREADING Safe (AWTRunLoopMode)
     (*env)->DeleteLocalRef(env, jString);

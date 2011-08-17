@@ -113,7 +113,7 @@ Java_sun_lwawt_macosx_CRobot_initRobot
 /*
  * Class:     sun_lwawt_macosx_CRobot
  * Method:    mouseEvent
- * Signature: (Lapple/awt/CGraphicsDevice;IIIIIZ)V
+ * Signature: (IIIIIIZ)V
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_mouseEvent
@@ -242,8 +242,8 @@ Java_sun_lwawt_macosx_CRobot_keyEvent
 
 /*
  * Class:     sun_lwawt_macosx_CRobot
- * Method:    getScreenPixels
- * Signature: (Lsun/awt/CGraphicsDevice;IIII[I)V
+ * Method:    nativeGetScreenPixels
+ * Signature: (IIIII[I)V
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_nativeGetScreenPixels
