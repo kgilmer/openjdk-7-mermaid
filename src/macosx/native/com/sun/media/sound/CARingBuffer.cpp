@@ -260,15 +260,22 @@ CARingBufferError	CARingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, Samp
 	CARingBufferError err = ClipTimeBounds(startRead, endRead);
 	if (err) return err;
 	size = endRead - startRead;
-	
-	SInt32 destStartOffset = startRead - startRead0; 
+
+	SInt32 destStartOffset = startRead - startRead0;
 	if (destStartOffset > 0) {
-		ZeroABL(abl, 0, destStartOffset * mBytesPerFrame);
+        SInt32 zeroedFrames = std::min((UInt32)destStartOffset, nFrames);
+		ZeroABL(abl, 0, zeroedFrames * mBytesPerFrame);
 	}
 
 	SInt32 destEndSize = endRead0 - endRead; 
 	if (destEndSize > 0) {
-		ZeroABL(abl, destStartOffset + size, destEndSize * mBytesPerFrame);
+        SInt32 startFrames = destStartOffset + size;
+        SInt32 endFrames   = startFrames + destEndSize;
+
+        startFrames = std::max(startFrames, (SInt32)0);
+        endFrames   = std::min((UInt32)endFrames, nFrames);
+
+		ZeroABL(abl, startFrames * mBytesPerFrame, (endFrames - startFrames) * mBytesPerFrame);
 	}
 	
 	Byte **buffers = mBuffers;
@@ -276,7 +283,7 @@ CARingBufferError	CARingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, Samp
 	int offset1 = FrameOffset(endRead);
 	int nbytes;
 	
-	if (offset0 < offset1) {
+	if (offset0 <= offset1) {
 		FetchABL(abl, destStartOffset, buffers, offset0, nbytes = offset1 - offset0);
 	} else {
 		nbytes = mCapacityBytes - offset0;

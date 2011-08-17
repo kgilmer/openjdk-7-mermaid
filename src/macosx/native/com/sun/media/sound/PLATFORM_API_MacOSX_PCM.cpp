@@ -49,7 +49,7 @@ typedef struct OSXDirectAudioDevice {
     SInt64       lastReadSampleTime;
     int          bufferSizeInFrames;
 
-    AudioBufferList *inputBufferList;
+    int        inputBufferSize;
     pthread_mutex_t inputMutex;
     pthread_cond_t  inputCond;
     int             isDraining;
@@ -61,7 +61,6 @@ typedef struct OSXDirectAudioDevice {
     ~OSXDirectAudioDevice() {
         pthread_cond_destroy(&inputCond);
         pthread_mutex_destroy(&inputMutex);
-        free(inputBufferList);
         buffer.Deallocate();
         CloseComponent(unit);
     }
@@ -221,27 +220,6 @@ exit:
     return NULL;
 }
 
-static void AllocateInputBufferList(OSXDirectAudioDevice *device)
-{
-    int channels = device->asbd.mChannelsPerFrame;
-    AudioBufferList *list = (AudioBufferList*)calloc(1, sizeof(AudioBufferList) + channels * sizeof(AudioBuffer));
-    UInt32 audioUnitBufferSize, size;
-    OSStatus err;
-
-    size = sizeof(audioUnitBufferSize);
-    err  = AudioUnitGetProperty(device->unit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0, &audioUnitBufferSize, &size);
-
-    audioUnitBufferSize *= device->asbd.mBytesPerFrame;
-
-    list->mNumberBuffers = channels;
-    for (int i = 0; i < channels; i++) {
-        list->mBuffers[i].mNumberChannels = 1;
-        list->mBuffers[i].mDataByteSize   = audioUnitBufferSize;
-    }
-
-    device->inputBufferList = list;
-}
-
 static void ClearAudioBufferList(AudioBufferList *list, int start, int end, int sampleSize)
 {
     for (int channel = 0; channel < list->mNumberBuffers; channel++)
@@ -264,7 +242,6 @@ static OSStatus AudioOutputCallback(void                    *inRefCon,
     err = device->buffer.GetTimeBounds(startTime, endTime);
 
     if (err) goto exit;
-    if (readTime >= endTime) goto exit;
     if (readTime + inNumberFrames >= endTime) {
         ClearAudioBufferList(ioData, endTime - readTime, inNumberFrames, device->asbd.mBytesPerFrame);
         inNumberFrames = endTime - readTime;
@@ -296,6 +273,7 @@ static OSStatus AudioInputCallback(void                    *inRefCon,
                             AudioBufferList                *ioData)
 {
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)inRefCon;
+    AudioBufferList abl;
     SInt64 sampleTime = inTimeStamp->mSampleTime;
     SInt64 startTime, endTime;
     CARingBufferError err;
@@ -305,17 +283,18 @@ static OSStatus AudioInputCallback(void                    *inRefCon,
     err = device->buffer.GetTimeBounds(startTime, endTime);
     if (err) goto exit;
 
-    for (int channel = 0; channel < device->asbd.mChannelsPerFrame; channel++) {
-        device->inputBufferList->mBuffers[channel].mData = NULL;
-    }
+    abl.mNumberBuffers = 1;
+    abl.mBuffers[0].mNumberChannels = device->asbd.mChannelsPerFrame;
+    abl.mBuffers[0].mDataByteSize   = device->inputBufferSize * device->asbd.mBytesPerFrame;
+    abl.mBuffers[0].mData           = NULL;
 
-    err = AudioUnitRender(device->unit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, device->inputBufferList);
+    err = AudioUnitRender(device->unit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, &abl);
     if (err) {
         ERROR1("AudioUnitRender err %d\n", err);
         goto exit;
     }
 
-    err = device->buffer.Store(device->inputBufferList, inNumberFrames, sampleTime);
+    err = device->buffer.Store(&abl, inNumberFrames, sampleTime);
     if (err) goto exit;
 
     pthread_cond_broadcast(&device->inputCond);
@@ -324,6 +303,8 @@ static OSStatus AudioInputCallback(void                    *inRefCon,
 
 exit:
     device->isDraining = 1;
+
+    pthread_cond_broadcast(&device->inputCond);
 
     return noErr;
 }
@@ -369,7 +350,14 @@ void* DAUDIO_Open(INT32 mixerIndex, INT32 deviceID, int isSource,
     err = AudioUnitInitialize(device->unit);
     if (err) goto exit;
 
-    if (!isSource) AllocateInputBufferList(device);
+    if (!isSource) {
+        UInt32 size;
+        OSStatus err;
+
+        size = sizeof(device->inputBufferSize);
+        err  = AudioUnitGetProperty(device->unit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0, &device->inputBufferSize, &size);
+    }
+
     device->buffer.Allocate(channels, frameSize, bufferSizeInFrames);
     device->bufferSizeInFrames = NextPowerOfTwo(bufferSizeInFrames);
 
