@@ -113,17 +113,17 @@ endif # PLATFORM linux
 
 ifeq ($(PLATFORM), macosx)
   CPPFLAGS += -DUSE_PORTS=TRUE \
-              -DUSE_DAUDIO=TRUE
+              -DUSE_DAUDIO=TRUE \
+              -DUSE_PLATFORM_MIDI_OUT=TRUE \
+              -DUSE_PLATFORM_MIDI_IN=TRUE
 
-  # Ports and direct audio are implemented
   INCLUDE_PORTS = TRUE
   INCLUDE_DAUDIO = TRUE
-
-  # MIDI is empty
   INCLUDE_MIDI = TRUE
 
   LDFLAGS += -framework CoreAudio -framework CoreFoundation \
-             -framework CoreServices -framework AudioUnit -lstdc++
+             -framework CoreServices -framework AudioUnit -lstdc++ \
+             -framework CoreMIDI
   CXXFLAGS += -I`xcode-select -print-path`/Extras/CoreAudio/PublicUtility
 endif
 
