@@ -79,5 +79,6 @@ FILES_c = \
         OGLSurfaceData.c \
         OGLTextRenderer.c \
         OGLVertexCache.c \
-        AccelGlyphCache.c
+        AccelGlyphCache.c \
+        CUPSfuncs.c
 
