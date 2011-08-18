@@ -42,7 +42,7 @@ import java.util.List;
 import javax.swing.event.DocumentListener;
 
 class LWTextFieldPeer
-    extends LWTextComponentPeer<TextField, LWTextFieldPeer.JTextFieldDelegate>
+    extends LWTextComponentPeer<TextField, JTextField>
     implements TextFieldPeer, SelectionClearListener, ActionListener
 {
     private static List <SelectionClearListener> clearListeners =
@@ -68,8 +68,8 @@ class LWTextFieldPeer
         }
     }
     
-    protected JTextFieldDelegate createDelegate() {
-        JTextFieldDelegate delegate = new JTextFieldDelegate();
+    protected JTextField createDelegate() {
+        JTextField delegate = new JTextField();
         delegate.setText(getTarget().getText());
         delegate.addActionListener(this);
         return delegate;
@@ -171,13 +171,5 @@ class LWTextFieldPeer
     public void actionPerformed(ActionEvent e) {
         postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
                 "", e.getWhen(), e.getModifiers()));
-    }
-
-    @SuppressWarnings("serial")
-    class JTextFieldDelegate extends JTextField implements ComponentDelegate {
-
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
     }
 }

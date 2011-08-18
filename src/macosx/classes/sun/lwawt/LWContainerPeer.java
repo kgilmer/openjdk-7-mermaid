@@ -39,7 +39,7 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
-abstract class LWContainerPeer<T extends Container, D extends JComponent & ComponentDelegate>
+abstract class LWContainerPeer<T extends Container, D extends JComponent>
     extends LWComponentPeer<T, D>
     implements ContainerPeer
 {

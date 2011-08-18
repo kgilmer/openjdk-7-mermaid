@@ -25,46 +25,59 @@
 
 package sun.lwawt;
 
-import java.awt.Button;
-import java.awt.AWTEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.peer.ButtonPeer;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 
-import javax.swing.JButton;
 
-class LWButtonPeer
-    extends LWComponentPeer<Button, JButton>
-    implements ButtonPeer, ActionListener
-{
-    public LWButtonPeer(Button target) {
-        super(target);
-    }
+public class LWDelegateKeyboardFocusManager extends KeyboardFocusManager {
 
-    @Override
-    protected JButton createDelegate() {
-        JButton delegate = new JButton();
-        delegate.setText(getTarget().getLabel());
-        delegate.addActionListener(this);
-        return delegate;
-    }
+    private Component focusOwner;
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
-                getTarget().getActionCommand(), e.getWhen(), e.getModifiers()));
-    }
-
-    @Override
-    public void setLabel(String label) {
-        synchronized (getDelegateLock()) {
-            getDelegate().setText(label);
+    public Component getFocusOwner() {
+        synchronized (KeyboardFocusManager.class) {
+            return focusOwner;
         }
-        repaintPeer();
     }
 
-    @Override
-    public boolean isFocusable() {
-        return true;
+    public void setFocusOwner(Component focusOwner) {
+        synchronized (KeyboardFocusManager.class) {
+            this.focusOwner = focusOwner;
+        }
+    }
+
+    public boolean dispatchEvent(AWTEvent e) {
+        return false;
+    }
+
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        return false;
+    }
+
+    public boolean postProcessKeyEvent(KeyEvent e) {
+        return false;
+    }
+
+    public void processKeyEvent(Component focusedComponent, KeyEvent e) {
+    }
+
+    protected void enqueueKeyEvents(long after, Component untilFocused) {
+    }
+
+    protected void dequeueKeyEvents(long after, Component untilFocused) {
+    }
+
+    protected void discardKeyEvents(Component comp) {
+    }
+
+    public void focusNextComponent(Component aComponent) {
+    }
+
+    public void focusPreviousComponent(Component aComponent) {
+    }
+
+    public void upFocusCycle(Component aComponent) {
+    }
+
+    public void downFocusCycle(Container aContainer) {
     }
 }

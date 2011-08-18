@@ -34,7 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 class LWLabelPeer
-    extends LWComponentPeer<Label, LWLabelPeer.JLabelDelegate>
+    extends LWComponentPeer<Label, JLabel>
     implements LabelPeer
 {
     public LWLabelPeer(Label target) {
@@ -42,8 +42,8 @@ class LWLabelPeer
     }
 
     @Override
-    protected JLabelDelegate createDelegate() {
-        final JLabelDelegate delegate = new JLabelDelegate();
+    protected JLabel createDelegate() {
+        final JLabel delegate = new JLabel();
         delegate.setText(getTarget().getText());
         delegate.setFont(getTarget().getFont());
         delegate.setBackground(getTarget().getBackground());
@@ -100,15 +100,5 @@ class LWLabelPeer
                 break;
         }
         return swingAlignment;
-    }
-
-    class JLabelDelegate
-	extends JLabel
-	implements ComponentDelegate
-    {
-	@Override
-	public void processAWTEvent(AWTEvent e) {
-	    processEvent(e);
-	}
     }
 }

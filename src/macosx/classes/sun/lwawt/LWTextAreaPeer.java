@@ -202,7 +202,7 @@ class LWTextAreaPeer
     }
 
     @SuppressWarnings("serial")
-    class JTextAreaDelegate extends JScrollPane implements ComponentDelegate
+    class JTextAreaDelegate extends JScrollPane
     {
         private InternalTextArea contents;
 
@@ -270,7 +270,7 @@ class LWTextAreaPeer
          * Dispatch and process an AWT event - depending on the area it happened we must
          * forward it to the corresponding part of JScrollPane
          */
-        @Override
+        // todo: check it out
         public void processAWTEvent(AWTEvent e) {
             if (e instanceof ContainerEvent) {
                 processContainerEvent((ContainerEvent)e);

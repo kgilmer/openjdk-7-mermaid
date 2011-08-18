@@ -104,23 +104,9 @@ class LWChoicePeer
         return true;
     }
 
-    @Override
-    protected void processDelegateEvent(AWTEvent e) {
-        // TODO: We receive LOST-GAIN sequence on popup opening.
-        // TODO: KeyEvents should have altered target. May relate to CR 6945376.
-        super.processDelegateEvent(e);
-     }
-
     class JComboBoxDelegate
 	extends JComboBox
-	implements ComponentDelegate
     {
-	//TODO: JComboBox is deaf to mouse events over the button which opens the menu.
-        @Override
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
-
         //Needed for proper popup menu location
         @Override
         public Point getLocationOnScreen() {

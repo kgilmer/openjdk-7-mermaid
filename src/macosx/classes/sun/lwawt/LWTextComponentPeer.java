@@ -32,7 +32,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import java.awt.event.TextEvent;
 
-abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent & ComponentDelegate > 
+abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent>
     extends LWComponentPeer<T, D>
 {
     protected final static int MARGIN = 2;

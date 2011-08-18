@@ -25,22 +25,7 @@
 
 package sun.lwawt;
 
-import java.awt.AWTEvent;
-import java.awt.AWTException;
-import java.awt.BufferCapabilities;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GraphicsConfiguration;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.Window;
+import java.awt.*;
 
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.peer.DropTargetPeer;
@@ -61,6 +46,8 @@ import java.awt.peer.ComponentPeer;
 import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import sun.awt.AWTAccessor;
 import sun.awt.CausedFocusEvent;
@@ -87,21 +74,20 @@ import sun.lwawt.macosx.CDropTarget;
 
 import com.sun.java.swing.SwingUtilities3;
 
-public abstract class LWComponentPeer<T extends Component, D extends JComponent & ComponentDelegate>
-    implements ComponentPeer, DropTargetPeer
-{
+public abstract class LWComponentPeer<T extends Component, D extends JComponent>
+        implements ComponentPeer, DropTargetPeer {
     // State lock is to be used for modifications to this
     // peer's fields (e.g. bounds, background, font, etc.)
     // It should be the last lock in the lock chain
     private final Object stateLock =
-            new StringBuilder("LWComponentPeer.stateLock");                    
+            new StringBuilder("LWComponentPeer.stateLock");
 
     // The lock to operate with the peers hierarchy. AWT tree
     // lock is not used as there are many peers related ops
     // to be done on the toolkit thread, and we don't want to
     // depend on a public lock on this thread
     private final static Object peerTreeLock =
-            new StringBuilder("LWComponentPeer.peerTreeLock");    
+            new StringBuilder("LWComponentPeer.peerTreeLock");
 
     /**
      * A custom tree-lock used for the hierarchy of the delegate Swing
@@ -145,16 +131,17 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     // the target dirty area
     private RepaintArea targetPaintArea;
 
- //   private volatile boolean paintPending;
+    //   private volatile boolean paintPending;
     private volatile boolean isLayouting;
 
     private final D delegate;
     private Container delegateContainer;
-    
+
     private int fNumDropTargets = 0;
     private CDropTarget fDropTarget = null;
 
     private static final Object APPLICATION_LAF_KEY = new Object();
+    private final LWDelegateKeyboardFocusManager delegateKFM = new LWDelegateKeyboardFocusManager();
 
     public LWComponentPeer(T target) {
         this.target = target;
@@ -185,6 +172,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
                 {
                     enableEvents(0xFFFFFFFF);
                 }
+
                 @Override
                 public boolean isLightweight() {
                     return false;
@@ -207,9 +195,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             Rectangle res = SwingUtilities.convertRectangle(
-                                c, new Rectangle(x, y, w, h), getDelegate());
+                                    c, new Rectangle(x, y, w, h), getDelegate());
                             LWComponentPeer.this.repaintPeer(
-                                res.x, res.y, res.width, res.height);
+                                    res.x, res.y, res.width, res.height);
                         }
                     });
                 }
@@ -222,13 +210,17 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
      * Overridden in subclasses.
      */
     protected D createDelegate() {
-	return null;
+        return null;
     }
 
     protected final D getDelegate() {
         synchronized (getStateLock()) {
             return delegate;
         }
+    }
+
+    protected Component getDelegateFocusOwner() {
+        return getDelegate();
     }
 
     /*
@@ -276,8 +268,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
     protected final static Object getPeerTreeLock() {
         return peerTreeLock;
-    }                    
-                    
+    }
+
     final T getTarget() {
         return target;
     }
@@ -303,10 +295,10 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     protected void initializeContainerPeer() {
         Container parent = LWToolkit.getNativeContainer(target);
         if (parent != null) {
-            containerPeer = (LWContainerPeer)LWToolkit.targetToPeer(parent);
+            containerPeer = (LWContainerPeer) LWToolkit.targetToPeer(parent);
         }
     }
-    
+
     public PlatformWindow getPlatformWindow() {
         LWWindowPeer windowPeer = getWindowPeer();
         return windowPeer.getPlatformWindow();
@@ -318,6 +310,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     public Toolkit getToolkit() {
         return LWToolkit.getLWToolkit();
     }
+
     // Just a helper method
     public LWToolkit getLWToolkit() {
         return LWToolkit.getLWToolkit();
@@ -329,6 +322,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
             disposeImpl();
         }
     }
+
     protected void disposeImpl() {
         LWContainerPeer cp = getContainerPeer();
         if (cp != null) {
@@ -336,6 +330,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         }
         LWToolkit.targetDisposedPeer(getTarget(), this);
     }
+
     public final boolean isDisposed() {
         return disposed.get();
     }
@@ -401,8 +396,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
     @Override
     public void createBuffers(int numBuffers, BufferCapabilities caps)
-            throws AWTException 
-    {
+            throws AWTException {
         throw new AWTException("Back buffers are only supported for " +
                 "Window or Canvas components.");
     }
@@ -418,8 +412,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
     @Override
     public void flip(int x1, int y1, int x2, int y2,
-                     BufferCapabilities.FlipContents flipAction) 
-    {
+                     BufferCapabilities.FlipContents flipAction) {
         // Skip silently or throw AWTException?
     }
 
@@ -427,11 +420,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     public void destroyBuffers() {
         // Do nothing
     }
-    
+
     // Helper method
     public void setBounds(Rectangle r) {
         setBounds(r.x, r.y, r.width, r.height, SET_BOUNDS);
     }
+
     /*
     * This method could be called on the toolkit thread.
     */
@@ -465,6 +459,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
             }
         }
     }
+
     public Rectangle getBounds() {
         synchronized (getStateLock()) {
             // Return a copy to prevent subsequent modifications
@@ -488,9 +483,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
         D delegate = getDelegate();
 
-        if (delegate != null && 
-                (getTarget().isBackgroundSet() || c == null))
-        {
+        if (delegate != null &&
+                (getTarget().isBackgroundSet() || c == null)) {
             synchronized (getDelegateLock()) {
                 delegate.setBackground(c);
             }
@@ -513,15 +507,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
         D delegate = getDelegate();
 
-        if (delegate != null && 
-                (getTarget().isForegroundSet() || c == null))
-        {
+        if (delegate != null &&
+                (getTarget().isForegroundSet() || c == null)) {
             synchronized (getDelegateLock()) {
                 delegate.setForeground(c);
             }
         }
         repaintPeer();
     }
+
     // Helper method
     protected Color getForeground() {
         synchronized (getStateLock()) {
@@ -537,15 +531,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
         D delegate = getDelegate();
 
-        if (delegate != null && 
-                (getTarget().isFontSet() || f == null))
-        {
+        if (delegate != null &&
+                (getTarget().isFontSet() || f == null)) {
             synchronized (getDelegateLock()) {
                 delegate.setFont(f);
             }
         }
         repaintPeer();
     }
+
     // Helper method
     protected Font getFont() {
         synchronized (getStateLock()) {
@@ -564,7 +558,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         try {
             return g == null ? null : g.getFontMetrics(f);
         } finally {
-            if(g != null) {
+            if (g != null) {
                 g.dispose();
             }
         }
@@ -577,6 +571,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         }
         repaintPeer();
     }
+
     // Helper method
     public boolean isEnabled() {
         synchronized (getStateLock()) {
@@ -599,6 +594,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         }
         repaintPeer();
     }
+
     // Helper method
     public boolean isVisible() {
         synchronized (getStateLock()) {
@@ -636,7 +632,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         // Don't check containerPeer for null as it can only happen
         // for windows, but this method is overridden in
         // LWWindowPeer and doesn't call super()
-        cp.setChildPeerZOrder(this, (LWComponentPeer)above);
+        cp.setChildPeerZOrder(this, (LWComponentPeer) above);
     }
 
     @Override
@@ -711,12 +707,10 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     @Override
     public boolean requestFocus(Component lightweightChild, boolean temporary,
                                 boolean focusedWindowChangeAllowed, long time,
-                                CausedFocusEvent.Cause cause) 
-    {
+                                CausedFocusEvent.Cause cause) {
         if (getLWToolkit().getKeyboardFocusManagerPeer().
                 processSynchronousLightweightTransfer(getTarget(), lightweightChild, temporary,
-                        focusedWindowChangeAllowed, time)) 
-        {
+                        focusedWindowChangeAllowed, time)) {
             return true;
         }
 
@@ -732,7 +726,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
                     LWKeyboardFocusManagerPeer.removeLastFocusRequest(getTarget());
                     return false;
                 }
-                LWWindowPeer parentPeer = (LWWindowPeer)parentWindow.getPeer();
+                LWWindowPeer parentPeer = (LWWindowPeer) parentWindow.getPeer();
                 if (parentPeer == null) {
                     LWKeyboardFocusManagerPeer.removeLastFocusRequest(getTarget());
                     return false;
@@ -800,7 +794,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         // TODO: not implemented
     }
 
-    
+
     // DropTargetPeer Method
     public synchronized void addDropTarget(DropTarget dt) {
         // 10-14-02 VL: Windows WComponentPeer would add (or remove) the drop target only
@@ -825,15 +819,11 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
                 // Dispose of the drop target:
                 fDropTarget.dispose();
                 fDropTarget = null;
-            }
-
-            else
+            } else
                 System.err.println("CComponent.removeDropTarget(): current drop target is null.");
         }
     }
 
-    
-    
     // ---- PEER NOTIFICATIONS ---- //
 
     /*
@@ -845,6 +835,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
      *
      * This method could be called on the toolkit thread.
      */
+
     protected void handleMove(int oldX, int oldY, int newX, int newY) {
         postEvent(new ComponentEvent(getTarget(), ComponentEvent.COMPONENT_MOVED));
         LWContainerPeer cp = getContainerPeer();
@@ -902,6 +893,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     /*
      * Post an event to the proper Java EDT.
      */
+
     public void postEvent(AWTEvent event) {
         SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
     }
@@ -930,44 +922,110 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
      */
     @Override
     public void handleEvent(AWTEvent e) {
-        if ((e instanceof InputEvent) && ((InputEvent)e).isConsumed()) {
+        if ((e instanceof InputEvent) && ((InputEvent) e).isConsumed()) {
             return;
         }
         switch (e.getID()) {
             case FocusEvent.FOCUS_GAINED:
             case FocusEvent.FOCUS_LOST:
-                handleJavaFocusEvent((FocusEvent)e);
+                handleJavaFocusEvent((FocusEvent) e);
                 break;
             case PaintEvent.PAINT:
                 // Got a native paint event
 //                paintPending = false;
                 // fall through to the next statement
             case PaintEvent.UPDATE:
-                handleJavaPaintEvent((PaintEvent)e);
+                handleJavaPaintEvent((PaintEvent) e);
                 break;
             case MouseEvent.MOUSE_PRESSED:
                 Component target = getTarget();
                 if ((e.getSource() == target) && !target.isFocusOwner() &&
-                        LWKeyboardFocusManagerPeer.shouldFocusOnClick(target)) 
-                {
+                        LWKeyboardFocusManagerPeer.shouldFocusOnClick(target)) {
                     LWKeyboardFocusManagerPeer.requestFocusFor(target,
                             CausedFocusEvent.Cause.MOUSE_EVENT);
                 }
                 break;
         }
         synchronized (getDelegateLock()) {
-            processDelegateEvent(e);
+            if (delegate == null) {
+                return;
+            }
+            installDelegateLookAndFeel();
+            try {
+                AWTEvent delegateEvent = createDelegateEvent(e);
+                if (delegateEvent != null) {
+                    processDelegateEvent(delegateEvent);
+                }
+            } finally {
+                uninstallDelegateLookAndFeel();
+            }
+        }
+    }
+
+    protected AWTEvent createDelegateEvent(AWTEvent e) {
+        AWTEvent delegateEvent = null;
+        if (e instanceof MouseWheelEvent) {
+            MouseWheelEvent me = (MouseWheelEvent) e;
+            delegateEvent = new MouseWheelEvent(
+                    delegate, me.getID(), me.getWhen(),
+                    me.getModifiers(),
+                    me.getX(), me.getY(),
+                    me.getClickCount(),
+                    false,                       // popupTrigger
+                    MouseWheelEvent.WHEEL_UNIT_SCROLL,
+                    3, // TODO: wheel scroll amount
+                    me.getWheelRotation());
+        } else if (e instanceof MouseEvent) {
+            MouseEvent me = (MouseEvent) e;
+            Component target = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
+            if (target == null) {
+                target = delegate;
+            }
+            delegateEvent = new MouseEvent(
+                    target, me.getID(), me.getWhen(), me.getModifiers(),
+                    me.getX(), me.getY(), me.getXOnScreen(), me.getYOnScreen(),
+                    me.getClickCount(), me.isPopupTrigger(), me.getButton());
+        } else if (e instanceof KeyEvent) {
+            KeyEvent ke = (KeyEvent) e;
+            delegateEvent = new KeyEvent(getDelegateFocusOwner(), ke.getID(), ke.getWhen(),
+                    ke.getModifiers(), ke.getKeyCode(), ke.getKeyChar(), ke.getKeyLocation());
+        } else if (e instanceof FocusEvent) {
+            FocusEvent fe = (FocusEvent) e;
+            delegateEvent = new FocusEvent(getDelegateFocusOwner(), fe.getID(), fe.isTemporary());
+        }
+        return delegateEvent;
+    }
+
+    private void processDelegateEvent(AWTEvent event) {
+        try {
+            Method method = Component.class.getDeclaredMethod("processEvent", AWTEvent.class);
+            method.setAccessible(true);
+            method.invoke(event.getSource(), event);
+        } catch (NoSuchMethodException e) {
+            //can't happen
+            throw new InternalError("Component.processEvent(AWTEvent) method is not found");
+        }
+        catch (IllegalAccessException e) {
+            //can't happen
+            throw new InternalError("Component.processEvent(AWTEvent) method can't be accessed");
+
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        if (event instanceof KeyEvent) {
+            KeyEvent ke = (KeyEvent) event;
+            SwingUtilities.processKeyBindings(ke);
         }
     }
 
     /*
-     * Handler for FocusEvents.
-     */
+    * Handler for FocusEvents.
+    */
     protected void handleJavaFocusEvent(FocusEvent e) {
         // Note that the peer receives all the FocusEvents from
         // its lightweight children as well
         getLWToolkit().getKeyboardFocusManagerPeer().
-            setFocusOwner(e.getID() == FocusEvent.FOCUS_GAINED ? this : null);
+                setFocusOwner(e.getID() == FocusEvent.FOCUS_GAINED ? this : null);
     }
 
     /*
@@ -979,49 +1037,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 //        if (!isLayouting && !paintPending) {
         if (!isLayouting) {
             targetPaintArea.paint(getTarget(), false);
-        }
-    }
-
-    protected void processDelegateEvent(AWTEvent e) {
-        D delegate = getDelegate();
-        if (delegate == null) {
-            return;
-        }
-        
-        installDelegateLookAndFeel();
-        try {
-            if (e instanceof MouseWheelEvent) {
-                MouseWheelEvent me = (MouseWheelEvent) e;
-                MouseWheelEvent delegateEvent = new MouseWheelEvent(
-                        delegate, me.getID(), me.getWhen(),
-                        me.getModifiers(),
-                        me.getX(), me.getY(),
-                        me.getClickCount(),
-                        false,                       // popupTrigger
-                        MouseWheelEvent.WHEEL_UNIT_SCROLL,
-                        3, // TODO: wheel scroll amount
-			me.getWheelRotation());
-                delegate.processAWTEvent(delegateEvent);
-            } else if (e instanceof MouseEvent) {
-                MouseEvent me = (MouseEvent) e;
-                MouseEvent delegateEvent = new MouseEvent(
-                        delegate, me.getID(), me.getWhen(), me.getModifiers(),
-                        me.getX(), me.getY(), me.getXOnScreen(), me.getYOnScreen(),
-                        me.getClickCount(), me.isPopupTrigger(), me.getButton());
-                delegate.processAWTEvent(delegateEvent);
-            } else if (e instanceof KeyEvent) {
-                KeyEvent ke = (KeyEvent) e;
-                KeyEvent delegateEvent = new KeyEvent(delegate, ke.getID(), ke.getWhen(),
-                        ke.getModifiers(), ke.getKeyCode(), ke.getKeyChar(), ke.getKeyLocation());
-                delegate.processAWTEvent(delegateEvent);
-                SwingUtilities.processKeyBindings(delegateEvent);
-            } else if (e instanceof FocusEvent) {
-                FocusEvent fe = (FocusEvent) e;
-                FocusEvent delegateEvent = new FocusEvent(delegate, fe.getID(), fe.isTemporary());
-                delegate.processAWTEvent(delegateEvent);
-            }
-        } finally {
-            uninstallDelegateLookAndFeel();
         }
     }
 
@@ -1041,7 +1056,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
 
     /**
      * This method must be called under getDelegateLock() lock.
-     *
+     * <p/>
      * Don't forget to call this method inside "finally" clause
      */
     private void uninstallDelegateLookAndFeel() {
@@ -1058,6 +1073,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
      * Finds a top-most component for the given point. The location is
      * specified relative to the peer's parent.
      */
+
     public LWComponentPeer findPeerAt(int x, int y) {
         synchronized (getStateLock()) {
             return (getBounds().contains(x, y)) ? this : null;
@@ -1072,6 +1088,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     public Point windowToLocal(int x, int y, LWWindowPeer wp) {
         return windowToLocal(new Point(x, y), wp);
     }
+
     public Point windowToLocal(Point p, LWWindowPeer wp) {
         LWComponentPeer cp = this;
         while (cp != wp) {
@@ -1083,6 +1100,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
         // Return a copy to prevent subsequent modifications
         return new Point(p);
     }
+
     public Rectangle windowToLocal(Rectangle r, LWWindowPeer wp) {
         Point p = windowToLocal(r.getLocation(), wp);
         return new Rectangle(p, r.getSize());
@@ -1091,6 +1109,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     public Point localToWindow(int x, int y) {
         return localToWindow(new Point(x, y));
     }
+
     public Point localToWindow(Point p) {
         LWComponentPeer cp = getContainerPeer();
         Rectangle r = getBounds();
@@ -1171,8 +1190,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     protected void peerPaint(Graphics g, Rectangle r) {
         Rectangle b = getBounds();
         if (!isVisible() || r.isEmpty() ||
-            !r.intersects(new Rectangle(0, 0, b.width, b.height)))
-        {
+                !r.intersects(new Rectangle(0, 0, b.width, b.height))) {
             return;
         }
         peerPaintSelf(g, r);
@@ -1195,12 +1213,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
                 throw new InternalError("Painting must be done on EDT");
             }
             synchronized (getDelegateLock()) {
-                installDelegateLookAndFeel();
-                try {
-                    // JComponent.print() is guaranteed to not affect the double buffer
-                    delegate.print(g);
-                } finally {
-                    uninstallDelegateLookAndFeel();
+                // I am taking this lock to block any calls to the real KeyboardFocusManager
+                // during the delegate painting
+                synchronized (KeyboardFocusManager.class) {
+                    installDelegateLookAndFeel();
+                    KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+                    if (getTarget().hasFocus()) {
+                        delegateKFM.setFocusOwner(getDelegateFocusOwner());
+                        AppContext.getAppContext().put(KeyboardFocusManager.class, delegateKFM);
+                    }
+                    try {
+                        // JComponent.print() is guaranteed to not affect the double buffer
+                        delegate.print(g);
+                    } finally {
+                        AppContext.getAppContext().put(KeyboardFocusManager.class, kfm);
+                        uninstallDelegateLookAndFeel();
+                    }
                 }
             }
         }
@@ -1239,15 +1267,5 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent 
     */
     protected void setLayouting(boolean l) {
         isLayouting = l;
-    }
-
-    protected class JComponentDelegate
-	extends JComponent
-        implements ComponentDelegate
-    {
-	@Override
-	public void processAWTEvent(AWTEvent e) {
-	    processEvent(e);
-	}
     }
 }

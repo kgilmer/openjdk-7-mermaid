@@ -37,7 +37,7 @@ import java.awt.peer.CanvasPeer;
 import javax.swing.JComponent;
 
 public class LWCanvasPeer
-    extends LWComponentPeer<Component, LWCanvasPeer.JCanvasDelegate>
+    extends LWComponentPeer<Component, JComponent>
     implements CanvasPeer
 {
     public LWCanvasPeer(Canvas target) {
@@ -45,7 +45,7 @@ public class LWCanvasPeer
     }
 
     @Override
-    public JCanvasDelegate createDelegate() {
+    public JComponent createDelegate() {
         return new JCanvasDelegate();
     }
 
@@ -84,12 +84,7 @@ public class LWCanvasPeer
 
     class JCanvasDelegate
 	extends JComponent
-	implements ComponentDelegate
     {
-        @Override
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
 
         @Override
         public Dimension getMinimumSize() {

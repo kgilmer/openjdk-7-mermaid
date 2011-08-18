@@ -25,58 +25,79 @@
 
 package sun.lwawt;
 
-import java.awt.Checkbox;
-import java.awt.CheckboxGroup;
-import java.awt.AWTEvent;
+import java.awt.*;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
 import java.awt.peer.CheckboxPeer;
+import java.beans.Transient;
 
-import javax.swing.JToggleButton;
-import javax.swing.JCheckBox;
-import javax.swing.JRadioButton;
+import javax.swing.*;
 
 class LWCheckboxPeer
-    extends LWComponentPeer<Checkbox, LWCheckboxPeer.JCheckBoxDelegate> 
-    implements CheckboxPeer, ItemListener
-{
+        extends LWComponentPeer<Checkbox, LWCheckboxPeer.CheckboxDelegate>
+        implements CheckboxPeer, ItemListener {
     LWCheckboxPeer(Checkbox target) {
         super(target);
     }
 
     @Override
-    protected JCheckBoxDelegate createDelegate() {
-	// TODO: not implemented, need delegate impl for radio
-	// buttons (that is, if target group is not null)
-        JCheckBoxDelegate delegate = new JCheckBoxDelegate();
-        delegate.setOpaque(false);
-        delegate.setText(getTarget().getLabel());
-        delegate.setSelected(getTarget().getState());
-        delegate.addItemListener(this);
-        return delegate;
+    protected CheckboxDelegate createDelegate() {
+        return new CheckboxDelegate();
     }
 
-    public void itemStateChanged(ItemEvent e) {
-        postEvent(new ItemEvent(getTarget(),  ItemEvent.ITEM_STATE_CHANGED,
+    @Override
+    protected Component getDelegateFocusOwner() {
+        return getDelegate().getCurrentButton();
+    }
+
+    public void initialize() {
+        super.initialize();
+        getDelegate().setOpaque(false);
+        getDelegate().setRadioButton(getTarget().getCheckboxGroup() != null);
+        getDelegate().getCurrentButton().setText(getTarget().getLabel());
+        getDelegate().getCurrentButton().setSelected(getTarget().getState());
+        getDelegate().getCurrentButton().addItemListener(this);
+    }
+
+    public void itemStateChanged(final ItemEvent e) {
+        postEvent(new ItemEvent(getTarget(), ItemEvent.ITEM_STATE_CHANGED,
                 getTarget().getLabel(), e.getStateChange()));
+
+        // group.setSelectedCheckbox() will repaint the component
+        // to let LWCheckboxPeer correctly handle it we should call it
+        // after the current event is processed
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                CheckboxGroup group = getTarget().getCheckboxGroup();
+                if (group != null) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        group.setSelectedCheckbox(getTarget());
+                    } else if (group.getSelectedCheckbox() == getTarget()) {
+                        // don't want to leave the group with no selected checkbox
+                        getTarget().setState(true);
+                    }
+                }
+            }
+        });
     }
 
     public void setCheckboxGroup(CheckboxGroup g) {
         synchronized (getDelegateLock()) {
-            // TODO: not implemented
+            initialize();
         }
+        repaintPeer();
     }
 
     public void setLabel(String label) {
         synchronized (getDelegateLock()) {
-            getDelegate().setText(label);
+            getDelegate().getCurrentButton().setText(label);
         }
         repaintPeer();
     }
 
     public void setState(boolean state) {
         synchronized (getDelegateLock()) {
-            getDelegate().setSelected(state);
+            getDelegate().getCurrentButton().setSelected(state);
         }
         repaintPeer();
     }
@@ -86,23 +107,38 @@ class LWCheckboxPeer
         return true;
     }
 
-    class JCheckBoxDelegate
-	extends JCheckBox
-	implements ComponentDelegate
-    {
-	@Override
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
-    }
+    class CheckboxDelegate extends JComponent {
+        private JCheckBox cb;
+        private JRadioButton rb;
 
-    class JRadioButtonDelegate
-	extends JRadioButton
-	implements ComponentDelegate
-    {
-	@Override
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
+        CheckboxDelegate() {
+            cb = new JCheckBox();
+            rb = new JRadioButton();
+            add(cb);
+        }
+
+        public boolean isRadioButton() {
+            return getCurrentButton() == rb;
+        }
+
+        public void setRadioButton(boolean b) {
+            remove(getCurrentButton());
+            add(b? rb: cb);
+        }
+
+        private JToggleButton getCurrentButton() {
+            return (JToggleButton) getComponent(0);
+        }
+
+        @Deprecated
+        public void reshape(int x, int y, int w, int h) {
+            super.reshape(x, y, w, h);
+            getCurrentButton().setBounds(0, 0, w, h);
+        }
+
+        @Transient
+        public Dimension getMinimumSize() {
+            return getCurrentButton().getMinimumSize();
         }
     }
 }
