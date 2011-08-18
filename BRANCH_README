@@ -1,0 +1,2 @@
+This branch of jdk is for accumulating changes needed to implement Core Animation Layer support until
+these changes are ready to be integrated into the default branch.
