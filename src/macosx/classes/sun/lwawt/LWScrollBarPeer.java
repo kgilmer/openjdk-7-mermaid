@@ -34,7 +34,7 @@ import java.awt.peer.ScrollbarPeer;
 import javax.swing.JScrollBar;
 
 public class LWScrollBarPeer
-    extends LWComponentPeer<Scrollbar, LWScrollBarPeer.JScrollBarDelegate>
+    extends LWComponentPeer<Scrollbar, JScrollBar>
     implements ScrollbarPeer, AdjustmentListener
 {
     //JScrollBar fires two changes with firePropertyChange (one for old value
@@ -59,8 +59,8 @@ public class LWScrollBarPeer
     }
 
     @Override
-    protected JScrollBarDelegate createDelegate() {
-        JScrollBarDelegate delegate = new JScrollBarDelegate();
+    protected JScrollBar createDelegate() {
+        JScrollBar delegate = new JScrollBar();
         delegate.setBackground(getTarget().getBackground());
         delegate.setForeground(getTarget().getForeground());
         return delegate;
@@ -101,16 +101,6 @@ public class LWScrollBarPeer
         postEvent(new AdjustmentEvent(getTarget(), e.getID(),
 				      e.getAdjustmentType(), e.getValue(),
 				      e.getValueIsAdjusting()));
-    }
-
-    class JScrollBarDelegate
-	extends JScrollBar
-	implements ComponentDelegate
-    {
-        @Override
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
     }
 
 }

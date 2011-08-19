@@ -31,13 +31,13 @@ import java.awt.image.BufferedImage;
 import java.awt.peer.*;
 import java.util.List;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import sun.awt.*;
 import sun.java2d.*;
 
 public class LWWindowPeer
-    extends LWContainerPeer<Window, LWComponentPeer.JComponentDelegate>
+    extends LWContainerPeer<Window, JComponent>
     implements WindowPeer, FramePeer, DialogPeer, FullScreenCapable
 {
     public static enum PeerType {
