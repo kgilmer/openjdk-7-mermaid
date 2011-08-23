@@ -44,9 +44,11 @@
 {
     jobject m_cPlatformView;
     NSOpenGLContext *m_nsContext;
+	AWTView *view;
 }
 - (void) setPlatformView:(jobject)cPlatformView;
 - (void) setNSContext: (NSOpenGLContext *)nsContext;
+- (void) setAWTView: (AWTView *)aView;
 @end
 
 @implementation AWTCAOpenGLLayer
@@ -56,7 +58,7 @@
     m_cPlatformView = cPlatformView;
 }
 
-- (void) setNSContext: (NSOpenGLContext *)nsContext;
+- (void) setNSContext: (NSOpenGLContext *)nsContext
 {
     m_nsContext = nsContext;
 }
@@ -64,6 +66,12 @@
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
     return m_nsContext.CGLContextObj;
 }
+
+- (void) setAWTView: (AWTView *) aView
+{
+    view = aView;
+}
+
 
 // static AWTCAOpenGLLayer *layer;
 
@@ -136,6 +144,7 @@
     // Set the current context to the one given to us.
     CGLSetCurrentContext(glContext);
 
+	
 	NSRect frame = NSRectFromCGRect([self frame]);
 	GLfloat         minX, minY, maxX, maxY;
 	
@@ -144,16 +153,29 @@
 	maxX = NSMaxX(frame);
 	maxY = NSMaxY(frame);
 	
-//	fprintf(stderr, "Coords provided are: %f, %f, %f, %f\n", minX, minY, maxX, maxY);
+	NSWindow *window = [view window];
+    NSRect windowframe = [window frame];
+	NSRect contentRect = [NSWindow contentRectForFrameRect:windowframe styleMask:[window styleMask]];
+	int top = (int)(windowframe.size.height - contentRect.size.height);
+    int left = (int)(contentRect.origin.x - windowframe.origin.x);
+    int bottom = (int)(contentRect.origin.y - windowframe.origin.y);
+    int right = (int)(windowframe.size.width - (contentRect.size.width + left));
 	
+//	fprintf(stderr, "Coords provided are: minX=%f, minY=%f, maxX=%f, maxY=%f\n", minX, minY, maxX, maxY);
+//	fprintf(stderr, "Insets are: top=%d, bottom=%d, left=%d, right=%d\n", top, bottom, left, right);
+	
+	minX -= left;
+	maxX += right;
+	minY -= bottom;
+	maxY += top;
+
 	glViewport(0, 0, (int)maxX, (int)maxY);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(minX, maxX, maxY, minY, -1.0, 1.0);
-        
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
 
-    static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
+	JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+	static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
     static JNF_MEMBER_CACHE(jm_drawLayer, jc_PlatformView, "drawLayer", "()V");
     JNFCallVoidMethod(env, m_cPlatformView, jm_drawLayer);
 
@@ -859,6 +881,7 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 		
         [layer setPlatformView: cPlatformView];
         [layer setNSContext: nsContextPtr];
+		[layer setAWTView: newView];
         // [layer setNeedsDisplay];
 		
         // NOTE: async=YES means that the layer is re-cached periodically
