@@ -388,7 +388,7 @@ Java_sun_lwawt_macosx_CMenuBar_nativeCreateMenuBar
     // We use an array here only to be able to get a return value
     NSMutableArray *args = [[NSMutableArray alloc] initWithObjects:[NSValue valueWithBytes:&cPeerObjGlobal objCType:@encode(jobject)], nil];
 
-    [ThreadUtilities performOnMainThread:@selector(_create_OnAppKitThread:) onObject:[CMenuBar alloc] withObject:args waitUntilDone:YES awtMode:NO];
+    [ThreadUtilities performOnMainThread:@selector(_create_OnAppKitThread:) onObject:[CMenuBar alloc] withObject:args waitUntilDone:YES awtMode:YES];
 
     aCMenuBar = (CMenuBar *)[args objectAtIndex: 0];
 

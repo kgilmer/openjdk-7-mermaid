@@ -103,7 +103,10 @@
 - (void)deleteNativeJavaItem_OnAppKitThread:(NSNumber *)number {
     AWT_ASSERT_APPKIT_THREAD;
 
-    [[self menu] removeItemAtIndex:[number intValue]];
+    int n = [number intValue];
+    if (n < [[self menu] numberOfItems]) {
+        [[self menu] removeItemAtIndex:n];
+    }
 }
 
 - (void)addNSMenuItemToMenu:(NSMenu *)inMenu {
@@ -140,7 +143,7 @@ CMenu * createCMenu (jobject cPeerObjGlobal) {
     // We use an array here only to be able to get a return value
     NSMutableArray *args = [[NSMutableArray alloc] initWithObjects:[NSValue valueWithBytes:&cPeerObjGlobal objCType:@encode(jobject)], nil];
 
-    [ThreadUtilities performOnMainThread:@selector(_create_OnAppKitThread:) onObject:[CMenu alloc] withObject:args waitUntilDone:YES awtMode:NO];
+    [ThreadUtilities performOnMainThread:@selector(_create_OnAppKitThread:) onObject:[CMenu alloc] withObject:args waitUntilDone:YES awtMode:YES];
 
     aCMenu = (CMenu *)[args objectAtIndex: 0];
 

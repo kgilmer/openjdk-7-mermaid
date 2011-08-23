@@ -184,7 +184,7 @@ class ScreenMenu extends Menu implements ContainerListener, ComponentListener, S
      * @param itemRectRight Tracking rectangle coordinates.
      */
     public void handleItemTargeted(final int inWhichItem, final int itemRectTop, final int itemRectLeft, final int itemRectBottom, final int itemRectRight) {
-        if (inWhichItem < 0 || inWhichItem > (fItemBounds.length - 1)) return;
+        if (fItemBounds == null || inWhichItem < 0 || inWhichItem > (fItemBounds.length - 1)) return;
         final Rectangle itemRect = new Rectangle(itemRectLeft, itemRectTop, itemRectRight - itemRectLeft, itemRectBottom - itemRectTop);
         fItemBounds[inWhichItem] = itemRect;
     }

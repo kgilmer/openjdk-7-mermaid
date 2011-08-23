@@ -95,6 +95,7 @@ public class CImage extends CFRetainedResource {
     
         // This is used to create a CImage from a Image
         public CImage createFromImage(final Image image) {
+            if (image == null) return null;
             int w = image.getWidth(null);
             int h = image.getHeight(null);
             BufferedImage bimg = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB_PRE);

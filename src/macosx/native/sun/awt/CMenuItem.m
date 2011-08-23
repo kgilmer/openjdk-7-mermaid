@@ -220,7 +220,7 @@
     NSNumber * asSeparator = (NSNumber *)[argValue objectAtIndex: 1];
     CMenuItem *aCMenuItem = [self initWithPeer: cPeerObjGlobal asSeparator: asSeparator];
     [argValue removeAllObjects];
-    [argValue addObject: aCMenuItem];
+    [argValue addObject: aCMenuItem];    
 }
 
 - (NSString *)description {
@@ -384,6 +384,7 @@ JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CMenuItem_nativeCreate
     (JNIEnv *env, jobject peer, jlong parentCMenuObj, jboolean isSeparator)
 {
+    
     CMenuItem *aCMenuItem = nil;
     CMenu *parentCMenu = (CMenu *)jlong_to_ptr(parentCMenuObj);
     JNF_COCOA_ENTER(env);
@@ -399,7 +400,7 @@ Java_sun_lwawt_macosx_CMenuItem_nativeCreate
         args = [[NSMutableArray alloc] initWithObjects:[NSValue valueWithBytes:&cPeerObjGlobal objCType:@encode(jobject)], [NSNumber numberWithBool:NO],  nil];
     }
 
-    [ThreadUtilities performOnMainThread:@selector(_createMenuItem_OnAppKitThread:) onObject:[CMenuItem alloc] withObject:args waitUntilDone:YES awtMode:NO];
+    [ThreadUtilities performOnMainThread:@selector(_createMenuItem_OnAppKitThread:) onObject:[CMenuItem alloc] withObject:args waitUntilDone:YES awtMode:YES];
 
     aCMenuItem = (CMenuItem *)[args objectAtIndex: 0];
 
