@@ -136,19 +136,39 @@
     // Set the current context to the one given to us.
     CGLSetCurrentContext(glContext);
 
-    // TODO: remove the temporary change
-    glViewport(0, 0, 400, 400);
+	NSRect frame = NSRectFromCGRect([self frame]);
+	GLfloat         minX, minY, maxX, maxY;
+	
+	minX = NSMinX(frame);
+	minY = NSMinY(frame);
+	maxX = NSMaxX(frame);
+	maxY = NSMaxY(frame);
+	
+//	fprintf(stderr, "Coords provided are: %f, %f, %f, %f\n", minX, minY, maxX, maxY);
+	
+	glViewport(0, 0, (int)maxX, (int)maxY);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 400, 400, 0.0, -1.0, 1.0);
+    glOrtho(minX, maxX, maxY, minY, -1.0, 1.0);
         
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
 
     static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
     static JNF_MEMBER_CACHE(jm_drawLayer, jc_PlatformView, "drawLayer", "()V");
     JNFCallVoidMethod(env, m_cPlatformView, jm_drawLayer);
+
+/*
+	// Red line across the frame to better understand its geometry
+	glPushMatrix();
+	glLineWidth(5);
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_LINES);
+	glVertex2f(0.0, 0.0);
+	glVertex2f(self.bounds.size.width, self.bounds.size.height);
+	glEnd();
+*/	
     
-    // Call super to finalize the drawing. By default all it does is call glFlush().
+	// Call super to finalize the drawing. By default all it does is call glFlush().
     [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
 
     CGLSetCurrentContext(NULL);
@@ -183,6 +203,13 @@ AWT_ASSERT_APPKIT_THREAD;
 
     return self;
 }
+
+//	Override setFrameSize
+//- (void)setFrameSize:(NSSize)newSize {
+//	NSLog(@"size : %@", NSStringFromSize(newSize));
+//	
+//	[super setFrameSize:newSize];
+//}
 
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
@@ -840,9 +867,9 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
         // layer.anchorPoint = CGPointMake(1.0, 0.0);
                
         // TODO: fix bounds
-        layer.frame = CGRectMake(0,0,400,400);
+        // layer.frame = CGRectMake(0,0,400,400);
         
-        //layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+        layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
         layer.backgroundColor = CGColorCreateGenericRGB(0.0, 1.0, 0.0, 1.0);
 		
         [newView setWantsLayer: YES];
