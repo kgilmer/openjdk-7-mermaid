@@ -166,6 +166,7 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         // we should restore them from the window back buffer.
         for (LWComponentPeer child : getChildren()) {
             child.flushOffscreenGraphics();
+            child.postPaintEvent();
         }
     }
 

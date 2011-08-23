@@ -136,9 +136,7 @@ class LWListPeer
      */
     @SuppressWarnings("serial")
     public class ScrollableJListDelegate
-	extends JScrollPane
-	implements ComponentDelegate
-    {
+	extends JScrollPane {
         public final static int MARGIN = 2;
         public final static int SPACE = 1;
 
@@ -225,7 +223,7 @@ class LWListPeer
             }
         }
 
-        @Override
+        // todo: alexp sort it out
         public void processAWTEvent(AWTEvent e) {
             if (e instanceof KeyEvent || e instanceof FocusEvent) {
                 //Event should be addressed to the actual JList, not its wrapper
@@ -300,11 +298,10 @@ class LWListPeer
          * JList itself
          */
         class JListDelegate
-	    extends JList
-	    implements ComponentDelegate
-	{
-	    @Override
-	    public void processAWTEvent(AWTEvent e) {
+	    extends JList {
+
+        //todo: alexp sort it out
+        public void processAWTEvent(AWTEvent e) {
 		processEvent(e);
 	    }
 	    @Override

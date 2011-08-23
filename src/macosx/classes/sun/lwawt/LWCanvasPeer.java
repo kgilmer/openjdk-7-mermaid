@@ -30,6 +30,7 @@ import java.awt.BufferCapabilities;
 import java.awt.Canvas;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
 import java.awt.Image;
 import java.awt.peer.CanvasPeer;
@@ -94,6 +95,20 @@ public class LWCanvasPeer
         @Override
         public Dimension getPreferredSize() {
             return getTarget().getSize();
+        }
+
+        @Override
+        public boolean isOpaque() {
+            return true;
+        }
+
+        @Override
+        protected void paintComponent(final Graphics g) {
+            if (isOpaque()) {
+                g.setColor(getBackground());
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(getForeground());
+            }
         }
     }
 }

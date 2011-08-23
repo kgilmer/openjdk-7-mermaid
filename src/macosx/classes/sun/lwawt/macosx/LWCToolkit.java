@@ -171,10 +171,20 @@ public class LWCToolkit extends LWToolkit {
         
     }
 
-    @Override
+    class OSXPlatformFont extends sun.awt.PlatformFont
+    {
+        public OSXPlatformFont(String name, int style)
+        {
+            super(name, style);
+        }
+        protected char getMissingGlyphCharacter()
+        {
+            // Follow up for real implementation
+            return (char)0xfff8; // see http://developer.apple.com/fonts/LastResortFont/
+        }
+    }
     public FontPeer getFontPeer(String name, int style) {
-        // TODO Auto-generated method stub
-        return null;
+        return new OSXPlatformFont(name, style);
     }
 
     @Override

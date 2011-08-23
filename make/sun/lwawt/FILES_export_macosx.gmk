@@ -72,7 +72,7 @@ FILES_export = \
 	sun/font/CStrikeDisposer.java \
 	sun/java2d/BackBufferCapsProvider.java \
 	sun/java2d/MacosxSurfaceManagerFactory.java \
-	sun/lwawt/ComponentDelegate.java \
+	sun/lwawt/LWDelegateKeyboardFocusManager.java \
 	sun/lwawt/LWButtonPeer.java \
 	sun/lwawt/LWCanvasPeer.java \
 	sun/lwawt/LWCheckboxPeer.java \

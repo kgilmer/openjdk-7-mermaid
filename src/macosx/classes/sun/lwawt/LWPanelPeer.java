@@ -28,10 +28,10 @@ package sun.lwawt;
 import java.awt.Panel;
 import java.awt.peer.PanelPeer;
 
-import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 public class LWPanelPeer
-    extends LWContainerPeer<Panel, LWComponentPeer.JComponentDelegate>
+    extends LWContainerPeer<Panel, JPanel>
     implements PanelPeer
 {
     public LWPanelPeer(Panel target) {
@@ -39,7 +39,7 @@ public class LWPanelPeer
     }
 
     @Override
-    public JComponentDelegate createDelegate() {
-	return new JComponentDelegate();
+    public JPanel createDelegate() {
+	return new JPanel();
     }
 }

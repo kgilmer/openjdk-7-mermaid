@@ -125,7 +125,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // Component state. Should be accessed under the state lock
     private boolean visible = false;
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     // Paint area to coalesce all the paint events and store
     // the target dirty area
@@ -227,7 +227,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * Initializes this peer by fetching all the properties from the target.
      * The call to initialize() is not placed to LWComponentPeer ctor to
      * let the subclass ctor to finish completely first. Instead, it's the
-     * LWToolkit object who is responsible for initializization.
+     * LWToolkit object who is responsible for initialization.
      */
     public void initialize() {
         targetPaintArea = new RepaintArea();
@@ -567,7 +567,17 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     @Override
     public void setEnabled(boolean e) {
         synchronized (getStateLock()) {
+            if (enabled == e) {
+                return;
+            }
             enabled = e;
+        }
+        final D delegate = getDelegate();
+
+        if (delegate != null) {
+            synchronized (getDelegateLock()) {
+                delegate.setEnabled(e);
+            }
         }
         repaintPeer();
     }
@@ -676,7 +686,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     /*
-     * Should be overriden in subclasses to forward the request
+     * Should be overridden in subclasses to forward the request
      * to the Swing helper component.
      */
     @Override
