@@ -37,13 +37,18 @@ import java.awt.image.ColorModel;
 import sun.java2d.SunGraphics2D;
 import sun.java2d.SurfaceData;
 
+import sun.java2d.pipe.RenderBuffer;
+
 import sun.lwawt.macosx.CPlatformView;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public abstract class CGLSurfaceData extends OGLSurfaceData {
 
     protected CPlatformView pView;
     private CGLGraphicsConfig graphicsConfig;
-
+    
     // Mac OS X specific - we never recreate surfaces, just resize them
     native void resize(int xoff, int yoff, int width, int height);
 
@@ -58,13 +63,45 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         super(gc, cm, type);
         this.pView = pView;
         this.graphicsConfig = gc;
-
+        
         long pConfigInfo = gc.getNativeConfigInfo();
         long pPeerData = 0L;
         if (pView != null) {
             pPeerData = pView.getAWTView();
         }
         initOps(pConfigInfo, pPeerData, 0, 0);
+    }
+    
+    // render buffers and runnable tasks
+    private List futureTasks = new ArrayList();
+    
+    // Asks layer to re-cache its content
+    // called on the renderer thread
+    void setNeedsDisplay(Object task) {
+        synchronized (this) {
+            futureTasks.add(task);
+        }
+        if (pView != null) {
+            pView.setNeedsDisplay(true);
+        }
+    }
+    
+    // Draws the layer's content
+    // Called on the Appkit thread
+    public void drawLayer() {
+        CGLRenderQueue rq = (CGLRenderQueue)CGLRenderQueue.getInstance();
+        synchronized (this) {
+            int size = futureTasks.size();
+            for (int i = 0; i < size; i++) {
+                Object task = futureTasks.get(i);
+                if (task instanceof RenderBuffer) {
+                    rq.drawLayer((RenderBuffer)task);                        
+                } else {
+                    rq.invokeTaskNow((Runnable)task);                                                
+                }
+            }
+            futureTasks.clear();
+        }
     }
     
     @Override //SurfaceData
@@ -128,7 +165,7 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
     protected native void clearWindow();
 
     public static class CGLWindowSurfaceData extends CGLSurfaceData {
-
+        
         public CGLWindowSurfaceData(CPlatformView pView,
                 CGLGraphicsConfig gc) {
             super(pView, gc, gc.getColorModel(), WINDOW);
@@ -174,7 +211,7 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         public void invalidate() {
             super.invalidate();
             clearWindow();
-        }        
+        }
     }
 
     /**

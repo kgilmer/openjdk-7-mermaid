@@ -73,6 +73,7 @@ public class CGLGraphicsConfig extends CGraphicsConfig
     private static ImageCapabilities imageCaps = new CGLImageCaps();
 
     private int pixfmt;
+    private long nsContextPtr = 0;
     private BufferCapabilities bufferCaps;
     private long pConfigInfo;
     private ContextCapabilities oglCaps;
@@ -84,7 +85,8 @@ public class CGLGraphicsConfig extends CGraphicsConfig
     private static native long getCGLConfigInfo(int screennum, int visualnum,
                                                 int swapInterval);
     private static native int getOGLCapabilities(long configInfo);
-
+    private static native long getNSContextPtr(long configInfo);
+        
     static {
         cglAvailable = initCGL();
     }
@@ -98,7 +100,8 @@ public class CGLGraphicsConfig extends CGraphicsConfig
         this.pConfigInfo = configInfo;
         this.oglCaps = oglCaps;
         context = new OGLContext(OGLRenderQueue.getInstance(), this);
-
+        this.nsContextPtr = getNSContextPtr(configInfo);
+        
         // add a record to the Disposer so that we destroy the native
         // CGLGraphicsConfigInfo data when this object goes away
         Disposer.addRecord(disposerReferent,
@@ -153,7 +156,7 @@ public class CGLGraphicsConfig extends CGraphicsConfig
 
         int oglCaps = getOGLCapabilities(cfginfo);
         ContextCapabilities caps = new OGLContextCaps(oglCaps, ids[0]);
-
+        
         return new CGLGraphicsConfig(device, pixfmt, cfginfo, caps);
     }
 
@@ -193,6 +196,10 @@ public class CGLGraphicsConfig extends CGraphicsConfig
         return pConfigInfo;
     }
 
+    public long getNSContextPtr() {
+        return nsContextPtr;
+    }    
+    
     /**
      * {@inheritDoc}
      *

@@ -36,6 +36,9 @@ import sun.java2d.SunGraphics2D;
 import sun.java2d.loops.XORComposite;
 import static sun.java2d.pipe.BufferedOpCodes.*;
 import static sun.java2d.pipe.BufferedRenderPipe.BYTES_PER_SPAN;
+import sun.java2d.opengl.CGLRenderQueue;
+import sun.java2d.SurfaceData;
+
 
 /**
  * Base context class for managing state in a single-threaded rendering
@@ -169,7 +172,7 @@ public abstract class BufferedContext {
                          Paint paint, SunGraphics2D sg2d, int flags)
     {
         // assert rq.lock.isHeldByCurrentThread();
-
+        
         boolean updateClip = false;
         boolean updatePaint = false;
 
@@ -318,12 +321,15 @@ public abstract class BufferedContext {
 
     private void setSurfaces(AccelSurface srcData,
                              AccelSurface dstData)
-    {
+    {        
         // assert rq.lock.isHeldByCurrentThread();
         rq.ensureCapacityAndAlignment(20, 4);
         buf.putInt(SET_SURFACES);
         buf.putLong(srcData.getNativeOps());
         buf.putLong(dstData.getNativeOps());
+        
+        // TODO: any better way to split "global" render buffer
+        CGLRenderQueue.setCurrentSurfaceData((SurfaceData)srcData);
     }
 
     private void resetClip() {

@@ -32,6 +32,129 @@
 #import "LWCToolkit.h"
 #import "JavaComponentAccessibility.h"
 #import "JavaTextAccessibility.h"
+#import <OpenGL/OpenGL.h>
+#import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
+
+
+// TODO: extract the layers code into separate file
+//       to macosx/native/sun/java2d/opengl ?
+
+@interface AWTCAOpenGLLayer : CAOpenGLLayer
+{
+    jobject m_cPlatformView;
+    NSOpenGLContext *m_nsContext;
+}
+- (void) setPlatformView:(jobject)cPlatformView;
+- (void) setNSContext: (NSOpenGLContext *)nsContext;
+@end
+
+@implementation AWTCAOpenGLLayer
+
+- (void) setPlatformView: (jobject) cPlatformView
+{
+    m_cPlatformView = cPlatformView;
+}
+
+- (void) setNSContext: (NSOpenGLContext *)nsContext;
+{
+    m_nsContext = nsContext;
+}
+
+- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
+    return m_nsContext.CGLContextObj;
+}
+
+// static AWTCAOpenGLLayer *layer;
+
+//
+// Some hardcoded rendering
+//
+
+// CALayer
+
+/*
+- (void)drawInContext:(CGContextRef)ctx {
+	CGRect clip = CGContextGetClipBoundingBox(ctx);
+	
+	NSLog(@"clip : %@", NSStringFromRect(NSRectFromCGRect(clip)));
+	NSLog(@"frame : %@", NSStringFromRect(NSRectFromCGRect(self.frame)));
+	
+	CGRect bounds = CGRectMake(0,0,0.2,0.2);
+	CGContextSetRGBFillColor(ctx, 0.0, 0.0, 1.0, 1.0);
+	CGContextFillRect(ctx, bounds);
+}
+*/
+
+// CAOpenGLLayer
+
+/*
+-(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp
+{
+    AWT_ASSERT_APPKIT_THREAD;
+ 
+    fprintf(stderr, " drawInCGLContext receives %x \n", glContext);
+    
+    // Set the current context to the one given to us.
+    CGLSetCurrentContext(glContext);
+ 
+    GLfloat rotate = timeInterval * 60.0; // 60 degrees per second!
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);	
+ 
+    glPushMatrix();
+    glRotatef(rotate, 0.0, 0.0, 1.0);
+    glBegin(GL_QUADS);
+    glColor3f(1.0, 0.0, 0.0);
+    glVertex2f(-0.5, -0.5);
+    glVertex2f(-0.5,  0.5);
+    glVertex2f( 0.5,  0.5);
+    glVertex2f( 0.5, -0.5);
+    glEnd();
+    glPopMatrix();
+
+    glPushMatrix();	
+    glLineWidth(3.0);
+    glBegin(GL_LINES);
+    glColor3f(0.0, 0.0, 1.0);
+    glVertex2f(-0.99, -0.99 );
+    glVertex2f( 0.99,  0.99);
+    glEnd();	
+    glPopMatrix();
+
+    // Call super to finalize the drawing. By default all it does is call glFlush().
+    [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
+
+    CGLSetCurrentContext(NULL);
+}
+*/
+
+-(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp
+{
+    AWT_ASSERT_APPKIT_THREAD;
+        
+    // Set the current context to the one given to us.
+    CGLSetCurrentContext(glContext);
+
+    // TODO: remove the temporary change
+    glViewport(0, 0, 400, 400);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 400, 400, 0.0, -1.0, 1.0);
+        
+    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+
+    static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
+    static JNF_MEMBER_CACHE(jm_drawLayer, jc_PlatformView, "drawLayer", "()V");
+    JNFCallVoidMethod(env, m_cPlatformView, jm_drawLayer);
+    
+    // Call super to finalize the drawing. By default all it does is call glFlush().
+    [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
+
+    CGLSetCurrentContext(NULL);
+}
+
+@end
 
 @interface AWTView()
 @property (retain) CDropTarget *_dropTarget;
@@ -685,7 +808,7 @@ AWT_ASSERT_APPKIT_THREAD;
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CPlatformView_nativeCreateView
-(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height)
+(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height, jlong nsContextPtr)
 {
     __block AWTView *newView = nil;
     
@@ -704,9 +827,58 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
         [view release]; // GC
         
         newView = view;
+        
+        AWTCAOpenGLLayer *layer = [AWTCAOpenGLLayer layer];
+		
+        [layer setPlatformView: cPlatformView];
+        [layer setNSContext: nsContextPtr];
+        // [layer setNeedsDisplay];
+		
+        // NOTE: async=YES means that the layer is re-cached periodically
+        // layer.asynchronous = TRUE;
+		
+        // layer.anchorPoint = CGPointMake(1.0, 0.0);
+               
+        // TODO: fix bounds
+        layer.frame = CGRectMake(0,0,400,400);
+        
+        //layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+        layer.backgroundColor = CGColorCreateGenericRGB(0.0, 1.0, 0.0, 1.0);
+		
+        [newView setWantsLayer: YES];
+        // TODO: do we really want to add our layer as a sublayer?
+        [newView.layer addSublayer:layer];
+
     }];
 
 JNF_COCOA_EXIT(env);
     
     return ptr_to_jlong(newView);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    setNeedsDisplay
+ * Signature: (JZ)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformView_setNeedsDisplay
+(JNIEnv *env, jclass clazz, jlong viewPtr, jboolean flag)
+{
+    JNF_COCOA_ENTER(env);
+    AWT_ASSERT_NOT_APPKIT_THREAD;
+
+    AWTView *view = OBJC(viewPtr);
+	
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+
+        // NOTE: looks like calling view doesn't re-cache sublayers
+        // [view setNeedsDisplay: YES];
+
+        NSArray *layers = view.layer.sublayers;
+        CALayer *layer = (CALayer *)[layers objectAtIndex:0];
+        [layer setNeedsDisplay];
+    }];
+
+    JNF_COCOA_EXIT(env);
 }

@@ -40,10 +40,10 @@ public class OGLRenderQueue extends RenderQueue {
     private static OGLRenderQueue theInstance;
     private final QueueFlusher flusher;
 
-    private OGLRenderQueue() {
+    protected OGLRenderQueue() {
         flusher = new QueueFlusher();
     }
-
+	
     /**
      * Returns the single OGLRenderQueue instance.  If it has not yet been
      * initialized, this method will first construct the single instance
@@ -51,7 +51,9 @@ public class OGLRenderQueue extends RenderQueue {
      */
     public static synchronized OGLRenderQueue getInstance() {
         if (theInstance == null) {
-            theInstance = new OGLRenderQueue();
+            // TODO: factory?
+            theInstance = new CGLRenderQueue();
+//            theInstance = new OGLRenderQueue();
         }
         return theInstance;
     }
@@ -129,7 +131,7 @@ public class OGLRenderQueue extends RenderQueue {
         }
     }
 
-    private native void flushBuffer(long buf, int limit);
+    protected native void flushBuffer(long buf, int limit);
 
     private void flushBuffer() {
         // assert lock.isHeldByCurrentThread();
@@ -144,7 +146,11 @@ public class OGLRenderQueue extends RenderQueue {
         refSet.clear();
     }
 
-    private class QueueFlusher extends Thread {
+    protected void invokeTask(Runnable task) {
+        task.run();
+    }
+    
+	private class QueueFlusher extends Thread {
         private boolean needsFlush;
         private Runnable task;
         private Error error;
@@ -217,7 +223,8 @@ public class OGLRenderQueue extends RenderQueue {
                     flushBuffer();
                     // if there's a task, invoke that now as well
                     if (task != null) {
-                        task.run();
+                        // task.run();
+                        invokeTask(task);
                     }
                 } catch (Error e) {
                     error = e;

@@ -437,7 +437,9 @@ Java_sun_java2d_opengl_OGLRenderQueue_flushBuffer
                 if (oglc != NULL) {
                     RESET_PREVIOUS_OP();
                 }
-                oglc = OGLContext_SetSurfaces(env, pSrc, pDst);
+                // TODO: uncomment me
+                //  this call should be a safe call as we pass our context to layer
+                //oglc = OGLContext_SetSurfaces(env, pSrc, pDst);
                 dstOps = (OGLSDOps *)jlong_to_ptr(pDst);
             }
             break;

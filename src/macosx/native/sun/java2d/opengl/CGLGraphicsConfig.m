@@ -241,7 +241,7 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getCGLConfigInfo
         [argValue addObject: [NSNumber numberWithLong: 0L]];
         return;
     }
-
+        
     GLint contextVirtualScreen = [context currentVirtualScreen];
 #if USE_NSVIEW_FOR_SCRATCH
     [context setView: scratchSurface];
@@ -376,4 +376,17 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getOGLCapabilities
     } else {
         return cglinfo->context->caps;
     }
+}
+
+JNIEXPORT jlong JNICALL
+Java_sun_java2d_opengl_CGLGraphicsConfig_getNSContextPtr
+    (JNIEnv *env, jclass cglgc, jlong configInfo)
+{
+    J2dTraceLn(J2D_TRACE_INFO, "CGLGraphicsConfig_getNSContextPtr");
+    CGLGraphicsConfigInfo *cglinfo =
+        (CGLGraphicsConfigInfo *)jlong_to_ptr(configInfo);
+
+    OGLContext *oglc = (OGLContext*)cglinfo->context;
+    CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
+    return ctxinfo->context;
 }

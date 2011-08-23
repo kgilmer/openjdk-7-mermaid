@@ -216,6 +216,9 @@ NSUInteger sPerformCount = 0;
 
 + (JNIEnv*)getAppKitJNIEnv {
     AWT_ASSERT_APPKIT_THREAD;
+	
+    //NSLog(@"%@", [NSThread callStackSymbols]);
+	
     if (appKitEnv == NULL) {
         (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void **)&appKitEnv, NULL);
     }
