@@ -177,6 +177,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 public boolean isLightweight() {
                     return false;
                 }
+
+                public Point getLocation() {
+                    return getLocationOnScreen();
+                }
+
+                public Point getLocationOnScreen() {
+                    return getTarget().getLocationOnScreen();
+                }
+
+                public int getX() {
+                    return getLocation().x;
+                }
+
+                public int getY() {
+                    return getLocation().y;
+                }
             };
 //            AWTAccessor.getComponentAccessor().
 //                  setTreeLock(delegateContainer, delegateTreeLock);
@@ -987,14 +1003,11 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     me.getWheelRotation());
         } else if (e instanceof MouseEvent) {
             MouseEvent me = (MouseEvent) e;
-            Component target = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
-            if (target == null) {
-                target = delegate;
+            Component eventTarget = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
+            if (eventTarget == null) {
+                eventTarget = delegate;
             }
-            delegateEvent = new MouseEvent(
-                    target, me.getID(), me.getWhen(), me.getModifiers(),
-                    me.getX(), me.getY(), me.getXOnScreen(), me.getYOnScreen(),
-                    me.getClickCount(), me.isPopupTrigger(), me.getButton());
+            delegateEvent = SwingUtilities.convertMouseEvent(getTarget(), me, eventTarget);
         } else if (e instanceof KeyEvent) {
             KeyEvent ke = (KeyEvent) e;
             delegateEvent = new KeyEvent(getDelegateFocusOwner(), ke.getID(), ke.getWhen(),
