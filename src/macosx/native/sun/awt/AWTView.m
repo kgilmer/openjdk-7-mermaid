@@ -72,6 +72,13 @@
     view = aView;
 }
 
+// Layer is non-opaque by default and making layer opaque is
+// an attempt to be consistent with surface data (CGLSurfaceData.m: isOpaque = JNI_TRUE)
+// the change helps to eliminate some painting artifacts
+- (BOOL) isOpaque
+{
+    return YES;
+}
 
 // static AWTCAOpenGLLayer *layer;
 
@@ -168,11 +175,6 @@
 	maxX += right;
 	minY -= bottom;
 	maxY += top;
-
-	glViewport(0, 0, (int)maxX, (int)maxY);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(minX, maxX, maxY, minY, -1.0, 1.0);
 
 	JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
 	static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
