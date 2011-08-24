@@ -126,21 +126,20 @@ class ScreenMenu extends Menu implements ContainerListener, ComponentListener, S
      */
     public void invokeOpenLater() {
         final JMenu invoker = fInvoker;
-        
         if (invoker == null) {
             System.err.println("invoker is null!");
             return;
         }
 
         try {
-            EventQueue.invokeLater(new Runnable() {
+            LWCToolkit.invokeAndWait(new Runnable() {
                 public void run() {
                     invoker.setSelected(true);
                     invoker.validate();
                     updateItems();
                     fItemBounds = new Rectangle[invoker.getMenuComponentCount()];
                 }
-            });
+            }, null);
         } catch (final Exception e) {
             System.err.println(e);
             e.printStackTrace();
@@ -155,7 +154,7 @@ class ScreenMenu extends Menu implements ContainerListener, ComponentListener, S
         if (invoker == null) return;
             
         try {
-        	EventQueue.invokeLater(new Runnable() {
+            LWCToolkit.invokeAndWait(new Runnable() {
                 public void run() {
                     invoker.setSelected(false);
 
@@ -168,7 +167,7 @@ class ScreenMenu extends Menu implements ContainerListener, ComponentListener, S
 
             fItemBounds = null;
     }
-            });
+            }, null);
         } catch (final Exception e) {
             e.printStackTrace();
         }
