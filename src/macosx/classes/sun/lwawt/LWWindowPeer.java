@@ -512,16 +512,17 @@ public class LWWindowPeer
 
         // First, restore the window contents from the back buffer, just
         // like SwingPaintEventDispatcher does 
-        flushOffscreenGraphics(new Rectangle(x, y, w, h));
+        //flushOffscreenGraphics(new Rectangle(x, y, w, h));
 
         // Second, refresh the back buffer contents and flush it onto
         // the screen - on EDT
-        paintPeerDirtyRectOnEDT(new Rectangle(x, y, w, h));
+        //paintPeerDirtyRectOnEDT(new Rectangle(x, y, w, h));
 
         // Last, post the paint events for all the subcomponents. As paint
         // events are of lower priority, the runnable above will be executed
         // before any of them are handled
-        handleExpose(x, y, w, h);
+        //handleExpose(x, y, w, h);
+        repaintPeer(x, y, w, h);
     }
 
     /*

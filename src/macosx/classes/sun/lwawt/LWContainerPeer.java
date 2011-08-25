@@ -165,8 +165,7 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         // the target painting may have corrupted some children, so
         // we should restore them from the window back buffer.
         for (LWComponentPeer child : getChildren()) {
-            child.flushOffscreenGraphics();
-            child.postPaintEvent();
+            child.restorePeer();
         }
     }
 
@@ -199,6 +198,11 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
      */
     @Override
     protected void peerPaint(Graphics g, Rectangle r) {
+        Rectangle b = getBounds();
+        if (!isVisible() || r.isEmpty() ||
+                !r.intersects(new Rectangle(0, 0, b.width, b.height))) {
+            return;
+        }
         // First, paint myself
         super.peerPaint(g, r);
         // Second, paint all the children

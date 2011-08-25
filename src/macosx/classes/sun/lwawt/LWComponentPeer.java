@@ -1200,8 +1200,30 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     public void repaintPeer(int x, int y, int width, int height) {
-        paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
-        postPaintEvent(x, y, width, height);
+        if (isVisible() && width != 0 && height != 0 && isContainersVisible()) {
+            paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
+            postPaintEvent(x, y, width, height);
+        }
+    }
+
+    public void restorePeer() {
+        if (isVisible() && !getBounds().isEmpty() && isContainersVisible()) {
+            flushOffscreenGraphics();
+            postPaintEvent();
+        }
+    }
+
+    public boolean isContainersVisible() {
+        synchronized (getPeerTreeLock()) {
+            LWContainerPeer container = getContainerPeer();
+            while (container != null) {
+                if (!container.isVisible() || container.getBounds().isEmpty()) {
+                    return false;
+                }
+                container = container.getContainerPeer();
+            }
+        }
+        return true;
     }
 
     /*
