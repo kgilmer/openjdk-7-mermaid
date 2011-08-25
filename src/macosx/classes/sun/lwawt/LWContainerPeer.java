@@ -199,7 +199,7 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
     @Override
     protected void peerPaint(Graphics g, Rectangle r) {
         Rectangle b = getBounds();
-        if (!isVisible() || r.isEmpty() ||
+        if (!isShowing() || r.isEmpty() ||
                 !r.intersects(new Rectangle(0, 0, b.width, b.height))) {
             return;
         }

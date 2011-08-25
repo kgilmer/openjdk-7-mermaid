@@ -62,7 +62,6 @@ import sun.awt.image.SunVolatileImage;
 import sun.awt.image.ToolkitImage;
 
 import sun.java2d.pipe.Region;
-import sun.lwawt.macosx.CPlatformWindow;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -210,7 +209,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     //why not paint the components synchronously into the buffer?
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
-                            if (getTarget().isShowing()) {
+                            if (isShowing()) {
                                 Rectangle res = SwingUtilities.convertRectangle(
                                         c, new Rectangle(x, y, w, h), getDelegate());
                                 LWComponentPeer.this.repaintPeer(
@@ -615,6 +614,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             }
             visible = v;
         }
+
+        final D delegate = getDelegate();
+
+        if (delegate != null) {
+            synchronized (getDelegateLock()) {
+                delegate.setVisible(v);
+            }
+        }
+
         LWContainerPeer cp = getContainerPeer();
         if (cp != null) {
             Rectangle r = getBounds();
@@ -1003,7 +1011,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     MouseWheelEvent.WHEEL_UNIT_SCROLL,
                     3, // TODO: wheel scroll amount
                     me.getWheelRotation());
-        } else if (e instanceof MouseEvent && getTarget().isShowing()) {
+        } else if (e instanceof MouseEvent && isShowing()) {
             MouseEvent me = (MouseEvent) e;
             Component eventTarget = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
             if (eventTarget == null) {
@@ -1202,30 +1210,32 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     public void repaintPeer(int x, int y, int width, int height) {
-        if (isVisible() && width != 0 && height != 0 && isContainersVisible()) {
+        if (isShowing() && width != 0 && height != 0) {
             paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
             postPaintEvent(x, y, width, height);
         }
     }
 
     public void restorePeer() {
-        if (isVisible() && !getBounds().isEmpty() && isContainersVisible()) {
+        if (isShowing() && !getBounds().isEmpty()) {
             flushOffscreenGraphics();
             postPaintEvent();
         }
     }
 
-    public boolean isContainersVisible() {
+    /**
+     * Determines whether this peer is showing on screen. This means that the
+     * peer must be visible, and it must be in a container that is visible and
+     * showing.
+     */
+    protected boolean isShowing() {
         synchronized (getPeerTreeLock()) {
-            LWContainerPeer container = getContainerPeer();
-            while (container != null) {
-                if (!container.isVisible() || container.getBounds().isEmpty()) {
-                    return false;
-                }
-                container = container.getContainerPeer();
+            if (isVisible()) {
+                final LWContainerPeer container = getContainerPeer();
+                return (container == null) || container.isShowing();
             }
         }
-        return true;
+        return false;
     }
 
     /*
@@ -1236,7 +1246,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     */
     protected void peerPaint(Graphics g, Rectangle r) {
         Rectangle b = getBounds();
-        if (!isVisible() || r.isEmpty() ||
+        if (!isShowing() || r.isEmpty() ||
                 !r.intersects(new Rectangle(0, 0, b.width, b.height))) {
             return;
         }
