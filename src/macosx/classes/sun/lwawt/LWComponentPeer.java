@@ -210,10 +210,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     //why not paint the components synchronously into the buffer?
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
-                            Rectangle res = SwingUtilities.convertRectangle(
-                                    c, new Rectangle(x, y, w, h), getDelegate());
-                            LWComponentPeer.this.repaintPeer(
-                                    res.x, res.y, res.width, res.height);
+                            if (getTarget().isShowing()) {
+                                Rectangle res = SwingUtilities.convertRectangle(
+                                        c, new Rectangle(x, y, w, h), getDelegate());
+                                LWComponentPeer.this.repaintPeer(
+                                        res.x, res.y, res.width, res.height);
+                            }
                         }
                     });
                 }
@@ -572,7 +574,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // TODO: check for "use platform metrics" settings
         Graphics g = getWindowPeer().getOffscreenGraphics();
         try {
-            return g == null ? null : g.getFontMetrics(f);
+            return g == null ? delegateContainer.getFontMetrics(f) : g.getFontMetrics(f);
         } finally {
             if (g != null) {
                 g.dispose();
@@ -1001,7 +1003,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     MouseWheelEvent.WHEEL_UNIT_SCROLL,
                     3, // TODO: wheel scroll amount
                     me.getWheelRotation());
-        } else if (e instanceof MouseEvent) {
+        } else if (e instanceof MouseEvent && getTarget().isShowing()) {
             MouseEvent me = (MouseEvent) e;
             Component eventTarget = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
             if (eventTarget == null) {
