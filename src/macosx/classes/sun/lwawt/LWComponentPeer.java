@@ -135,6 +135,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private final D delegate;
     private Container delegateContainer;
+    private Component delegateDropTarget;
 
     private int fNumDropTargets = 0;
     private CDropTarget fDropTarget = null;
@@ -990,7 +991,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             try {
                 AWTEvent delegateEvent = createDelegateEvent(e);
                 if (delegateEvent != null) {
-                    processDelegateEvent(delegateEvent);
+                    AWTAccessor.getComponentAccessor().processEvent(
+                            (Component) delegateEvent.getSource(), delegateEvent);
+                    if (delegateEvent instanceof KeyEvent) {
+                        KeyEvent ke = (KeyEvent) delegateEvent;
+                        SwingUtilities.processKeyBindings(ke);
+                    }
                 }
             } finally {
                 uninstallDelegateLookAndFeel();
@@ -1013,7 +1019,20 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     me.getWheelRotation());
         } else if (e instanceof MouseEvent && isShowing()) {
             MouseEvent me = (MouseEvent) e;
+
             Component eventTarget = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
+
+            if (me.getID() == MouseEvent.MOUSE_DRAGGED) {
+                if (delegateDropTarget == null) {
+                    delegateDropTarget = eventTarget;
+                } else {
+                    eventTarget = delegateDropTarget;
+                }
+            }
+            if (me.getID() == MouseEvent.MOUSE_RELEASED && delegateDropTarget != null) {
+                eventTarget = delegateDropTarget;
+                delegateDropTarget = null;
+            }
             if (eventTarget == null) {
                 eventTarget = delegate;
             }
@@ -1027,28 +1046,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             delegateEvent = new FocusEvent(getDelegateFocusOwner(), fe.getID(), fe.isTemporary());
         }
         return delegateEvent;
-    }
-
-    private void processDelegateEvent(AWTEvent event) {
-        try {
-            Method method = Component.class.getDeclaredMethod("processEvent", AWTEvent.class);
-            method.setAccessible(true);
-            method.invoke(event.getSource(), event);
-        } catch (NoSuchMethodException e) {
-            //can't happen
-            throw new InternalError("Component.processEvent(AWTEvent) method is not found");
-        }
-        catch (IllegalAccessException e) {
-            //can't happen
-            throw new InternalError("Component.processEvent(AWTEvent) method can't be accessed");
-
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        if (event instanceof KeyEvent) {
-            KeyEvent ke = (KeyEvent) event;
-            SwingUtilities.processKeyBindings(ke);
-        }
     }
 
     /*
