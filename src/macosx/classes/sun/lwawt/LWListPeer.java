@@ -42,6 +42,14 @@ class LWListPeer
         return new ScrollableJList();
     }
 
+    public boolean isFocusable() {
+        return true;
+    }
+
+    protected Component getDelegateFocusOwner() {
+        return getDelegate().getView();
+    }
+
     public int[] getSelectedIndexes() {
         synchronized (getDelegateLock()) {
             return getDelegate().getView().getSelectedIndices();
