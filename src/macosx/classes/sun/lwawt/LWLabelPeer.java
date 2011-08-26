@@ -25,8 +25,6 @@
 
 package sun.lwawt;
 
-import java.awt.AWTEvent;
-import java.awt.Dimension;
 import java.awt.Label;
 import java.awt.peer.LabelPeer;
 
@@ -45,24 +43,11 @@ class LWLabelPeer
     protected JLabel createDelegate() {
         final JLabel delegate = new JLabel();
         delegate.setText(getTarget().getText());
-        delegate.setFont(getTarget().getFont());
-        delegate.setBackground(getTarget().getBackground());
-        delegate.setForeground(getTarget().getForeground());
         delegate.setHorizontalAlignment(
                 convertAlignment(getTarget().getAlignment()));
         return delegate;
     }
-    
 
-    @Override
-    protected void handleResize(int oldW, int oldH, int newW, int newH) {
-        super.handleResize(oldW, oldH, newW, newH);
-        Dimension dims = getTarget().getSize();
-        synchronized (getDelegateLock()) {
-            getDelegate().setSize(dims);
-        }
-    }
-    
     @Override
     public void setText(String text) {
         synchronized (getDelegateLock()) {
