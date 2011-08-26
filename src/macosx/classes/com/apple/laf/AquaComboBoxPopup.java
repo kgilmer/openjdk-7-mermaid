@@ -34,7 +34,9 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import sun.lwawt.macosx.CPlatformWindow;
 
 class AquaComboBoxPopup extends BasicComboPopup {
-    final static Insets FOCUS_RING_INSETS = new Insets(5, 6, 5, 6);
+    static final int FOCUS_RING_PAD_LEFT = 6;
+    static final int FOCUS_RING_PAD_RIGHT = 6;
+    static final int FOCUS_RING_PAD_BOTTOM = 5;
     
     protected Component topStrut;
     protected Component bottomStrut;
@@ -121,6 +123,7 @@ class AquaComboBoxPopup extends BasicComboPopup {
         final Rectangle popupBounds = adjustPopupAndGetBounds();
         if (popupBounds == null) return; // null means don't show
         
+        comboBox.firePopupMenuWillBecomeVisible();
         show(comboBox, popupBounds.x, popupBounds.y);
         
         // hack for <rdar://problem/4905531> JComboBox does not fire popupWillBecomeVisible if item count is 0
@@ -266,10 +269,10 @@ class AquaComboBoxPopup extends BasicComboPopup {
         final boolean leftToRight = AquaUtils.isLeftToRight(comboBox);
         if (leftToRight) {
             px += comboBoxInsets.left;
-            if (!isPopDown) px -= FOCUS_RING_INSETS.left;
+            if (!isPopDown) px -= FOCUS_RING_PAD_LEFT;
         } else {
             px = comboBoxBounds.width - pw - comboBoxInsets.right;
-            if (!isPopDown) px += FOCUS_RING_INSETS.right;
+            if (!isPopDown) px += FOCUS_RING_PAD_RIGHT;
         }
         py -= (comboBoxInsets.bottom); //sja fix was +kInset
 
@@ -302,9 +305,9 @@ class AquaComboBoxPopup extends BasicComboPopup {
         
         // don't attempt to inset table cell editors
         if (!isTableCellEditor) {
-            pw -= (FOCUS_RING_INSETS.left + FOCUS_RING_INSETS.right);
+            pw -= (FOCUS_RING_PAD_LEFT + FOCUS_RING_PAD_RIGHT);
             if (leftToRight) {
-                px += FOCUS_RING_INSETS.left;
+                px += FOCUS_RING_PAD_LEFT;
             }
         }
 
@@ -365,7 +368,7 @@ class AquaComboBoxPopup extends BasicComboPopup {
         final Insets insets = comboBox.getInsets();
         final int buttonSize = height - (insets.top + insets.bottom);
         final int diff = (buttonSize - elementSize) / 2 + insets.top;
-        popupBounds.y += diff - FOCUS_RING_INSETS.bottom;
+        popupBounds.y += diff - FOCUS_RING_PAD_BOTTOM;
 
         return popupBounds;
     }

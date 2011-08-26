@@ -36,8 +36,8 @@ import sun.lwawt.macosx.CImage;
 import apple.laf.JRSUIConstants.Size;
 import apple.laf.*;
 
-import com.apple.laf.AquaUtilControlSize.SizeDescriptor;
-import com.apple.laf.AquaUtilControlSize.SizeVariant;
+import com.apple.laf.AquaUtilControlSize.*;
+import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaIcon {
     interface InvertableIcon extends Icon {
@@ -229,36 +229,62 @@ public class AquaIcon {
         }
     }
     
+    static class SystemIconSingleton extends LazySingleton<SystemIcon> {
+        final String selector;
+        
+        public SystemIconSingleton(String selector) {
+            this.selector = selector;
+        }
+        
+        @Override
+        protected SystemIcon getInstance() {
+            return new SystemIcon(selector);
+        }
+    }
+    
+    static class SystemIconUIResourceSingleton extends LazySingleton<IconUIResource> {
+        final String selector;
+        
+        public SystemIconUIResourceSingleton(String selector) {
+            this.selector = selector;
+        }
+        
+        @Override
+        protected IconUIResource getInstance() {
+            return new IconUIResource(new SystemIcon(selector));
+        }
+    }
+    
     static class SystemIcon extends CachingScalingIcon {
-        static final SystemIcon fldr = new SystemIcon("fldr");
-        static final IconUIResource folderIcon = new IconUIResource(fldr);
+        private static final SystemIconUIResourceSingleton folderIcon = new SystemIconUIResourceSingleton("fldr");
+        static IconUIResource getFolderIconUIResource() { return folderIcon.get(); }
         
-        static final SystemIcon ofld = new SystemIcon("ofld");
-        static final IconUIResource openFolderIcon = new IconUIResource(ofld);
+        private static final SystemIconUIResourceSingleton openFolderIcon = new SystemIconUIResourceSingleton("ofld");
+        static IconUIResource getOpenFolderIconUIResource() { return openFolderIcon.get(); }
         
-        static final SystemIcon desk = new SystemIcon("desk");
-        static final IconUIResource desktopIcon = new IconUIResource(desk);
+        private static final SystemIconUIResourceSingleton desktopIcon = new SystemIconUIResourceSingleton("desk");
+        static IconUIResource getDesktopIconUIResource() { return desktopIcon.get(); }
         
-        static final SystemIcon FNDR = new SystemIcon("FNDR");
-        static final IconUIResource computerIcon = new IconUIResource(FNDR);
+        private static final SystemIconUIResourceSingleton computerIcon = new SystemIconUIResourceSingleton("FNDR");
+        static IconUIResource getComputerIconUIResource() { return computerIcon.get(); }
         
-        static final SystemIcon docu = new SystemIcon("docu");
-        static final IconUIResource documentIcon = new IconUIResource(docu);
+        private static final SystemIconUIResourceSingleton documentIcon = new SystemIconUIResourceSingleton("docu"); 
+        static IconUIResource getDocumentIconUIResource() { return documentIcon.get(); }
+
+        private static final SystemIconUIResourceSingleton hardDriveIcon = new SystemIconUIResourceSingleton("hdsk");
+        static IconUIResource getHardDriveIconUIResource() { return hardDriveIcon.get(); }
         
-        static final SystemIcon hdsk = new SystemIcon("hdsk");
-        static final IconUIResource hardDriveIcon = new IconUIResource(hdsk);
+        private static final SystemIconUIResourceSingleton floppyIcon = new SystemIconUIResourceSingleton("flpy");
+        static IconUIResource getFloppyIconUIResource() { return floppyIcon.get(); }
         
-        static final SystemIcon flpy = new SystemIcon("flpy");
-        static final IconUIResource floppyIcon = new IconUIResource(flpy);
+        //private static final SystemIconUIResourceSingleton noteIcon = new SystemIconUIResourceSingleton("note");
+        //static IconUIResource getNoteIconUIResource() { return noteIcon.get(); }
         
-        static final SystemIcon note = new SystemIcon("note");
-        static final IconUIResource noteIcon = new IconUIResource(note);
+        private static final SystemIconSingleton caut = new SystemIconSingleton("caut");
+        static SystemIcon getCautionIcon() { return caut.get(); }
         
-        static final SystemIcon caut = new SystemIcon("caut");
-        static final IconUIResource cautionIcon = new IconUIResource(caut);
-        
-        static final SystemIcon stop = new SystemIcon("stop");
-        static final IconUIResource stopIcon = new IconUIResource(stop);
+        private static final SystemIconSingleton stop = new SystemIconSingleton("stop");
+        static SystemIcon getStopIcon() { return stop.get(); }
         
         final String selector;
         

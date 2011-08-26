@@ -31,10 +31,10 @@ import javax.swing.*;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicSeparatorUI;
 
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultContructor;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
 
 public class AquaPopupMenuSeparatorUI extends BasicSeparatorUI {
-    protected static LazySingletonFromDefaultContructor<AquaPopupMenuSeparatorUI> instance = new LazySingletonFromDefaultContructor<AquaPopupMenuSeparatorUI>(AquaPopupMenuSeparatorUI.class);
+    protected static LazySingletonFromDefaultConstructor<AquaPopupMenuSeparatorUI> instance = new LazySingletonFromDefaultConstructor<AquaPopupMenuSeparatorUI>(AquaPopupMenuSeparatorUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
         return instance.get();

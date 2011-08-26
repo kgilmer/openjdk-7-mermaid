@@ -90,7 +90,7 @@ public class AquaTextFieldSearch {
         return (c.getClientProperty(FIND_POPUP_KEY) instanceof JPopupMenu);
     }
     
-    protected static final LazySingleton<SearchFieldBorder> instance = new LazySingletonFromDefaultContructor<SearchFieldBorder>(SearchFieldBorder.class);
+    protected static final LazySingleton<SearchFieldBorder> instance = new LazySingletonFromDefaultConstructor<SearchFieldBorder>(SearchFieldBorder.class);
     public static SearchFieldBorder getSearchTextFieldBorder() {
         return instance.get();
     }
@@ -314,9 +314,8 @@ public class AquaTextFieldSearch {
             super.paintBorder(c, g, x, y - (height % 2), width, height);
         }
         
-        static Insets sNullInsets = new Insets(0, 0, 0, 0);
         public Insets getBorderInsets(final Component c) {
-            if (doingLayout) return sNullInsets;
+            if (doingLayout) return new Insets(0, 0, 0, 0);
             
             if (!hasPopupMenu((JTextComponent)c)) {
                 return new Insets(sizeVariant.margins.top, sizeVariant.margins.left - 7, sizeVariant.margins.bottom, sizeVariant.margins.right);

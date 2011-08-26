@@ -29,10 +29,13 @@ import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicPanelUI;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 public class AquaPanelUI extends BasicPanelUI {
-    static AquaPanelUI instance = new AquaPanelUI();
+    static LazySingleton<AquaPanelUI> instance = new LazySingletonFromDefaultConstructor<AquaPanelUI>(AquaPanelUI.class);
     
     public static ComponentUI createUI(final JComponent c) {
-        return instance;
+        return instance.get();
     }
 }

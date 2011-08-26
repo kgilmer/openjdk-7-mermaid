@@ -52,11 +52,11 @@ public class AquaMenuUI extends BasicMenuUI implements AquaMenuPainter.Client {
     }
 
     protected void paintMenuItem(final Graphics g, final JComponent c, final Icon localCheckIcon, final Icon localArrowIcon, final Color background, final Color foreground, final int localDefaultTextIconGap) {
-        AquaMenuPainter.sPainter.paintMenuItem(this, g, c, localCheckIcon, localArrowIcon, background, foreground, disabledForeground, selectionForeground, localDefaultTextIconGap, acceleratorFont);
+        AquaMenuPainter.instance().paintMenuItem(this, g, c, localCheckIcon, localArrowIcon, background, foreground, disabledForeground, selectionForeground, localDefaultTextIconGap, acceleratorFont);
     }
 
     protected Dimension getPreferredMenuItemSize(final JComponent c, final Icon localCheckIcon, final Icon localArrowIcon, final int localDefaultTextIconGap) {
-        final Dimension d = AquaMenuPainter.sPainter.getPreferredMenuItemSize(c, localCheckIcon, localArrowIcon, localDefaultTextIconGap, acceleratorFont);
+        final Dimension d = AquaMenuPainter.instance().getPreferredMenuItemSize(c, localCheckIcon, localArrowIcon, localDefaultTextIconGap, acceleratorFont);
         if (c.getParent() instanceof JMenuBar) d.height = Math.max(d.height, 21);
         return d;
     }
@@ -68,13 +68,13 @@ public class AquaMenuUI extends BasicMenuUI implements AquaMenuPainter.Client {
         final ButtonModel model = ((JMenuItem)c).getModel();
         if (model.isArmed() || model.isSelected()) {
             if (parentIsMenuBar) {
-                AquaMenuPainter.sPainter.paintSelectedMenuTitleBackground(g, menuWidth, menuHeight);
+                AquaMenuPainter.instance().paintSelectedMenuTitleBackground(g, menuWidth, menuHeight);
             } else {
-                AquaMenuPainter.sPainter.paintSelectedMenuItemBackground(g, menuWidth, menuHeight);
+                AquaMenuPainter.instance().paintSelectedMenuItemBackground(g, menuWidth, menuHeight);
             }
         } else {
             if (parentIsMenuBar) {
-                AquaMenuPainter.sPainter.paintMenuBarBackground(g, menuWidth, menuHeight, c);
+                AquaMenuPainter.instance().paintMenuBarBackground(g, menuWidth, menuHeight, c);
             } else {
                 g.setColor(c.getBackground());
                 g.fillRect(0, 0, menuWidth, menuHeight);

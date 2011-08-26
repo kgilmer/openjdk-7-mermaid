@@ -35,8 +35,6 @@ import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicDesktopPaneUI;
 
 public class AquaInternalFramePaneUI extends BasicDesktopPaneUI implements MouseListener {
-    static final Color sSmokeyGlass = new Color(0, 0, 0, 152);
-    static final Color sRim = new Color(192, 192, 192, 192);
     
     JComponent fDock;
     DockLayoutManager fLayoutMgr;
@@ -176,10 +174,10 @@ public class AquaInternalFramePaneUI extends BasicDesktopPaneUI implements Mouse
             final Object priorAA = g2d.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            g2d.setColor(sSmokeyGlass);
+            g2d.setColor(UIManager.getColor("DesktopIcon.borderColor"));
             g2d.fillRoundRect(4, 4, width - 9, height + DOCK_EDGE_SLACK, DOCK_EDGE_SLACK, DOCK_EDGE_SLACK);
             
-            g2d.setColor(sRim);
+            g2d.setColor(UIManager.getColor("DesktopIcon.borderRimColor"));
             g2d.setStroke(new BasicStroke(2.0f));
             g2d.drawRoundRect(4, 4, width - 9, height + DOCK_EDGE_SLACK, DOCK_EDGE_SLACK, DOCK_EDGE_SLACK);
             

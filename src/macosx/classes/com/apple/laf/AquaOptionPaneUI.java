@@ -35,7 +35,7 @@ public class AquaOptionPaneUI extends BasicOptionPaneUI {
     private static final int kOKCancelButtonWidth = 79;
     private static final int kButtonHeight = 23;
 
-    static final int kDialogSmallPadding = 4;
+    private static final int kDialogSmallPadding = 4;
     private static final int kDialogLargePadding = 23;
 
     /**

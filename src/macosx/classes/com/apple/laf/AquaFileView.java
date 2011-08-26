@@ -33,6 +33,8 @@ import java.util.Map.Entry;
 import javax.swing.Icon;
 import javax.swing.filechooser.FileView;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+
 class AquaFileView extends FileView {
     private static final boolean DEBUG = false;
     
@@ -67,12 +69,14 @@ class AquaFileView extends FileView {
     private static native int getNativeLSInfo(final byte[] pathBytes, final boolean isDirectory);
     private static native String getNativePathForResolvedAlias(final byte[] absolutePath, final boolean isDirectory);
     
-    static String machineName = null;
-    private static String getMachineName() {
-        if (machineName == null) {
-            machineName = getNativeMachineName();
+    static final LazySingleton<String> machineName = new LazySingleton<String>() {
+        @Override
+        protected String getInstance() {
+            return getNativeMachineName();
         }
-        return machineName;
+    };
+    private static String getMachineName() {
+        return machineName.get();
     }
     
     protected static String getPathToRunningJDKBundle() {
@@ -176,7 +180,7 @@ class AquaFileView extends FileView {
         if (info.icon != null) return info.icon;
         
         if (f == null) {
-            info.icon = AquaIcon.SystemIcon.documentIcon;
+            info.icon = AquaIcon.SystemIcon.getDocumentIconUIResource();
         } else {
             // Look for the document's icon
             final AquaIcon.FileIcon fileIcon = new AquaIcon.FileIcon(f);
@@ -185,14 +189,14 @@ class AquaFileView extends FileView {
                 // Fall back on the default icons
                 if (f.isDirectory()) {
                     if (fFileChooserUI.getFileChooser().getFileSystemView().isRoot(f)) {
-                        info.icon = AquaIcon.SystemIcon.computerIcon;
+                        info.icon = AquaIcon.SystemIcon.getComputerIconUIResource();
                     } else if (f.getParent() == null || f.getParent().equals("/")) {
-                        info.icon = AquaIcon.SystemIcon.hardDriveIcon;
+                        info.icon = AquaIcon.SystemIcon.getHardDriveIconUIResource();
                     } else {
-                        info.icon = AquaIcon.SystemIcon.folderIcon;
+                        info.icon = AquaIcon.SystemIcon.getFolderIconUIResource();
                     }
                 } else {
-                    info.icon = AquaIcon.SystemIcon.documentIcon;
+                    info.icon = AquaIcon.SystemIcon.getDocumentIconUIResource();
                 }
             }
         }

@@ -43,7 +43,6 @@ import javax.swing.plaf.*;
  */
 public class AquaInternalFrameDockIconUI extends DesktopIconUI implements MouseListener, MouseMotionListener, ComponentListener {
     private static final String CACHED_FRAME_ICON_KEY = "apple.laf.internal.frameIcon";
-    private static final Color sMediumTranslucentBlack = new Color(0, 0, 0, 100);
     
     protected JInternalFrame.JDesktopIcon fDesktopIcon;
     protected JInternalFrame fFrame;
@@ -258,7 +257,7 @@ public class AquaInternalFrameDockIconUI extends DesktopIconUI implements MouseL
             
             final Graphics2D g2d = g instanceof Graphics2D ? (Graphics2D)g : null;
             if (g2d != null) {
-                g.setColor(sMediumTranslucentBlack);
+                g.setColor(UIManager.getColor("DesktopIcon.labelBackground"));
                 final Object origAA = g2d.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 

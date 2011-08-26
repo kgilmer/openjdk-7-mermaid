@@ -65,7 +65,6 @@ public class AquaPopupMenuUI extends BasicPopupMenuUI {
         super.paint(g, c);
     }
     
-    static Stroke THREE_PIXEL_STROKE = new BasicStroke(3.0f);
     protected void paintRoundRect(final Graphics2D g2d, final Rectangle popupBounds) {
         // setup the graphics context to blast alpha for every primitive we draw
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -73,7 +72,7 @@ public class AquaPopupMenuUI extends BasicPopupMenuUI {
         
         // draw the 3px round-rect line around the outer bounds of the window,
         // this gives the appearance of rounded corners
-        g2d.setStroke(THREE_PIXEL_STROKE);
+        g2d.setStroke(new BasicStroke(3.0f));
         g2d.drawRoundRect(-2, -2, popupBounds.width + 3, popupBounds.height + 3, 12, 12);
     }
     

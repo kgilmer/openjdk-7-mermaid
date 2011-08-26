@@ -242,7 +242,7 @@ public class ScreenMenuBar extends MenuBar implements ContainerListener, ScreenM
             fSubmenus.remove(menu);
     }
         
-    static Field[] stolenFields = null;
+    private static Field[] stolenFields = null;
     
     static {
         stolenFields = AccessController.doPrivileged(new PrivilegedAction<Field[]>() {

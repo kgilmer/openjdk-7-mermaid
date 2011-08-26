@@ -154,7 +154,7 @@ public class AquaScrollBarUI extends ScrollBarUI {
         return State.ACTIVE;
     }
     
-    static LazySingleton<Map<Hit, ScrollBarPart>> hitToPressedPartMap = new LazySingleton<Map<Hit,ScrollBarPart>>(){
+    static final LazySingleton<Map<Hit, ScrollBarPart>> hitToPressedPartMap = new LazySingleton<Map<Hit,ScrollBarPart>>(){
         @Override
         protected Map<Hit, ScrollBarPart> getInstance() {
             final Map<Hit, ScrollBarPart> map = new HashMap<Hit, ScrollBarPart>(7);

@@ -37,8 +37,6 @@ import javax.swing.text.*;
 import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaHighlighter extends DefaultHighlighter implements UIResource {
-    final static Color DEFAULT_INACTIVE_SELECTION = new Color(212, 212, 212);
-    
     static final LazySingleton<LayerPainter> instance = new LazySingleton<LayerPainter>() {
         protected LayerPainter getInstance() {
             return new AquaHighlightPainter(null);
@@ -64,13 +62,7 @@ public class AquaHighlighter extends DefaultHighlighter implements UIResource {
         
         protected Color getInactiveSelectionColor() {
             if (disabledSelectionColor != null) return disabledSelectionColor;
-            
-            final Color disabledSelectionFromUIManager = UIManager.getColor("TextComponent.selectionBackgroundInactive");
-            if (disabledSelectionFromUIManager != null) {
-                return disabledSelectionColor = disabledSelectionFromUIManager;
-            }
-            
-            return disabledSelectionColor = DEFAULT_INACTIVE_SELECTION;
+            return disabledSelectionColor = UIManager.getColor("TextComponent.selectionBackgroundInactive");
         }
 
         void setColor(final JTextComponent c) {

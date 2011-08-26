@@ -68,7 +68,7 @@ public class AquaMenuBarUI extends BasicMenuBarUI implements ScreenMenuBarProvid
     
     // Paint Methods
     public void paint(final Graphics g, final JComponent c) {
-        AquaMenuPainter.sPainter.paintMenuBarBackground(g, c.getWidth(), c.getHeight(), c);
+        AquaMenuPainter.instance().paintMenuBarBackground(g, c.getWidth(), c.getHeight(), c);
     }
 
     public Dimension getPreferredSize(final JComponent c) {

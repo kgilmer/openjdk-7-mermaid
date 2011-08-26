@@ -132,8 +132,8 @@ abstract class AquaPainter <T extends JRSUIState> {
             g.drawImage(image, intersection.x, intersection.y, c);
         }
         
-        static Color outerbounds = new Color(0xFF, 0x0, 0x0, 0x80);
-        static Color innerbounds = new Color(0x0, 0x0, 0xFF, 0x80);
+        //static Color outerbounds = new Color(0xFF, 0x0, 0x0, 0x80);
+        //static Color innerbounds = new Color(0x0, 0x0, 0xFF, 0x80);
         
 //      static AquaPainter create(final int w, final int h) {
 //          return null;

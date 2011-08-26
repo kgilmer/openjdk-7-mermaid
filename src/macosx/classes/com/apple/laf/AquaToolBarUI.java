@@ -35,7 +35,7 @@ import javax.swing.plaf.basic.BasicToolBarUI;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaToolBarUI extends BasicToolBarUI implements SwingConstants {
-    private static LazySingleton<ToolBarBorder> toolBarBorder = new LazySingletonFromDefaultContructor<ToolBarBorder>(ToolBarBorder.class);
+    private static LazySingleton<ToolBarBorder> toolBarBorder = new LazySingletonFromDefaultConstructor<ToolBarBorder>(ToolBarBorder.class);
     public static Border getToolBarBorder() {
         return toolBarBorder.get();
     }
@@ -56,10 +56,8 @@ public class AquaToolBarUI extends BasicToolBarUI implements SwingConstants {
     
     /* ToolBarBorder and drag-off handle, based loosly on MetalBumps */
     static class ToolBarBorder extends AbstractBorder implements UIResource, javax.swing.SwingConstants {
-        static Color handleColor = new Color(0x8C, 0x8C, 0x8C);
-        
         protected void fillHandle(final Graphics g, final int x1, final int y1, final int x2, final int y2, final boolean horizontal) {
-            g.setColor(handleColor);
+            g.setColor(UIManager.getColor("ToolBar.borderHandleColor"));
             if (horizontal) {
                 final int h = y2 - y1 - 2;
                 g.fillRect(x1 + 2, y1 + 1, 1, h);

@@ -35,6 +35,7 @@ import javax.swing.plaf.basic.BasicTableHeaderUI;
 import javax.swing.table.*;
 import com.apple.laf.ClientPropertyApplicator;
 import com.apple.laf.ClientPropertyApplicator.Property;
+import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaTableHeaderUI extends BasicTableHeaderUI {
     private int originalHeaderAlignment;
@@ -66,18 +67,26 @@ public class AquaTableHeaderUI extends BasicTableHeaderUI {
         super.uninstallDefaults();
     }
     
-    final static ClientPropertyApplicator<JTableHeader, JTableHeader> TABLE_HEADER_APPLICATORS = new ClientPropertyApplicator<JTableHeader, JTableHeader>(
-        new Property<JTableHeader>("JTableHeader.selectedColumn") {
-            public void applyProperty(final JTableHeader target, final Object value) {
-                tickle(target, value, target.getClientProperty("JTableHeader.sortDirection"));
-            }
-        },
-        new Property<JTableHeader>("JTableHeader.sortDirection") {
-            public void applyProperty(final JTableHeader target, final Object value) {
-                tickle(target, target.getClientProperty("JTableHeader.selectedColumn"), value);
-            }
+    final static LazySingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>> TABLE_HEADER_APPLICATORS = new LazySingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>>() {
+        @Override
+        protected ClientPropertyApplicator<JTableHeader, JTableHeader> getInstance() {
+            return new ClientPropertyApplicator<JTableHeader, JTableHeader>(
+                    new Property<JTableHeader>("JTableHeader.selectedColumn") {
+                        public void applyProperty(final JTableHeader target, final Object value) {
+                            tickle(target, value, target.getClientProperty("JTableHeader.sortDirection"));
+                        }
+                    },
+                    new Property<JTableHeader>("JTableHeader.sortDirection") {
+                        public void applyProperty(final JTableHeader target, final Object value) {
+                            tickle(target, target.getClientProperty("JTableHeader.selectedColumn"), value);
+                        }
+                    }
+            );
         }
-    );
+    };
+    static ClientPropertyApplicator<JTableHeader, JTableHeader> getTableHeaderApplicators() {
+        return TABLE_HEADER_APPLICATORS.get();
+    }
     
     static void tickle(final JTableHeader target, final Object selectedColumn, final Object direction) {
         final TableColumn tableColumn = getTableColumn(target, selectedColumn);
@@ -155,11 +164,11 @@ public class AquaTableHeaderUI extends BasicTableHeaderUI {
     
     protected void installListeners() {
         super.installListeners();
-        TABLE_HEADER_APPLICATORS.attachAndApplyClientProperties(header);
+        getTableHeaderApplicators().attachAndApplyClientProperties(header);
     }
     
     protected void uninstallListeners() {
-        TABLE_HEADER_APPLICATORS.removeFrom(header);
+        getTableHeaderApplicators().removeFrom(header);
         super.uninstallListeners();
     }
     

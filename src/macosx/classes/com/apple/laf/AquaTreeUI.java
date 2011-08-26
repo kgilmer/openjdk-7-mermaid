@@ -46,21 +46,13 @@ import apple.laf.JRSUIState.AnimationFrameState;
  * This is heavily based on the 1.3.1 AquaTreeUI implementation.
  */
 public class AquaTreeUI extends BasicTreeUI {
-    static final Insets EMPTY_INSETS = new Insets(0, 0, 0, 0);
-
+    
     // Create PLAF
     public static ComponentUI createUI(final JComponent c) {
         return new AquaTreeUI();
     }
 
-    static final LazySingleton<Icon> defaultRightToLeftIcon = new LazySingleton<Icon>() {
-        protected Icon getInstance() {
-            return UIManager.getIcon("Tree.rightToLeftCollapsedIcon");
-        }
-    };
-
     // Begin Line Stuff from Metal
-    private static Color lineColor;
 
     private static final String LINE_STYLE = "JTree.lineStyle";
 
@@ -90,7 +82,6 @@ public class AquaTreeUI extends BasicTreeUI {
     
     public void installUI(final JComponent c) {
         super.installUI(c);
-        lineColor = UIManager.getColor("Tree.line");
 
         final Object lineStyleFlag = c.getClientProperty(LINE_STYLE);
         decodeLineStyle(lineStyleFlag);
@@ -144,7 +135,7 @@ public class AquaTreeUI extends BasicTreeUI {
     }
 
     protected void paintHorizontalSeparators(final Graphics g, final JComponent c) {
-        g.setColor(lineColor);
+        g.setColor(UIManager.getColor("Tree.line"));
 
         final Rectangle clipBounds = g.getClipBounds();
 
@@ -243,7 +234,7 @@ public class AquaTreeUI extends BasicTreeUI {
         final Icon icon = super.getCollapsedIcon();
         if (AquaUtils.isLeftToRight(tree)) return icon;
         if (!(icon instanceof UIResource)) return icon;
-        return defaultRightToLeftIcon.get();
+        return UIManager.getIcon("Tree.rightToLeftCollapsedIcon");
     }
 
     protected void setupPainter(State state, final boolean isExpanded, final boolean leftToRight) {
@@ -355,7 +346,7 @@ public class AquaTreeUI extends BasicTreeUI {
             fVisibleRect = tree.getVisibleRect();
             fInsets = tree.getInsets();
 
-            if (fInsets == null) fInsets = EMPTY_INSETS;
+            if (fInsets == null) fInsets = new Insets(0, 0, 0, 0);
             fIsLeaf = treeModel.isLeaf(path.getLastPathComponent());
             if (fIsLeaf) fIsExpanded = fHasBeenExpanded = false;
             else {
@@ -386,18 +377,23 @@ public class AquaTreeUI extends BasicTreeUI {
             if (tree == null) return;
             
             if (fIsPressed) {
+                final boolean wasInBounds = fIsInBounds;
+                
                 fIsPressed = false;
                 fIsInBounds = false;
-                fIsExpanded = !fIsExpanded;
-                paintAnimation(fIsExpanded);
-                if (e.isAltDown()) {
-                    if (fIsExpanded) {
-                        expandNode(fTrackingRow, true);
+                
+                if (wasInBounds) {
+                    fIsExpanded = !fIsExpanded;
+                    paintAnimation(fIsExpanded);
+                    if (e.isAltDown()) {
+                        if (fIsExpanded) {
+                            expandNode(fTrackingRow, true);
+                        } else {
+                            collapseNode(fTrackingRow, true);
+                        }
                     } else {
-                        collapseNode(fTrackingRow, true);
+                        toggleExpandState(fTrackingPath);
                     }
-                } else {
-                    toggleExpandState(fTrackingPath);
                 }
             }
             fTrackingPath = null;
@@ -534,7 +530,7 @@ public class AquaTreeUI extends BasicTreeUI {
                 // we want to do what the Cocoa does, and select the parent
                 if (selectionPaths.length == 1 && tree.isCollapsed(path)) {
                     final TreePath parentPath = path.getParentPath();
-                    if (parentPath != null) {
+                    if (parentPath != null && (!(parentPath.getParentPath() == null) || tree.isRootVisible())) {
                         tree.scrollPathToVisible(parentPath);
                         tree.setSelectionPath(parentPath);
                     }

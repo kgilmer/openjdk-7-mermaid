@@ -215,12 +215,10 @@ class AquaComboBoxButton extends JButton {
         // It doesn't need to draw its background, we handled it
         final Color bg = c.getBackground();
         final boolean inhibitBackground = bg instanceof UIResource;
-        if (inhibitBackground) c.setBackground(CLEAR);
+        if (inhibitBackground) c.setBackground(new Color(0, 0, 0, 0));
         
         rendererPane.paintComponent(g, c, this, left, top, cWidth, height, shouldValidate); // h - (insets.top + insets.bottom) );
         
         if (inhibitBackground) c.setBackground(bg);
     }
-
-    static final Color CLEAR = new Color(0, 0, 0, 0);
 }

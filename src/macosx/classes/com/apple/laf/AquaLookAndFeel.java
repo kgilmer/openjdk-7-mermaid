@@ -309,10 +309,25 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final ColorUIResource toolTipBackground = new ColorUIResource(255, 255, (int)(255.0 * 0.80));
         final ColorUIResource black = new ColorUIResource(Color.black);
         final ColorUIResource white = new ColorUIResource(Color.white);
+        final ColorUIResource smokyGlass = new ColorUIResource(new Color(0, 0, 0, 152));
+        final ColorUIResource dockIconRim = new ColorUIResource(new Color(192, 192, 192, 192));
+        final ColorUIResource mediumTranslucentBlack = new ColorUIResource(new Color(0, 0, 0, 100));
+        final ColorUIResource translucentWhite = new ColorUIResource(new Color(255, 255, 255, 254));
     //    final ColorUIResource lightGray = new ColorUIResource(232, 232, 232);
         final ColorUIResource disabled = new ColorUIResource(0.5f, 0.5f, 0.5f);
         final ColorUIResource disabledShadow = new ColorUIResource(0.25f, 0.25f, 0.25f);
         final ColorUIResource selected = new ColorUIResource(1.0f, 0.4f, 0.4f);
+        
+        // Contrast tab UI colors
+        
+        final ColorUIResource selectedTabTitlePressedColor = new ColorUIResource(240, 240, 240);
+        final ColorUIResource selectedTabTitleDisabledColor = new ColorUIResource(new Color(1, 1, 1, 0.55f));
+        final ColorUIResource selectedTabTitleNormalColor = white;
+        final ColorUIResource selectedTabTitleShadowDisabledColor = new ColorUIResource(new Color(0, 0, 0, 0.25f));
+        final ColorUIResource selectedTabTitleShadowNormalColor = mediumTranslucentBlack;
+        final ColorUIResource nonSelectedTabTitleNormalColor = black;
+        
+        final ColorUIResource toolbarDragHandleColor = new ColorUIResource(140, 140, 140);
 
         // sja todo Make these lazy values so we only get them when required - if we deem it necessary
         // it may be the case that we think the overhead of a proxy lazy value is not worth delaying
@@ -351,6 +366,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final Color textForeground = black;
         final Color textBackground = white;
         final Color textInactiveBackground = white;
+        
+        final Color textPasswordFieldCapsLockIconColor = mediumTranslucentBlack;
 
         final Object internalFrameBorder = new SwingLazyValue("javax.swing.plaf.basic.BasicBorders", "getInternalFrameBorder");
         final Color desktopBackgroundColor = new ColorUIResource(new Color(65, 105, 170));//SystemColor.desktop
@@ -393,6 +410,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final Object cautionIcon = new SwingLazyValue(kAquaImageFactoryName, "getCautionImageIcon"); // AquaImageFactory.getCautionImageIcon();
         final Object stopIcon = new SwingLazyValue(kAquaImageFactoryName, "getStopImageIcon"); // AquaImageFactory.getStopImageIcon();
         final Object securityIcon = new SwingLazyValue(kAquaImageFactoryName, "getLockImageIcon"); // AquaImageFactory.getLockImageIcon();
+        
+        final AquaKeyBindings aquaKeyBindings = AquaKeyBindings.instance();
         
         final Object[] defaults = {
             "control", windowBackgroundColor, /* Default color for controls (buttons, sliders, etc) */
@@ -453,12 +472,15 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "ComboBox.selectionForeground", menuSelectedForegroundColor,
             "ComboBox.disabledBackground", menuDisabledBackgroundColor,
             "ComboBox.disabledForeground", menuDisabledForegroundColor,
-            "ComboBox.ancestorInputMap", AquaKeyBindings.getComboBoxInputMap(),
+            "ComboBox.ancestorInputMap", aquaKeyBindings.getComboBoxInputMap(),
 
             "DesktopIcon.border", internalFrameBorder,
+            "DesktopIcon.borderColor", smokyGlass,
+            "DesktopIcon.borderRimColor", dockIconRim,
+            "DesktopIcon.labelBackground", mediumTranslucentBlack,
             "Desktop.background", desktopBackgroundColor,
 
-            "EditorPane.focusInputMap", AquaKeyBindings.getMultiLineTextInputMap(),
+            "EditorPane.focusInputMap", aquaKeyBindings.getMultiLineTextInputMap(),
             "EditorPane.font", controlFont,
             "EditorPane.background", textBackground,
             "EditorPane.foreground", textForeground,
@@ -471,17 +493,17 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "EditorPane.border", textAreaBorder,
             "EditorPane.margin", editorMargin,
 
-            "FileChooser.newFolderIcon", AquaIcon.SystemIcon.folderIcon,
-            "FileChooser.upFolderIcon", AquaIcon.SystemIcon.folderIcon,
-            "FileChooser.homeFolderIcon", AquaIcon.SystemIcon.desktopIcon,
-            "FileChooser.detailsViewIcon", AquaIcon.SystemIcon.computerIcon,
-            "FileChooser.listViewIcon", AquaIcon.SystemIcon.computerIcon,
+            "FileChooser.newFolderIcon", AquaIcon.SystemIcon.getFolderIconUIResource(),
+            "FileChooser.upFolderIcon", AquaIcon.SystemIcon.getFolderIconUIResource(),
+            "FileChooser.homeFolderIcon", AquaIcon.SystemIcon.getDesktopIconUIResource(),
+            "FileChooser.detailsViewIcon", AquaIcon.SystemIcon.getComputerIconUIResource(),
+            "FileChooser.listViewIcon", AquaIcon.SystemIcon.getComputerIconUIResource(),
 
-            "FileView.directoryIcon", AquaIcon.SystemIcon.folderIcon,
-            "FileView.fileIcon", AquaIcon.SystemIcon.documentIcon,
-            "FileView.computerIcon", AquaIcon.SystemIcon.desktopIcon,
-            "FileView.hardDriveIcon", AquaIcon.SystemIcon.hardDriveIcon,
-            "FileView.floppyDriveIcon", AquaIcon.SystemIcon.floppyIcon,
+            "FileView.directoryIcon", AquaIcon.SystemIcon.getFolderIconUIResource(),
+            "FileView.fileIcon", AquaIcon.SystemIcon.getDocumentIconUIResource(),
+            "FileView.computerIcon", AquaIcon.SystemIcon.getDesktopIconUIResource(),
+            "FileView.hardDriveIcon", AquaIcon.SystemIcon.getHardDriveIconUIResource(),
+            "FileView.floppyDriveIcon", AquaIcon.SystemIcon.getFloppyIconUIResource(),
             
             // File View 
             "FileChooser.cancelButtonMnemonic", zero,
@@ -497,7 +519,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             
             "Focus.color", focusRingColor,
             
-            "FormattedTextField.focusInputMap", AquaKeyBindings.getFormattedTextFieldInputMap(),
+            "FormattedTextField.focusInputMap", aquaKeyBindings.getFormattedTextFieldInputMap(),
             "FormattedTextField.font", controlFont,
             "FormattedTextField.background", textBackground,
             "FormattedTextField.foreground", textForeground,
@@ -597,7 +619,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "List.oddRowBackgroundPainter", new SwingLazyValue(PKG_PREFIX + "AquaListUI", "getListOddBackgroundPainter"),
 
             // <rdar://Problem/3743210> The modifier for the Mac is meta, not control.
-            "List.focusInputMap", AquaKeyBindings.getListInputMap(),
+            "List.focusInputMap", aquaKeyBindings.getListInputMap(),
 
             //"List.scrollPaneBorder", listBoxBorder, // Not used in Swing1.1
             //"ListItem.border", ThemeMenu.listItemBorder(), // for inset calculation
@@ -690,7 +712,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Panel.foreground", black,
             "Panel.opaque", useOpaqueComponents,
 
-            "PasswordField.focusInputMap", AquaKeyBindings.getTextFieldInputMap(),
+            "PasswordField.focusInputMap", aquaKeyBindings.getTextFieldInputMap(),
             "PasswordField.font", controlFont,
             "PasswordField.background", textBackground,
             "PasswordField.foreground", textForeground,
@@ -703,9 +725,11 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "PasswordField.border", textFieldBorder,
             "PasswordField.margin", zeroInsets,
             "PasswordField.echoChar", new Character((char)0x25CF),
+            "PasswordField.capsLockIconColor", textPasswordFieldCapsLockIconColor,
 
             "PopupMenu.font", menuFont,
             "PopupMenu.background", menuBackgroundColor,
+            "PopupMenu.translucentBackground", translucentWhite,
             "PopupMenu.foreground", menuForegroundColor,
             "PopupMenu.selectionBackground", menuSelectedBackgroundColor,
             "PopupMenu.selectionForeground", menuSelectedForegroundColor,
@@ -752,8 +776,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Separator.foreground", new ColorUIResource(0xD4, 0xD4, 0xD4),
             
             "ScrollBar.border", null,
-            "ScrollBar.focusInputMap", AquaKeyBindings.getScrollBarInputMap(),
-            "ScrollBar.focusInputMap.RightToLeft", AquaKeyBindings.getScrollBarRightToLeftInputMap(),
+            "ScrollBar.focusInputMap", aquaKeyBindings.getScrollBarInputMap(),
+            "ScrollBar.focusInputMap.RightToLeft", aquaKeyBindings.getScrollBarRightToLeftInputMap(),
             "ScrollBar.width", new Integer(16),
             "ScrollBar.background", white,
             "ScrollBar.foreground", black,
@@ -764,7 +788,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "ScrollPane.border", scollListBorder,
             "ScrollPane.viewportBorder", null,
 
-            "ScrollPane.ancestorInputMap", AquaKeyBindings.getScrollPaneInputMap(),
+            "ScrollPane.ancestorInputMap", aquaKeyBindings.getScrollPaneInputMap(),
             "ScrollPane.ancestorInputMap.RightToLeft", new UIDefaults.LazyInputMap(new Object[]{}),
 
             "Viewport.font", controlFont,
@@ -780,8 +804,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Slider.tickColor", new ColorUIResource(Color.GRAY),
             "Slider.border", null,
             "Slider.focusInsets", new InsetsUIResource(2, 2, 2, 2),
-            "Slider.focusInputMap", AquaKeyBindings.getSliderInputMap(),
-            "Slider.focusInputMap.RightToLeft", AquaKeyBindings.getSliderRightToLeftInputMap(),
+            "Slider.focusInputMap", aquaKeyBindings.getSliderInputMap(),
+            "Slider.focusInputMap.RightToLeft", aquaKeyBindings.getSliderRightToLeftInputMap(),
 
             // *** Spinner
             "Spinner.font", controlFont,
@@ -789,7 +813,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Spinner.foreground", black,
             "Spinner.border", null,
             "Spinner.arrowButtonSize", new Dimension(16, 5),
-            "Spinner.ancestorInputMap", AquaKeyBindings.getSpinnerInputMap(),
+            "Spinner.ancestorInputMap", aquaKeyBindings.getSpinnerInputMap(),
             "Spinner.editorBorderPainted", Boolean.TRUE,
             "Spinner.editorAlignment", SwingConstants.TRAILING,
 
@@ -827,6 +851,12 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             //"TabbedPane.selectedTabPadInsets", new InsetsUIResource(0, 0, 1, 0), // Really outsets, this is where we allow for overlap
             "TabbedPane.selectedTabPadInsets", new InsetsUIResource(0, 0, 0, 0), // Really outsets, this is where we allow for overlap
             "TabbedPane.tabsOverlapBorder", Boolean.TRUE,
+            "TabbedPane.selectedTabTitlePressedColor", selectedTabTitlePressedColor,
+            "TabbedPane.selectedTabTitleDisabledColor", selectedTabTitleDisabledColor,
+            "TabbedPane.selectedTabTitleNormalColor", selectedTabTitleNormalColor,
+            "TabbedPane.selectedTabTitleShadowDisabledColor", selectedTabTitleShadowDisabledColor,
+            "TabbedPane.selectedTabTitleShadowNormalColor", selectedTabTitleShadowNormalColor,
+            "TabbedPane.nonSelectedTabTitleNormalColor", nonSelectedTabTitleNormalColor,
             
             // *** Table
             "Table.font", viewFont, // [3577901] Aqua HIG says "default font of text in lists and tables" should be 12 point (vm).
@@ -842,8 +872,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Table.focusCellHighlightBorder", focusCellHighlightBorder,
             "Table.scrollPaneBorder", scollListBorder,
 
-            "Table.ancestorInputMap", AquaKeyBindings.getTableInputMap(),
-            "Table.ancestorInputMap.RightToLeft", AquaKeyBindings.getTableRightToLeftInputMap(),
+            "Table.ancestorInputMap", aquaKeyBindings.getTableInputMap(),
+            "Table.ancestorInputMap.RightToLeft", aquaKeyBindings.getTableRightToLeftInputMap(),
 
             "TableHeader.font", controlSmallFont,
             "TableHeader.foreground", black,
@@ -851,7 +881,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "TableHeader.cellBorder", listHeaderBorder,
 
             // *** Text
-            "TextArea.focusInputMap", AquaKeyBindings.getMultiLineTextInputMap(),
+            "TextArea.focusInputMap", aquaKeyBindings.getMultiLineTextInputMap(),
             "TextArea.font", controlFont,
             "TextArea.background", textBackground,
             "TextArea.foreground", textForeground,
@@ -866,7 +896,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
 
             "TextComponent.selectionBackgroundInactive", textHighlightInactive,
             
-            "TextField.focusInputMap", AquaKeyBindings.getTextFieldInputMap(),
+            "TextField.focusInputMap", aquaKeyBindings.getTextFieldInputMap(),
             "TextField.font", controlFont,
             "TextField.background", textBackground,
             "TextField.foreground", textForeground,
@@ -879,7 +909,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "TextField.border", textFieldBorder,
             "TextField.margin", zeroInsets,
 
-            "TextPane.focusInputMap", AquaKeyBindings.getMultiLineTextInputMap(),
+            "TextPane.focusInputMap", aquaKeyBindings.getMultiLineTextInputMap(),
             "TextPane.font", controlFont,
             "TextPane.background", textBackground,
             "TextPane.foreground", textForeground,
@@ -918,6 +948,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "ToolBar.floatingBackground", panelBackgroundColor,
             "ToolBar.floatingForeground", new ColorUIResource(Color.darkGray),
             "ToolBar.border", new SwingLazyValue(PKG_PREFIX + "AquaToolBarUI", "getToolBarBorder"),
+            "ToolBar.borderHandleColor", toolbarDragHandleColor,
             //"ToolBar.separatorSize", new DimensionUIResource( 10, 10 ), 
             "ToolBar.separatorSize", null,
 
@@ -961,8 +992,8 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             "Tree.changeSelectionWithFocus", Boolean.TRUE,
             "Tree.drawsFocusBorderAroundIcon", Boolean.FALSE,
 
-            "Tree.focusInputMap", AquaKeyBindings.getTreeInputMap(),
-            "Tree.focusInputMap.RightToLeft", AquaKeyBindings.getTreeRightToLeftInputMap(),
+            "Tree.focusInputMap", aquaKeyBindings.getTreeInputMap(),
+            "Tree.focusInputMap.RightToLeft", aquaKeyBindings.getTreeRightToLeftInputMap(),
             "Tree.ancestorInputMap", new UIDefaults.LazyInputMap(new Object[]{"ESCAPE", "cancel"}),};
 
         table.putDefaults(defaults);

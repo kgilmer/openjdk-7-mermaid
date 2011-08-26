@@ -34,8 +34,8 @@ import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaButtonCheckBoxUI extends AquaButtonLabeledUI {
-    protected static LazySingleton<AquaButtonCheckBoxUI> instance = new LazySingletonFromDefaultContructor<AquaButtonCheckBoxUI>(AquaButtonCheckBoxUI.class); 
-    protected static LazySingleton<ImageIcon> sizingIcon = new LazySingleton<ImageIcon>() {
+    protected static final LazySingleton<AquaButtonCheckBoxUI> instance = new LazySingletonFromDefaultConstructor<AquaButtonCheckBoxUI>(AquaButtonCheckBoxUI.class); 
+    protected static final LazySingleton<ImageIcon> sizingIcon = new LazySingleton<ImageIcon>() {
         protected ImageIcon getInstance() {
             return new ImageIcon(AquaNativeResources.getRadioButtonSizerImage());
         }

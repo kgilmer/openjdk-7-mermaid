@@ -67,9 +67,14 @@ public class AquaUtils {
         });
     }
     
-    private static CImage.Creator cImageCreator = getCImageCreatorInternal();
+    private static final LazySingleton<CImage.Creator> cImageCreator = new LazySingleton<CImage.Creator>() {
+        @Override
+        protected Creator getInstance() {
+            return getCImageCreatorInternal();
+        }
+    };
     static CImage.Creator getCImageCreator() {
-        return cImageCreator;
+        return cImageCreator.get();
     }
     
     protected static Image generateSelectedDarkImage(final Image image) {
@@ -144,10 +149,10 @@ public class AquaUtils {
         protected abstract T getInstance();
     }
     
-    public static class LazySingletonFromDefaultContructor<T> extends LazySingleton<T> {
+    public static class LazySingletonFromDefaultConstructor<T> extends LazySingleton<T> {
         protected final Class<T> clazz;
         
-        public LazySingletonFromDefaultContructor(final Class<T> clazz) {
+        public LazySingletonFromDefaultConstructor(final Class<T> clazz) {
             this.clazz = clazz;
         }
         
@@ -180,11 +185,15 @@ public class AquaUtils {
         protected abstract V getInstance(final K key);
     }
     
-    static Boolean enableAnimations;
+    static final LazySingleton<Boolean> enableAnimations = new LazySingleton<Boolean>() {
+        @Override
+        protected Boolean getInstance() {
+            final String sizeProperty = (String)java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.GetPropertyAction(ANIMATIONS_SYSTEM_PROPERTY));
+            return new Boolean(!"false".equals(sizeProperty)); // should be true by default
+        }
+    };
     static boolean animationsEnabled() {
-        if (enableAnimations != null) return enableAnimations.booleanValue();
-        final String sizeProperty = (String)java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.GetPropertyAction(ANIMATIONS_SYSTEM_PROPERTY));
-        return enableAnimations = new Boolean(!"false".equals(sizeProperty)); // should be true by default
+        return enableAnimations.get();
     }
     
     static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec == TicksToEventTime(3) from HIToolbox/Menus/Source/MenuEvents.cp

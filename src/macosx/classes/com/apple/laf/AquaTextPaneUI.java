@@ -81,10 +81,11 @@ public class AquaTextPaneUI extends BasicTextPaneUI {
     // Install a default keypress action which handles Cmd and Option keys properly
     protected void installKeyboardActions() {
         super.installKeyboardActions();
-        AquaKeyBindings.setDefaultAction(getKeymapName());
+        AquaKeyBindings bindings = AquaKeyBindings.instance();
+        bindings.setDefaultAction(getKeymapName());
         
         final JTextComponent c = getComponent();
-        AquaKeyBindings.installAquaUpDownActions(c);
+        bindings.installAquaUpDownActions(c);
     }
 
     protected Caret createCaret() {

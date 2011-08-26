@@ -36,6 +36,8 @@ import apple.laf.*;
 import apple.laf.JRSUIConstants.State;
 
 import com.apple.laf.AquaUtils.LazyKeyedSingleton;
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
 
 public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
     final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIStateFactory.getSplitPaneDivider());
@@ -123,7 +125,7 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
         return createButtonForDirection(getDirection(false));
     }
     
-    static LazyKeyedSingleton<Integer, Image> directionArrows = new LazyKeyedSingleton<Integer, Image>() {
+    static final LazyKeyedSingleton<Integer, Image> directionArrows = new LazyKeyedSingleton<Integer, Image>() {
         protected Image getInstance(final Integer direction) {
             final Image arrowImage = AquaImageFactory.getArrowImageForDirection(direction);
             final int h = (arrowImage.getHeight(null) * 5) / 7;
@@ -152,7 +154,7 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
         return isLeft ? SwingConstants.NORTH : SwingConstants.SOUTH;
     }
     
-    static int kMaxPopupArrowSize = 9;
+    static final int kMaxPopupArrowSize = 9;
     protected class DividerLayout extends BasicSplitPaneDivider.DividerLayout {
         public void layoutContainer(final Container c) {
             final int maxSize = getMaxDividerSize();
@@ -198,12 +200,14 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
     }
     
     public static Border getHorizontalSplitDividerGradientVariant() {
-        // cheap singleton - doesn't load class until this method is called
-        return HorizontalSplitDividerGradientPainter.instance;
+        return HorizontalSplitDividerGradientPainter.instance();
     }
     
     static class HorizontalSplitDividerGradientPainter implements Border {
-        static HorizontalSplitDividerGradientPainter instance = new HorizontalSplitDividerGradientPainter();
+        private static final LazySingleton<HorizontalSplitDividerGradientPainter> instance = new LazySingletonFromDefaultConstructor<HorizontalSplitDividerGradientPainter>(HorizontalSplitDividerGradientPainter.class);
+        static HorizontalSplitDividerGradientPainter instance() {
+            return instance.get();
+        }
         
         final Color startColor = Color.white;
         final Color endColor = new Color(217, 217, 217);

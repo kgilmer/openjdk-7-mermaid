@@ -34,7 +34,7 @@ import javax.swing.plaf.basic.BasicToolBarSeparatorUI;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaToolBarSeparatorUI extends BasicToolBarSeparatorUI {
-    protected static LazySingleton<AquaToolBarSeparatorUI> instance = new LazySingletonFromDefaultContructor<AquaToolBarSeparatorUI>(AquaToolBarSeparatorUI.class);
+    protected static LazySingleton<AquaToolBarSeparatorUI> instance = new LazySingletonFromDefaultConstructor<AquaToolBarSeparatorUI>(AquaToolBarSeparatorUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
         return instance.get();

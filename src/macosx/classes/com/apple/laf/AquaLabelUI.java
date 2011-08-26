@@ -33,11 +33,14 @@ import javax.swing.plaf.basic.*;
 
 import sun.swing.SwingUtilities2;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 public class AquaLabelUI extends BasicLabelUI {
-    protected static AquaLabelUI aquaLabelUI = new AquaLabelUI();
+    protected static final  LazySingleton<AquaLabelUI> aquaLabelUI = new LazySingletonFromDefaultConstructor<AquaLabelUI>(AquaLabelUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
-        return aquaLabelUI;
+        return aquaLabelUI.get();
     }
     
     protected void installListeners(final JLabel c) {

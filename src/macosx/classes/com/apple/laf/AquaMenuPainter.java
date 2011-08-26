@@ -37,6 +37,7 @@ import apple.laf.JRSUIConstants.*;
 
 import com.apple.laf.AquaIcon.InvertableIcon;
 import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
 
 /**
  * AquaMenuPainter, implements paintMenuItem to avoid code duplication
@@ -118,21 +119,13 @@ public class AquaMenuPainter {
         return buf.toString();
     }
     
-    static AquaMenuPainter sPainter = new AquaMenuPainter();
+    static final LazySingleton<AquaMenuPainter> sPainter = new LazySingletonFromDefaultConstructor<AquaMenuPainter>(AquaMenuPainter.class);
+    static AquaMenuPainter instance() {
+        return sPainter.get();
+    }
 
-    static int defaultMenuItemGap = 2;
-    static int kAcceleratorArrowSpace = 16; // Accel space doesn't overlap arrow space, even though items can't have both
-
-    // these rects are used for painting and preferredsize calculations.
-    // they used to be regenerated constantly.  Now they are reused.
-    static Rectangle zeroRect = new Rectangle(0, 0, 0, 0);
-    static Rectangle iconRect = new Rectangle();
-    static Rectangle textRect = new Rectangle();
-    static Rectangle acceleratorRect = new Rectangle();
-    static Rectangle checkIconRect = new Rectangle();
-    static Rectangle arrowIconRect = new Rectangle();
-    static Rectangle viewRect = new Rectangle(Short.MAX_VALUE, Short.MAX_VALUE);
-    static Rectangle r = new Rectangle();
+    static final int defaultMenuItemGap = 2;
+    static final int kAcceleratorArrowSpace = 16; // Accel space doesn't overlap arrow space, even though items can't have both
     
     static class LazyBorder extends LazySingleton<Border> {
         final String borderName;
@@ -143,16 +136,6 @@ public class AquaMenuPainter {
     protected final LazyBorder menuBarPainter = new LazyBorder("MenuBar.backgroundPainter");
     protected final LazyBorder selectedMenuBarItemPainter = new LazyBorder("MenuBar.selectedBackgroundPainter");
     protected final LazyBorder selectedMenuItemPainter = new LazyBorder("MenuItem.selectedBackgroundPainter");
-    
-    private void resetRects() {
-        iconRect.setBounds(zeroRect);
-        textRect.setBounds(zeroRect);
-        acceleratorRect.setBounds(zeroRect);
-        checkIconRect.setBounds(zeroRect);
-        arrowIconRect.setBounds(zeroRect);
-        viewRect.setBounds(0, 0, Short.MAX_VALUE, Short.MAX_VALUE);
-        r.setBounds(zeroRect);
-    }
     
     public void paintMenuBarBackground(final Graphics g, final int width, final int height, final JComponent c) {
         g.setColor(c == null ? Color.white : c.getBackground());
@@ -169,8 +152,6 @@ public class AquaMenuPainter {
     }
 
     protected void paintMenuItem(final Client client, final Graphics g, final JComponent c, final Icon checkIcon, final Icon arrowIcon, final Color background, final Color foreground, final Color disabledForeground, final Color selectionForeground, final int defaultTextIconGap, final Font acceleratorFont) {
-        final Graphics2D g2d = (Graphics2D)g;
-
         final JMenuItem b = (JMenuItem)c;
         final ButtonModel model = b.getModel();
 
@@ -179,9 +160,7 @@ public class AquaMenuPainter {
         final int menuHeight = b.getHeight();
         final Insets i = c.getInsets();
 
-        resetRects();
-
-        viewRect.setBounds(0, 0, menuWidth, menuHeight);
+        Rectangle viewRect = new Rectangle(0, 0, menuWidth, menuHeight);
 
         viewRect.x += i.left;
         viewRect.y += i.top;
@@ -218,6 +197,12 @@ public class AquaMenuPainter {
             }
         }
 
+        Rectangle iconRect = new Rectangle();
+        Rectangle textRect = new Rectangle();
+        Rectangle acceleratorRect = new Rectangle();
+        Rectangle checkIconRect = new Rectangle();
+        Rectangle arrowIconRect = new Rectangle();
+        
         // layout the text and icon
         final String text = layoutMenuItem(b, fm, b.getText(), fmAccel, keyString, modifiersString, b.getIcon(), checkIcon, arrowIcon, b.getVerticalAlignment(), b.getHorizontalAlignment(), b.getVerticalTextPosition(), b.getHorizontalTextPosition(), viewRect, iconRect, textRect, acceleratorRect, checkIconRect, arrowIconRect, b.getText() == null ? 0 : defaultTextIconGap, defaultTextIconGap);
 
@@ -258,7 +243,7 @@ public class AquaMenuPainter {
 
         // Paint the Check using the current text color
         if (checkIcon != null) {
-            paintCheck(g, b, checkIcon);
+            paintCheck(g, b, checkIcon, checkIconRect);
         }
 
         // Draw the accelerator first in case the HTML renderer changes the color
@@ -303,7 +288,7 @@ public class AquaMenuPainter {
 
         // Paint the Arrow
         if (arrowIcon != null) {
-            paintArrow(g, b, model, arrowIcon);
+            paintArrow(g, b, model, arrowIcon, arrowIconRect);
         }
         
         g.setColor(holdc);
@@ -336,10 +321,16 @@ public class AquaMenuPainter {
         final FontMetrics fm = b.getFontMetrics(font);
         final FontMetrics fmAccel = b.getFontMetrics(acceleratorFont);
 
-        resetRects();
+        Rectangle iconRect = new Rectangle();
+        Rectangle textRect = new Rectangle();
+        Rectangle acceleratorRect = new Rectangle();
+        Rectangle checkIconRect = new Rectangle();
+        Rectangle arrowIconRect = new Rectangle();
+        Rectangle viewRect = new Rectangle(Short.MAX_VALUE, Short.MAX_VALUE);
 
         layoutMenuItem(b, fm, text, fmAccel, keyString, modifiersString, icon, checkIcon, arrowIcon, b.getVerticalAlignment(), b.getHorizontalAlignment(), b.getVerticalTextPosition(), b.getHorizontalTextPosition(), viewRect, iconRect, textRect, acceleratorRect, checkIconRect, arrowIconRect, text == null ? 0 : defaultTextIconGap, defaultTextIconGap);
         // find the union of the icon and text rects
+        Rectangle r = new Rectangle();
         r.setBounds(textRect);
         r = SwingUtilities.computeUnion(iconRect.x, iconRect.y, iconRect.width, iconRect.height, r);
         //   r = iconRect.union(textRect);
@@ -374,7 +365,7 @@ public class AquaMenuPainter {
         return r.getSize();
     }
 
-    protected void paintCheck(final Graphics g, final JMenuItem item, Icon checkIcon) {
+    protected void paintCheck(final Graphics g, final JMenuItem item, Icon checkIcon, Rectangle checkIconRect) {
         if (isTopLevelMenu(item) || !item.isSelected()) return;
         
         if (item.isArmed() && checkIcon instanceof InvertableIcon) {
@@ -402,7 +393,7 @@ public class AquaMenuPainter {
         if (icon != null) icon.paintIcon(c, g, localIconRect.x, localIconRect.y);
     }
     
-    protected void paintArrow(Graphics g, JMenuItem c, ButtonModel model, Icon arrowIcon) {
+    protected void paintArrow(Graphics g, JMenuItem c, ButtonModel model, Icon arrowIcon, Rectangle arrowIconRect) {
         if (isTopLevelMenu(c)) return;
         
         if (c instanceof JMenu && (model.isArmed() || model.isSelected()) && arrowIcon instanceof InvertableIcon) {

@@ -41,17 +41,37 @@ import javax.swing.text.InternationalFormatter;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 /**
  * This is originally derived from BasicSpinnerUI, but they made everything private
  * so we can't subclass!
  */
 public class AquaSpinnerUI extends SpinnerUI {
-    private static final PropertyChangeListener propertyChangeListener = new PropertyChangeHandler();
-
-    private static final ArrowButtonHandler nextButtonHandler = new ArrowButtonHandler("increment", true);
-    private static final ArrowButtonHandler previousButtonHandler = new ArrowButtonHandler("decrement", false);
-
-    static final Dimension zeroSize = new Dimension(0, 0);
+    private static final LazySingleton<? extends PropertyChangeListener> propertyChangeListener = new LazySingletonFromDefaultConstructor<PropertyChangeHandler>(PropertyChangeHandler.class);
+    static PropertyChangeListener getPropertyChangeListener() { 
+        return propertyChangeListener.get();
+    }
+    
+    private static final LazySingleton<ArrowButtonHandler> nextButtonHandler = new LazySingleton<ArrowButtonHandler>() {
+        @Override
+        protected ArrowButtonHandler getInstance() {
+            return new ArrowButtonHandler("increment", true);
+        }
+    };
+    static ArrowButtonHandler getNextButtonHandler() {
+        return nextButtonHandler.get();
+    }
+    private static final LazySingleton<ArrowButtonHandler> previousButtonHandler = new LazySingleton<ArrowButtonHandler>() {
+        @Override
+        protected ArrowButtonHandler getInstance() {
+            return new ArrowButtonHandler("decrement", false);
+        }
+    };
+    static ArrowButtonHandler getPreviousButtonHandler() {
+        return previousButtonHandler.get();
+    }
 
     JSpinner spinner;
     SpinPainter spinPainter;
@@ -100,11 +120,11 @@ public class AquaSpinnerUI extends SpinnerUI {
     }
     
     protected void installListeners() {
-        spinner.addPropertyChangeListener(propertyChangeListener);
+        spinner.addPropertyChangeListener(getPropertyChangeListener());
     }
     
     protected void uninstallListeners() {
-        spinner.removePropertyChangeListener(propertyChangeListener);
+        spinner.removePropertyChangeListener(getPropertyChangeListener());
     }
     
     protected void installDefaults() {
@@ -127,15 +147,15 @@ public class AquaSpinnerUI extends SpinnerUI {
     
     protected TransparentButton createPreviousButton() {
         final TransparentButton b = new TransparentButton();
-        b.addActionListener(previousButtonHandler);
-        b.addMouseListener(previousButtonHandler);
+        b.addActionListener(getPreviousButtonHandler());
+        b.addMouseListener(getPreviousButtonHandler());
         return b;
     }
     
     protected TransparentButton createNextButton() {
         final TransparentButton b = new TransparentButton();
-        b.addActionListener(nextButtonHandler);
-        b.addMouseListener(nextButtonHandler);
+        b.addActionListener(getNextButtonHandler());
+        b.addMouseListener(getNextButtonHandler());
         return b;
     }
     
@@ -231,8 +251,8 @@ public class AquaSpinnerUI extends SpinnerUI {
 
     private ActionMap createActionMap() {
         final ActionMap map = new ActionMapUIResource();
-        map.put("increment", nextButtonHandler);
-        map.put("decrement", previousButtonHandler);
+        map.put("increment", getNextButtonHandler());
+        map.put("decrement", getPreviousButtonHandler());
         return map;
     }
     
@@ -498,7 +518,7 @@ public class AquaSpinnerUI extends SpinnerUI {
         }
 
         private Dimension preferredSize(final Component c) {
-            return (c == null) ? zeroSize : c.getPreferredSize();
+            return (c == null) ? new Dimension(0, 0) : c.getPreferredSize();
         }
 
         public Dimension preferredLayoutSize(final Container parent) {

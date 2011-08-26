@@ -72,6 +72,10 @@ class AquaComboBoxRendererInternal extends JLabel implements ListCellRenderer {
         
     }
 
+    public int getBaseline(int width, int height) {
+        return super.getBaseline(width, height) - 1;
+    }
+    
     // Really means is the one with the mouse over it
     public Component getListCellRendererComponent(final JList list, final Object value, int index, final boolean isSelected, final boolean cellHasFocus) {
         fInList = (index >= 0); // When the button wants the item painted, it passes in -1
@@ -142,7 +146,7 @@ class AquaComboBoxRendererInternal extends JLabel implements ListCellRenderer {
     protected void paintComponent(final Graphics g) {
         if (fInList) {
             if (fSelected && !fEditable) {
-                AquaMenuPainter.sPainter.paintSelectedMenuItemBackground(g, getWidth(), getHeight());
+                AquaMenuPainter.instance().paintSelectedMenuItemBackground(g, getWidth(), getHeight());
             } else {
                 g.setColor(getBackground());
                 g.fillRect(0, 0, getWidth(), getHeight());

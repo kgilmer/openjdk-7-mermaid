@@ -35,9 +35,13 @@ import javax.swing.plaf.*;
 import javax.swing.text.*;
 
 import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
 
 public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
-    static CapsLockSymbolPainter capsLockPainter = new CapsLockSymbolPainter();
+    static final LazySingleton<CapsLockSymbolPainter> capsLockPainter = new LazySingletonFromDefaultConstructor<CapsLockSymbolPainter>(CapsLockSymbolPainter.class);
+    static CapsLockSymbolPainter getCapsLockPainter() {
+        return capsLockPainter.get();
+    }
     
     public static ComponentUI createUI(final JComponent c) {
         return new AquaTextPasswordFieldUI();
@@ -56,12 +60,12 @@ public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
     @Override
     protected void installListeners() {
         super.installListeners();
-        getComponent().addKeyListener(capsLockPainter);
+        getComponent().addKeyListener(getCapsLockPainter());
     }
     
     @Override
     protected void uninstallListeners() {
-        getComponent().removeKeyListener(capsLockPainter);
+        getComponent().removeKeyListener(getCapsLockPainter());
         super.uninstallListeners();
     }
 
@@ -77,7 +81,7 @@ public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
         if (!capsLockDown) return;
         
         final Rectangle bounds = component.getBounds();
-        capsLockPainter.paintBorder(component, g, bounds.x, bounds.y, bounds.width, bounds.height);
+        getCapsLockPainter().paintBorder(component, g, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     protected class AquaPasswordView extends PasswordView {
@@ -96,33 +100,33 @@ public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
     }
     
     static class CapsLockSymbolPainter extends KeyAdapter implements Border, UIResource {
-        static Color capsLockShapeColor = new Color(0.0f, 0.0f, 0.0f, 0.4f);
-        static LazySingleton<Shape> capsLockShape = new LazySingleton<Shape>() {
-            protected Shape getInstance() {
-                final RoundRectangle2D rect = new RoundRectangle2D.Double(0.5, 0.5, 16, 16, 8, 8);
-                final GeneralPath shape = new GeneralPath(rect);
-                shape.setWindingRule(Path2D.WIND_EVEN_ODD);
+        protected Shape capsLockShape;
+        protected Shape getCapsLockShape() {
+            if (capsLockShape != null) return capsLockShape;
+            
+            final RoundRectangle2D rect = new RoundRectangle2D.Double(0.5, 0.5, 16, 16, 8, 8);
+            final GeneralPath shape = new GeneralPath(rect);
+            shape.setWindingRule(Path2D.WIND_EVEN_ODD);
                 
-                // arrow
-                shape.moveTo( 8.50,  2.00);
-                shape.lineTo( 4.00,  7.00);
-                shape.lineTo( 6.25,  7.00);
-                shape.lineTo( 6.25, 10.25);
-                shape.lineTo(10.75, 10.25);
-                shape.lineTo(10.75,  7.00);
-                shape.lineTo(13.00,  7.00);
-                shape.lineTo( 8.50,  2.00);
+            // arrow
+            shape.moveTo( 8.50,  2.00);
+            shape.lineTo( 4.00,  7.00);
+            shape.lineTo( 6.25,  7.00);
+            shape.lineTo( 6.25, 10.25);
+            shape.lineTo(10.75, 10.25);
+            shape.lineTo(10.75,  7.00);
+            shape.lineTo(13.00,  7.00);
+            shape.lineTo( 8.50,  2.00);
                 
-                // base line
-                shape.moveTo(10.75, 12.00);
-                shape.lineTo( 6.25, 12.00);
-                shape.lineTo( 6.25, 14.25);
-                shape.lineTo(10.75, 14.25);
-                shape.lineTo(10.75, 12.00);
+            // base line
+            shape.moveTo(10.75, 12.00);
+            shape.lineTo( 6.25, 12.00);
+            shape.lineTo( 6.25, 14.25);
+            shape.lineTo(10.75, 14.25);
+            shape.lineTo(10.75, 12.00);
                 
-                return shape;
-            }
-        };
+            return capsLockShape = shape;
+        }
         
         @Override
         public Insets getBorderInsets(final Component c) {
@@ -138,9 +142,9 @@ public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
         public void paintBorder(final Component c, Graphics g, final int x, final int y, final int width, final int height) {
             g = g.create(width - 23, height / 2 - 8, 18, 18);
             
-            g.setColor(capsLockShapeColor);
+            g.setColor(UIManager.getColor("PasswordField.capsLockIconColor"));
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            ((Graphics2D)g).fill(capsLockShape.get());
+            ((Graphics2D)g).fill(getCapsLockShape());
             g.dispose();
         }
         

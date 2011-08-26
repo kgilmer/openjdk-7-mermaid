@@ -37,17 +37,17 @@ import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public abstract class AquaButtonBorder extends AquaBorder implements Border, UIResource {
-    public static final LazySingleton<Dynamic> fDynamic = new LazySingletonFromDefaultContructor<Dynamic>(Dynamic.class);
+    public static final LazySingleton<Dynamic> fDynamic = new LazySingletonFromDefaultConstructor<Dynamic>(Dynamic.class);
     static public AquaButtonBorder getDynamicButtonBorder() {
         return fDynamic.get();
     }
     
-    private static final LazySingleton<Toggle> fToggle = new LazySingletonFromDefaultContructor<Toggle>(Toggle.class);
+    private static final LazySingleton<Toggle> fToggle = new LazySingletonFromDefaultConstructor<Toggle>(Toggle.class);
     static public AquaButtonBorder getToggleButtonBorder() {
         return fToggle.get();
     }
     
-    public static LazySingleton<Toolbar> fToolBar = new LazySingletonFromDefaultContructor<Toolbar>(Toolbar.class);
+    public static final LazySingleton<Toolbar> fToolBar = new LazySingletonFromDefaultConstructor<Toolbar>(Toolbar.class);
     static public Border getToolBarButtonBorder() {
         return fToolBar.get();
     }

@@ -37,30 +37,18 @@ import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.TitleBarHeightState;
 
 import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaInternalFrameBorderMetrics;
 
 public class AquaInternalFrameBorder implements Border, UIResource {
     private static final int kCloseButton = 0;
     private static final int kIconButton = 1;
     private static final int kGrowButton = 2;
     
-    private static final Font sStandardFont = new Font("Lucida Grande", Font.PLAIN, 13);
-    private static final int sTitleBarHeight = 22;
     private static final int sMaxIconWidth = 15;
     private static final int sMaxIconHeight = sMaxIconWidth;
-    private static final int sLeftSidePad = 8;
-    private static final int sButtonHeight = 15;
-    private static final int sButtonWidth = 15;
-    private static final int sButtonPad = 6;
     private static final int sAfterButtonPad = 11;
     private static final int sAfterIconPad = 5;
     private static final int sRightSideTitleClip = 0;
-
-    private static final Font sUtilityFont = new Font("Lucida Grande", Font.PLAIN, 11);
-    private static final int sUtilityLeftSidePad = 5;
-    private static final int sUtilityTitleBarHeight = 16;
-    private static final int sUtilityButtonHeight = 13;
-    private static final int sUtilityButtonWidth = 13;
-    private static final int sUtilityButtonPad = 4;
 
     private static final int kContentTester = 100; // For getting region insets
     
@@ -91,12 +79,8 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         return dialogWindowFrame.get();
     }
     
-    private final int fThisTitleBarHeight;
-    private final int fThisLeftSidePad;
-    private final int fThisButtonHeight;
-    private final int fThisButtonWidth;
+    private final AquaInternalFrameBorderMetrics metrics;
 
-    private final int fThisButtonPad;
     private final int fThisButtonSpan;
     private final int fThisLeftSideTotal;
 
@@ -120,32 +104,23 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         titleBarPainter.state.set(WindowClipCorners.YES);
         if (fWindowKind == WindowType.UTILITY) {
             fIsUtility = true;
-            fThisButtonHeight = sUtilityButtonHeight;
-            fThisButtonWidth = sUtilityButtonWidth;
-
-            fThisButtonPad = sUtilityButtonPad;
-            fThisLeftSidePad = sUtilityLeftSidePad;
-            fThisTitleBarHeight = sUtilityTitleBarHeight;
+            metrics = AquaInternalFrameBorderMetrics.getMetrics(true);
             
             widgetPainter.state.set(WindowType.UTILITY);
             titleBarPainter.state.set(WindowType.UTILITY);
         } else {
             fIsUtility = false;
-            fThisButtonHeight = sButtonHeight;
-            fThisButtonWidth = sButtonWidth;
-
-            fThisButtonPad = sButtonPad;
-            fThisLeftSidePad = sLeftSidePad;
-            fThisTitleBarHeight = sTitleBarHeight;
+            metrics = AquaInternalFrameBorderMetrics.getMetrics(false);
             
             widgetPainter.state.set(WindowType.DOCUMENT);
             titleBarPainter.state.set(WindowType.DOCUMENT);
         }
-        titleBarPainter.state.setValue(fThisTitleBarHeight);
+        titleBarPainter.state.setValue(metrics.titleBarHeight);
         titleBarPainter.state.set(WindowTitleBarSeparator.YES);
+        widgetPainter.state.set(AlignmentVertical.CENTER);
         
-        fThisButtonSpan = (fThisButtonWidth * 3) + (fThisButtonPad * 2);
-        fThisLeftSideTotal = fThisLeftSidePad + fThisButtonSpan + sAfterButtonPad;
+        fThisButtonSpan = (metrics.buttonWidth * 3) + (metrics.buttonPadding * 2);
+        fThisLeftSideTotal = metrics.leftSidePadding + fThisButtonSpan + sAfterButtonPad;
     }
     
     public void setColors(final Color inSelectedTextColor, final Color inNotSelectedTextColor) {
@@ -178,15 +153,11 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         final boolean isSelected = frame.isSelected();
         final Font f = g.getFont();
         
-        if (fIsUtility) {
-            g.setFont(sUtilityFont);
-        } else {
-            g.setFont(sStandardFont);
-        }
+        g.setFont(metrics.font);
 
         // Center text vertically.
         final FontMetrics fm = g.getFontMetrics();
-        final int baseline = (fThisTitleBarHeight + fm.getAscent() - fm.getLeading() - fm.getDescent()) / 2;
+        final int baseline = (metrics.titleBarHeight + fm.getAscent() - fm.getLeading() - fm.getDescent()) / 2;
         
         // max button is the rightmost so use it
         final int usedWidth = fThisLeftSideTotal + sRightSideTitleClip;
@@ -249,7 +220,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         }
 
         // sja fix x & y
-        final int iconYPostion = (fThisTitleBarHeight - getIconHeight(frame)) / 2;
+        final int iconYPostion = (metrics.titleBarHeight - getIconHeight(frame)) / 2;
         paintTitleIcon(g, frame, x + startXPosition, y + iconYPostion);
     }
 
@@ -257,21 +228,21 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         int buttonHit = -1;
         
         final Insets i = frame.getInsets();
-        int startX = i.left + fThisLeftSidePad - 1;
+        int startX = i.left + metrics.leftSidePadding - 1;
         if (isInsideYButtonArea(i, y) && x >= startX) {
-            if (x <= (startX + fThisButtonWidth)) {
+            if (x <= (startX + metrics.buttonWidth)) {
                 if (frame.isClosable()) {
                     buttonHit = kCloseButton;
                 }
             } else {
-                startX += fThisButtonWidth + fThisButtonPad;
-                if (x >= startX && x <= (startX + fThisButtonWidth)) {
+                startX += metrics.buttonWidth + metrics.buttonPadding;
+                if (x >= startX && x <= (startX + metrics.buttonWidth)) {
                     if (frame.isIconifiable()) {
                         buttonHit = kIconButton;
                     }
                 } else {
-                    startX += fThisButtonWidth + fThisButtonPad;
-                    if (x >= startX && x <= (startX + fThisButtonWidth)) {
+                    startX += metrics.buttonWidth + metrics.buttonPadding;
+                    if (x >= startX && x <= (startX + metrics.buttonWidth)) {
                         if (frame.isMaximizable()) {
                             buttonHit = kGrowButton;
                         }
@@ -325,13 +296,13 @@ public class AquaInternalFrameBorder implements Border, UIResource {
     }
 
     public boolean isInsideYButtonArea(final Insets i, final int y) {
-        final int startY = (i.top - fThisTitleBarHeight / 2) - (fThisButtonHeight / 2) - 1;
-        final int endY = startY + fThisButtonHeight;
+        final int startY = (i.top - metrics.titleBarHeight / 2) - (metrics.buttonHeight / 2) - 1;
+        final int endY = startY + metrics.buttonHeight;
         return y >= startY && y <= endY;
     }
 
     public boolean getWithinRolloverArea(final Insets i, final int x, final int y) {
-        final int startX = i.left + fThisLeftSidePad;
+        final int startX = i.left + metrics.leftSidePadding;
         final int endX = startX + fThisButtonSpan;
         return isInsideYButtonArea(i, y) && x >= startX && x <= endX;
     }
@@ -388,7 +359,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         final int w = inW;
         int h = inH;
 
-        h = fThisTitleBarHeight + inH;
+        h = metrics.titleBarHeight + inH;
 
         // paint the background
         titleBarPainter.state.set(frame.isSelected() ? State.ACTIVE : State.INACTIVE);
@@ -437,7 +408,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         setMetrics(frame, c);
 
         fBorderInsets.left = 0;
-        fBorderInsets.top = fThisTitleBarHeight;
+        fBorderInsets.top = metrics.titleBarHeight;
         fBorderInsets.right = 0;
         fBorderInsets.bottom = 0;
         
@@ -446,19 +417,19 @@ public class AquaInternalFrameBorder implements Border, UIResource {
 
     public void repaintButtonArea(final JInternalFrame frame) {
         final Insets i = frame.getInsets();
-        final int x = i.left + fThisLeftSidePad;
-        final int y = i.top - fThisTitleBarHeight + 1;
-        frame.repaint(x, y, fThisButtonSpan, fThisTitleBarHeight - 2);
+        final int x = i.left + metrics.leftSidePadding;
+        final int y = i.top - metrics.titleBarHeight + 1;
+        frame.repaint(x, y, fThisButtonSpan, metrics.titleBarHeight - 2);
     }
 
     // Draw all the widgets this frame supports
     void drawAllWidgets(final Graphics g, final JInternalFrame frame) {
-        int x = fThisLeftSidePad;
-        int y = (fThisTitleBarHeight - fThisButtonHeight) / 2 - fThisTitleBarHeight;
+        int x = metrics.leftSidePadding;
+        int y = (metrics.titleBarHeight - metrics.buttonHeight) / 2 - metrics.titleBarHeight;
         
         final Insets insets = frame.getInsets();
         x += insets.left;
-        y += insets.top + (fIsUtility ? 0 : 1);
+        y += insets.top + metrics.downShift;
 
         final AquaInternalFrameUI ui = (AquaInternalFrameUI)frame.getUI();
         final int buttonPressedIndex = ui.getWhichButtonPressed();
@@ -472,10 +443,10 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         
         paintButton(g, frame, x, y, kCloseButton, buttonPressedIndex, overButton, frame.isClosable(), generalActive, rollover, dirty);
 
-        x += fThisButtonPad + fThisButtonWidth;
+        x += metrics.buttonPadding + metrics.buttonWidth;
         paintButton(g, frame, x, y, kIconButton, buttonPressedIndex, overButton, frame.isIconifiable(), generalActive, rollover, false);
 
-        x += fThisButtonPad + fThisButtonWidth;
+        x += metrics.buttonPadding + metrics.buttonWidth;
         paintButton(g, frame, x, y, kGrowButton, buttonPressedIndex, overButton, frame.isMaximizable(), generalActive, rollover, false);
     }
 
@@ -483,7 +454,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         widgetPainter.state.set(getWidget(frame, buttonType));
         widgetPainter.state.set(getState(buttonPressedIndex == buttonType && overButton, anyRollover, active, enabled));
         widgetPainter.state.set(dirty ? BooleanValue.YES : BooleanValue.NO);
-        widgetPainter.paint(g, frame, x, y, fThisButtonWidth, fThisButtonHeight);
+        widgetPainter.paint(g, frame, x, y, metrics.buttonWidth, metrics.buttonHeight);
     }
     
     static Widget getWidget(final JInternalFrame frame, final int buttonType) {
@@ -520,6 +491,6 @@ public class AquaInternalFrameBorder implements Border, UIResource {
     }
     
     protected int getTitleHeight() {
-        return fThisTitleBarHeight;
+        return metrics.titleBarHeight;
     }
 }

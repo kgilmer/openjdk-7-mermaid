@@ -30,13 +30,16 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 public class AquaMnemonicHandler {
-    static AltProcessor altProcessor = new AltProcessor();
+    static final LazySingleton<AltProcessor> altProcessor = new LazySingletonFromDefaultConstructor<AltProcessor>(AltProcessor.class);
     public static KeyEventPostProcessor getInstance() {
-        return altProcessor;
+        return altProcessor.get();
     }
     
-    static boolean isMnemonicHidden = true; // true by default
+    protected static boolean isMnemonicHidden = true; // true by default
 
     public static void setMnemonicHidden(final boolean hide) {
         if (UIManager.getBoolean("Button.showMnemonics")) {

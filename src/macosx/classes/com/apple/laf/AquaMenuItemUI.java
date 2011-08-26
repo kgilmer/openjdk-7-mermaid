@@ -100,11 +100,11 @@ public class AquaMenuItemUI extends BasicMenuItemUI implements AquaMenuPainter.C
     }
 
     protected void paintMenuItem(final Graphics g, final JComponent c, final Icon localCheckIcon, final Icon localArrowIcon, final Color background, final Color foreground, final int localDefaultTextIconGap) {
-        AquaMenuPainter.sPainter.paintMenuItem(this, g, c, localCheckIcon, localArrowIcon, background, foreground, disabledForeground, selectionForeground, localDefaultTextIconGap, acceleratorFont);
+        AquaMenuPainter.instance().paintMenuItem(this, g, c, localCheckIcon, localArrowIcon, background, foreground, disabledForeground, selectionForeground, localDefaultTextIconGap, acceleratorFont);
     }
 
     protected Dimension getPreferredMenuItemSize(final JComponent c, final Icon localCheckIcon, final Icon localArrowIcon, final int localDefaultTextIconGap) {
-        return AquaMenuPainter.sPainter.getPreferredMenuItemSize(c, localCheckIcon, localArrowIcon, localDefaultTextIconGap, acceleratorFont);
+        return AquaMenuPainter.instance().getPreferredMenuItemSize(c, localCheckIcon, localArrowIcon, localDefaultTextIconGap, acceleratorFont);
     }
 
     public void update(final Graphics g, final JComponent c) {
@@ -127,7 +127,7 @@ public class AquaMenuItemUI extends BasicMenuItemUI implements AquaMenuPainter.C
         g.fillRect(0, 0, menuWidth, menuHeight);
         if (((JMenuItem)c).isBorderPainted()) {
             if (((JMenuItem)c).getModel().isArmed()) {
-                AquaMenuPainter.sPainter.paintSelectedMenuItemBackground(g, menuWidth, menuHeight);
+                AquaMenuPainter.instance().paintSelectedMenuItemBackground(g, menuWidth, menuHeight);
             }
             //getTheme().drawMenuItem(c, g, 0, 0, menuWidth, menuHeight);
         } else {
@@ -157,7 +157,7 @@ public class AquaMenuItemUI extends BasicMenuItemUI implements AquaMenuPainter.C
         super.doClick(msm);
     }
     
-    static IndeterminateListener INDETERMINATE_LISTENER = new IndeterminateListener();
+    static final IndeterminateListener INDETERMINATE_LISTENER = new IndeterminateListener();
     static class IndeterminateListener implements PropertyChangeListener {
         static final String CLIENT_PROPERTY_KEY = "JMenuItem.selectedState";
         

@@ -75,6 +75,12 @@ public class JRSUIUtils {
         }
     }
     
+    public static class InternalFrame {
+        public static boolean shouldUseLegacyBorderMetrics() {
+            return isSnowLeopardOrBelow;
+        }
+    }
+    
     public static class Tree {
         public static boolean useLegacyTreeKnobs() {
             return isLeopard;

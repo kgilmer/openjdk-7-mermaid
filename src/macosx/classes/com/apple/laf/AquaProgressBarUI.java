@@ -39,14 +39,23 @@ import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ValueState;
 
 import com.apple.laf.AquaUtilControlSize.*;
+import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, PropertyChangeListener, AncestorListener, Sizeable {
-    protected static final AffineTransform kRotateTx = AffineTransform.getRotateInstance(0.0f - (Math.PI / 2.0f), 0, 0);
     private static final boolean ADJUSTTIMER = true;
     
-    protected static final SizeDescriptor sizeDescriptor = new SizeDescriptor(new SizeVariant(146, 20)) {
-        public SizeVariant deriveSmall(final SizeVariant v) { v.alterMinSize(0, -6); return super.deriveSmall(v); }
+    protected static final LazySingleton<SizeDescriptor> sizeDescriptor = new LazySingleton<SizeDescriptor>() {
+        @Override
+        protected SizeDescriptor getInstance() {
+            return new SizeDescriptor(new SizeVariant(146, 20)) {
+                public SizeVariant deriveSmall(final SizeVariant v) { v.alterMinSize(0, -6); return super.deriveSmall(v); }
+            };
+        }
     };
+    static SizeDescriptor getSizeDescriptor() {
+        return sizeDescriptor.get();
+    }
+    
     protected Size sizeVariant = Size.REGULAR;
     
     protected Color selectionForeground;
@@ -197,7 +206,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
         } else { // VERTICAL
             // We rotate it -90 degrees, then translate it down since we are going to be bottom up.
             final AffineTransform savedAT = g2.getTransform();
-            g2.transform(kRotateTx);
+            g2.transform(AffineTransform.getRotateInstance(0.0f - (Math.PI / 2.0f), 0, 0));
             g2.translate(-progressBar.getHeight(), 0);
 
             // 0,0 is now the bottom left of the viewable area, so we just draw our image at
@@ -235,10 +244,13 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
         return new Point(x + Math.round(width / 2 - stringWidth / 2), y + ((height + fontSizer.getAscent() - fontSizer.getLeading() - fontSizer.getDescent()) / 2) - 1);
     }
     
-    static final Dimension circularPreferredSize = new Dimension(20, 20);
+    static Dimension getCircularPreferredSize() {
+        return new Dimension(20, 20);
+    }
+    
     public Dimension getPreferredSize(final JComponent c) {
         if (isCircular) {
-            return circularPreferredSize;
+            return getCircularPreferredSize();
         }
         
         final FontMetrics metrics = progressBar.getFontMetrics(progressBar.getFont());
@@ -252,7 +264,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
     }
     
     protected Dimension getPreferredHorizontalSize(final FontMetrics metrics) {
-        final SizeVariant variant = sizeDescriptor.get(sizeVariant);
+        final SizeVariant variant = getSizeDescriptor().get(sizeVariant);
         final Dimension size = new Dimension(variant.w, variant.h);
         if (!progressBar.isStringPainted()) return size;
         
@@ -276,7 +288,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
     }
     
     protected Dimension getPreferredVerticalSize(final FontMetrics metrics) {
-        final SizeVariant variant = sizeDescriptor.get(sizeVariant);
+        final SizeVariant variant = getSizeDescriptor().get(sizeVariant);
         final Dimension size = new Dimension(variant.h, variant.w);
         if (!progressBar.isStringPainted()) return size;
         
@@ -297,7 +309,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
     
     public Dimension getMinimumSize(final JComponent c) {
         if (isCircular) {
-            return circularPreferredSize;
+            return getCircularPreferredSize();
         }
         
         final Dimension pref = getPreferredSize(progressBar);
@@ -315,7 +327,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
 
     public Dimension getMaximumSize(final JComponent c) {
         if (isCircular) {
-            return circularPreferredSize;
+            return getCircularPreferredSize();
         }
         
         final Dimension pref = getPreferredSize(progressBar);
@@ -344,7 +356,6 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
         isAnimating = false;
     }
     
-    private static final Rectangle circularRect = new Rectangle(20, 20);
     private final Rectangle fUpdateArea = new Rectangle(0, 0, 0, 0);
     private final Dimension fLastSize = new Dimension(0, 0);
     protected Rectangle getRepaintRect() {
@@ -352,7 +363,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
         int width = progressBar.getWidth();
         
         if (isCircular) {
-            return circularRect;
+            return new Rectangle(20, 20);
         }
         
         if (fLastSize.height == height && fLastSize.width == width) {
@@ -382,7 +393,7 @@ public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, 
     }
     
     protected int getMaxProgressBarHeight() {
-        return sizeDescriptor.get(sizeVariant).h;
+        return getSizeDescriptor().get(sizeVariant).h;
     }
 
     protected boolean isHorizontal() {

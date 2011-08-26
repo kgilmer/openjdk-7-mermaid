@@ -31,6 +31,8 @@ import java.security.PrivilegedAction;
 
 import javax.swing.plaf.UIResource;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+
 public class AquaNativeResources {
     static {
         java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
@@ -46,14 +48,16 @@ public class AquaNativeResources {
         }
     }
 
-    static Color sBackgroundColor;
+    static final LazySingleton<Color> sBackgroundColor = new LazySingleton<Color>() {
+        @Override
+        protected Color getInstance() {
+            final long backgroundID = getWindowBackgroundColor();
+            return new CColorPaintUIResource(backgroundID, 0xEE, 0xEE, 0xEE, 0xFF);
+        }
+    };
     private static native long getWindowBackgroundColor();
     public static Color getWindowBackgroundColorUIResource() {
-        if (sBackgroundColor == null) {
-            final long backgroundID = getWindowBackgroundColor();
-            sBackgroundColor = new CColorPaintUIResource(backgroundID, 0xEE, 0xEE, 0xEE, 0xFF); // the average of the two greys in the pinstripes (this is wrong if we are using metal)
-        }
-        return sBackgroundColor;
+        return sBackgroundColor.get();
     }
     
     static BufferedImage getRadioButtonSizerImage() {

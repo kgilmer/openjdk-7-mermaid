@@ -53,7 +53,7 @@ import sun.lwawt.macosx.CPlatformWindow;
  *
  */
 public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingConstants {
-    protected static String IS_PALETTE_PROPERTY = "JInternalFrame.isPalette";
+    protected static final String IS_PALETTE_PROPERTY = "JInternalFrame.isPalette";
     private static final String FRAME_TYPE = "JInternalFrame.frameType";
     private static final String NORMAL_FRAME = "normal";
     private static final String PALETTE_FRAME = "palette";
@@ -143,7 +143,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         southPane = c;
     }
     
-    static LazySingleton<Icon> closeIcon = new LazySingleton<Icon>() {
+    static final LazySingleton<Icon> closeIcon = new LazySingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_CLOSE_BOX);
         }
@@ -152,7 +152,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         return closeIcon.get();
     }
 
-    static LazySingleton<Icon> minimizeIcon = new LazySingleton<Icon>() {
+    static final LazySingleton<Icon> minimizeIcon = new LazySingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_COLLAPSE_BOX);
         }
@@ -161,7 +161,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         return minimizeIcon.get();
     }
 
-    static LazySingleton<Icon> zoomIcon = new LazySingleton<Icon>() {
+    static final LazySingleton<Icon> zoomIcon = new LazySingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_ZOOM_BOX);
         }
@@ -706,7 +706,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         }
     } // end class PaletteListener
     
-    static InternalFrameShadow documentWindowShadow = new InternalFrameShadow() {
+    static final InternalFrameShadow documentWindowShadow = new InternalFrameShadow() {
         Border getForegroundShadowBorder() {
             return new AquaUtils.SlicedShadowBorder(new Painter() {
                 public void paint(final Graphics g, final int x, final int y, final int w, final int h) {
@@ -740,7 +740,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         }
     };
     
-    static InternalFrameShadow paletteWindowShadow = new InternalFrameShadow() {
+    static final InternalFrameShadow paletteWindowShadow = new InternalFrameShadow() {
         Border getForegroundShadowBorder() {
             return new AquaUtils.SlicedShadowBorder(new Painter() {
                 public void paint(final Graphics g, final int x, final int y, final int w, final int h) {
@@ -788,7 +788,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         }
     }
     
-    static LazySingleton<Icon> RESIZE_ICON = new LazySingleton<Icon>() {
+    static final LazySingleton<Icon> RESIZE_ICON = new LazySingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaIcon.CachableJRSUIIcon(11, 11) {
                 public void initIconPainter(final AquaPainter<JRSUIState> iconState) {

@@ -46,7 +46,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
     private static final String BUTTON_TYPE = "JButton.buttonType";
     private static final String SEGMENTED_BUTTON_POSITION = "JButton.segmentPosition";
 
-    protected static final LazySingleton<AquaButtonUI> buttonUI = new LazySingletonFromDefaultContructor<AquaButtonUI>(AquaButtonUI.class);
+    protected static final LazySingleton<AquaButtonUI> buttonUI = new LazySingletonFromDefaultConstructor<AquaButtonUI>(AquaButtonUI.class);
     public static ComponentUI createUI(final JComponent c) {
         return buttonUI.get();
     }
@@ -244,28 +244,16 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
         return new AquaButtonListener(b);
     }
 
-    /* These rectangles/insets are allocated once for all 
-     * ButtonUI.paint() calls.  Re-using rectangles rather than 
-     * allocating them in each paint call substantially reduced the time
-     * it took paint to run.  Obviously, this method can't be re-entered.
-     */
-    protected static final Rectangle viewRect = new Rectangle();
-    protected static final Rectangle textRect = new Rectangle();
-    protected static final Rectangle iconRect = new Rectangle();
-
     // Paint Methods
     public void paint(final Graphics g, final JComponent c) {
-        final Graphics2D g2d = g instanceof Graphics2D ? (Graphics2D)g : null;
-
         final AbstractButton b = (AbstractButton)c;
         final ButtonModel model = b.getModel();
         
         final Insets i = c.getInsets();
 
-        viewRect.x = 0;
-        viewRect.y = 0;
-        viewRect.width = b.getWidth();
-        viewRect.height = b.getHeight();
+        Rectangle viewRect = new Rectangle(b.getWidth(), b.getHeight());
+        Rectangle iconRect = new Rectangle();
+        Rectangle textRect = new Rectangle();
 
         // we are overdrawing here with translucent colors so we get
         // a darkening effect. How can we avoid it. Try clear rect?
@@ -307,7 +295,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
         }
         
         // performs icon and text rect calculations
-        final String text = layoutAndGetText(g, b, aquaBorder, i);
+        final String text = layoutAndGetText(g, b, aquaBorder, i, viewRect, iconRect, textRect);
 
         // Paint the Icon
         if (b.getIcon() != null) {
@@ -328,7 +316,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
         }
     }
     
-    protected String layoutAndGetText(final Graphics g, final AbstractButton b, final AquaButtonBorder aquaBorder, final Insets i) {
+    protected String layoutAndGetText(final Graphics g, final AbstractButton b, final AquaButtonBorder aquaBorder, final Insets i, Rectangle viewRect, Rectangle iconRect, Rectangle textRect) {
         // re-initialize the view rect to the selected insets
         viewRect.x = i.left;
         viewRect.y = i.top;
@@ -352,7 +340,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
         final Insets alternateContentInsets = aquaBorder.getContentInsets(b, b.getWidth(), b.getHeight());
         if (alternateContentInsets != null) {
             // recursively call and don't pass AquaBorder
-            return layoutAndGetText(g, b, null, alternateContentInsets);
+            return layoutAndGetText(g, b, null, alternateContentInsets, viewRect, iconRect, textRect);
         }
         
         // there is no Aqua border, go with what we've got
@@ -472,7 +460,11 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
         return d;
     }
 
-    final static AquaHierarchyButtonListener fHierListener = new AquaHierarchyButtonListener();
+    final static LazySingleton<AquaHierarchyButtonListener> fHierListener = new LazySingletonFromDefaultConstructor<AquaHierarchyButtonListener>(AquaHierarchyButtonListener.class);
+    static AquaHierarchyButtonListener getAquaHierarchyButtonListener() {
+        return fHierListener.get();
+    }
+    
     // We need to know when ordinary JButtons are put on JToolbars, but not JComboBoxButtons
     // JToggleButtons always have the same border
     
@@ -483,13 +475,13 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
     protected void installHierListener(final AbstractButton b) {
         if (shouldInstallHierListener(b)) {
             // super put the listener in the button's client properties
-            b.addHierarchyListener(fHierListener);
+            b.addHierarchyListener(getAquaHierarchyButtonListener());
         }
     }
 
     protected void uninstallHierListener(final AbstractButton b) {
         if (shouldInstallHierListener(b)) {
-            b.removeHierarchyListener(fHierListener);
+            b.removeHierarchyListener(getAquaHierarchyButtonListener());
         }
     }
     

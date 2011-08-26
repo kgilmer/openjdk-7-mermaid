@@ -985,14 +985,6 @@ public class AquaFileChooserUI extends FileChooserUI {
         }
     }
 
-    // *****************************************
-    // ***** Mac-specific stuff here       *****
-    // *****************************************
-    static final Rectangle paintIconR = new Rectangle();
-    static final Rectangle paintTextR = new Rectangle();
-    static final Rectangle paintViewR = new Rectangle();
-    static Insets paintViewInsets = new Insets(0, 0, 0, 0);
-
     // Penultimate superclass is JLabel
     protected class MacFCTableCellRenderer extends DefaultTableCellRenderer {
         boolean fIsSelected = false;
@@ -1033,16 +1025,13 @@ public class AquaFileChooserUI extends FileChooserUI {
 
             // from BasicLabelUI paint
             final FontMetrics fm = g.getFontMetrics();
-            paintViewInsets = getInsets(paintViewInsets);
+            Insets paintViewInsets = getInsets(null);
             paintViewInsets.left += 10;
 
-            paintViewR.x = paintViewInsets.left;
-            paintViewR.y = paintViewInsets.top;
-            paintViewR.width = getWidth() - (paintViewInsets.left + paintViewInsets.right);
-            paintViewR.height = getHeight() - (paintViewInsets.top + paintViewInsets.bottom);
+            Rectangle paintViewR = new Rectangle(paintViewInsets.left, paintViewInsets.top, getWidth() - (paintViewInsets.left + paintViewInsets.right), getHeight() - (paintViewInsets.top + paintViewInsets.bottom));
 
-            paintIconR.x = paintIconR.y = paintIconR.width = paintIconR.height = 0;
-            paintTextR.x = paintTextR.y = paintTextR.width = paintTextR.height = 0;
+            Rectangle paintIconR = new Rectangle();
+            Rectangle paintTextR = new Rectangle();
 
             final String clippedText = layoutCL(this, fm, text, icon, paintViewR, paintIconR, paintTextR);
 

@@ -42,10 +42,7 @@ import com.apple.laf.AquaUtils.LazySingleton;
 public class AquaSliderUI extends BasicSliderUI implements Sizeable {
 //    static final Dimension roundThumbSize = new Dimension(21 + 4, 21 + 4); // +2px on both sides for focus fuzz
 //    static final Dimension pointingThumbSize = new Dimension(19 + 4, 22 + 4);
-    
-    private static final Dimension MAC_PREFERRED_HORIZONTAL_SIZE = new Dimension(190, 21);
-    private static final Dimension MAC_PREFERRED_VERTICAL_SIZE = new Dimension(21, 190);
-    
+        
     protected static final LazySingleton<SizeDescriptor> roundThumbDescriptor = new LazySingleton<SizeDescriptor>() {
         protected SizeDescriptor getInstance() {
             return new SizeDescriptor(new SizeVariant(25, 25)) {
@@ -286,11 +283,11 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
 
     // Basic's preferred size doesn't allow for our focus ring, throwing off things like SwingSet2
     public Dimension getPreferredHorizontalSize() {
-        return MAC_PREFERRED_HORIZONTAL_SIZE;
+        return new Dimension(190, 21);
     }
     
     public Dimension getPreferredVerticalSize() {
-        return MAC_PREFERRED_VERTICAL_SIZE;
+        return new Dimension(21, 190);
     }
 
     protected ChangeListener createChangeListener(final JSlider s) {

@@ -87,7 +87,7 @@ public class AquaTextFieldUI extends BasicTextFieldUI {
     // Install a default keypress action which handles Cmd and Option keys properly
     protected void installKeyboardActions() {
         super.installKeyboardActions();
-        AquaKeyBindings.setDefaultAction(getKeymapName());
+        AquaKeyBindings.instance().setDefaultAction(getKeymapName());
     }
     
     protected Rectangle getVisibleEditorRect() {

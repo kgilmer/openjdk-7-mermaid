@@ -63,22 +63,16 @@ public class AquaMenuBorder implements Border, UIResource {
         return false;
     }
 
-    private static Insets itemBorderInsets;
     protected static Insets getItemInsets() {
-        if (itemBorderInsets == null) itemBorderInsets = new Insets(1, 5, 1, 5);
-        return itemBorderInsets;
+        return new Insets(1, 5, 1, 5);
     }
     
-    private static Insets emptyBorderInsets;
     protected static Insets getEmptyInsets() {
-        if (emptyBorderInsets == null) emptyBorderInsets = new Insets(0, 0, 0, 0);
-        return emptyBorderInsets;
+        return new Insets(0, 0, 0, 0);
     }
     
-    private static Insets popupBorderInsets;
     protected static Insets getPopupInsets() {
-        if (popupBorderInsets == null) popupBorderInsets = new Insets(4, 0, 4, 0);
-        return popupBorderInsets;
+        return new Insets(4, 0, 4, 0);
     }
 
     /**

@@ -37,10 +37,10 @@ import apple.laf.JRSUIConstants.Widget;
 
 import com.apple.laf.AquaUtilControlSize.SizeDescriptor;
 import com.apple.laf.AquaUtilControlSize.SizeVariant;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultContructor;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
 
 public class AquaScrollRegionBorder extends AquaBorder {
-    static LazySingletonFromDefaultContructor<AquaScrollRegionBorder> instance = new LazySingletonFromDefaultContructor<AquaScrollRegionBorder>(AquaScrollRegionBorder.class);
+    static final LazySingletonFromDefaultConstructor<AquaScrollRegionBorder> instance = new LazySingletonFromDefaultConstructor<AquaScrollRegionBorder>(AquaScrollRegionBorder.class);
     
     public static AquaScrollRegionBorder getScrollRegionBorder() {
         return instance.get();

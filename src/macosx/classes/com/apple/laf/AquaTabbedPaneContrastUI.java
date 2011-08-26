@@ -31,6 +31,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import javax.swing.JComponent;
+import javax.swing.UIManager;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.View;
@@ -39,14 +40,6 @@ import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
 import apple.laf.JRSUIConstants.State;
 
 public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
-    protected static Color selectedTabTitlePressedColor = new Color(240, 240, 240);
-    protected static Color selectedTabTitleDisabledColor = new Color(1, 1, 1, 0.55f);
-    protected static Color selectedTabTitleNormalColor = Color.white;
-    protected static Color selectedTabTitleShadowDisabledColor = new Color(0, 0, 0, 0.25f);
-    protected static Color selectedTabTitleShadowNormalColor = new Color(0, 0, 0, 0.4f);
-    
-    protected static Color nonSelectedTabTitleNormalColor = Color.black;
-    
     public static ComponentUI createUI(final JComponent c) {
         return new AquaTabbedPaneContrastUI();
     }
@@ -81,20 +74,20 @@ public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
     
     protected static Color getSelectedTabTitleColor(boolean enabled, boolean pressed) {
         if (enabled && pressed) {
-            return selectedTabTitlePressedColor;
+            return UIManager.getColor("TabbedPane.selectedTabTitlePressedColor");
         } else if (!enabled) {
-            return selectedTabTitleDisabledColor;
+            return UIManager.getColor("TabbedPane.selectedTabTitleDisabledColor");
         } else {
-            return selectedTabTitleNormalColor;
+            return UIManager.getColor("TabbedPane.selectedTabTitleNormalColor");
         }
     }
     
     protected static Color getSelectedTabTitleShadowColor(boolean enabled) {
-        return enabled ? selectedTabTitleShadowNormalColor : selectedTabTitleShadowDisabledColor;
+        return enabled ? UIManager.getColor("TabbedPane.selectedTabTitleShadowNormalColor") : UIManager.getColor("TabbedPane.selectedTabTitleShadowDisabledColor");
     }
     
     protected static Color getNonSelectedTabTitleColor() {
-        return nonSelectedTabTitleNormalColor;
+        return UIManager.getColor("TabbedPane.nonSelectedTabTitleNormalColor");
     }
     
     protected boolean isPressedAt(int index) {

@@ -29,9 +29,7 @@ import java.awt.*;
 
 import javax.swing.border.Border;
 
-public class AquaMenuBarBorder implements Border {
-    static protected Insets sBorderInsets;
-    
+public class AquaMenuBarBorder implements Border {    
     public AquaMenuBarBorder() {
         super();
     }
@@ -59,15 +57,7 @@ public class AquaMenuBarBorder implements Border {
      * @param c the component for which this border insets value applies
      */
     public Insets getBorderInsets(final Component c) {
-        Insets returnInsets;
-
-        if (sBorderInsets == null) {
-            sBorderInsets = new Insets(0, 0, 1, 0);
-        }
-
-        returnInsets = sBorderInsets;
-
-        return returnInsets;
+        return new Insets(0, 0, 1, 0);
     }
 
     /**

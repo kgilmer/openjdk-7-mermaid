@@ -37,7 +37,6 @@ class ScreenPopupFactory extends PopupFactory {
         java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
     }
     
-    static final Color WHITE_ALPHA = new Color(0xFF, 0xFF, 0xFF, 0xFE);
     static final Float TRANSLUCENT = new Float(248f/255f);
     static final Float OPAQUE = new Float(1.0f);
     
@@ -88,7 +87,7 @@ class ScreenPopupFactory extends PopupFactory {
             popupRootPane.putClientProperty(CPlatformWindow.WINDOW_SHADOW, Boolean.TRUE);
             popupRootPane.putClientProperty(CPlatformWindow.WINDOW_FADE_DELEGATE, invoker);
             
-            w.setBackground(WHITE_ALPHA);
+            w.setBackground(UIManager.getColor("PopupMenu.translucentBackground"));
             popupRootPane.putClientProperty(CPlatformWindow.WINDOW_DRAGGABLE_BACKGROUND, Boolean.FALSE);
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {

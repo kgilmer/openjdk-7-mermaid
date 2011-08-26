@@ -33,9 +33,17 @@ import javax.swing.UIDefaults.LazyValue;
 import javax.swing.text.*;
 import javax.swing.text.DefaultEditorKit.DefaultKeyTypedAction;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 public class AquaKeyBindings {
-    static DefaultKeyTypedAction defaultKeyTypedAction = new DefaultKeyTypedAction();
-    static void setDefaultAction(final String keymapName) {
+    static final LazySingleton<AquaKeyBindings> instance = new LazySingletonFromDefaultConstructor<AquaKeyBindings>(AquaKeyBindings.class);
+    static AquaKeyBindings instance() {
+        return instance.get();
+    }
+    
+    final DefaultKeyTypedAction defaultKeyTypedAction = new DefaultKeyTypedAction();
+    void setDefaultAction(final String keymapName) {
         final javax.swing.text.Keymap map = JTextComponent.getKeymap(keymapName);
         map.setDefaultAction(defaultKeyTypedAction);
     } 
@@ -45,7 +53,7 @@ public class AquaKeyBindings {
     static final String pageUpMultiline = "aqua-page-up";
     static final String pageDownMultiline = "aqua-page-down";
     
-    static final String[] commonTextEditorBindings = {
+    final String[] commonTextEditorBindings = {
         "ENTER", JTextField.notifyAction,
         "COPY", DefaultEditorKit.copyAction,
         "CUT", DefaultEditorKit.cutAction,
@@ -106,7 +114,7 @@ public class AquaKeyBindings {
         "shift PAGE_UP", "selection-page-up",
         "meta shift PAGE_DOWN", "selection-page-right",
         "meta shift PAGE_UP", "selection-page-left",
-        
+
         "meta DOWN", DefaultEditorKit.endAction,
         "meta KP_DOWN", DefaultEditorKit.endAction,
         "meta UP", DefaultEditorKit.beginAction,
@@ -117,7 +125,7 @@ public class AquaKeyBindings {
         "shift meta KP_UP", DefaultEditorKit.selectionBeginAction,
     };
 
-    static LateBoundInputMap getTextFieldInputMap() {
+    LateBoundInputMap getTextFieldInputMap() {
         return new LateBoundInputMap(new SimpleBinding(commonTextEditorBindings), new SimpleBinding(new String[] {
             "DOWN", DefaultEditorKit.endLineAction,
             "KP_DOWN", DefaultEditorKit.endLineAction,
@@ -134,7 +142,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getMultiLineTextInputMap() {
+    LateBoundInputMap getMultiLineTextInputMap() {
         return new LateBoundInputMap(new SimpleBinding(commonTextEditorBindings), new SimpleBinding(new String[] {
             "ENTER", DefaultEditorKit.insertBreakAction,
             "DOWN", downMultilineAction,
@@ -173,7 +181,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getFormattedTextFieldInputMap() {
+    LateBoundInputMap getFormattedTextFieldInputMap() {
         return new LateBoundInputMap(getTextFieldInputMap(), new SimpleBinding(new String[] {
             "UP", "increment",
             "KP_UP", "increment",
@@ -184,7 +192,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getComboBoxInputMap() {
+    LateBoundInputMap getComboBoxInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "ESCAPE", "hidePopup",
             "PAGE_UP", "aquaSelectPageUp",
@@ -200,7 +208,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getListInputMap() {
+    LateBoundInputMap getListInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "meta C", "copy",
             "meta V", "paste",
@@ -238,7 +246,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getScrollBarInputMap() {
+    LateBoundInputMap getScrollBarInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "positiveUnitIncrement",
             "KP_RIGHT", "positiveUnitIncrement",
@@ -255,7 +263,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getScrollBarRightToLeftInputMap() {
+    LateBoundInputMap getScrollBarRightToLeftInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "negativeUnitIncrement",
             "KP_RIGHT", "negativeUnitIncrement",
@@ -264,7 +272,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getScrollPaneInputMap() {
+    LateBoundInputMap getScrollPaneInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "unitScrollRight",
             "KP_RIGHT", "unitScrollRight",
@@ -281,7 +289,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getSliderInputMap() {
+    LateBoundInputMap getSliderInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "positiveUnitIncrement",
             "KP_RIGHT", "positiveUnitIncrement",
@@ -298,7 +306,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getSliderRightToLeftInputMap() {
+    LateBoundInputMap getSliderRightToLeftInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "negativeUnitIncrement",
             "KP_RIGHT", "negativeUnitIncrement",
@@ -307,7 +315,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getSpinnerInputMap() {
+    LateBoundInputMap getSpinnerInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "UP", "increment",
             "KP_UP", "increment",
@@ -316,7 +324,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getTableInputMap() {
+    LateBoundInputMap getTableInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "meta C", "copy",
             "meta V", "paste",
@@ -359,7 +367,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getTableRightToLeftInputMap() {
+    LateBoundInputMap getTableRightToLeftInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "selectPreviousColumn",
             "KP_RIGHT", "selectPreviousColumn",
@@ -376,7 +384,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getTreeInputMap() {
+    LateBoundInputMap getTreeInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "meta C", "copy",
             "meta V", "paste",
@@ -413,7 +421,7 @@ public class AquaKeyBindings {
         }));
     }
     
-    static LateBoundInputMap getTreeRightToLeftInputMap() {
+    LateBoundInputMap getTreeRightToLeftInputMap() {
         return new LateBoundInputMap(new SimpleBinding(new String[] {
             "RIGHT", "aquaCollapseNode",
             "KP_RIGHT", "aquaCollapseNode",
@@ -496,7 +504,7 @@ public class AquaKeyBindings {
         }
     }
 
-    static void installAquaUpDownActions(final JTextComponent component) {
+    void installAquaUpDownActions(final JTextComponent component) {
         final ActionMap actionMap = component.getActionMap();
         actionMap.put(upMultilineAction, moveUpMultilineAction);
         actionMap.put(downMultilineAction, moveDownMultilineAction);
@@ -537,10 +545,10 @@ public class AquaKeyBindings {
         abstract int getEnd(final JTextComponent target, final Element line, final int start) throws BadLocationException;
     }
     
-    static final TextAction moveUpMultilineAction = new AquaMultilineAction(upMultilineAction, DefaultEditorKit.upAction, DefaultEditorKit.beginAction);
-    static final TextAction moveDownMultilineAction = new AquaMultilineAction(downMultilineAction, DefaultEditorKit.downAction, DefaultEditorKit.endAction);
-    static final TextAction pageUpMultilineAction = new AquaMultilineAction(pageUpMultiline, DefaultEditorKit.pageUpAction, DefaultEditorKit.beginAction);
-    static final TextAction pageDownMultilineAction = new AquaMultilineAction(pageDownMultiline, DefaultEditorKit.pageDownAction, DefaultEditorKit.endAction);
+    final TextAction moveUpMultilineAction = new AquaMultilineAction(upMultilineAction, DefaultEditorKit.upAction, DefaultEditorKit.beginAction);
+    final TextAction moveDownMultilineAction = new AquaMultilineAction(downMultilineAction, DefaultEditorKit.downAction, DefaultEditorKit.endAction);
+    final TextAction pageUpMultilineAction = new AquaMultilineAction(pageUpMultiline, DefaultEditorKit.pageUpAction, DefaultEditorKit.beginAction);
+    final TextAction pageDownMultilineAction = new AquaMultilineAction(pageDownMultiline, DefaultEditorKit.pageDownAction, DefaultEditorKit.endAction);
     
     static class AquaMultilineAction extends TextAction {
         final String targetActionName;

@@ -81,17 +81,8 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
     }
 
     protected abstract AquaButtonBorder getPainter();
-
-    /*
-     * These Dimensions/Rectangles are allocated once for all RadioButtonUI.paint() calls. Re-using rectangles rather
-     * than allocating them in each paint call substantially reduced the time it took paint to run. Obviously, this
-     * method can't be re-entered.
-     */
-    private static Dimension size = new Dimension();
     
     public synchronized void paint(final Graphics g, final JComponent c) {
-        final Graphics2D fontg2d = (Graphics2D)g;
-
         final AbstractButton b = (AbstractButton)c;
         final ButtonModel model = b.getModel();
 
@@ -99,17 +90,13 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
         g.setFont(f);
         final FontMetrics fm = g.getFontMetrics();
 
-        size = b.getSize(size);
+        Dimension size = b.getSize();
 
         final Insets i = c.getInsets();
 
-        viewRect.x = 0;
-        viewRect.y = 0;
-        viewRect.width = b.getWidth();
-        viewRect.height = b.getHeight();
-
-        iconRect.x = iconRect.y = iconRect.width = iconRect.height = 0;
-        textRect.x = textRect.y = textRect.width = textRect.height = 0;
+        Rectangle viewRect = new Rectangle(b.getWidth(), b.getHeight());
+        Rectangle iconRect = new Rectangle();
+        Rectangle textRect = new Rectangle();
 
         Icon altIcon = b.getIcon();
         
@@ -192,16 +179,6 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
         }
     }
 
-    /*
-     * These Insets/Rectangles are allocated once for all RadioButtonUI.getPreferredSize() calls. Re-using rectangles
-     * rather than allocating them in each call substantially reduced the time it took getPreferredSize() to run.
-     * Obviously, this method can't be re-entered.
-     */
-    private static final Rectangle prefViewRect = new Rectangle();
-    private static final Rectangle prefIconRect = new Rectangle();
-    private static final Rectangle prefTextRect = new Rectangle();
-    private static Insets prefInsets = new Insets(0, 0, 0, 0);
-
     /**
      * The preferred size of the button
      */
@@ -220,11 +197,9 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
         final Font font = b.getFont();
         final FontMetrics fm = b.getFontMetrics(font);
 
-        prefViewRect.x = prefViewRect.y = 0;
-        prefViewRect.width = Short.MAX_VALUE;
-        prefViewRect.height = Short.MAX_VALUE;
-        prefIconRect.x = prefIconRect.y = prefIconRect.width = prefIconRect.height = 0;
-        prefTextRect.x = prefTextRect.y = prefTextRect.width = prefTextRect.height = 0;
+        Rectangle prefViewRect = new Rectangle(Short.MAX_VALUE, Short.MAX_VALUE);
+        Rectangle prefIconRect = new Rectangle();
+        Rectangle prefTextRect = new Rectangle();
 
         SwingUtilities.layoutCompoundLabel(c, fm, text, buttonIcon, b.getVerticalAlignment(), b.getHorizontalAlignment(), b.getVerticalTextPosition(), b.getHorizontalTextPosition(), prefViewRect, prefIconRect, prefTextRect, text == null ? 0 : b.getIconTextGap());
 
@@ -236,7 +211,7 @@ public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements 
         int width = x2 - x1;
         int height = y2 - y1;
 
-        prefInsets = b.getInsets(prefInsets);
+        Insets prefInsets = b.getInsets();
         width += prefInsets.left + prefInsets.right;
         height += prefInsets.top + prefInsets.bottom;
         return new Dimension(width, height);

@@ -36,6 +36,9 @@ import javax.swing.plaf.*;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
+import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+
 public class AquaUtilControlSize {
     protected final static String CLIENT_PROPERTY_KEY = "JComponent.sizeVariant";
     protected final static String SYSTEM_PROPERTY_KEY = "swing.component.sizevariant";
@@ -44,15 +47,18 @@ public class AquaUtilControlSize {
         void applySizeFor(final JComponent c, final Size size);
     }
     
-    protected static final AquaUtilControlSize.PropertySizeListener SIZE_LISTENER = new PropertySizeListener();
+    protected static final LazySingleton<PropertySizeListener> sizeListener = new LazySingletonFromDefaultConstructor<PropertySizeListener>(PropertySizeListener.class);
+    protected static PropertySizeListener getSizeListener() {
+        return sizeListener.get();
+    }
     
     protected static void addSizePropertyListener(final JComponent c) {
-        c.addPropertyChangeListener(CLIENT_PROPERTY_KEY, SIZE_LISTENER);
+        c.addPropertyChangeListener(CLIENT_PROPERTY_KEY, getSizeListener());
         PropertySizeListener.applyComponentSize(c, c.getClientProperty(CLIENT_PROPERTY_KEY));
     }
 
     protected static void removeSizePropertyListener(final JComponent c) {
-        c.removePropertyChangeListener(CLIENT_PROPERTY_KEY, SIZE_LISTENER);
+        c.removePropertyChangeListener(CLIENT_PROPERTY_KEY, getSizeListener());
     }
     
     private static JRSUIConstants.Size getSizeFromString(final String name) {
@@ -70,7 +76,7 @@ public class AquaUtilControlSize {
         return JRSUIConstants.Size.REGULAR;
     }
 
-    protected static JRSUIConstants.Size defaultSize = getDefaultSize();
+    protected final static JRSUIConstants.Size defaultSize = getDefaultSize();
     protected static JRSUIConstants.Size getUserSizeFrom(final JComponent c) {
         final Object sizeProp = c.getClientProperty(CLIENT_PROPERTY_KEY);
         if (sizeProp == null) return defaultSize;
