@@ -677,7 +677,12 @@ public class LWWindowPeer
             // check if we receive mouseEvent from outside the window's bounds
             // it can be either mouseDragged or mouseReleased
             if (curWindowPeer == null) {
+                //TODO This can happen if this window is invisible. this is correct behavior in this case?
                 curWindowPeer = this;
+            }
+            if (targetPeer == null) {
+                //TODO This can happen if this window is invisible. this is correct behavior in this case?
+                targetPeer = this;
             }
 
             Point lp = targetPeer.windowToLocal(x, y, curWindowPeer);
@@ -713,7 +718,12 @@ public class LWWindowPeer
         // TODO: could we just use the last mouse event target here?
         Rectangle r = getBounds();
         // findPeerAt() expects parent coordinates
-        LWComponentPeer targetPeer = findPeerAt(r.x + x, r.y + y);
+        final LWComponentPeer targetPeer = findPeerAt(r.x + x, r.y + y);
+        if (targetPeer == null) {
+            //TODO This can happen if this window is invisible. this is correct behavior in this case?
+            return;
+        }
+
         Point lp = targetPeer.windowToLocal(x, y, this);
         // TODO: fill "bdata" member of AWTEvent
         // TODO: screenX/screenY

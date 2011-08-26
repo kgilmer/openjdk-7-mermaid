@@ -171,23 +171,25 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
 
     // ---- UTILITY METHODS ---- //
 
-    /*
-     * Finds a top-most component for the given point. The location is
+    /**
+     * Finds a top-most visible component for the given point. The location is
      * specified relative to the peer's parent.
      */
     @Override
     public LWComponentPeer findPeerAt(int x, int y) {
         Rectangle r = getBounds();
-        if (!r.contains(x, y)) {
+        if (!(r.contains(x, y) && isVisible())) {
             return null;
         }
         // Translate to this container's coordinates to pass to children
         x -= r.x;
         y -= r.y;
-        for (int i = childPeers.size() - 1; i >= 0; i--) {
-            LWComponentPeer p = childPeers.get(i).findPeerAt(x, y);
-            if (p != null) {
-                return p;
+        synchronized (getPeerTreeLock()) {
+            for (int i = childPeers.size() - 1; i >= 0; i--) {
+                LWComponentPeer p = childPeers.get(i).findPeerAt(x, y);
+                if (p != null) {
+                    return p;
+                }
             }
         }
         return this;
@@ -233,7 +235,7 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
     @Override
     public void setVisible(boolean v) {
         super.setVisible(v);
-
+		//TODO it is necessary?
         for (LWComponentPeer child : getChildren()) {
             child.setVisible(child.getTarget().isVisible());
         }

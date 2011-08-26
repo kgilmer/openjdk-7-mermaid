@@ -1099,14 +1099,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // ---- UTILITY METHODS ---- //
 
-    /*
-     * Finds a top-most component for the given point. The location is
+    /**
+     * Finds a top-most visible component for the given point. The location is
      * specified relative to the peer's parent.
      */
-
     public LWComponentPeer findPeerAt(int x, int y) {
         synchronized (getStateLock()) {
-            return (getBounds().contains(x, y)) ? this : null;
+            return (getBounds().contains(x, y) && isVisible()) ? this : null;
         }
     }
 
