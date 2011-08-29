@@ -25,71 +25,61 @@
 
 package sun.lwawt;
 
+import javax.swing.*;
+import javax.swing.text.Document;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.im.InputMethodRequests;
 import java.awt.peer.TextAreaPeer;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.*;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.text.Document;
-import javax.xml.bind.SchemaOutputResolver;
 
 class LWTextAreaPeer
-        extends LWTextComponentPeer<TextArea, LWTextAreaPeer.JTextAreaDelegate>
-        implements TextAreaPeer, SelectionClearListener, ActionListener
-{
+        extends LWTextComponentPeer<TextArea, LWTextAreaPeer.ScrollableJTextArea>
+        implements TextAreaPeer {
     private final static int DEFAULT_COLUMNS = 9;
-    private final static int DEFAULT_ROWS=3;
+    private final static int DEFAULT_ROWS = 3;
     private final static int BORDERMARGIN = 5;
-
-    private static java.util.List<SelectionClearListener> clearListeners =
-            new ArrayList <SelectionClearListener>();
 
     public LWTextAreaPeer(TextArea target) {
         super(target);
-        installSelectionClearListener(this);
-        getDelegate().getDocument().addDocumentListener(
-                new SwingTextComponentDocumentListener());
-        getDelegate().getViewport().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                Window w = getTopLevelContainer(getTarget());
-                if(w != null) {
-                    synchronized (getDelegateLock()) {
-                        w.repaint();
-                    }
-                }
-            }
-        });
     }
-
-    private static void installSelectionClearListener(SelectionClearListener listener) {
-        clearListeners.add(listener);
-    }
-
 
     @Override
-    protected JTextAreaDelegate createDelegate() {
-        JTextAreaDelegate delegate = new JTextAreaDelegate(new InternalTextArea());
-        delegate.setText(getTarget().getText());
-        delegate.setBorder(BorderFactory.createLoweredBevelBorder());
+    protected ScrollableJTextArea createDelegate() {
+        ScrollableJTextArea delegate = new ScrollableJTextArea();
         return delegate;
+    }
+
+    public void initialize() {
+        super.initialize();
+        synchronized (getDelegateLock()) {
+            getDelegate().getView().setText(getTarget().getText());
+            getDelegate().setBorder(BorderFactory.createLoweredBevelBorder());
+        }
+    }
+
+    @Override
+    public Document getDocument() {
+        return getDelegate().getView().getDocument();
+    }
+
+    @Override
+    protected Component getDelegateFocusOwner() {
+        return getDelegate().getView();
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return getMinimumSize(10, 60);
     }
 
     @Override
     public Dimension getPreferredSize(int rows, int columns) {
         FontMetrics fm = getFontMetrics(getFont());
         Dimension d;
-        if( fm != null ) {
+        if (fm != null) {
             d = new Dimension(columns * fm.stringWidth("W"),
-                    (getItemHeight(fm) * rows + ((1+rows) * MARGIN)) + 2 * BORDERMARGIN);
+                    (getItemHeight(fm) * rows + ((1 + rows) * MARGIN)) + 2 * BORDERMARGIN);
         } else {
-            d = new Dimension(columns * 10, 12 * rows + ((rows+1) * MARGIN) + 2 * BORDERMARGIN);
+            d = new Dimension(columns * 10, 12 * rows + ((rows + 1) * MARGIN) + 2 * BORDERMARGIN);
         }
         return d;
     }
@@ -102,7 +92,7 @@ class LWTextAreaPeer
     @Override
     public void setText(String label) {
         synchronized (getDelegateLock()) {
-            getDelegate().setText(label);
+            getDelegate().getView().setText(label);
         }
         repaintPeer();
     }
@@ -110,7 +100,7 @@ class LWTextAreaPeer
     @Override
     public String getText() {
         synchronized (getDelegateLock()) {
-                return getDelegate().getText();
+            return getDelegate().getView().getText();
         }
     }
 
@@ -122,7 +112,7 @@ class LWTextAreaPeer
     @Override
     public void insert(String text, int pos) {
         synchronized (getDelegateLock()) {
-            getDelegate().insert(text, pos);
+            getDelegate().getView().insert(text, pos);
 
         }
         repaintPeer();
@@ -131,7 +121,7 @@ class LWTextAreaPeer
     @Override
     public void replaceRange(String text, int start, int end) {
         synchronized (getDelegateLock()) {
-            getDelegate().replaceRange(text, start, end);
+            getDelegate().getView().replaceRange(text, start, end);
         }
         repaintPeer();
     }
@@ -140,52 +130,42 @@ class LWTextAreaPeer
     @Override
     public void setEditable(boolean editable) {
         synchronized (getDelegateLock()) {
-            getDelegate().setEditable(editable);
+            getDelegate().getView().setEditable(editable);
         }
     }
 
     @Override
     public int getSelectionStart() {
         synchronized (getDelegateLock()) {
-            return getDelegate().getSelectionStart();
+            return getDelegate().getView().getSelectionStart();
         }
     }
 
     @Override
     public int getSelectionEnd() {
         synchronized (getDelegateLock()) {
-            return getDelegate().getSelectionEnd();
+            return getDelegate().getView().getSelectionEnd();
         }
     }
 
     @Override
     public void select(int selStart, int selEnd) {
         synchronized (getDelegateLock()) {
-            for (SelectionClearListener l : clearListeners){
-                l.clearSelection();
-            }
-            getDelegate().select(selStart, selEnd);
-        }
-    }
-
-    @Override
-    public void clearSelection() {
-        synchronized (getDelegateLock()) {
-            getDelegate().select(0, 0);
+            getDelegate().getView().select(selStart, selEnd);
         }
     }
 
     @Override
     public void setCaretPosition(int pos) {
         synchronized (getDelegateLock()) {
-            getDelegate().setCaretPosition(pos);
+            getDelegate().getView().setCaretPosition(pos);
         }
     }
 
     @Override
     public int getCaretPosition() {
         synchronized (getDelegateLock()) {
-            return getDelegate().getCaretPosition();
+            return getDelegate().getView().getCaretPosition();
         }
     }
 
@@ -195,182 +175,24 @@ class LWTextAreaPeer
     }
 
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
-                "", e.getWhen(), e.getModifiers()));
-    }
-
     @SuppressWarnings("serial")
-    class JTextAreaDelegate extends JScrollPane
-    {
-        private InternalTextArea contents;
-
-        public JTextAreaDelegate(Component view) {
-            super(view);
-            if(view instanceof InternalTextArea) contents = (InternalTextArea) view;
-            setHorizontalScrollBar(new InternalScrollBar(JScrollBar.HORIZONTAL));
+    class ScrollableJTextArea extends JScrollPane {
+        public ScrollableJTextArea() {
+            getViewport().setView(new JTextAreaDelegate());
             setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-            setVerticalScrollBar(new InternalScrollBar(JScrollBar.VERTICAL));
             setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         }
 
-        public JTextAreaDelegate() {
-            super();
+        public JTextArea getView() {
+            return (JTextArea) getViewport().getView();
         }
 
-        /*
-         * Passing all the delegate calls into the enclosed JTextArea
-         */
-        public Document getDocument() {
-            return contents.getDocument();
-        }
 
-        public void setText(String t) {
-            contents.setText(t);
-        }
-
-        public String getText() {
-            return contents.getText();
-        }
-
-        public void insert(String str, int pos) {
-            contents.insert(str, pos);
-        }
-
-        public void replaceRange(String str, int start, int end) {
-            contents.replaceRange(str, start, end);
-        }
-
-        public void setEditable(boolean b) {
-            contents.setEditable(b);
-        }
-
-        public int getSelectionStart() {
-            return contents.getSelectionStart();
-        }
-
-        public int getSelectionEnd() {
-            return contents.getSelectionEnd();
-        }
-
-        public void select(int selectionStart, int selectionEnd) {
-            contents.select(selectionStart, selectionEnd);
-        }
-
-        public void setCaretPosition(int position) {
-            contents.setCaretPosition(position);
-        }
-
-        public int getCaretPosition() {
-            return contents.getCaretPosition();
-        }
-
-        /*
-         * Dispatch and process an AWT event - depending on the area it happened we must
-         * forward it to the corresponding part of JScrollPane
-         */
-        // todo: check it out
-        public void processAWTEvent(AWTEvent e) {
-            if (e instanceof ContainerEvent) {
-                processContainerEvent((ContainerEvent)e);
-                return;
+        @SuppressWarnings("serial")
+        class JTextAreaDelegate extends JTextArea {
+            public Point getLocationOnScreen() {
+                return getTarget().getLocationOnScreen();
             }
-            if(e instanceof FocusEvent) {
-                e.setSource(contents);
-                contents.processAWTEvent(e);
-            } else if(e instanceof MouseEvent) {
-                switch(e.getID()) {
-                  case MouseEvent.MOUSE_PRESSED:
-                  case MouseEvent.MOUSE_RELEASED:
-                  case MouseEvent.MOUSE_CLICKED:
-                  case MouseEvent.MOUSE_MOVED:
-                  case MouseEvent.MOUSE_DRAGGED:
-                      if(getViewportBorderBounds().contains(((MouseEvent) e).getPoint())) {
-                          MouseEvent newEvent = translateEventToComponent((MouseEvent)e, (int)getViewport().getViewRect().getX(),
-                                  (int)getViewport().getViewRect().getY());
-                          newEvent.setSource(contents);
-                          contents.processAWTEvent(newEvent);
-                      } else {
-                          if(getVerticalScrollBar().getBounds().contains(((MouseEvent) e).getPoint())) {
-                              MouseEvent newEvent = translateEventToComponent((MouseEvent)e,
-                                      -getVerticalScrollBar().getBounds().x,
-                                      -getVerticalScrollBar().getBounds().y);
-                              newEvent.setSource(getVerticalScrollBar());
-                              ((InternalScrollBar)getVerticalScrollBar()).processAWTEvent(newEvent);
-                          } else if(getHorizontalScrollBar().getBounds().contains(((MouseEvent) e).getPoint())) {
-                              MouseEvent newEvent = translateEventToComponent((MouseEvent)e,
-                                      -getHorizontalScrollBar().getBounds().x,
-                                      -getHorizontalScrollBar().getBounds().y);
-                              newEvent.setSource(getHorizontalScrollBar());
-                              ((InternalScrollBar)getHorizontalScrollBar()).processAWTEvent(newEvent);
-                          } else {
-                              super.processEvent(e);
-                          }
-                      }
-                      break;
-                  case MouseEvent.MOUSE_ENTERED:
-                  case MouseEvent.MOUSE_EXITED:
-                  case MouseEvent.MOUSE_WHEEL:
-                      e.setSource(contents);
-                      contents.processAWTEvent(e);
-                      break;
-                }
-            } else if (e instanceof KeyEvent) {
-                e.setSource(contents);
-                contents.processAWTEvent(e);
-            } else {
-                super.processEvent(e);
-            }
-        }
-    }
-
-    /*
-     * Create the new event shifted by the provided offsets inside the target component
-     */
-    private MouseEvent translateEventToComponent(MouseEvent e, int offsetX, int offsetY) {
-        MouseEvent event = new MouseEvent(getTarget(), e.getID(),
-                                  ((MouseEvent) e).getWhen(),
-                                  ((MouseEvent) e).getModifiers(),
-                                  ((MouseEvent) e).getX()+offsetX,
-                                  ((MouseEvent) e).getY()+offsetY,
-                                  ((MouseEvent) e).getClickCount(),
-                                  ((MouseEvent) e).isPopupTrigger());
-        return event;
-    }
-
-    /*
-     * Get the top-level container if any. If there is no Window - return null
-     */
-    private Window getTopLevelContainer(Component c) {
-        Component top = c;
-        while (top != null && !(top instanceof Window)) {
-            top = top.getParent();
-        }
-        return (Window) top;
-    }
-
-    /*
-     * Enclosed text area - need this inner class to correctly deliver AWT event into it
-     */
-    @SuppressWarnings("serial")
-    class InternalTextArea extends JTextArea {
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
-        }
-    }
-
-    /*
-     * Enclosed scrollbar - need this inner class to correctly deliver AWT event into it
-     */
-    @SuppressWarnings("serial")
-    class InternalScrollBar extends JScrollBar {
-        public InternalScrollBar(int orientation) {
-            super(orientation);
-        }
-
-        public void processAWTEvent(AWTEvent e) {
-            processEvent(e);
         }
     }
 }

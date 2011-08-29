@@ -25,12 +25,10 @@
 
 package sun.lwawt;
 
-import javax.swing.JTextField;
+import javax.swing.*;
+import javax.swing.text.Document;
 
-import java.awt.FontMetrics;
-import java.awt.TextField;
-import java.awt.Dimension;
-import java.awt.AWTEvent;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.im.InputMethodRequests;
@@ -42,51 +40,52 @@ import java.util.List;
 import javax.swing.event.DocumentListener;
 
 class LWTextFieldPeer
-    extends LWTextComponentPeer<TextField, JTextField>
-    implements TextFieldPeer, SelectionClearListener, ActionListener
-{
-    private static List <SelectionClearListener> clearListeners =
-	new ArrayList <SelectionClearListener>();
-    
+        extends LWTextComponentPeer<TextField, JPasswordField>
+        implements TextFieldPeer, ActionListener {
     private final static int DEFAULT_COLUMNS = 9;
-	
+
     LWTextFieldPeer(TextField target) {
         super(target);
-        installSelectionClearListener(this);
-        getDelegate().getDocument().addDocumentListener(
-                new SwingTextComponentDocumentListener());
     }
 
-    private static void installSelectionClearListener(SelectionClearListener listener) {
-	clearListeners.add(listener);
-    }
-
-    @Override //SelectionClearListener
-    public void clearSelection(){
-        synchronized (getDelegateLock()) {
-            getDelegate().select(0, 0);
-        }
-    }
-    
-    protected JTextField createDelegate() {
-        JTextField delegate = new JTextField();
-        delegate.setText(getTarget().getText());
-        delegate.addActionListener(this);
+    protected JPasswordField createDelegate() {
+        JPasswordField delegate = new JPasswordField() {
+            public Point getLocationOnScreen() {
+                return getTarget().getLocationOnScreen();
+            }
+        };
         return delegate;
     }
 
+    public void initialize() {
+        super.initialize();
+        synchronized (getDelegateLock()) {
+            getDelegate().setText(getTarget().getText());
+            getDelegate().addActionListener(this);
+            getDelegate().setEchoChar(getTarget().getEchoChar());
+        }
+    }
+
+    @Override
+    public Document getDocument() {
+        return getDelegate().getDocument();
+    }
+
+
     @Override
     public void setEchoChar(char echoChar) {
-        // TODO: use JPasswordField?
+        synchronized (getDelegateLock()) {
+            getDelegate().setEchoChar(echoChar);
+        }
     }
 
     @Override
     public Dimension getPreferredSize(int columns) {
         FontMetrics fm = getFontMetrics(getFont());
         Dimension d;
-        if( fm != null ) {
+        if (fm != null) {
             d = new Dimension(columns * fm.stringWidth("x"),
-                getItemHeight(fm) + (2 * MARGIN));
+                    getItemHeight(fm) + (2 * MARGIN));
         } else {
             d = new Dimension(columns * 10, 10 + (2 * MARGIN));
         }
@@ -136,9 +135,6 @@ class LWTextFieldPeer
     @Override
     public void select(int selStart, int selEnd) {
         synchronized (getDelegateLock()) {
-            for (SelectionClearListener l : clearListeners){
-                l.clearSelection();
-            }
             getDelegate().select(selStart, selEnd);
         }
     }
@@ -164,12 +160,14 @@ class LWTextFieldPeer
 
     @Override
     public boolean isFocusable() {
-        return getTarget().isFocusable();
+        synchronized (getDelegateLock()) {
+            return getTarget().isFocusable();
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
+        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
                 "", e.getWhen(), e.getModifiers()));
     }
 }

@@ -283,7 +283,14 @@ public class LWCToolkit extends LWToolkit {
     	return new CRobot(target, (CGraphicsDevice)screen);
     }
 
-    /*                                                                                                            
+    /*
+     * TODO: take a look at the Cocoa API for this method, return false for now.
+     */
+    public boolean getLockingKeyState(int keyCode) throws UnsupportedOperationException {
+        return false;
+    }
+
+    /*
      * TODO: take a look on pointer API for Cocoa. For now, suppress extra-button                                 
      * mouse events.                                                                                              
      */

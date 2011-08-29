@@ -28,37 +28,51 @@ package sun.lwawt;
 import java.awt.FontMetrics;
 import java.awt.TextComponent;
 import javax.swing.JComponent;
+import javax.swing.text.Document;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import java.awt.event.TextEvent;
 
 abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent>
-    extends LWComponentPeer<T, D>
-{
+        extends LWComponentPeer<T, D> {
     protected final static int MARGIN = 2;
     protected final static int SPACE = 1;
-    
+
     LWTextComponentPeer(T target) {
         super(target);
     }
-    
+
     /* Returns height of the line in textarea or textfield */
     protected int getItemHeight(FontMetrics metrics) {
         return (metrics.getHeight() - metrics.getLeading()) + (2 * SPACE);
     }
 
-    class SwingTextComponentDocumentListener implements DocumentListener {
-        void sendTextEvent(DocumentEvent de) {
-             LWTextComponentPeer.this.postEvent(
-                 new TextEvent(LWTextComponentPeer.this.getTarget(), 
-                               TextEvent.TEXT_VALUE_CHANGED));
+    public void initialize() {
+        super.initialize();
+        synchronized (getDelegateLock()) {
+            getDocument().addDocumentListener(new SwingTextComponentDocumentListener());
         }
+    }
+
+    abstract Document getDocument();
+
+    private class SwingTextComponentDocumentListener implements DocumentListener {
+        void sendTextEvent(DocumentEvent de) {
+            LWTextComponentPeer.this.postEvent(
+                    new TextEvent(LWTextComponentPeer.this.getTarget(),
+                            TextEvent.TEXT_VALUE_CHANGED));
+            getDelegate().invalidate();
+            getDelegate().validate();
+        }
+
         public void changedUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }
+
         public void insertUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }
+
         public void removeUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }
