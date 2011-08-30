@@ -25,8 +25,7 @@
 
 package sun.font;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +37,7 @@ import java.util.Vector;
 import javax.swing.plaf.FontUIResource;
 
 import sun.awt.FontConfiguration;
+import sun.lwawt.macosx.*;
 
 public class CFontManager extends SunFontManager {
     private FontConfigManager fcManager = null;
@@ -356,6 +356,11 @@ public class CFontManager extends SunFontManager {
 
     @Override
     public String getFontPath(boolean noType1Fonts) {
+        // In the case of the Cocoa toolkit, since we go through NSFont, we dont need to register /Library/Fonts
+        if (Toolkit.getDefaultToolkit() instanceof LWCToolkit) {
+            return "";
+        }
+        // X11 case
         return "/Library/Fonts";
     }
 
