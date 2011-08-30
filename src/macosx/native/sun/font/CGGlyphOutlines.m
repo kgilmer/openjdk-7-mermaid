@@ -260,7 +260,7 @@ AWTGetGlyphOutline(CGGlyph *glyphs, NSFont *font,
     OSStatus status = noErr;
     
     glyphs = glyphs + inStartIndex;
-    advanceArray = advanceArray + inStartIndex; // TODO(cpc): use advance
+//    advanceArray = advanceArray + inStartIndex; // TODO(cpc): use advance
 
     CGPathRef cgPath = CTFontCreatePathForGlyph((CTFontRef)font, glyphs[0], tx);
     CGPathApply(cgPath, *outPath, AWTPathApplierCallback);

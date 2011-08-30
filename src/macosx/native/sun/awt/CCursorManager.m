@@ -55,36 +55,66 @@ static SEL lookupCursorSelectorForType(jint type) {
     return nil;
 }
 
-static SEL getBuiltInCursorSelectorForType(JNIEnv *env, jint type) {
-    SEL sel = lookupCursorSelectorForType(type);
-    if (sel == nil) {
-        [JNFException raise:env as:kIllegalArgumentException reason:"unimplemented built-in cursor type"];
-    }
-    
-    if (![[NSCursor class] respondsToSelector:sel]) {
-        [JNFException raise:env as:kNoSuchMethodException reason:"missing NSCursor selector"];
-    }
-    
-    return sel;
+static SEL lookupCursorSelectorForName(NSString *name) {
+    if ([@"DnD.Cursor.CopyDrop" isEqual:name]) return @selector(dragCopyCursor);
+    if ([@"DnD.Cursor.LinkDrop" isEqual:name]) return @selector(dragLinkCursor);
+    if ([@"DnD.Cursor.MoveDrop" isEqual:name]) return @selector(_genericDragCursor);
+    if ([@"DnD.Cursor.CopyNoDrop" isEqual:name]) return @selector(operationNotAllowedCursor);
+    if ([@"DnD.Cursor.LinkNoDrop" isEqual:name]) return @selector(operationNotAllowedCursor);
+    if ([@"DnD.Cursor.MoveNoDrop" isEqual:name]) return @selector(operationNotAllowedCursor);
+    return nil;
+}
+
+static void setCursorOnAppKitThread(NSCursor *cursor) {
+    [cursor set];
 }
 
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CCursorManager_nativeSetBuiltInCursor
-(JNIEnv *env, jclass class, jlong windowPtr, jint type)
+(JNIEnv *env, jclass class, jint type, jstring name)
 {
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
-    SEL cursorSelector = getBuiltInCursorSelectorForType(env, type);
+    NSString *cursorName = JNFJavaToNSString(env, name);
+    SEL cursorSelector = (type == sun_lwawt_macosx_CCursorManager_NAMED_CURSOR) ? lookupCursorSelectorForName(cursorName) : lookupCursorSelectorForType(type);
+    if (cursorSelector == nil) {
+        NSString *reason = [NSString stringWithFormat:@"unimplemented built-in cursor type: %d / %@", type, cursorName];
+        [JNFException raise:env as:kIllegalArgumentException reason:[reason UTF8String]];
+    }
+    
+    if (![[NSCursor class] respondsToSelector:cursorSelector]) {
+        [JNFException raise:env as:kNoSuchMethodException reason:"missing NSCursor selector"];
+    }
+    
     [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
         AWT_ASSERT_APPKIT_THREAD;
         
-        [((NSCursor *)[[NSCursor class] performSelector:cursorSelector]) set];
+        setCursorOnAppKitThread([[NSCursor class] performSelector:cursorSelector]);
     }];
 
 JNF_COCOA_EXIT(env);
 }
 
+JNIEXPORT void JNICALL
+Java_sun_lwawt_macosx_CCursorManager_nativeSetCustomCursor
+(JNIEnv *env, jclass class, jlong imgPtr, jdouble x, jdouble y)
+{
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    NSImage *image = (NSImage *)jlong_to_ptr(imgPtr);
+    
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        NSCursor *cursor = [[NSCursor alloc] initWithImage:image
+                                                   hotSpot:(NSPoint){ x, y }];
+        setCursorOnAppKitThread(cursor);
+        [cursor release];
+    }];
+
+JNF_COCOA_EXIT(env);
+}
 
 JNIEXPORT jobject JNICALL
 Java_sun_lwawt_macosx_CCursorManager_nativeGetCursorPosition

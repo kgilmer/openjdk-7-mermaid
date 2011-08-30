@@ -146,6 +146,16 @@ public class LWCToolkit extends LWToolkit {
     public LWCursorManager getCursorManager() {
         return CCursorManager.getInstance(); 
     }
+    
+    @Override
+    public Cursor createCustomCursor(final Image cursor, final Point hotSpot, final String name) throws IndexOutOfBoundsException, HeadlessException {
+        return new CCustomCursor(cursor, hotSpot, name);
+    }
+    
+    @Override
+    public Dimension getBestCursorSize(final int preferredWidth, final int preferredHeight) throws HeadlessException {
+        return CCustomCursor.getBestCursorSize(preferredWidth, preferredHeight);
+    }
 
     @Override
     protected void platformCleanup() {

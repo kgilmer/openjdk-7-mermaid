@@ -51,10 +51,7 @@
 AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
     self = [super initWithFrame: rect];
-    
-    if (self == nil) {
-        // TODO: not implemented
-    }
+    if (self == nil) return self;
 
     m_cPlatformView = cPlatformView;
 
