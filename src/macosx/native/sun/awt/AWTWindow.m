@@ -686,7 +686,7 @@ JNF_COCOA_ENTER(env);
 AWT_ASSERT_NOT_APPKIT_THREAD;
     
     AWTWindow *window = OBJC(windowPtr);
-    NSURL *url = [NSURL fileURLWithPath:JNFNormalizedNSStringForPath(env, filename)];
+    NSURL *url = (filename == NULL) ? nil : [NSURL fileURLWithPath:JNFNormalizedNSStringForPath(env, filename)];
     [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
         AWT_ASSERT_APPKIT_THREAD;
         

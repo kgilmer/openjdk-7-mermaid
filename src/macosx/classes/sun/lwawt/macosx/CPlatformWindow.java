@@ -168,13 +168,12 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
             nativeRevalidateNSWindowShadow(c.getNSWindowPtr());
         }},
         new Property<CPlatformWindow>(WINDOW_DOCUMENT_FILE) { public void applyProperty(final CPlatformWindow c, final Object value) {
-            if (value == null) {
-                nativeSetNSWindowRepresentedFilename(c.getNSWindowPtr(), "");
+            if (value == null || !(value instanceof java.io.File)) {
+                nativeSetNSWindowRepresentedFilename(c.getNSWindowPtr(), null);
                 return;
             }
             
-            if (!(value instanceof java.io.File)) return;
-            String filename = ((java.io.File)value).getAbsolutePath();
+            final String filename = ((java.io.File)value).getAbsolutePath();
             nativeSetNSWindowRepresentedFilename(c.getNSWindowPtr(), filename);
         }}
     }) {
