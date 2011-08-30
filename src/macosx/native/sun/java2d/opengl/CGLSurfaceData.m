@@ -33,6 +33,7 @@
 #import "OGLRenderQueue.h"
 #import "CGLGraphicsConfig.h"
 #import "CGLSurfaceData.h"
+#import "AWTView.h"
 
 /**
  * The methods in this file implement the native windowing system specific
@@ -121,11 +122,18 @@ JNF_COCOA_ENTER(env);
             cglsdo->pbuffer = NULL;
         }
     } else if (oglsdo->drawableType == OGLSD_WINDOW) {
+#if USE_INTERMEDIATE_BUFFER
+        if (oglsdo->textureID != 0) {
+            j2d_glDeleteTextures(1, &oglsdo->textureID);
+            oglsdo->textureID = 0;
+        }        
+#else        
         // detach the NSView from the NSOpenGLContext
         CGLGraphicsConfigInfo *cglInfo = cglsdo->configInfo;
         OGLContext *oglc = cglInfo->context;
         CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
         [ctxinfo->context clearDrawable];
+#endif
     }
     
     oglsdo->drawableType = OGLSD_UNDEFINED;
@@ -270,21 +278,28 @@ JNF_COCOA_ENTER(env);
                 mipMapLevel: 0
                 currentVirtualScreen: [ctxinfo->context currentVirtualScreen]];
     } else {
+#if USE_INTERMEDIATE_BUFFER
+        j2d_glBindTexture(GL_TEXTURE_2D, 0);
+        j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, dstOps->fbobjectID);
+#else
         CGLSDOps *cglsdo = (CGLSDOps *)dstOps->privOps;
         NSView *nsView = (NSView *)cglsdo->peerData;
-
+        
         if ([ctxinfo->context view] != nsView) {
             [ctxinfo->context makeCurrentContext];
             [ctxinfo->context setView: nsView];
-        }
+        }        
+#endif
     }
-    
+
+#ifndef USE_INTERMEDIATE_BUFFER
     if (OGLC_IS_CAP_PRESENT(oglc, CAPS_EXT_FBOBJECT)) {
         // the GL_EXT_framebuffer_object extension is present, so we
         // must bind to the default (windowing system provided)
         // framebuffer
         j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-    }
+    }    
+#endif
     
     if ((srcOps != dstOps) && (srcOps->drawableType == OGLSD_PBUFFER)) {
         // bind pbuffer to the render texture object (since we are preparing
@@ -299,6 +314,64 @@ JNF_COCOA_ENTER(env);
 JNF_COCOA_EXIT(env);
     
     return oglc;
+}
+
+/**
+ * Returns true if OpenGL textures can have non-power-of-two dimensions
+ * when using the basic GL_TEXTURE_2D target.
+ */
+BOOL isTexNonPow2Available(CGLGraphicsConfigInfo *cglinfo) {
+    jint caps;
+    if ((cglinfo == NULL) || (cglinfo->context == NULL)) {
+        return FALSE;
+    } else {
+        caps = cglinfo->context->caps;
+    }    
+    return ((caps & CAPS_TEXNONPOW2) != 0);
+}
+
+/**
+ * Returns true if OpenGL textures can have non-power-of-two dimensions
+ * when using the GL_TEXTURE_RECTANGLE_ARB target (only available when the
+ * GL_ARB_texture_rectangle extension is present).
+ */
+BOOL isTexRectAvailable(CGLGraphicsConfigInfo *cglinfo) {
+    jint caps;
+    if ((cglinfo == NULL) || (cglinfo->context == NULL)) {
+        return FALSE;
+    } else {
+        caps = cglinfo->context->caps;
+    }    
+    return ((caps & CAPS_EXT_TEXRECT) != 0);
+}
+
+/**
+ * Recreates the intermediate buffer associated with the given OGLSDOps
+ * and with the buffer's new size specified in OGLSDOps.
+ */
+jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
+{
+    // destroy previous buffer first
+    if (oglsdo->textureID != 0) {
+        j2d_glDeleteTextures(1, &oglsdo->textureID);
+        oglsdo->textureID = 0;
+    }
+    
+    CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
+    jboolean result =
+        OGLSurfaceData_initFBObject(env, NULL, ptr_to_jlong(oglsdo), oglsdo->isOpaque,
+                                    isTexNonPow2Available(cglsdo->configInfo),
+                                    isTexRectAvailable(cglsdo->configInfo),
+                                    oglsdo->width, oglsdo->height);    
+    
+    // NOTE: WINDOW type is reused for offscreen rendering
+    //       when intermediate buffer is enabled
+    oglsdo->drawableType = OGLSD_WINDOW;
+
+    AWTView *view = cglsdo->peerData;
+    [view setTextureID: (GLuint)oglsdo->textureID];
+    
+    return result;
 }
 
 /**
@@ -327,18 +400,24 @@ OGLSD_InitOGLWindow(JNIEnv *env, OGLSDOps *oglsdo)
         J2dRlsTraceLn(J2D_TRACE_ERROR, "OGLSD_InitOGLWindow: view is invalid");
         return JNI_FALSE;
     }
-
+    
 JNF_COCOA_ENTER(env);
     NSRect surfaceBounds = [v bounds];
     oglsdo->drawableType = OGLSD_WINDOW;
     oglsdo->isOpaque = JNI_TRUE;
     oglsdo->width = surfaceBounds.size.width;
     oglsdo->height = surfaceBounds.size.height;
-JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);    
+    
+    jboolean result = JNI_TRUE;
+
+#if USE_INTERMEDIATE_BUFFER
+    result = RecreateBuffer(env, oglsdo);
+#endif
 
     J2dTraceLn2(J2D_TRACE_VERBOSE, "  created window: w=%d h=%d", oglsdo->width, oglsdo->height);
     
-    return JNI_TRUE;
+    return result;
 }
 
 void
@@ -524,12 +603,14 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
     oglsdo->needsInit = JNI_TRUE;
     oglsdo->xOffset = xoff;
     oglsdo->yOffset = yoff;
+    
+    BOOL newSize = (oglsdo->width != width || oglsdo->height != height);
     oglsdo->width = width;
     oglsdo->height = height;
 
     if (oglsdo->drawableType == OGLSD_WINDOW) {
         OGLContext_SetSurfaces(env, ptr_to_jlong(oglsdo), ptr_to_jlong(oglsdo));
-
+        
         // we have to explicitly tell the NSOpenGLContext that its target
         // drawable has changed size
         CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
@@ -537,7 +618,13 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
         CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
         
 JNF_COCOA_ENTER(env);
+#if USE_INTERMEDIATE_BUFFER
+        if (newSize) {
+            RecreateBuffer(env, oglsdo);
+        }
+#else
         [ctxinfo->context update];
+#endif
 JNF_COCOA_EXIT(env);
     }
 }

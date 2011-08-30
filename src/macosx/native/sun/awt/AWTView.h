@@ -45,9 +45,14 @@
 
     // mask used to set the correct modifiers for java mouseEntered/mouseExited
     NSInteger mouseDownButtonMask;
+
+    // intermediate buffer
+    GLuint textureID;
 }
 
-- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
+@property (readwrite, assign) GLuint textureID;
+
+- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView context:(NSOpenGLContext*)nsContext;
 - (void) deliverJavaMouseEvent: (NSEvent *) event;
 - (void) resetTrackingRect;
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;

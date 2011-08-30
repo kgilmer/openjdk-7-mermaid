@@ -210,11 +210,11 @@ OGLSD_InitTextureObject(OGLSDOps *oglsdo,
     // a texture object once with 2^n dimensions, and then use
     // glTexSubImage2D() to provide further updates)
     j2d_glGenTextures(1, &texID);
-    j2d_glBindTexture(texTarget, texID);
+    j2d_glBindTexture(texTarget, texID);    
     j2d_glTexImage2D(texTarget, 0, format,
                      texWidth, texHeight, 0,
                      format, GL_UNSIGNED_BYTE, NULL);
-
+    
     oglsdo->isOpaque = isOpaque;
     oglsdo->xOffset = 0;
     oglsdo->yOffset = 0;
@@ -390,6 +390,16 @@ OGLSD_InitFBObject(GLuint *fbobjectID, GLuint *depthID,
  */
 JNIEXPORT jboolean JNICALL
 Java_sun_java2d_opengl_OGLSurfaceData_initFBObject
+    (JNIEnv *env, jobject oglsd,
+     jlong pData, jboolean isOpaque,
+     jboolean texNonPow2, jboolean texRect,
+     jint width, jint height)
+{
+    return OGLSurfaceData_initFBObject(env, oglsd, pData, isOpaque,
+                                       texNonPow2, texRect, width, height);
+}
+
+jboolean OGLSurfaceData_initFBObject
     (JNIEnv *env, jobject oglsd,
      jlong pData, jboolean isOpaque,
      jboolean texNonPow2, jboolean texRect,

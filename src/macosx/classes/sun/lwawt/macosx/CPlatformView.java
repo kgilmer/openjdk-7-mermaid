@@ -244,12 +244,5 @@ public class CPlatformView extends CFRetainedResource {
     
     private void deliverWindowDidExposeEvent(float x, float y, float w, float h) {
         peer.notifyExpose((int)x, (int)y, (int)w, (int)h);
-    }
-	
-    private void drawLayer() {
-        // TODO: new interface?
-        if (surfaceData != null) {
-            ((CGLSurfaceData)surfaceData).drawLayer();
-        }
-    }
+    }	
 }

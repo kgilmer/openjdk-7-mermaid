@@ -36,6 +36,8 @@
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 
+extern NSOpenGLPixelFormat *sharedPixelFormat;
+extern NSOpenGLContext *sharedContext;
 
 // TODO: extract the layers code into separate file
 //       to macosx/native/sun/java2d/opengl ?
@@ -49,6 +51,7 @@
 - (void) setPlatformView:(jobject)cPlatformView;
 - (void) setNSContext: (NSOpenGLContext *)nsContext;
 - (void) setAWTView: (AWTView *)aView;
+- (void) _blitTexture;
 @end
 
 @implementation AWTCAOpenGLLayer
@@ -63,8 +66,14 @@
     m_nsContext = nsContext;
 }
 
+- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
+    return sharedPixelFormat.CGLPixelFormatObj;    
+}
+ 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    return m_nsContext.CGLContextObj;
+    CGLContextObj contextObj = NULL;
+    CGLCreateContext(pixelFormat, sharedContext.CGLContextObj, &contextObj);
+    return contextObj;
 }
 
 - (void) setAWTView: (AWTView *) aView
@@ -72,126 +81,41 @@
     view = aView;
 }
 
-// Layer is non-opaque by default and making layer opaque is
-// an attempt to be consistent with surface data (CGLSurfaceData.m: isOpaque = JNI_TRUE)
-// the change helps to eliminate some painting artifacts
-- (BOOL) isOpaque
+// use texture as src and blit it to the layer
+- (void) _blitTexture
 {
-    return YES;
-}
-
-// static AWTCAOpenGLLayer *layer;
-
-//
-// Some hardcoded rendering
-//
-
-// CALayer
-
-/*
-- (void)drawInContext:(CGContextRef)ctx {
-	CGRect clip = CGContextGetClipBoundingBox(ctx);
-	
-	NSLog(@"clip : %@", NSStringFromRect(NSRectFromCGRect(clip)));
-	NSLog(@"frame : %@", NSStringFromRect(NSRectFromCGRect(self.frame)));
-	
-	CGRect bounds = CGRectMake(0,0,0.2,0.2);
-	CGContextSetRGBFillColor(ctx, 0.0, 0.0, 1.0, 1.0);
-	CGContextFillRect(ctx, bounds);
-}
-*/
-
-// CAOpenGLLayer
-
-/*
--(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp
-{
-    AWT_ASSERT_APPKIT_THREAD;
- 
-    fprintf(stderr, " drawInCGLContext receives %x \n", glContext);
+    if (view.textureID == 0)
+        return;
     
-    // Set the current context to the one given to us.
-    CGLSetCurrentContext(glContext);
- 
-    GLfloat rotate = timeInterval * 60.0; // 60 degrees per second!
-    glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);	
- 
-    glPushMatrix();
-    glRotatef(rotate, 0.0, 0.0, 1.0);
+    glEnable(GL_TEXTURE_2D);    
+    glBindTexture(GL_TEXTURE_2D, view.textureID);
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); // srccopy
+
     glBegin(GL_QUADS);
-    glColor3f(1.0, 0.0, 0.0);
-    glVertex2f(-0.5, -0.5);
-    glVertex2f(-0.5,  0.5);
-    glVertex2f( 0.5,  0.5);
-    glVertex2f( 0.5, -0.5);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f( 1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f( 1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f,  1.0f);
     glEnd();
-    glPopMatrix();
-
-    glPushMatrix();	
-    glLineWidth(3.0);
-    glBegin(GL_LINES);
-    glColor3f(0.0, 0.0, 1.0);
-    glVertex2f(-0.99, -0.99 );
-    glVertex2f( 0.99,  0.99);
-    glEnd();	
-    glPopMatrix();
-
-    // Call super to finalize the drawing. By default all it does is call glFlush().
-    [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
-
-    CGLSetCurrentContext(NULL);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
 }
-*/
 
 -(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp
 {
     AWT_ASSERT_APPKIT_THREAD;
-        
+       
     // Set the current context to the one given to us.
     CGLSetCurrentContext(glContext);
 
-	
-	NSRect frame = NSRectFromCGRect([self frame]);
-	GLfloat         minX, minY, maxX, maxY;
-	
-	minX = NSMinX(frame);
-	minY = NSMinY(frame);
-	maxX = NSMaxX(frame);
-	maxY = NSMaxY(frame);
-	
-	NSWindow *window = [view window];
-    NSRect windowframe = [window frame];
-	NSRect contentRect = [NSWindow contentRectForFrameRect:windowframe styleMask:[window styleMask]];
-	int top = (int)(windowframe.size.height - contentRect.size.height);
-    int left = (int)(contentRect.origin.x - windowframe.origin.x);
-    int bottom = (int)(contentRect.origin.y - windowframe.origin.y);
-    int right = (int)(windowframe.size.width - (contentRect.size.width + left));
-	
-//	fprintf(stderr, "Coords provided are: minX=%f, minY=%f, maxX=%f, maxY=%f\n", minX, minY, maxX, maxY);
-//	fprintf(stderr, "Insets are: top=%d, bottom=%d, left=%d, right=%d\n", top, bottom, left, right);
-	
-	minX -= left;
-	maxX += right;
-	minY -= bottom;
-	maxY += top;
+    // Updates viewport to window size.
+    NSRect bounds = [[view window] frame];
+    glViewport(0, 0, bounds.size.width, bounds.size.height);
 
-	JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
-	static JNF_CLASS_CACHE(jc_PlatformView, "sun/lwawt/macosx/CPlatformView");
-    static JNF_MEMBER_CACHE(jm_drawLayer, jc_PlatformView, "drawLayer", "()V");
-    JNFCallVoidMethod(env, m_cPlatformView, jm_drawLayer);
+    [self _blitTexture];
 
-/*
-	// Red line across the frame to better understand its geometry
-	glPushMatrix();
-	glLineWidth(5);
-	glColor3f(1.0, 0.0, 0.0);
-	glBegin(GL_LINES);
-	glVertex2f(0.0, 0.0);
-	glVertex2f(self.bounds.size.width, self.bounds.size.height);
-	glEnd();
-*/	
-    
 	// Call super to finalize the drawing. By default all it does is call glFlush().
     [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
 
@@ -210,20 +134,33 @@
 
 @synthesize _dropTarget;
 @synthesize _dragSource;
+@synthesize textureID;
 
 // Note: Must be called on main (AppKit) thread only
 - (id) initWithRect: (NSRect) rect
        platformView: (jobject) cPlatformView
+       context: (NSOpenGLContext*) nsContext
 {
 AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
     self = [super initWithFrame: rect];
-    
-    if (self == nil) {
-        // TODO: not implemented
-    }
+    if (self == nil) return self;
 
+    textureID = 0; // texture will be created by rendering pipe
     m_cPlatformView = cPlatformView;
+    
+    AWTCAOpenGLLayer *layer = [AWTCAOpenGLLayer layer];
+    [layer setPlatformView: cPlatformView];
+    [layer setNSContext: nsContext];
+    [layer setAWTView: self];
+
+    // NOTE: async=YES means that the layer is re-cached periodically
+    layer.asynchronous = FALSE;    
+    layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+    
+    [self setWantsLayer: YES];
+    // TODO: do we really want to add our layer as a sublayer?
+    [self.layer addSublayer:layer];
 
     return self;
 }
@@ -847,9 +784,6 @@ AWT_ASSERT_APPKIT_THREAD;
 
 /********************************  END NSDraggingDestination Interface  ********************************/
 
-
-
-
 @end // AWTView
 
 /*
@@ -873,34 +807,12 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
         AWT_ASSERT_APPKIT_THREAD;
         
         AWTView *view = [[AWTView alloc] initWithRect:rect
-                                         platformView:cPlatformView];
+                                         platformView:cPlatformView
+                                         context:jlong_to_ptr(nsContextPtr)];
         CFRetain(view);
         [view release]; // GC
         
         newView = view;
-        
-        AWTCAOpenGLLayer *layer = [AWTCAOpenGLLayer layer];
-		
-        [layer setPlatformView: cPlatformView];
-        [layer setNSContext: nsContextPtr];
-		[layer setAWTView: newView];
-        // [layer setNeedsDisplay];
-		
-        // NOTE: async=YES means that the layer is re-cached periodically
-        // layer.asynchronous = TRUE;
-		
-        // layer.anchorPoint = CGPointMake(1.0, 0.0);
-               
-        // TODO: fix bounds
-        // layer.frame = CGRectMake(0,0,400,400);
-        
-        layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
-        layer.backgroundColor = CGColorCreateGenericRGB(0.0, 1.0, 0.0, 1.0);
-		
-        [newView setWantsLayer: YES];
-        // TODO: do we really want to add our layer as a sublayer?
-        [newView.layer addSublayer:layer];
-
     }];
 
 JNF_COCOA_EXIT(env);

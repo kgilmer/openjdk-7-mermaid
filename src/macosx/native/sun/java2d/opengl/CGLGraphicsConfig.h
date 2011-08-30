@@ -45,6 +45,13 @@
 // switching to the scratch surface whenever possible.
 #define USE_NSVIEW_FOR_SCRATCH 1
 
+// Prototyped CAOpenGLLayer drawing directly from Java2D OpenGL rendering
+// pipe fails to draw entire scene. So, the following enables alternative
+// codepath that uses a FBO backed with a texture as an intermediate buffer.
+// Java2D OpenGL rendering pipe performs rendering to the intermediate buffer
+// and CAOpenGLLayer copies the entire intermediate buffer to layer.
+#define USE_INTERMEDIATE_BUFFER 1
+
 /**
  * The CGLGraphicsConfigInfo structure contains information specific to a
  * given CGLGraphicsConfig (pixel format).

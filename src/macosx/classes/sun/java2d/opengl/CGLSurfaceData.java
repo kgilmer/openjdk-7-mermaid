@@ -72,38 +72,14 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         initOps(pConfigInfo, pPeerData, 0, 0);
     }
     
-    // render buffers and runnable tasks
-    private List futureTasks = new ArrayList();
-    
     // Asks layer to re-cache its content
     // called on the renderer thread
-    void setNeedsDisplay(Object task) {
-        synchronized (this) {
-            futureTasks.add(task);
-        }
+    void setNeedsDisplay() {
         if (pView != null) {
             pView.setNeedsDisplay(true);
         }
     }
-    
-    // Draws the layer's content
-    // Called on the Appkit thread
-    public void drawLayer() {
-        CGLRenderQueue rq = (CGLRenderQueue)CGLRenderQueue.getInstance();
-        synchronized (this) {
-            int size = futureTasks.size();
-            for (int i = 0; i < size; i++) {
-                Object task = futureTasks.get(i);
-                if (task instanceof RenderBuffer) {
-                    rq.drawLayer((RenderBuffer)task);                        
-                } else {
-                    rq.invokeTaskNow((Runnable)task);                                                
-                }
-            }
-            futureTasks.clear();
-        }
-    }
-    
+
     @Override //SurfaceData
     public GraphicsConfiguration getDeviceConfiguration() {
         return graphicsConfig;

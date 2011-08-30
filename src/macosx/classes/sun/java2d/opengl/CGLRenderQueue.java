@@ -19,33 +19,19 @@ public class CGLRenderQueue extends OGLRenderQueue
 
     @Override
     protected void flushBuffer(long buf, int limit) {
-        synchronized (this) {
-            if (currentSurfaceData != null) {
-                RenderBuffer renderBuffer = RenderBuffer.allocate(limit);
-                Unsafe unsafe = Unsafe.getUnsafe();
-                unsafe.copyMemory(buf, renderBuffer.getAddress(), limit);                                            
-                
-                currentSurfaceData.setNeedsDisplay(renderBuffer);
-            } else {
-                super.flushBuffer(buf, limit);                
-            }
+        super.flushBuffer(buf, limit);                
+
+        if (currentSurfaceData != null) {
+            currentSurfaceData.setNeedsDisplay();
         }
     }
 
     @Override
-    protected void invokeTask(Runnable task) {
-        if (currentSurfaceData != null) {
-            currentSurfaceData.setNeedsDisplay(task);
-        } else {
-            super.invokeTask(task);            
-        }
-    }
-
-    void drawLayer(RenderBuffer renderBuffer) {        
-        super.flushBuffer(renderBuffer.getAddress(), renderBuffer.capacity());
-    }
-
-    void invokeTaskNow(Runnable task) {
+    protected void invokeTask(Runnable task) {        
         super.invokeTask(task);
+        
+        if (currentSurfaceData != null) {
+            currentSurfaceData.setNeedsDisplay();
+        }
     }
 }
