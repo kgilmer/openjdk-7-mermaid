@@ -192,9 +192,11 @@ CARingBufferError	CARingBuffer::Store(const AudioBufferList *abl, UInt32 framesT
 	}
 
 	offset1 = FrameOffset(endWrite);
-	if (offset0 < offset1)
+	if (offset0 == offset1) {
+        // do nothing
+	} else if (offset0 < offset1) {
 		StoreABL(buffers, offset0, abl, 0, offset1 - offset0);
-	else {
+	} else {
 		nbytes = mCapacityBytes - offset0;
 		StoreABL(buffers, offset0, abl, 0, nbytes);
 		StoreABL(buffers, 0, abl, nbytes, offset1);

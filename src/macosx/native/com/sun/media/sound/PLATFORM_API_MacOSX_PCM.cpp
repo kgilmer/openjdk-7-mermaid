@@ -549,7 +549,7 @@ INT64 DAUDIO_GetBytePosition(void* id, int isSource, INT64 javaBytePos) {
     INT64 position;
 
     if (isSource) { // output
-        position = (device->lastReadSampleTime * device->asbd.mBytesPerFrame) - javaBytePos;
+        position = javaBytePos - (device->lastReadSampleTime * device->asbd.mBytesPerFrame);
     } else { // input
         SInt64 startTime, endTime;
         CARingBufferError err = device->buffer.GetTimeBounds(startTime, endTime);
