@@ -55,6 +55,8 @@ public class LWCToolkit extends LWToolkit {
     
     private static native void initIDs();
     
+    private static CInputMethodDescriptor sInputMethodDescriptor;
+    
     static {
         System.err.flush();
         java.security.AccessController.doPrivileged(new java.security.PrivilegedAction<Object>() {
@@ -258,23 +260,11 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
-    public Map<TextAttribute, ?> mapInputMethodHighlight(
-            InputMethodHighlight highlight) throws HeadlessException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void sync() {
         // TODO Auto-generated method stub
         
     }
 
-    @Override
-    public InputMethodDescriptor getInputMethodAdapterDescriptor() throws AWTException {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     @Override
     public void grab(Window w) {
@@ -349,6 +339,27 @@ public class LWCToolkit extends LWToolkit {
         }
     }
 
+    /**
+     * Determines which modifier key is the appropriate accelerator
+     * key for menu shortcuts.
+     * <p>
+     * Menu shortcuts, which are embodied in the
+     * <code>MenuShortcut</code> class, are handled by the
+     * <code>MenuBar</code> class.
+     * <p>
+     * By default, this method returns <code>Event.CTRL_MASK</code>.
+     * Toolkit implementations should override this method if the
+     * <b>Control</b> key isn't the correct key for accelerators.
+     * @return    the modifier mask on the <code>Event</code> class
+     *                 that is used for menu shortcuts on this toolkit.
+     * @see       java.awt.MenuBar
+     * @see       java.awt.MenuShortcut
+     * @since     JDK1.1
+     */
+    public int getMenuShortcutKeyMask() {
+        return Event.META_MASK;
+    }
+    
     @Override
     public Image getImage(final String filename) {
         final Image nsImage = checkForNSImage(filename);
@@ -488,6 +499,39 @@ public class LWCToolkit extends LWToolkit {
         return (T)dgr;
     }
     
+// InputMethodSupport Method
+    /**
+     * Returns the default keyboard locale of the underlying operating system
+     */
+    public Locale getDefaultKeyboardLocale() {
+        Locale locale = CInputMethod.getNativeLocale();
+
+        if (locale == null) {
+            return super.getDefaultKeyboardLocale();
+        }
+        
+        return locale;
+    }
+    
+    public java.awt.im.spi.InputMethodDescriptor getInputMethodAdapterDescriptor() {
+        if (sInputMethodDescriptor == null)
+            sInputMethodDescriptor = new CInputMethodDescriptor();
+        
+        return sInputMethodDescriptor;
+    }
+
+    /**
+     * Returns a map of visual attributes for thelevel description
+     * of the given input method highlight, or null if no mapping is found.
+     * The style field of the input method highlight is ignored. The map
+     * returned is unmodifiable.
+     * @param highlight input method highlight
+     * @return style attribute map, or null
+     * @since 1.3
+     */
+    public Map mapInputMethodHighlight(InputMethodHighlight highlight) {
+        return CInputMethod.mapInputMethodHighlight(highlight);
+    }
     
     
     // Extends PeerEvent because we want to pass long an ObjC mediator object and because we want these events to be posted early

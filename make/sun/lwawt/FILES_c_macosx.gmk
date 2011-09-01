@@ -47,6 +47,8 @@ FILES_objc = \
 	CDragSourceContextPeer.m \
 	CDropTarget.m \
 	CDropTargetContextPeer.m \
+	CInputMethod.m \
+	OSVersion.m \
 	DnDUtilities.m \
 	CFileDialog.m \
 	CImage.m \

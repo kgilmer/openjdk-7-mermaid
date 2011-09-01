@@ -24,6 +24,7 @@
  */
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
 #import "ThreadUtilities.h"
 #import "AWTView.h"
@@ -32,12 +33,25 @@
 #import "LWCToolkit.h"
 #import "JavaComponentAccessibility.h"
 #import "JavaTextAccessibility.h"
+#import "GeomUtilities.h"
+#import "OSVersion.h"
 
 @interface AWTView()
 @property (retain) CDropTarget *_dropTarget;
 @property (retain) CDragSource *_dragSource;
 @end
 
+// Uncomment this line to see fprintfs of each InputMethod API being called on this View
+//#define IM_DEBUG TRUE
+//#define EXTRA_DEBUG
+
+
+static BOOL shouldUsePressAndHold() {
+    static int shouldUsePressAndHold = -1;   
+    if (shouldUsePressAndHold != -1) return shouldUsePressAndHold;
+    shouldUsePressAndHold = !isSnowLeopardOrLower();
+    return shouldUsePressAndHold;
+}
 
 @implementation AWTView
 
@@ -54,6 +68,14 @@ AWT_ASSERT_APPKIT_THREAD;
     if (self == nil) return self;
 
     m_cPlatformView = cPlatformView;
+    
+    fInputMethodLOCKABLE = NULL;
+    fKeyEventsNeeded = NO;
+    fProcessingKeystroke = NO;
+    
+    fEnablePressAndHold = shouldUsePressAndHold();
+    fInPressAndHold = NO;
+    fPAHNeedsToSelect = NO;
 
     return self;
 }
@@ -64,6 +86,15 @@ AWT_ASSERT_APPKIT_THREAD;
     JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
     (*env)->DeleteGlobalRef(env, m_cPlatformView);
     m_cPlatformView = NULL;
+    
+    if (fInputMethodLOCKABLE != NULL)
+    {
+        JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
+        
+        JNFDeleteGlobalRef(env, fInputMethodLOCKABLE);
+        fInputMethodLOCKABLE = NULL;
+    }
+
     
     [super dealloc];
 }
@@ -104,8 +135,24 @@ AWT_ASSERT_APPKIT_THREAD;
  */
 
 - (void) mouseDown: (NSEvent *)event {
-    [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask |= NSLeftMouseDownMask;
+    NSInputManager *inputManager = [NSInputManager currentInputManager];
+    if ([inputManager wantsToHandleMouseEvents]) {
+#if IM_DEBUG
+        NSLog(@"-> IM wants to handle event");
+#endif
+        if (![inputManager handleMouseEvent:event]) {            
+            [self deliverJavaMouseEvent: event];
+            mouseDownButtonMask |= NSLeftMouseDownMask;
+        } else {
+#if IM_DEBUG
+            NSLog(@"-> Event was handled.");
+#endif
+        }
+    } else {
+        NSLog(@"-> IM does not want to handle event");
+        [self deliverJavaMouseEvent: event];
+        mouseDownButtonMask |= NSLeftMouseDownMask;
+    }
 }
 
 - (void) mouseUp: (NSEvent *)event {
@@ -180,7 +227,27 @@ AWT_ASSERT_APPKIT_THREAD;
  */
 
 - (void) keyDown: (NSEvent *)event {
-    [self deliverJavaKeyEventHelper: event];
+    
+    fProcessingKeystroke = YES;
+    fKeyEventsNeeded = YES;
+    
+    // Allow TSM to look at the event and potentially send back NSTextInputClient messages.
+    [self interpretKeyEvents:[NSArray arrayWithObject:event]];
+
+    if (fEnablePressAndHold && [event willBeHandledByComplexInputMethod]) { 
+        fProcessingKeystroke = NO;
+        if (!fInPressAndHold) {
+            fInPressAndHold = YES;
+            fPAHNeedsToSelect = YES;
+        }
+        return;
+    }
+        
+    if (![self hasMarkedText] && fKeyEventsNeeded) {
+        [self deliverJavaKeyEventHelper: event];
+    }
+    
+    fProcessingKeystroke = NO;
 }
 
 - (void) keyUp: (NSEvent *)event {
@@ -669,6 +736,384 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 /********************************  END NSDraggingDestination Interface  ********************************/
+
+/********************************  BEGIN NSTextInputClient Protocol  ********************************/
+
+
+JNF_CLASS_CACHE(jc_CInputMethod, "sun/lwawt/macosx/CInputMethod");
+
+- (void) insertText:(id)aString replacementRange:(NSRange)replacementRange
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [insertText]: %s\n", [aString UTF8String]);
+#endif // IM_DEBUG
+    
+    if (fInputMethodLOCKABLE == NULL) {
+        return;
+    }
+
+    // Insert happens at the end of PAH
+    fInPressAndHold = NO;
+
+    // insertText gets called when the user commits text generated from an input method.  It also gets
+    // called during ordinary input as well.  We only need to send an input method event when we have marked
+    // text, or 'text in progress'.  We also need to send the event if we get an insert text out of the blue!
+    // (i.e., when the user uses the Character palette or Inkwell), or when the string to insert is a complex
+    // Unicode value.
+    NSUInteger utf8Length = [aString lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+    
+    if ([self hasMarkedText] || !fProcessingKeystroke || (utf8Length > 2)) {
+        JNIEnv *env = [ThreadUtilities getJNIEnv];
+        
+        static JNF_MEMBER_CACHE(jm_selectPreviousGlyph, jc_CInputMethod, "selectPreviousGlyph", "()V");
+        // We need to select the previous glyph so that it is overwritten.
+        if (fPAHNeedsToSelect) {
+            JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_selectPreviousGlyph);
+            fPAHNeedsToSelect = NO;
+        }
+                
+        static JNF_MEMBER_CACHE(jm_insertText, jc_CInputMethod, "insertText", "(Ljava/lang/String;)V");
+        jstring insertedText =  JNFNSToJavaString(env, aString);
+        JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_insertText, insertedText); // AWT_THREADING Safe (AWTRunLoopMode)
+        (*env)->DeleteLocalRef(env, insertedText);
+
+        // The input method event will create psuedo-key events for each character in the committed string.
+        // We also don't want to send the character that triggered the insertText, usually a return. [3337563]
+        fKeyEventsNeeded = NO;
+    }
+    
+    fPAHNeedsToSelect = NO;
+
+}
+
+- (void) doCommandBySelector:(SEL)aSelector
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [doCommandBySelector]\n");
+    NSLog(@"%@", NSStringFromSelector(aSelector));
+#endif // IM_DEBUG
+    if (@selector(insertNewline:) == aSelector || @selector(insertTab:) == aSelector || @selector(deleteBackward:) == aSelector)
+    {
+        fKeyEventsNeeded = YES;
+    }
+}
+
+// setMarkedText: cannot take a nil first argument. aString can be NSString or NSAttributedString
+- (void) setMarkedText:(id)aString selectedRange:(NSRange)selectionRange replacementRange:(NSRange)replacementRange
+{
+    if (!fInputMethodLOCKABLE)
+        return;
+    
+    BOOL isAttributedString = [aString isKindOfClass:[NSAttributedString class]];
+    NSAttributedString *attrString = (isAttributedString ? (NSAttributedString *)aString : nil);
+    NSString *incomingString = (isAttributedString ? [aString string] : aString);
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [setMarkedText] \"%s\", loc=%lu, length=%lu\n", [incomingString UTF8String], (unsigned long)selectionRange.location, (unsigned long)selectionRange.length);
+#endif // IM_DEBUG
+    static JNF_MEMBER_CACHE(jm_startIMUpdate, jc_CInputMethod, "startIMUpdate", "(Ljava/lang/String;)V");
+    static JNF_MEMBER_CACHE(jm_addAttribute, jc_CInputMethod, "addAttribute", "(ZZII)V");
+    static JNF_MEMBER_CACHE(jm_dispatchText, jc_CInputMethod, "dispatchText", "(IIZ)V");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    
+    // NSInputContext already did the analysis of the TSM event and created attributes indicating
+    // the underlining and color that should be done to the string.  We need to look at the underline
+    // style and color to determine what kind of Java hilighting needs to be done.
+    jstring inProcessText = JNFNSToJavaString(env, incomingString);
+    JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_startIMUpdate, inProcessText); // AWT_THREADING Safe (AWTRunLoopMode)
+    (*env)->DeleteLocalRef(env, inProcessText);
+    
+    if (isAttributedString) {
+        NSUInteger length;
+        NSRange effectiveRange;
+        NSDictionary *attributes;
+        length = [attrString length];
+        effectiveRange = NSMakeRange(0, 0);
+        while (NSMaxRange(effectiveRange) < length) {
+            attributes = [attrString attributesAtIndex:NSMaxRange(effectiveRange)
+                                        effectiveRange:&effectiveRange];
+            if (attributes) {
+                BOOL isThickUnderline, isGray;
+                NSNumber *underlineSizeObj =
+                (NSNumber *)[attributes objectForKey:NSUnderlineStyleAttributeName];
+                NSInteger underlineSize = [underlineSizeObj integerValue];
+                isThickUnderline = (underlineSize > 1);
+                
+                NSColor *underlineColorObj =
+                (NSColor *)[attributes objectForKey:NSUnderlineColorAttributeName];
+                isGray = !([underlineColorObj isEqual:[NSColor blackColor]]);
+                
+                JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_addAttribute, isThickUnderline, isGray, effectiveRange.location, effectiveRange.length); // AWT_THREADING Safe (AWTRunLoopMode)
+            }
+        }
+    }
+    
+    static JNF_MEMBER_CACHE(jm_selectPreviousGlyph, jc_CInputMethod, "selectPreviousGlyph", "()V");
+    // We need to select the previous glyph so that it is overwritten.
+    if (fPAHNeedsToSelect) {
+        JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_selectPreviousGlyph);
+        fPAHNeedsToSelect = NO;
+    }
+
+    JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_dispatchText, selectionRange.location, selectionRange.length, JNI_FALSE); // AWT_THREADING Safe (AWTRunLoopMode)
+    
+    // If the marked text is being cleared (zero-length string) don't handle the key event.
+    if ([incomingString length] == 0) {
+        fKeyEventsNeeded = NO;
+    }
+}
+
+- (void) unmarkText
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [unmarkText]\n");
+#endif // IM_DEBUG
+    
+    if (!fInputMethodLOCKABLE) {
+        return;
+    }
+    
+    // unmarkText cancels any input in progress and commits it to the text field.
+    static JNF_MEMBER_CACHE(jm_unmarkText, jc_CInputMethod, "unmarkText", "()V");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    JNFCallVoidMethod(env, fInputMethodLOCKABLE, jm_unmarkText); // AWT_THREADING Safe (AWTRunLoopMode)
+    
+}
+
+- (BOOL) hasMarkedText
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [hasMarkedText]\n");
+#endif // IM_DEBUG
+    
+    if (!fInputMethodLOCKABLE) {
+        return NO;
+    }
+    
+    static JNF_MEMBER_CACHE(jf_fCurrentText, jc_CInputMethod, "fCurrentText", "Ljava/text/AttributedString;");
+    static JNF_MEMBER_CACHE(jf_fCurrentTextLength, jc_CInputMethod, "fCurrentTextLength", "I");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jobject currentText = JNFGetObjectField(env, fInputMethodLOCKABLE, jf_fCurrentText);
+        
+    jint currentTextLength = JNFGetIntField(env, fInputMethodLOCKABLE, jf_fCurrentTextLength);
+    
+    BOOL hasMarkedText = (currentText != NULL && currentTextLength > 0);
+    
+    if (currentText != NULL) {
+        (*env)->DeleteLocalRef(env, currentText);
+    }
+    
+    return hasMarkedText;
+}
+
+- (NSInteger) conversationIdentifier
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [conversationIdentifier]\n");
+#endif // IM_DEBUG
+    
+    return (NSInteger) self;
+}
+
+/* Returns attributed string at the range.  This allows input mangers to
+ query any range in backing-store (Andy's request)
+ */
+- (NSAttributedString *) attributedSubstringForProposedRange:(NSRange)theRange actualRange:(NSRangePointer)actualRange
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [attributedSubstringFromRange] location=%lu, length=%lu\n", (unsigned long)theRange.location, (unsigned long)theRange.length);
+#endif // IM_DEBUG
+    
+    static JNF_MEMBER_CACHE(jm_substringFromRange, jc_CInputMethod, "attributedSubstringFromRange", "(II)Ljava/lang/String;");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jobject theString = JNFCallObjectMethod(env, fInputMethodLOCKABLE, jm_substringFromRange, theRange.location, theRange.length); // AWT_THREADING Safe (AWTRunLoopMode)
+    
+    id result = [[[NSAttributedString alloc] initWithString:JNFJavaToNSString(env, theString)] autorelease];
+#ifdef IM_DEBUG
+    NSLog(@"attributedSubstringFromRange returning \"%@\"", result);
+#endif // IM_DEBUG
+    
+    (*env)->DeleteLocalRef(env, theString);
+    return result;
+}
+
+/* This method returns the range for marked region.  If hasMarkedText == false,
+ it'll return NSNotFound location & 0 length range.
+ */
+- (NSRange) markedRange
+{
+    
+#ifdef IM_DEBUG    
+    fprintf(stderr, "AWTView InputMethod Selector Called : [markedRange]\n");
+#endif // IM_DEBUG
+    
+    if (!fInputMethodLOCKABLE) {
+        return NSMakeRange(NSNotFound, 0);        
+    }
+    
+    static JNF_MEMBER_CACHE(jm_markedRange, jc_CInputMethod, "markedRange", "()[I");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jarray array;
+    jboolean isCopy;
+    jint *_array;
+    NSRange range;
+    
+    array = JNFCallObjectMethod(env, fInputMethodLOCKABLE, jm_markedRange); // AWT_THREADING Safe (AWTRunLoopMode)
+    
+    if (array) {
+        _array = (*env)->GetIntArrayElements(env, array, &isCopy);
+        range = NSMakeRange(_array[0], _array[1]);
+        
+#ifdef IM_DEBUG    
+        fprintf(stderr, "markedRange returning (%lu, %lu)\n", (unsigned long)range.location, (unsigned long)range.length);
+#endif // IM_DEBUG
+        (*env)->ReleaseIntArrayElements(env, array, _array, 0);
+        (*env)->DeleteLocalRef(env, array);
+    } else {
+        range = NSMakeRange(NSNotFound, 0);
+    }
+    
+    return range;
+}
+
+/* This method returns the range for selected region.  Just like markedRange method,
+ its location field contains char index from the text beginning.
+ */
+- (NSRange) selectedRange
+{
+    if (!fInputMethodLOCKABLE) {
+        return NSMakeRange(NSNotFound, 0);
+    }
+    
+    static JNF_MEMBER_CACHE(jm_selectedRange, jc_CInputMethod, "selectedRange", "()[I");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jarray array;
+    jboolean isCopy;
+    jint *_array;
+    NSRange range;
+    
+#ifdef IM_DEBUG    
+    fprintf(stderr, "AWTView InputMethod Selector Called : [selectedRange]\n");
+#endif // IM_DEBUG
+    
+    array = JNFCallObjectMethod(env, fInputMethodLOCKABLE, jm_selectedRange); // AWT_THREADING Safe (AWTRunLoopMode)
+    if (array) {
+        _array = (*env)->GetIntArrayElements(env, array, &isCopy);
+        range = NSMakeRange(_array[0], _array[1]);
+        (*env)->ReleaseIntArrayElements(env, array, _array, 0);
+        (*env)->DeleteLocalRef(env, array);
+    } else {
+        range = NSMakeRange(NSNotFound, 0);
+    }
+    
+    return range;
+    
+}
+
+/* This method returns the first frame of rects for theRange in screen coordindate system.
+ */
+- (NSRect) firstRectForCharacterRange:(NSRange)theRange actualRange:(NSRangePointer)actualRange
+{
+    if (!fInputMethodLOCKABLE) {
+        return NSMakeRect(0, 0, 0, 0);
+    }
+    
+    static JNF_MEMBER_CACHE(jm_firstRectForCharacterRange, jc_CInputMethod,
+                            "firstRectForCharacterRange", "(I)[I");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jarray array;
+    jboolean isCopy;
+    jint *_array;
+    NSRect rect;
+    
+#ifdef IM_DEBUG    
+    fprintf(stderr, "AWTView InputMethod Selector Called : [firstRectForCharacterRange:] location=%lu, length=%lu\n", (unsigned long)theRange.location, (unsigned long)theRange.length);
+#endif // IM_DEBUG
+    
+    array = JNFCallObjectMethod(env, fInputMethodLOCKABLE, jm_firstRectForCharacterRange, theRange.location); // AWT_THREADING Safe (AWTRunLoopMode)
+    
+    _array = (*env)->GetIntArrayElements(env, array, &isCopy);
+    rect = ConvertNSScreenRect(env, NSMakeRect(_array[0], _array[1], _array[2], _array[3]));
+    (*env)->ReleaseIntArrayElements(env, array, _array, 0);
+    (*env)->DeleteLocalRef(env, array);
+    
+#ifdef IM_DEBUG    
+    fprintf(stderr, "firstRectForCharacterRange returning x=%f, y=%f, width=%f, height=%f\n", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+#endif // IM_DEBUG
+    return rect;
+}
+
+/* This method returns the index for character that is nearest to thePoint.  thPoint is in
+ screen coordinate system.
+ */
+- (NSUInteger)characterIndexForPoint:(NSPoint)thePoint
+{
+    if (!fInputMethodLOCKABLE) {
+        return NSNotFound;
+    }
+    
+    static JNF_MEMBER_CACHE(jm_characterIndexForPoint, jc_CInputMethod,
+                            "characterIndexForPoint", "(II)I");
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    
+    NSPoint flippedLocation = ConvertNSScreenPoint(env, thePoint);
+    
+#ifdef IM_DEBUG    
+    fprintf(stderr, "AWTView InputMethod Selector Called : [characterIndexForPoint:(NSPoint)thePoint] x=%f, y=%f\n", flippedLocation.x, flippedLocation.y);
+#endif // IM_DEBUG
+    
+    jint index = JNFCallIntMethod(env, fInputMethodLOCKABLE, jm_characterIndexForPoint, (jint)flippedLocation.x, (jint)flippedLocation.y); // AWT_THREADING Safe (AWTRunLoopMode)
+        
+#ifdef IM_DEBUG    
+    fprintf(stderr, "characterIndexForPoint returning %ld\n", index);
+#endif // IM_DEBUG
+    
+    if (index == -1) {
+        return NSNotFound;
+    } else {
+        return (NSUInteger)index;
+    }
+}
+
+- (NSArray*) validAttributesForMarkedText
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [validAttributesForMarkedText]\n");
+#endif // IM_DEBUG
+    
+    return [NSArray array];
+}
+
+- (void)setInputMethod:(jobject)inputMethod
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [setInputMethod]\n");
+#endif // IM_DEBUG
+    
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    
+    // Get rid of the old one
+    if (fInputMethodLOCKABLE) {
+        JNFDeleteGlobalRef(env, fInputMethodLOCKABLE);
+    }
+    
+    // Save a global ref to the new input method.
+    if (inputMethod != NULL)
+        fInputMethodLOCKABLE = JNFNewGlobalRef(env, inputMethod);
+    else 
+        fInputMethodLOCKABLE = NULL;
+}
+
+- (void)abandonInput
+{
+#ifdef IM_DEBUG
+    fprintf(stderr, "AWTView InputMethod Selector Called : [abandonInput]\n");
+#endif // IM_DEBUG
+    
+    [ThreadUtilities performOnMainThread:@selector(markedTextAbandoned:) onObject:[NSInputManager currentInputManager] withObject:self waitUntilDone:YES awtMode:YES];
+    [self unmarkText];
+}
+
+/********************************   END NSTextInputClient Protocol   ********************************/
 
 
 

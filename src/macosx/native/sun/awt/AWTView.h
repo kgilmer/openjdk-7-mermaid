@@ -29,7 +29,7 @@
 #import "CDragSource.h"
 #import "CDropTarget.h"
 
-@interface AWTView : NSView {
+@interface AWTView : NSView<NSTextInputClient> {
 @private
     jobject m_cPlatformView;
     NSMenu * popupMenu;
@@ -45,6 +45,16 @@
 
     // mask used to set the correct modifiers for java mouseEntered/mouseExited
     NSInteger mouseDownButtonMask;
+    
+    // Input method data
+    jobject fInputMethodLOCKABLE;
+    BOOL fKeyEventsNeeded;
+    BOOL fProcessingKeystroke;
+    
+    BOOL fEnablePressAndHold;
+    BOOL fInPressAndHold;
+    BOOL fPAHNeedsToSelect;
+
 }
 
 - (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
@@ -56,5 +66,10 @@
 
 - (void) setDragSource:(CDragSource *)source;
 - (void) setDropTarget:(CDropTarget *)target;
+
+
+// Input method-related events
+- (void)setInputMethod:(jobject)inputMethod;
+- (void)abandonInput;
 
 @end

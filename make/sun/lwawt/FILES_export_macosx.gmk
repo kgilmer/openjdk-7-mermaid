@@ -102,6 +102,8 @@ FILES_export = \
 	sun/lwawt/macosx/CMouseDragGestureRecognizer.java \
 	sun/lwawt/macosx/CDropTarget.java \
 	sun/lwawt/macosx/CDropTargetContextPeer.java \
+	sun/lwawt/macosx/CInputMethod.java \
+	sun/lwawt/macosx/CInputMethodDescriptor.java \
 	sun/lwawt/macosx/CCursorManager.java \
 	sun/lwawt/macosx/CFileDialog.java \
 	sun/lwawt/macosx/CImage.java \
