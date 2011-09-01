@@ -31,11 +31,8 @@
 #import "ThreadUtilities.h"
 #import "AWTView.h"
 
-#import <CoreServices/CoreServices.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <JavaRuntimeSupport/JavaRuntimeSupport.h>
-#import <Carbon/Carbon.h>
-#import <Carbon/CarbonPriv.h>
 
 #define JAVA_LIST @"JAVA_LIST"
 #define CURRENT_KB_DESCRIPTION @"CURRENT_KB_DESCRIPTION"
