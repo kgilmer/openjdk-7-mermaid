@@ -37,12 +37,7 @@ import java.awt.image.ColorModel;
 import sun.java2d.SunGraphics2D;
 import sun.java2d.SurfaceData;
 
-import sun.java2d.pipe.RenderBuffer;
-
 import sun.lwawt.macosx.CPlatformView;
-
-import java.util.List;
-import java.util.ArrayList;
 
 public abstract class CGLSurfaceData extends OGLSurfaceData {
 
@@ -72,14 +67,6 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         initOps(pConfigInfo, pPeerData, 0, 0);
     }
     
-    // Asks layer to re-cache its content
-    // called on the renderer thread
-    void setNeedsDisplay() {
-        if (pView != null) {
-            pView.setNeedsDisplay(true);
-        }
-    }
-
     @Override //SurfaceData
     public GraphicsConfiguration getDeviceConfiguration() {
         return graphicsConfig;

@@ -26,6 +26,7 @@
 FILES_objc = \
 	CGLGraphicsConfig.m \
 	CGLSurfaceData.m \
+        CGLLayer.m \
 	CGraphicsConfig.m \
 	CGraphicsDevice.m \
 	CGraphicsEnv.m \

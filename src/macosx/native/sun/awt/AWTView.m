@@ -32,97 +32,8 @@
 #import "LWCToolkit.h"
 #import "JavaComponentAccessibility.h"
 #import "JavaTextAccessibility.h"
-#import <OpenGL/OpenGL.h>
-#import <Cocoa/Cocoa.h>
-#import <QuartzCore/QuartzCore.h>
+#import "CGLLayer.h"
 
-extern NSOpenGLPixelFormat *sharedPixelFormat;
-extern NSOpenGLContext *sharedContext;
-
-// TODO: extract the layers code into separate file
-//       to macosx/native/sun/java2d/opengl ?
-
-@interface AWTCAOpenGLLayer : CAOpenGLLayer
-{
-    jobject m_cPlatformView;
-    NSOpenGLContext *m_nsContext;
-	AWTView *view;
-}
-- (void) setPlatformView:(jobject)cPlatformView;
-- (void) setNSContext: (NSOpenGLContext *)nsContext;
-- (void) setAWTView: (AWTView *)aView;
-- (void) _blitTexture;
-@end
-
-@implementation AWTCAOpenGLLayer
-
-- (void) setPlatformView: (jobject) cPlatformView
-{
-    m_cPlatformView = cPlatformView;
-}
-
-- (void) setNSContext: (NSOpenGLContext *)nsContext
-{
-    m_nsContext = nsContext;
-}
-
-- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return sharedPixelFormat.CGLPixelFormatObj;    
-}
- 
-- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
-    CGLContextObj contextObj = NULL;
-    CGLCreateContext(pixelFormat, sharedContext.CGLContextObj, &contextObj);
-    return contextObj;
-}
-
-- (void) setAWTView: (AWTView *) aView
-{
-    view = aView;
-}
-
-// use texture as src and blit it to the layer
-- (void) _blitTexture
-{
-    if (view.textureID == 0)
-        return;
-    
-    glEnable(GL_TEXTURE_2D);    
-    glBindTexture(GL_TEXTURE_2D, view.textureID);
-
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); // srccopy
-
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f( 1.0f, -1.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f( 1.0f,  1.0f);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f,  1.0f);
-    glEnd();
-    
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-}
-
--(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp
-{
-    AWT_ASSERT_APPKIT_THREAD;
-       
-    // Set the current context to the one given to us.
-    CGLSetCurrentContext(glContext);
-
-    // Updates viewport to window size.
-    NSRect bounds = [[view window] frame];
-    glViewport(0, 0, bounds.size.width, bounds.size.height);
-
-    [self _blitTexture];
-
-	// Call super to finalize the drawing. By default all it does is call glFlush().
-    [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
-
-    CGLSetCurrentContext(NULL);
-}
-
-@end
 
 @interface AWTView()
 @property (retain) CDropTarget *_dropTarget;
@@ -134,43 +45,26 @@ extern NSOpenGLContext *sharedContext;
 
 @synthesize _dropTarget;
 @synthesize _dragSource;
-@synthesize textureID;
+@synthesize cglLayer;
 
 // Note: Must be called on main (AppKit) thread only
 - (id) initWithRect: (NSRect) rect
        platformView: (jobject) cPlatformView
-       context: (NSOpenGLContext*) nsContext
 {
 AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
     self = [super initWithFrame: rect];
     if (self == nil) return self;
 
-    textureID = 0; // texture will be created by rendering pipe
     m_cPlatformView = cPlatformView;
-    
-    AWTCAOpenGLLayer *layer = [AWTCAOpenGLLayer layer];
-    [layer setPlatformView: cPlatformView];
-    [layer setNSContext: nsContext];
-    [layer setAWTView: self];
 
-    // NOTE: async=YES means that the layer is re-cached periodically
-    layer.asynchronous = FALSE;    
-    layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+    cglLayer = [CGLLayer layer];
     
     [self setWantsLayer: YES];
-    // TODO: do we really want to add our layer as a sublayer?
-    [self.layer addSublayer:layer];
+    [self.layer addSublayer: (CALayer *)cglLayer];
 
     return self;
 }
-
-//	Override setFrameSize
-//- (void)setFrameSize:(NSSize)newSize {
-//	NSLog(@"size : %@", NSStringFromSize(newSize));
-//	
-//	[super setFrameSize:newSize];
-//}
 
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
@@ -793,7 +687,7 @@ AWT_ASSERT_APPKIT_THREAD;
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CPlatformView_nativeCreateView
-(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height, jlong nsContextPtr)
+(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height)
 {
     __block AWTView *newView = nil;
     
@@ -807,8 +701,7 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
         AWT_ASSERT_APPKIT_THREAD;
         
         AWTView *view = [[AWTView alloc] initWithRect:rect
-                                         platformView:cPlatformView
-                                         context:jlong_to_ptr(nsContextPtr)];
+                                         platformView:cPlatformView];
         CFRetain(view);
         [view release]; // GC
         
@@ -818,31 +711,4 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
     
     return ptr_to_jlong(newView);
-}
-
-/*
- * Class:     sun_lwawt_macosx_CPlatformWindow
- * Method:    setNeedsDisplay
- * Signature: (JZ)V
- */
-JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformView_setNeedsDisplay
-(JNIEnv *env, jclass clazz, jlong viewPtr, jboolean flag)
-{
-    JNF_COCOA_ENTER(env);
-    AWT_ASSERT_NOT_APPKIT_THREAD;
-
-    AWTView *view = OBJC(viewPtr);
-	
-    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
-        AWT_ASSERT_APPKIT_THREAD;
-
-        // NOTE: looks like calling view doesn't re-cache sublayers
-        // [view setNeedsDisplay: YES];
-
-        NSArray *layers = view.layer.sublayers;
-        CALayer *layer = (CALayer *)[layers objectAtIndex:0];
-        [layer setNeedsDisplay];
-    }];
-
-    JNF_COCOA_EXIT(env);
 }

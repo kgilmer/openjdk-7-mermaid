@@ -34,11 +34,8 @@ import sun.java2d.SurfaceData;
 import sun.lwawt.LWWindowPeer;
 import sun.lwawt.macosx.event.NSEvent;
 
-import sun.java2d.opengl.CGLGraphicsConfig;
-import sun.java2d.opengl.CGLSurfaceData;
-
 public class CPlatformView extends CFRetainedResource {
-    private native long nativeCreateView(int x, int y, int width, int height, long nsContextPtr);
+    private native long nativeCreateView(int x, int y, int width, int height);
     
     private LWWindowPeer peer;
     private SurfaceData surfaceData;
@@ -47,27 +44,15 @@ public class CPlatformView extends CFRetainedResource {
         super(0, true);
     }
     
-    private long getNSContextPtr() {
-        return ((CGLGraphicsConfig)peer.getGraphicsConfiguration()).getNSContextPtr();        
-    }
-    
     public void initialize(LWWindowPeer peer) {
         this.peer = peer;
-        setPtr(nativeCreateView(0, 0, 0, 0, getNSContextPtr()));
+        setPtr(nativeCreateView(0, 0, 0, 0));
     }
     
     public long getAWTView() {
         return ptr;
     }
 
-    // TODO: consider using CWrapper
-    private native void setNeedsDisplay(long nsViewPtr, boolean flag);
-    
-    public void setNeedsDisplay(boolean flag) {
-        setNeedsDisplay(ptr, flag);
-        // CWrapper.NSView.setNeedsDisplay(ptr, flag);
-    }
-	
     /*
      * All coordinates passed to the method should be based on the origin being in the bottom-left corner (standard
      * Cocoa coordinates).

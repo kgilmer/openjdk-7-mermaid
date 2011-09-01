@@ -377,16 +377,3 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_getOGLCapabilities
         return cglinfo->context->caps;
     }
 }
-
-JNIEXPORT jlong JNICALL
-Java_sun_java2d_opengl_CGLGraphicsConfig_getNSContextPtr
-    (JNIEnv *env, jclass cglgc, jlong configInfo)
-{
-    J2dTraceLn(J2D_TRACE_INFO, "CGLGraphicsConfig_getNSContextPtr");
-    CGLGraphicsConfigInfo *cglinfo =
-        (CGLGraphicsConfigInfo *)jlong_to_ptr(configInfo);
-
-    OGLContext *oglc = (OGLContext*)cglinfo->context;
-    CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
-    return ctxinfo->context;
-}

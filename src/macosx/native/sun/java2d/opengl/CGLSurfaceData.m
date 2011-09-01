@@ -33,7 +33,9 @@
 #import "OGLRenderQueue.h"
 #import "CGLGraphicsConfig.h"
 #import "CGLSurfaceData.h"
-#import "AWTView.h"
+#import "CGLLayer.h"
+#import "ThreadUtilities.h"
+
 
 /**
  * The methods in this file implement the native windowing system specific
@@ -187,7 +189,7 @@ OGLSD_SetScratchSurface(JNIEnv *env, jlong pConfigInfo)
     CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
 
 JNF_COCOA_ENTER(env);
-    
+
     // avoid changing the context's target view whenever possible, since
     // calling setView causes flickering; as long as our context is current
     // to some view, it's not necessary to switch to the scratch surface
@@ -246,6 +248,17 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
         j2d_glFlush();
     }
 
+#if USE_INTERMEDIATE_BUFFER
+    // looks like we should also explicitly re-cache layers between context changes
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        AWTView *view = dstCGLOps->peerData;
+        [view.cglLayer setNeedsDisplay];
+    }];
+
+#endif
+    
     if (dstOps->drawableType == OGLSD_FBOBJECT) {
         // first make sure we have a current context (if the context isn't
         // already current to some drawable, we will make it current to
@@ -362,15 +375,18 @@ jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
         OGLSurfaceData_initFBObject(env, NULL, ptr_to_jlong(oglsdo), oglsdo->isOpaque,
                                     isTexNonPow2Available(cglsdo->configInfo),
                                     isTexRectAvailable(cglsdo->configInfo),
-                                    oglsdo->width, oglsdo->height);    
+                                    oglsdo->width, oglsdo->height);
     
-    // NOTE: WINDOW type is reused for offscreen rendering
+    // NOTE: OGLSD_WINDOW type is reused for offscreen rendering
     //       when intermediate buffer is enabled
     oglsdo->drawableType = OGLSD_WINDOW;
 
     AWTView *view = cglsdo->peerData;
-    [view setTextureID: (GLuint)oglsdo->textureID];
-    
+    CGLLayer *layer = (CGLLayer *)view.cglLayer;
+    layer.textureID = oglsdo->textureID;
+    layer.textureWidth = oglsdo->width;
+    layer.textureHeight = oglsdo->height;
+
     return result;
 }
 

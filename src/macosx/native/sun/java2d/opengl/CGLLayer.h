@@ -23,42 +23,24 @@
  * questions.
  */
 
-#import <Cocoa/Cocoa.h>
-#import <JavaNativeFoundation/JavaNativeFoundation.h>
+#ifndef CGLLayer_h_Included
+#define CGLLayer_h_Included
 
-#import "CDragSource.h"
-#import "CDropTarget.h"
+#import "AWTView.h"
 
-@interface AWTView : NSView {
-@private
-    jobject m_cPlatformView;
-    NSMenu * popupMenu;
-
-    // Handler for the tracking rect needed for Enter/Exit events management.
-    NSTrackingRectTag rolloverTrackingRectTag;
-
-    // TODO: NSMenu *contextualMenu;
-	
-    // dnd support (see AppKit/NSDragging.h, NSDraggingSource/Destination):
-    CDragSource *_dragSource;
-    CDropTarget *_dropTarget;
-
-    // mask used to set the correct modifiers for java mouseEntered/mouseExited
-    NSInteger mouseDownButtonMask;
-    
-    id cglLayer; // is a sublayer of view.layer
+@interface CGLLayer : CAOpenGLLayer
+{    
+    // intermediate buffer
+    GLuint textureID;    
+    float textureWidth;
+    float textureHeight;
 }
 
-@property (nonatomic, retain) id cglLayer;
+@property (readwrite, assign) GLuint textureID;
+@property (readwrite, assign) float textureWidth;
+@property (readwrite, assign) float textureHeight;
 
-- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
-- (void) deliverJavaMouseEvent: (NSEvent *) event;
-- (void) resetTrackingRect;
-- (void) deliverJavaKeyEventHelper: (NSEvent *) event;
-- (void) setContextMenu:(NSMenu *)aMenu;
-- (jobject) awtComponent:(JNIEnv *)env;
-
-- (void) setDragSource:(CDragSource *)source;
-- (void) setDropTarget:(CDropTarget *)target;
-
+- (void) _blitTexture;
 @end
+
+#endif /* CGLLayer_h_Included */

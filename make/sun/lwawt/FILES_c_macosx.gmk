@@ -27,6 +27,7 @@ FILES_objc = \
 	CFRetainedResource.m \
 	CGLGraphicsConfig.m \
 	CGLSurfaceData.m \
+        CGLLayer.m \
 	CGraphicsConfig.m \
 	CGraphicsDevice.m \
 	CGraphicsEnv.m \
