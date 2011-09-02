@@ -47,6 +47,13 @@ import sun.awt.*;
 import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
 
+
+class NamedCursor extends Cursor {
+    NamedCursor(String name) {
+        super(name);
+    }
+}
+
 /**
  * Mac OS X Cocoa-based AWT Toolkit.
  */
@@ -225,6 +232,23 @@ public class LWCToolkit extends LWToolkit {
         fontHints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         desktopProperties.put(SunToolkit.DESKTOPFONTHINTS, fontHints);
         desktopProperties.put("awt.mouse.numButtons", BUTTONS);
+        
+        // These DnD properties must be set, otherwise Swing ends up spewing NPEs
+        // all over the place. The values came straight off of MToolkit.
+        desktopProperties.put("DnD.Autoscroll.initialDelay", new Integer(50));
+        desktopProperties.put("DnD.Autoscroll.interval", new Integer(50));
+        desktopProperties.put("DnD.Autoscroll.cursorHysteresis", new Integer(5));
+
+        desktopProperties.put("DnD.isDragImageSupported", new Boolean(true));
+        
+        // Register DnD cursors
+        desktopProperties.put("DnD.Cursor.CopyDrop", new NamedCursor("DnD.Cursor.CopyDrop"));
+        desktopProperties.put("DnD.Cursor.MoveDrop", new NamedCursor("DnD.Cursor.MoveDrop"));
+        desktopProperties.put("DnD.Cursor.LinkDrop", new NamedCursor("DnD.Cursor.LinkDrop"));
+        desktopProperties.put("DnD.Cursor.CopyNoDrop", new NamedCursor("DnD.Cursor.CopyNoDrop"));
+        desktopProperties.put("DnD.Cursor.MoveNoDrop", new NamedCursor("DnD.Cursor.MoveNoDrop"));
+        desktopProperties.put("DnD.Cursor.LinkNoDrop", new NamedCursor("DnD.Cursor.LinkNoDrop"));
+       
     }
 
     
