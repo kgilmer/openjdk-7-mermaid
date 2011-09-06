@@ -41,7 +41,7 @@ import sun.java2d.pipe.hw.ExtendedBufferCapabilities;
 import static sun.java2d.pipe.hw.AccelSurface.*;
 import static sun.java2d.pipe.hw.ExtendedBufferCapabilities.VSyncType.*;
 
-import sun.lwawt.LWWindowPeer;
+import sun.lwawt.LWCanvasPeer;
 
 public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
 
@@ -78,8 +78,8 @@ public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
     protected SurfaceData initAcceleratedSurface() {
         SurfaceData sData = null;
         Component comp = vImg.getComponent();
-        LWWindowPeer peer =
-            (comp != null) ? (LWWindowPeer)comp.getPeer() : null;
+        LWCanvasPeer peer =
+            (comp != null) ? (LWCanvasPeer)comp.getPeer() : null;
 
         try {
             boolean createVSynced = false;
