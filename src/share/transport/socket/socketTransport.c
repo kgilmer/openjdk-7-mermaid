@@ -585,8 +585,6 @@ recv_fully(int f, char *buf, int len)
     while (nbytes < len) {
         int res = dbgsysRecv(f, buf + nbytes, len - nbytes, 0);
         if (res < 0) {
-	    if (errno == EINTR)
-		continue;
             return res;
         } else if (res == 0) {
             break; /* eof, return nbytes which is less than len */
@@ -603,8 +601,6 @@ send_fully(int f, char *buf, int len)
     while (nbytes < len) {
         int res = dbgsysSend(f, buf + nbytes, len - nbytes, 0);
         if (res < 0) {
-	    if (errno == EINTR)
-		continue;
             return res;
         } else if (res == 0) {
             break; /* eof, return nbytes which is less than len */
