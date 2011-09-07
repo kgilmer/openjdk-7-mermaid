@@ -35,7 +35,7 @@ import com.apple.laf.AquaUtils.LazySingleton;
 
 public class AquaNativeResources {
     static {
-        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
+        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("osxui"));
     }
     
     // TODO: removing CColorPaint for now

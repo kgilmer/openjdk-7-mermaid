@@ -57,7 +57,7 @@ class AquaFileView extends FileView {
     static final int kLSItemInfoExtensionIsHidden  = 0x00100000; /* Item has a hidden extension*/
     
     static {
-        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
+        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("osxui"));
     }
     
     // TODO: Un-comment this out when the native version exists

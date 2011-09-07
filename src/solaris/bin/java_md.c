@@ -50,21 +50,18 @@
 
 #ifdef MACOSX
 /* Support Cocoa event loop on the main thread */
-#include <Security/AuthSession.h>
-#include <ApplicationServices/ApplicationServices.h>
-#include <CoreFoundation/CoreFoundation.h>
 #include <Cocoa/Cocoa.h>
 #include <objc/objc-runtime.h>
 #include <errno.h>
 #include <spawn.h>
 
 struct NSAppArgs {
-        int argc;
-        char **argv;
+    int argc;
+    char **argv;
 };
 #endif
 
-#ifdef __APPLE__
+#ifdef MACOSX
 #define JVM_DLL "libjvm.dylib"
 #define JAVA_DLL "libjava.dylib"
 /* FALLBACK avoids naming conflicts with system libraries
@@ -105,7 +102,7 @@ struct NSAppArgs {
 #endif
 
 /* pointer to environment */
-#ifdef __APPLE__
+#ifdef MACOSX
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
 #else
@@ -314,44 +311,28 @@ static void *apple_main (void *arg)
     exit(main_fptr(args->argc, args->argv));
 }
 
+static void dummyTimer(CFRunLoopTimerRef timer, void *info) {}
+
 /*
  * Mac OS X mandates that the GUI event loop run on very first thread of
  * an application. This requires that we re-call Java's main() on a new
  * thread, reserving the 'main' thread for Cocoa.
  */
-static void DarwinStartup (int argc, char *argv[])
-{
-    struct NSAppArgs args;
-    pthread_t main_thr; 
-    SInt32 result;
-    static jboolean started = false;
-
+static void MacOSXStartup(int argc, char *argv[]) {
     // Thread already started?
+    static jboolean started = false;
     if (started) {
         return;
     }
-    id app = [NSApplication sharedApplication];
     started = true;
 
-    // Is the WindowServer available? If not, nothing to do.
-    OSStatus status;
-    SecuritySessionId session_id;
-    SessionAttributeBits session_info;
-    status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
-    if (status != noErr) {
-        fprintf(stderr, "Could not get security session info, err = %ld\n", (long)status);
-        exit(1);
-    }
-
-    if (!(session_info & sessionHasGraphicAccess)) {
-        return;
-    }
-
     // Hand off arguments
+    struct NSAppArgs args;
     args.argc = argc;
     args.argv = argv;
 
     // Fire up the main thread
+    pthread_t main_thr;
     if (pthread_create(&main_thr, NULL, &apple_main, &args) != 0) {
         fprintf(stderr, "Could not create main thread: %s\n", strerror(errno));
         exit(1);
@@ -360,41 +341,18 @@ static void DarwinStartup (int argc, char *argv[])
         fprintf(stderr, "pthread_detach() failed: %s\n", strerror(errno));
         exit(1);
     }
-
-    // Wait here for AWT to be loaded before we turn this into a full-fledged
-    // foreground application (and start the main event loop, etc)
-    pthread_mutex_lock(&awtLoaded_mutex);
-    while (awtLoaded == NO) {
-        //fprintf(stderr, "waiting for AWT to be loaded...");
-        pthread_cond_wait(&awtLoaded_cv, &awtLoaded_mutex);
-    }
-    pthread_mutex_unlock(&awtLoaded_mutex);
-    //fprintf(stderr, "done\n");
-
-    // Now run the Cocoa main application loop
-    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-
-    // The following is necessary to make the java process behave like a
-    // proper foreground application...
-    ProcessSerialNumber psn;
-    GetCurrentProcess(&psn);
-    TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-
-    NSBundle *javaBundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/JavaVM.framework"];
-    NSString *defaultNibFile = [javaBundle pathForResource:@"DefaultApp" ofType:@"nib"];
-    [NSBundle loadNibFile:defaultNibFile externalNameTable: [NSDictionary dictionaryWithObject:app forKey:@"NSOwner"] withZone:nil];
-
-    // Need to activate the application explicitly here, otherwise it won't
-    // become active until the user clicks an application window
-    [NSApp activateIgnoringOtherApps: TRUE];
-
-    // Start the main event loop
-    [NSApp run];
-
-    [pool drain];
-
-    fprintf(stderr, "-[NSApp run] exited unexpectedly\n");
-    exit(1);
+    
+    // RunLoop needs at least one source, and 1e20 is pretty far into the future
+    CFRunLoopTimerRef t = CFRunLoopTimerCreate(kCFAllocatorDefault, 1.0e20, 0.0, 0, 0, dummyTimer, NULL);
+    CFRunLoopAddTimer(CFRunLoopGetCurrent(), t, kCFRunLoopDefaultMode);
+    CFRelease(t);
+    
+    // Park this thread in the main run loop.
+    int32_t result;
+    do {
+        result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0e20, false);
+    } while (result != kCFRunLoopRunFinished);
+    return;
 }
 
 #endif
@@ -584,7 +542,6 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
         /* scan for data model arguments and remove from argument list;
            last occurrence determines desired data model */
         for (i=1; i < argc; i++) {
-
           if (JLI_StrCmp(argv[i], "-J-d64") == 0 || JLI_StrCmp(argv[i], "-d64") == 0) {
             wanted = 64;
             continue;
@@ -655,7 +612,7 @@ CreateExecutionEnvironment(int *pargc, char ***pargv,
          * thread. Spawn off a new thread to run main() and pass
          * this thread off to the Cocoa event loop.
          */
-        DarwinStartup(argc, argv);
+        MacOSXStartup(argc, argv);
 #endif
         /*
          * we seem to have everything we need, so without further ado
@@ -1673,7 +1630,7 @@ jlong_format_specifier() {
 int
 ContinueInNewThread0(int (JNICALL *continuation)(void *), jlong stack_size, void * args) {
     int rslt;
-#if defined(__linux__) || defined(_ALLBSD_SOURCE)
+#if defined(__linux__) || defined(_ALLBSD_SOURCE) || defined(__APPLE__)
     pthread_t tid;
     pthread_attr_t attr;
     pthread_attr_init(&attr);

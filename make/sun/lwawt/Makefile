@@ -38,7 +38,7 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 include FILES_c_macosx.gmk
 include FILES_export_macosx.gmk
-AUTO_FILES_JAVA_DIRS = sun/awt sun/font sun/lwawt sun/lwawt/macosx sun/java2d sun/java2d/opengl
+AUTO_FILES_JAVA_DIRS = sun/awt sun/font sun/lwawt sun/lwawt/macosx sun/java2d sun/java2d/opengl com/apple/eawt
 
 #
 # Rules.
@@ -77,6 +77,7 @@ OTHER_LDLIBS += \
 	-framework AudioToolbox \
 	-framework Carbon \
 	-framework Cocoa \
+	-framework Security \
 	-framework ExceptionHandling \
 	-framework JavaNativeFoundation \
 	-framework JavaRuntimeSupport \

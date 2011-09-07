@@ -28,6 +28,9 @@
 
 #import <pthread.h>
 
+#import "AWT_debug.h"
+
+
 // --------------------------------------------------------------------------
 #ifndef PRODUCT_BUILD
 
@@ -55,13 +58,10 @@
 #ifdef AWT_THREAD_ASSERTS_MESSAGES
 
 #define AWT_THREAD_ASSERTS_NOT_APPKIT_MESSAGE \
-    NSLog(@"Cocoa AWT: Not running on AppKit thread 0 when expected. (%s - %s:%d)", __FUNCTION__, __FILE__, __LINE__)
+    AWT_DEBUG_LOG(@"Not running on AppKit thread 0 when expected.")
 
 #define AWT_THREAD_ASSERTS_ON_APPKIT_MESSAGE \
-    NSLog(@"Cocoa AWT: Running on AppKit thread 0 when not expected. (%s - %s:%d)", __FUNCTION__, __FILE__, __LINE__)
-
-#define AWT_THREAD_ASSERTS_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
+    AWT_DEBUG_LOG(@"Running on AppKit thread 0 when not expected.")
 
 #ifdef AWT_THREAD_ASSERTS_ENV_ASSERT
 
@@ -84,7 +84,7 @@ do {                                           \
 do {                                           \
     if (pthread_main_np() == 0) {              \
         AWT_THREAD_ASSERTS_NOT_APPKIT_MESSAGE; \
-        AWT_THREAD_ASSERTS_BUG_REPORT_MESSAGE; \
+        AWT_DEBUG_BUG_REPORT_MESSAGE;          \
         AWT_THREAD_ASSERTS_ENV_ASSERT_CHECK;   \
     }                                          \
 } while (0)
@@ -92,8 +92,8 @@ do {                                           \
 #define AWT_ASSERT_NOT_APPKIT_THREAD           \
 do {                                           \
     if (pthread_main_np() != 0) {              \
-        AWT_THREAD_ASSERTS_ON_APPKIT_MESSAGE; \
-        AWT_THREAD_ASSERTS_BUG_REPORT_MESSAGE; \
+        AWT_THREAD_ASSERTS_ON_APPKIT_MESSAGE;  \
+        AWT_DEBUG_BUG_REPORT_MESSAGE;          \
         AWT_THREAD_ASSERTS_ENV_ASSERT_CHECK;   \
     }                                          \
 } while (0)

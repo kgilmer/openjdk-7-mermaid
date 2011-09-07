@@ -34,7 +34,7 @@ import sun.lwawt.macosx.CPlatformWindow;
 
 class ScreenPopupFactory extends PopupFactory {
     static {
-        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
+        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("osxui"));
     }
     
     static final Float TRANSLUCENT = new Float(248f/255f);

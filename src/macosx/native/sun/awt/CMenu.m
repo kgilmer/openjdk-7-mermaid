@@ -36,7 +36,7 @@
 @implementation CMenu
 
 - (id)initWithPeer:(jobject)peer {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     // Create the new NSMenu
     self = [super initWithPeer:peer];
     if (self) {
@@ -55,22 +55,22 @@
 //- (void)finalize { [super finalize]; }
 
 - (void)addJavaSubmenu:(CMenu *)submenu {
-    AWT_ASSERT_NOT_APPKIT_THREAD;
+AWT_ASSERT_NOT_APPKIT_THREAD;
     [ThreadUtilities performOnMainThread:@selector(addNativeItem_OnAppKitThread:) onObject:self withObject:submenu waitUntilDone:YES awtMode:YES];
 }
 
 - (void)addJavaMenuItem:(CMenuItem *)theMenuItem {
-    AWT_ASSERT_NOT_APPKIT_THREAD;
+AWT_ASSERT_NOT_APPKIT_THREAD;
     [ThreadUtilities performOnMainThread:@selector(addNativeItem_OnAppKitThread:) onObject:self withObject:theMenuItem waitUntilDone:YES awtMode:YES];
 }
 
 - (void)addNativeItem_OnAppKitThread:(CMenuItem *)itemModified {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     [itemModified addNSMenuItemToMenu:[self menu]];
 }
 
 - (void)setJavaMenuTitle:(NSString *)title {
-    AWT_ASSERT_NOT_APPKIT_THREAD;
+AWT_ASSERT_NOT_APPKIT_THREAD;
 
     if (title) {
         [ThreadUtilities performOnMainThread:@selector(setNativeMenuTitle_OnAppKitThread:) onObject:self withObject:title waitUntilDone:YES awtMode:YES];
@@ -78,7 +78,7 @@
 }
 
 - (void)setNativeMenuTitle_OnAppKitThread:(NSString *)title {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
 
     [fMenu setTitle:title];
     // If we are a submenu we need to set our name in the parent menu's menu item.
@@ -95,13 +95,13 @@
 }
 
 - (void)deleteJavaItem:(jint)index {
-    AWT_ASSERT_NOT_APPKIT_THREAD;
+AWT_ASSERT_NOT_APPKIT_THREAD;
 
     [ThreadUtilities performOnMainThread:@selector(deleteNativeJavaItem_OnAppKitThread:) onObject:self withObject:[NSNumber numberWithInt:index] waitUntilDone:YES awtMode:YES];
 }
 
 - (void)deleteNativeJavaItem_OnAppKitThread:(NSNumber *)number {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
 
     int n = [number intValue];
     if (n < [[self menu] numberOfItems]) {
@@ -120,7 +120,7 @@
 }
 
 - (void)setNativeEnabled_OnAppKitThread:(NSNumber *)boolNumber {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
 
     @synchronized(self) {
         fIsEnabled = [boolNumber boolValue];
@@ -162,10 +162,10 @@ CMenu * createCMenu (jobject cPeerObjGlobal) {
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeCreateSubMenu
-    (JNIEnv *env, jobject peer, jlong parentMenu)
+(JNIEnv *env, jobject peer, jlong parentMenu)
 {
     CMenu *aCMenu = nil;
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 
     jobject cPeerObjGlobal = (*env)->NewGlobalRef(env, peer);
 
@@ -173,12 +173,13 @@ Java_sun_lwawt_macosx_CMenu_nativeCreateSubMenu
 
     // Add it to the parent menu
     [((CMenu *)jlong_to_ptr(parentMenu)) addJavaSubmenu: aCMenu];
-    JNF_COCOA_EXIT(env);
-
     if (aCMenu) {
         CFRetain(aCMenu); // GC
         [aCMenu release];
     }
+    
+JNF_COCOA_EXIT(env);
+
     return ptr_to_jlong(aCMenu);
 }
 
@@ -191,12 +192,12 @@ Java_sun_lwawt_macosx_CMenu_nativeCreateSubMenu
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeCreateMenu
-    (JNIEnv *env, jobject peer,
+(JNIEnv *env, jobject peer,
         jlong parentMenuBar, jboolean isHelpMenu, jint insertLocation)
 {
     CMenu *aCMenu = nil;
     CMenuBar *parent = (CMenuBar *)jlong_to_ptr(parentMenuBar);
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
 
     jobject cPeerObjGlobal = (*env)->NewGlobalRef(env, peer);
 
@@ -212,11 +213,11 @@ Java_sun_lwawt_macosx_CMenu_nativeCreateMenu
         [parent javaSetHelpMenu: aCMenu];
     }
 
-    JNF_COCOA_EXIT(env);
     if (aCMenu) {
         CFRetain(aCMenu); // GC
         [aCMenu release];
     }
+JNF_COCOA_EXIT(env);
     return ptr_to_jlong(aCMenu);
 }
 
@@ -228,12 +229,12 @@ Java_sun_lwawt_macosx_CMenu_nativeCreateMenu
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeSetMenuTitle
-    (JNIEnv *env, jobject peer, jlong menuObject, jstring label)
+(JNIEnv *env, jobject peer, jlong menuObject, jstring label)
 {
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
     // Set the menu's title.
     [((CMenu *)jlong_to_ptr(menuObject)) setJavaMenuTitle:JNFJavaToNSString(env, label)];
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -243,12 +244,12 @@ Java_sun_lwawt_macosx_CMenu_nativeSetMenuTitle
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeAddSeparator
-    (JNIEnv *env, jobject peer, jlong menuObject)
+(JNIEnv *env, jobject peer, jlong menuObject)
 {
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
     // Add a separator item.
     [((CMenu *)jlong_to_ptr(menuObject))addSeparator];
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -258,12 +259,12 @@ Java_sun_lwawt_macosx_CMenu_nativeAddSeparator
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeDeleteItem
-    (JNIEnv *env, jobject peer, jlong menuObject, jint index)
+(JNIEnv *env, jobject peer, jlong menuObject, jint index)
 {
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
     // Remove the specified item.
     [((CMenu *)jlong_to_ptr(menuObject)) deleteJavaItem: index];
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -273,13 +274,13 @@ Java_sun_lwawt_macosx_CMenu_nativeDeleteItem
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CMenu_nativeGetNSMenu
-    (JNIEnv *env, jobject peer, jlong menuObject)
+(JNIEnv *env, jobject peer, jlong menuObject)
 {
     NSMenu* nsMenu = NULL;
 
-    JNF_COCOA_ENTER(env);
+JNF_COCOA_ENTER(env);
     nsMenu = [((CMenu *)jlong_to_ptr(menuObject)) menu];
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 
     // Strong retain this menu; it'll get released in Java_apple_laf_ScreenMenu_addMenuListeners
     if (nsMenu) {

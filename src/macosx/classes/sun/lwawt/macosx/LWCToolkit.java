@@ -27,19 +27,13 @@ package sun.lwawt.macosx;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragGestureRecognizer;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.InvalidDnDOperationException;
-import java.awt.dnd.MouseDragGestureRecognizer;
+import java.awt.dnd.*;
 import java.awt.dnd.peer.DragSourceContextPeer;
-import java.awt.font.TextAttribute;
+import java.awt.event.InvocationEvent;
 import java.awt.im.InputMethodHighlight;
-import java.awt.im.spi.InputMethodDescriptor;
 import java.awt.peer.*;
-import java.awt.event.*;
 import java.lang.reflect.*;
+import java.security.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -76,6 +70,14 @@ public class LWCToolkit extends LWToolkit {
         if (!GraphicsEnvironment.isHeadless()) {
             initIDs();
         }
+    }
+    
+    static String getSystemProperty(final String name, final String deflt) {
+        return AccessController.doPrivileged (new PrivilegedAction<String>() {
+            public String run() {
+                return System.getProperty(name, deflt);
+            }
+        });
     }
 
     public LWCToolkit() {
@@ -342,10 +344,6 @@ public class LWCToolkit extends LWToolkit {
         Thread.currentThread().setName(CThreading.APPKIT_THREAD_NAME);
     }
 
-    void setApplicationIconImage(CImage cImage){
-        nativeSetApplicationIconImage(cImage.ptr);
-    }
-
     @Override
     public boolean isWindowOpacitySupported() {
         return true;
@@ -595,8 +593,6 @@ public class LWCToolkit extends LWToolkit {
     public static native void stopAWTRunLoop(long mediator);
     
     private native boolean nativeSyncQueue(long timeout);
-
-    private native void nativeSetApplicationIconImage(long imagePtr);
 
     @Override
     public Clipboard createPlatformClipboard() {

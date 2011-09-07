@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 1997, 2011, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,8 @@
 #
 
 BUILDDIR = ../../..
-PACKAGE = com.apple.laf
-LIBRARY = laf
+PACKAGE = com.apple.osxui
+LIBRARY = osxui
 PRODUCT = sun
 include $(BUILDDIR)/common/Defs.gmk
 
@@ -33,7 +33,7 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 # Files
 #
-AUTO_FILES_JAVA_DIRS = com/apple/laf
+AUTO_FILES_JAVA_DIRS = com/apple/laf com/apple/eawt
 
 FILES_objc = \
         $(TARGDIR)AquaFileView.m \
@@ -87,6 +87,7 @@ include $(BUILDDIR)/common/Library.gmk
 # Add to ambient vpath to get files in a subdirectory
 #
 vpath %.m   $(call NativeSrcDirList,,native/com/apple/laf)
+vpath %.m $(call NativeSrcDirList,,native/com/apple/eawt)
 
 CPPFLAGS += \
 	$(call NativeSrcDirList,-I,native/com/apple/laf) \

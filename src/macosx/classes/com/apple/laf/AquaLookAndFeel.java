@@ -34,11 +34,8 @@ import javax.swing.border.Border;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicLookAndFeel;
 
-import sun.awt.SunHints;
-import sun.swing.SwingLazyValue;
-import sun.swing.SwingUtilities2;
-import apple.laf.JRSUIControl;
-import apple.laf.JRSUIUtils;
+import sun.swing.*;
+import apple.laf.*;
 
 import com.apple.resources.MacOSXResourceBundle;
 
@@ -138,7 +135,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
      */
     private int fOldAntiAliasingHint = 0;
     public void initialize() {
-        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("laf"));
+        java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("osxui"));
         java.security.AccessController.doPrivileged(new PrivilegedAction<Object>(){
             @Override
             public Object run() {

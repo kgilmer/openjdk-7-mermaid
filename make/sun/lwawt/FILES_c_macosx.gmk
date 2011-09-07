@@ -24,35 +24,38 @@
 #
 
 FILES_objc = \
-	CFRetainedResource.m \
-	CGLGraphicsConfig.m \
-	CGLSurfaceData.m \
-	CGraphicsConfig.m \
-	CGraphicsDevice.m \
-	CGraphicsEnv.m \
-	CCharToGlyphMapper.m \
-	AWTFont.m \
-	CGGlyphOutlines.m \
-	CGGlyphImages.m \
-	CoreTextSupport.m \
-	AWTStrike.m \
-	InitIDs.m \
-	AWTEvent.m \
-	AWTView.m \
-	AWTWindow.m \
-	CCursorManager.m \
-	CClipboard.m \
-	CDataTransferer.m \
-	CDragSource.m \
-	CDragSourceContextPeer.m \
-	CDropTarget.m \
-	CDropTargetContextPeer.m \
-	CInputMethod.m \
-	OSVersion.m \
-	DnDUtilities.m \
-	CFileDialog.m \
-	CImage.m \
-       	CMenu.m \
+        awt.m \
+        NSApplicationAWT.m \
+        ApplicationDelegate.m \
+        CFRetainedResource.m \
+        CGLGraphicsConfig.m \
+        CGLSurfaceData.m \
+        CGraphicsConfig.m \
+        CGraphicsDevice.m \
+        CGraphicsEnv.m \
+        CCharToGlyphMapper.m \
+        AWTFont.m \
+        CGGlyphOutlines.m \
+        CGGlyphImages.m \
+        CoreTextSupport.m \
+        AWTStrike.m \
+        InitIDs.m \
+        AWTEvent.m \
+        AWTView.m \
+        AWTWindow.m \
+        CCursorManager.m \
+        CClipboard.m \
+        CDataTransferer.m \
+        CDragSource.m \
+        CDragSourceContextPeer.m \
+        CDropTarget.m \
+        CDropTargetContextPeer.m \
+        CInputMethod.m \
+        OSVersion.m \
+        DnDUtilities.m \
+        CFileDialog.m \
+        CImage.m \
+        CMenu.m \
         CMenuBar.m \
         CMenuComponent.m \
         CMenuItem.m \
@@ -66,7 +69,8 @@ FILES_objc = \
         JavaTextAccessibility.m \
         LWCToolkit.m \
         ThreadUtilities.m \
-        GeomUtilities.m
+        GeomUtilities.m \
+        PropertiesUtilities.m
 
 FILES_c = \
         OGLBlitLoops.c \

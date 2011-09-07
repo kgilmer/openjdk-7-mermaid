@@ -31,7 +31,7 @@ BUILDDIR = ../..
 PRODUCT = sun
 include $(BUILDDIR)/common/Defs.gmk
 
-SUBDIRS = laf
+SUBDIRS = osx osxui
 
 include $(BUILDDIR)/common/Subdirs.gmk
 

@@ -23,9 +23,10 @@
  * questions.
  */
 
-#include <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
-#include "LWCToolkit.h"
+#import "LWCToolkit.h"
+#import "AWT_debug.h"
 
 
 /*

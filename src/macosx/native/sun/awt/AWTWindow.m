@@ -27,6 +27,7 @@
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
 #import "sun_lwawt_macosx_CPlatformWindow.h"
+#import "com_apple_eawt_event_GestureHandler.h"
 
 #import "AWTWindow.h"
 #import "AWTView.h"
@@ -180,6 +181,65 @@ AWT_ASSERT_APPKIT_THREAD;
 - (BOOL) worksWhenModal {
 AWT_ASSERT_APPKIT_THREAD;
     return IS(self.styleBits, MODAL_EXCLUDED);
+}
+
+
+// Gesture support
+- (void)postGesture:(NSEvent *)event as:(jint)type a:(jdouble)a b:(jdouble)b {
+AWT_ASSERT_APPKIT_THREAD;
+    
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
+    if (platformWindow == NULL) return; // shouldn't occur
+    
+    // extract the target AWT Window object out of the CPlatformWindow
+    static JNF_MEMBER_CACHE(jf_target, jc_CPlatformWindow, "target", "Ljava/awt/Window;");
+    jobject awtWindow = JNFGetObjectField(env, platformWindow, jf_target);
+    if (awtWindow == NULL) return; // shouldn't occur
+    
+    // translate the point into Java coordinates
+    NSPoint loc = [event locationInWindow];
+    loc.y = [self frame].size.height - loc.y;
+    
+    // send up to the GestureHandler to recursively dispatch on the AWT event thread
+    static JNF_CLASS_CACHE(jc_GestureHandler, "com/apple/eawt/event/GestureHandler");
+    static JNF_STATIC_MEMBER_CACHE(sjm_handleGestureFromNative, jc_GestureHandler, "handleGestureFromNative", "(Ljava/awt/Window;IDDDD)V");
+    JNFCallStaticVoidMethod(env, sjm_handleGestureFromNative, awtWindow, type, (jdouble)loc.x, (jdouble)loc.y, (jdouble)a, (jdouble)b);
+}
+
+- (void)beginGestureWithEvent:(NSEvent *)event {
+    [self postGesture:event
+                   as:com_apple_eawt_event_GestureHandler_PHASE
+                    a:-1.0
+                    b:0.0];
+}
+
+- (void)endGestureWithEvent:(NSEvent *)event {
+    [self postGesture:event
+                   as:com_apple_eawt_event_GestureHandler_PHASE
+                    a:1.0
+                    b:0.0];
+}
+
+- (void)magnifyWithEvent:(NSEvent *)event {
+    [self postGesture:event
+                   as:com_apple_eawt_event_GestureHandler_MAGNIFY
+                    a:[event magnification]
+                    b:0.0];
+}
+
+- (void)rotateWithEvent:(NSEvent *)event {
+    [self postGesture:event
+                   as:com_apple_eawt_event_GestureHandler_ROTATE
+                    a:[event rotation]
+                    b:0.0];
+}
+
+- (void)swipeWithEvent:(NSEvent *)event {
+    [self postGesture:event
+                   as:com_apple_eawt_event_GestureHandler_SWIPE
+                    a:[event deltaX]
+                    b:[event deltaY]];
 }
 
 

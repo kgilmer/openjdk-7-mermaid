@@ -34,19 +34,9 @@
 #define DEBUG 1
 
 
-const char *kInternalError;
-
 @interface AWTToolkit : NSObject { }
 + (long) getEventCount;
 + (void) eventCountPlusPlus;
-@end
-
-@interface AWTRunLoopObject : NSObject {
-    BOOL _shouldEndRunLoop;
-}
-- (id) init;
-- (BOOL) shouldEndRunLoop;
-- (void) endRunLoop;
 @end
 
 CGDirectDisplayID FindCGDirectDisplayIDForScreenIndex(jint screenIndex);

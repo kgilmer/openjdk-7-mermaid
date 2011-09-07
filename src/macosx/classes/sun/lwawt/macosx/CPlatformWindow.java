@@ -37,11 +37,11 @@ import javax.swing.*;
 import sun.java2d.SurfaceData;
 import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
+import sun.util.logging.PlatformLogger;
 
 import com.apple.laf.*;
 import com.apple.laf.ClientPropertyApplicator.Property;
 import com.sun.awt.AWTUtilities;
-import sun.util.logging.PlatformLogger;
 
 public class CPlatformWindow extends CFRetainedResource implements PlatformWindow {
     private native long nativeCreateNSWindow(long nsViewPtr, long styleBits, double x, double y, double w, double h);

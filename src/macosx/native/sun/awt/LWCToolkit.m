@@ -30,14 +30,14 @@
 #import "InitIDs.h"
 #import "LWCToolkit.h"
 #import "ThreadUtilities.h"
+#import "AWT_debug.h"
 
 #import "sun_lwawt_macosx_LWCToolkit.h"
 
-const char *kInternalError = "java/lang/InternalError";
-
-static long eventCount;
 
 @implementation AWTToolkit
+
+static long eventCount;
 
 + (long) getEventCount{
     return eventCount;
@@ -45,6 +45,13 @@ static long eventCount;
 
 + (void) eventCountPlusPlus{
     eventCount++;
+}
+
+@end
+
+
+@interface AWTRunLoopObject : NSObject {
+    BOOL _shouldEndRunLoop;
 }
 @end
 
@@ -65,101 +72,9 @@ static long eventCount;
 - (void) endRunLoop {
     _shouldEndRunLoop = YES;
 }
+
 @end
 
-JavaVM *jvm = NULL;
-
-//used to check if some event has processed by the main loop in syncNativeQueue.
-
-JNIEXPORT jint JNICALL
-JNI_OnLoad(JavaVM *vm, void *reserved)
-{
-    // Cache the JavaVM when this library is loaded; it never changes (only one JVM per process)
-    jvm = vm;
-    
-    void *handle = dlopen(0, RTLD_LAZY | RTLD_GLOBAL);
-    if (handle != NULL) {
-        void (*fptr)() = dlsym(handle, "JLI_NotifyAWTLoaded");
-        if (fptr != NULL) {
-            fptr();
-        } else {
-            fprintf(stderr, "dlsym failed\n");
-        }
-    } else {
-        fprintf(stderr, "dlopen failed\n");
-    }
-    
-
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
-    [JNFRunLoop performOnMainThread:@selector(clearMenuBarExcludingAppleMenu_OnAppKitThread:)
-                                 on:[CMenuBar class]
-                         withObject:nil
-                      waitUntilDone:NO];
-
-    // It's recommended to prepare the system for setting the dock image.
-    // Although seem it works on available scenarios even without that.
-    // Left for some further case when we discover an app not showing the
-    // custom icon.
-    /*
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary *dict = [NSDictionary
-                           dictionaryWithObject:@"YES"
-                           forKey:@"AppleDockIconEnabled"];
-    [userDefaults registerDefaults:dict];
-    */
-
-    [pool drain];
-
-    return JNI_VERSION_1_2;
-}
-
-/*
- * Returns a reference to the class java.awt.Component.
- */
-static jclass
-GetComponentClass(JNIEnv *env)
-{
-    static jclass componentCls = NULL;
-
-    // get global reference of java/awt/Component class (run only once)
-    if (componentCls == NULL) {
-        jclass componentClsLocal = (*env)->FindClass(env, "java/awt/Component");
-        //DASSERT(componentClsLocal != NULL);
-        if (componentClsLocal == NULL) {
-            /* exception already thrown */
-            return NULL;
-        }
-        componentCls = (jclass)(*env)->NewGlobalRef(env, componentClsLocal);
-        (*env)->DeleteLocalRef(env, componentClsLocal);
-    }
-    return componentCls;
-}
-
-
-/*
- * Returns a reference to the class java.awt.MenuComponent.
- */
-static jclass
-GetMenuComponentClass(JNIEnv *env)
-{
-    static jclass menuComponentCls = NULL;
-
-    // get global reference of java/awt/MenuComponent class (run only once)
-    if (menuComponentCls == NULL) {
-        jclass menuComponentClsLocal =
-            (*env)->FindClass(env, "java/awt/MenuComponent");
-        //DASSERT(menuComponentClsLocal != NULL);
-        if (menuComponentClsLocal == NULL) {
-            /* exception already thrown */
-            return NULL;
-        }
-        menuComponentCls = (jclass)
-            (*env)->NewGlobalRef(env, menuComponentClsLocal);
-        (*env)->DeleteLocalRef(env, menuComponentClsLocal);
-    }
-    return menuComponentCls;
-}
 
 /*
  * Class:     sun_lwawt_macosx_LWCToolkit
@@ -180,15 +95,6 @@ JNIEXPORT jboolean JNICALL Java_sun_lwawt_macosx_LWCToolkit_nativeSyncQueue
     return JNI_FALSE;
 }
 
-
-JNIEXPORT void JNICALL
-Java_sun_lwawt_macosx_LWCToolkit_nativeSetApplicationIconImage
-(JNIEnv *env, jobject obj, jlong nsImagePtr)
-{
-    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
-        [NSApp setApplicationIconImage:(NSImage *)jlong_to_ptr(nsImagePtr)];
-    }];
-}
 
 static JNF_CLASS_CACHE(jc_Component, "java/awt/Component");
 static JNF_MEMBER_CACHE(jf_Component_appContext, jc_Component, "appContext", "Lsun/awt/AppContext;");
@@ -317,7 +223,7 @@ Java_sun_lwawt_macosx_LWCToolkit_initIDs
 JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_LWCToolkit_createAWTRunLoopMediator
 (JNIEnv *env, jclass clz)
 {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     
     AWTRunLoopObject *o = nil;
     
@@ -340,9 +246,8 @@ JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_LWCToolkit_createAWTRunLoopMediato
 JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_doAWTRunLoop
 (JNIEnv *env, jclass clz, jlong mediator, jboolean awtMode, jboolean detectDeadlocks)
 {
-    AWT_ASSERT_APPKIT_THREAD;
-    
-    JNF_COCOA_ENTER(env);
+AWT_ASSERT_APPKIT_THREAD;
+JNF_COCOA_ENTER(env);
     
     AWTRunLoopObject* mediatorObject = (AWTRunLoopObject*)jlong_to_ptr(mediator);
     
@@ -368,10 +273,9 @@ JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_doAWTRunLoop
     }
 #endif
     
-    
     CFRelease(mediatorObject);
     
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
@@ -382,9 +286,8 @@ JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_doAWTRunLoop
 JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_stopAWTRunLoop
 (JNIEnv *env, jclass clz, jlong mediator)
 {
-    AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+JNF_COCOA_ENTER(env);
     
     AWTRunLoopObject* mediatorObject = (AWTRunLoopObject*)jlong_to_ptr(mediator);
     
@@ -392,7 +295,7 @@ JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_stopAWTRunLoop
     
     CFRelease(mediatorObject);
     
-    JNF_COCOA_EXIT(env);
+JNF_COCOA_EXIT(env);
 }
 
 /*
