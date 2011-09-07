@@ -1994,12 +1994,12 @@ static void SetXDockArgForAWT(const char *arg) {
     char envVar[80];
     if (strstr(arg, "-Xdock:name=") == arg) {
         snprintf(envVar, sizeof(envVar), "APP_NAME_%d", getpid());
-        setenv(envVar, (arg + 13), 1);
+        setenv(envVar, (arg + 12), 1);
     }
     
     if (strstr(arg, "-Xdock:icon=") == arg) {
         snprintf(envVar, sizeof(envVar), "APP_ICON_%d", getpid());
-        setenv(envVar, (arg + 13), 1);
+        setenv(envVar, (arg + 12), 1);
     }
 }
 
