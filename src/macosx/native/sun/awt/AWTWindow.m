@@ -72,18 +72,22 @@ static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
 
 // creates a new NSWindow style mask based on the _STYLE_PROP_BITMASK bits
 + (NSUInteger) styleMaskForStyleBits:(jint)styleBits {
-    NSUInteger type = IS(styleBits, DECORATED) ? NSTitledWindowMask : NSBorderlessWindowMask;
+    NSUInteger type = 0;
+    if (IS(styleBits, DECORATED)) {
+        type |= NSTitledWindowMask;
+        if (IS(styleBits, CLOSEABLE))   type |= NSClosableWindowMask;
+        if (IS(styleBits, MINIMIZABLE)) type |= NSMiniaturizableWindowMask;
+        if (IS(styleBits, RESIZABLE))   type |= NSResizableWindowMask;
+    } else {
+        type |= NSBorderlessWindowMask;
+    }
     
     if (IS(styleBits, TEXTURED))    type |= NSTexturedBackgroundWindowMask;
     if (IS(styleBits, UNIFIED))     type |= NSUnifiedTitleAndToolbarWindowMask;
     if (IS(styleBits, UTILITY))     type |= NSUtilityWindowMask;
     if (IS(styleBits, HUD))         type |= NSHUDWindowMask;
     if (IS(styleBits, SHEET))       type |= NSDocModalWindowMask;
-    
-    if (IS(styleBits, CLOSEABLE))   type |= NSClosableWindowMask;
-    if (IS(styleBits, MINIMIZABLE)) type |= NSMiniaturizableWindowMask;
-    if (IS(styleBits, RESIZABLE))   type |= NSResizableWindowMask;
-    
+
     return type;
 }
 
@@ -427,25 +431,19 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     AWTWindow *window = OBJC(windowPtr);
     [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
         AWT_ASSERT_APPKIT_THREAD;
+
+        // scans the bit field, and only updates the values requested by the mask
+        // (this implicity handles the _CALLBACK_PROP_BITMASK case, since those are passive reads)
+        jint newBits = window.styleBits & ~mask | bits & mask;
         
         // resets the NSWindow's style mask if the mask intersects any of those bits
         if (mask & MASK(_STYLE_PROP_BITMASK)) {
-            [window setStyleMask:[AWTWindow styleMaskForStyleBits:bits]];
+            [window setStyleMask:[AWTWindow styleMaskForStyleBits:newBits]];
         }
         
         // calls methods on NSWindow to change other properties, based on the mask
         if (mask & MASK(_METHOD_PROP_BITMASK)) {
             [window setPropertiesForStyleBits:bits mask:mask];
-        }
-        
-        // scans the bit field, and only updates the values requested by the mask
-        // (this implicity handles the _CALLBACK_PROP_BITMASK case, since those are passive reads)
-        jint newBits = window.styleBits;
-        size_t i;
-        for (i = 0; i < sizeof(jint); i++) {
-            jint imask = (1 << i);
-            if (!(mask & imask)) continue;
-            newBits = (bits & imask) ? newBits | imask : newBits & ~imask;
         }
         
         window.styleBits = newBits;
