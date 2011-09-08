@@ -35,6 +35,19 @@
 @interface GraphicsConfigUtil : NSObject {}
 @end
 
+// Prototyped CAOpenGLLayer drawing directly from Java2D OpenGL rendering
+// pipe fails to draw entire scene. So, the following enables alternative
+// codepath that uses a FBO backed with a texture as an intermediate buffer.
+// Java2D OpenGL rendering pipe performs rendering to the intermediate buffer
+// and CAOpenGLLayer copies the entire intermediate buffer to layer.
+#define USE_INTERMEDIATE_BUFFER 1
+
+// Uncomment the next line to enable using IO Surface based drawing.
+// It has to be used *in conjunction* with USE_INTERMEDIATE_BUFFERS
+// It presently has more artifacts than the straight 2D texture drawing
+// but both seem to have some of the same issues.
+//#define USE_IOS 1
+
 // REMIND: Using an NSOpenGLPixelBuffer as the scratch surface has been
 // problematic thus far (seeing garbage and flickering when switching
 // between an NSView and the scratch surface), so the following enables
@@ -43,14 +56,10 @@
 // situations.  It appears that calling [NSOpenGLContext setView] too
 // frequently contributes to the bad behavior, so we should try to avoid
 // switching to the scratch surface whenever possible.
+#ifndef USE_IOS
+/* Do we we need this if we are using all off-screen drawing ? */
 #define USE_NSVIEW_FOR_SCRATCH 1
-
-// Prototyped CAOpenGLLayer drawing directly from Java2D OpenGL rendering
-// pipe fails to draw entire scene. So, the following enables alternative
-// codepath that uses a FBO backed with a texture as an intermediate buffer.
-// Java2D OpenGL rendering pipe performs rendering to the intermediate buffer
-// and CAOpenGLLayer copies the entire intermediate buffer to layer.
-#define USE_INTERMEDIATE_BUFFER 1
+#endif
 
 /**
  * The CGLGraphicsConfigInfo structure contains information specific to a

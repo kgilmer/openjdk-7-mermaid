@@ -36,6 +36,14 @@
 #import "CGLLayer.h"
 #import "ThreadUtilities.h"
 
+/* JDK's glext.h is already included and will prevent the Apple glext.h
+ * being included, so define the externs directly
+ */
+extern void glBindFramebufferEXT(GLenum target, GLuint framebuffer);
+extern CGLError CGLTexImageIOSurface2D(
+        CGLContextObj ctx, GLenum target, GLenum internal_format,
+        GLsizei width, GLsizei height, GLenum format, GLenum type,
+        IOSurfaceRef ioSurface, GLuint plane);
 
 /**
  * The methods in this file implement the native windowing system specific
@@ -262,7 +270,13 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
         // this means that all rendering will go into the fbobject destination
         // (note that we unbind the currently bound texture first; this is
         // recommended procedure when binding an fbobject)
+#ifndef USE_IOS
         j2d_glBindTexture(GL_TEXTURE_2D, 0);
+#else
+        GLenum target = GL_TEXTURE_RECTANGLE_ARB; 
+        j2d_glBindTexture(target, 0);
+        j2d_glDisable(target);
+#endif
         j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, dstOps->fbobjectID);
         
         return oglc;
@@ -281,7 +295,13 @@ JNF_COCOA_ENTER(env);
                 currentVirtualScreen: [ctxinfo->context currentVirtualScreen]];
     } else {
 #if USE_INTERMEDIATE_BUFFER
+#ifndef USE_IOS
         j2d_glBindTexture(GL_TEXTURE_2D, 0);
+#else
+	GLenum target = GL_TEXTURE_RECTANGLE_ARB; 
+	j2d_glBindTexture(target, 0);
+	j2d_glDisable(target);
+#endif
         j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, dstOps->fbobjectID);
 #else
         CGLSDOps *cglsdo = (CGLSDOps *)dstOps->privOps;
@@ -373,10 +393,149 @@ jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     AWTView *view = cglsdo->peerData;
     CGLLayer *layer = (CGLLayer *)view.cglLayer;
     layer.textureID = oglsdo->textureID;
+    layer.target = GL_TEXTURE_2D;
     layer.textureWidth = oglsdo->width;
     layer.textureHeight = oglsdo->height;
     
     return result;
+}
+
+
+static inline IOSurfaceRef createIoSurface(int width, int height)
+{
+    // Get an error return for 0 size. Maybe should skip creation
+    // for that case, but for now make a 1X1 surface
+    if (width <= 0) width = 1;
+    if (height <= 0) height = 1;
+
+    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+    NSMutableDictionary *properties = [NSMutableDictionary dictionaryWithCapacity:4];
+    [properties setObject:[NSNumber numberWithInt:width] forKey:(id)kIOSurfaceWidth];
+    [properties setObject:[NSNumber numberWithInt:height] forKey:(id)kIOSurfaceHeight];
+    [properties setObject:[NSNumber numberWithInt:4] forKey:(id)kIOSurfaceBytesPerElement];
+    IOSurfaceRef surface = IOSurfaceCreate((CFDictionaryRef)properties);
+    CFRetain(surface); // REMIND: do I need to do this ?
+    [pool drain];
+	
+    if (surface == NULL) {
+        NSLog(@"IOSurfaceCreate error, surface: %p", surface);
+    } else {
+        //NSLog(@"Plugin iosurface OK");
+        //NSLog(@"    surface: %p", surface);
+        //NSLog(@"    IOSurfaceGetID(self->surface): %d", IOSurfaceGetID(surface));
+    }
+    return surface;
+}
+
+/**
+ * Recreates the intermediate buffer associated with the given OGLSDOps
+ * and with the buffer's new size specified in OGLSDOps.
+ */
+jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
+{
+    CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
+    // destroy previous buffer first
+    if (oglsdo->textureID != 0) {
+        j2d_glDeleteTextures(1, &oglsdo->textureID);
+        oglsdo->textureID = 0;
+		if (cglsdo->surfaceRef != NULL) {
+            CFRelease(cglsdo->surfaceRef);
+            cglsdo->surfaceRef = NULL;
+        }
+    }
+    
+	oglsdo->textureID = 0;
+    cglsdo->surfaceRef = NULL;
+    int width = oglsdo->width;
+    int height = oglsdo->height;
+    if (width <= 0) width = 1;
+    if (height <= 0) height = 1;
+    IOSurfaceRef _surfaceRef = createIoSurface(width, height);
+	if (_surfaceRef == NULL) {
+		return JNI_FALSE;
+	}
+    
+    GLenum target = GL_TEXTURE_RECTANGLE_ARB;
+    glEnable(target);
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(target, texture);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    OGLContext *oglc = cglsdo->configInfo->context;
+    CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
+    CGLContextObj context = ctxinfo->context.CGLContextObj;
+    
+	/* These parameters are documented only in the header file
+     * and apart from the requirement that it must be one of
+     * the combinations listed there its not as clear as I'd like
+     * what the choices mean.
+     */
+    GLenum format = GL_BGRA;
+    GLenum internal_format = GL_RGB;
+    GLenum type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	
+    CGLError err =
+    CGLTexImageIOSurface2D(context, target, internal_format,
+         width, height, format, type, _surfaceRef, 0);
+    
+    if (err != kCGLNoError) {
+        J2dRlsTraceLn(J2D_TRACE_ERROR,
+                      "OGLSurfaceData_RecreateIOSBuffer: could not init texture");
+        j2d_glDeleteTextures(1, &texture);
+		CFRelease(_surfaceRef);
+        return JNI_FALSE;
+    }
+    
+    oglsdo->drawableType = OGLSD_FBOBJECT;
+    oglsdo->xOffset = 0;
+    oglsdo->yOffset = 0;
+    oglsdo->width = width;
+    oglsdo->height = height;
+    oglsdo->textureID = texture;
+    oglsdo->textureWidth = width;
+    oglsdo->textureHeight = height;
+    // init_FBO fails if we don't use target GL_TEXTURE_RECTANGLE_ARB for the IOS texture.
+    oglsdo->textureTarget = target;
+    OGLSD_INIT_TEXTURE_FILTER(oglsdo, GL_NEAREST);
+    OGLSD_RESET_TEXTURE_WRAP(target);
+    
+    // initialize framebuffer object using color texture created above
+    GLuint fbobjectID, depthID;
+    if (!OGLSD_InitFBObject(&fbobjectID, &depthID,
+                            oglsdo->textureID, oglsdo->textureTarget,
+                            oglsdo->textureWidth, oglsdo->textureHeight))
+    {
+        J2dRlsTraceLn(J2D_TRACE_ERROR,
+                      "OGLSurfaceData_RecreateIOSBuffer: could not init fbobject");
+        j2d_glDeleteTextures(1, &oglsdo->textureID);
+        CFRelease(_surfaceRef);
+        return JNI_FALSE;
+    }
+
+    oglsdo->fbobjectID = fbobjectID;
+    oglsdo->depthID = depthID;
+    // NOTE: OGLSD_WINDOW type is reused for offscreen rendering
+    //       when intermediate buffer is enabled
+    oglsdo->drawableType = OGLSD_WINDOW;
+    
+    OGLSD_SetNativeDimensions(env, oglsdo,
+                              oglsdo->textureWidth, oglsdo->textureHeight);
+    
+    cglsdo->surfaceRef = _surfaceRef;
+    AWTView *view = cglsdo->peerData;
+    CGLLayer *layer = (CGLLayer *)view.cglLayer;
+    layer.textureID = oglsdo->textureID;
+    layer.target = target;
+    layer.textureWidth = oglsdo->width;
+    layer.textureHeight = oglsdo->height;
+    
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    
+    return JNI_TRUE;
 }
 
 /**
@@ -417,7 +576,11 @@ JNF_COCOA_EXIT(env);
     jboolean result = JNI_TRUE;
 
 #if USE_INTERMEDIATE_BUFFER
+#ifdef USE_IOS
+    result = RecreateIOSBuffer(env, oglsdo);
+#else
     result = RecreateBuffer(env, oglsdo);
+#endif
 #endif
 
     J2dTraceLn2(J2D_TRACE_VERBOSE, "  created window: w=%d h=%d", oglsdo->width, oglsdo->height);
@@ -641,7 +804,11 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
 JNF_COCOA_ENTER(env);
 #if USE_INTERMEDIATE_BUFFER
         if (newSize) {
+#ifdef USE_IOS
+            RecreateIOSBuffer(env, oglsdo);
+#else
             RecreateBuffer(env, oglsdo);
+#endif
         }
 #else
         [ctxinfo->context update];

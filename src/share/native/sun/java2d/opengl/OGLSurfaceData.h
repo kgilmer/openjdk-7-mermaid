@@ -296,4 +296,6 @@ jboolean OGLSurfaceData_initFBObject(JNIEnv *env, jobject oglsd,
                                      jlong pData, jboolean isOpaque,
                                      jboolean texNonPow2, jboolean texRect,
                                      jint width, jint height);
+void OGLSD_SetNativeDimensions(JNIEnv *env, OGLSDOps *oglsdo, jint w, jint h);
+
 #endif /* OGLSurfaceData_h_Included */

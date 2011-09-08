@@ -32,6 +32,7 @@ extern NSOpenGLContext *sharedContext;
 @implementation CGLLayer
 
 @synthesize textureID;
+@synthesize target;
 @synthesize textureWidth;
 @synthesize textureHeight;
 
@@ -47,7 +48,8 @@ AWT_ASSERT_APPKIT_THREAD;
     self.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;        
     
     textureID = 0; // texture will be created by rendering pipe
-
+	target = 0;
+	
     return self;
 }
 
@@ -64,23 +66,29 @@ AWT_ASSERT_APPKIT_THREAD;
 // use texture (intermediate buffer) as src and blit it to the layer
 - (void) _blitTexture
 {    
-    if (textureID == 0)
+    if (textureID == 0) {
         return;
+    }
     
-    glEnable(GL_TEXTURE_2D);    
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glEnable(target);    
+    glBindTexture(target, textureID);
     
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE); // srccopy
     
+    float swid = 1.0f, shgt = 1.0f;
+    if (target == GL_TEXTURE_RECTANGLE_ARB) {
+        swid = textureWidth;
+        shgt = textureHeight;
+    }
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 0.0f); glVertex2f(-1.0f, -1.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f( 1.0f, -1.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f( 1.0f,  1.0f);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1.0f,  1.0f);
+    glTexCoord2f(swid, 0.0f); glVertex2f( 1.0f, -1.0f);
+    glTexCoord2f(swid, shgt); glVertex2f( 1.0f,  1.0f);
+    glTexCoord2f(0.0f, shgt); glVertex2f(-1.0f,  1.0f);
     glEnd();
     
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    glBindTexture(target, 0);
+    glDisable(target);
 }
 
 -(void)drawInCGLContext:(CGLContextObj)glContext pixelFormat:(CGLPixelFormatObj)pixelFormat forLayerTime:(CFTimeInterval)timeInterval displayTime:(const CVTimeStamp *)timeStamp

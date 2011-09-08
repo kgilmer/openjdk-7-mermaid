@@ -26,6 +26,8 @@
 #ifndef CGLSurfaceData_h_Included
 #define CGLSurfaceData_h_Included
 
+#import <IOSurface/IOSurface.h>
+
 #import "OGLSurfaceData.h"
 #import "CGLGraphicsConfig.h"
 #import "AWTWindow.h"
@@ -38,7 +40,8 @@ typedef struct _CGLSDOps {
     AWTView               *peerData;
     GLclampf              argb[4]; // background clear color
     NSOpenGLPixelBuffer   *pbuffer;
-    CGLGraphicsConfigInfo *configInfo;    
+    CGLGraphicsConfigInfo *configInfo;  
+    IOSurfaceRef          surfaceRef;
 } CGLSDOps;
 
 #endif /* CGLSurfaceData_h_Included */

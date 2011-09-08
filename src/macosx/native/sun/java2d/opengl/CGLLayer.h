@@ -31,12 +31,14 @@
 @interface CGLLayer : CAOpenGLLayer
 {    
     // intermediate buffer
-    GLuint textureID;    
+    GLuint textureID; 
+    GLenum target;
     float textureWidth;
     float textureHeight;
 }
 
 @property (readwrite, assign) GLuint textureID;
+@property (readwrite, assign) GLenum target;
 @property (readwrite, assign) float textureWidth;
 @property (readwrite, assign) float textureHeight;
 
