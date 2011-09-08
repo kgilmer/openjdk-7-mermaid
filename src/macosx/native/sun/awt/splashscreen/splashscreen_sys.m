@@ -25,7 +25,8 @@
 
 #include "splashscreen_impl.h"
 
-#include <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
+#import <objc/objc-auto.h>
 
 #include <sys/time.h>
 #include <pthread.h>
@@ -390,6 +391,8 @@ SplashEventLoop(Splash * splash) {
 
 void *
 SplashScreenThread(void *param) {
+    objc_registerThreadWithCollector();
+    
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     Splash *splash = (Splash *) param;
 

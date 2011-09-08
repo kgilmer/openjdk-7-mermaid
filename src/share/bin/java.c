@@ -71,6 +71,7 @@ static jboolean printXUsage = JNI_FALSE;  /* print and exit*/
 static char     *showSettings = NULL;      /* print but continue */
 
 #ifdef MACOSX
+#include <objc/objc-auto.h>
 static jboolean continueInSameThread = JNI_FALSE; /* start VM in current thread */
 #endif
 
@@ -394,6 +395,10 @@ JavaMain(void * _args)
     int ret = 0;
     jlong start, end;
 
+#ifdef MACOSX
+    objc_registerThreadWithCollector();
+#endif
+    
     /* Initialize the virtual machine */
     start = CounterGet();
     if (!InitializeJVM(&vm, &env, &ifn)) {

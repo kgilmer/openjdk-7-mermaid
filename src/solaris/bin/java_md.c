@@ -52,6 +52,7 @@
 /* Support Cocoa event loop on the main thread */
 #include <Cocoa/Cocoa.h>
 #include <objc/objc-runtime.h>
+#include <objc/objc-auto.h>
 #include <errno.h>
 #include <spawn.h>
 
@@ -299,6 +300,8 @@ static int (*main_fptr)(int argc, char **argv) = NULL;
  */
 static void *apple_main (void *arg)
 {
+    objc_registerThreadWithCollector();
+    
     if (main_fptr == NULL) {
         main_fptr = (int (*)())dlsym(RTLD_DEFAULT, "main");
         if (main_fptr == NULL) {
