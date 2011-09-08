@@ -73,6 +73,8 @@ static void SwizzleBitmap(void* data, int rowBytes, int height);
 static void cleanContext(CGLContextObj glContextObj);
 static CGLContextObj InitContext(CGDirectDisplayID display);
 
+static void postMouseEvent(const CGPoint point, CGMouseButton button, CGEventType type);
+
 
 static void
 CreateJavaException(JNIEnv* env, CGError err)
@@ -141,10 +143,14 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
     if ((mouseLastX == sun_lwawt_macosx_CRobot_MOUSE_LOCATION_UNKNOWN) ||
         (mouseLastY == sun_lwawt_macosx_CRobot_MOUSE_LOCATION_UNKNOWN))
     {
-//TODO: use Cocoa API instead.
-        HIPoint globalPos;
-        HIGetMousePosition(kHICoordSpaceScreenPixel, NULL, &globalPos);
-
+        CGEventRef event = CGEventCreate(NULL);
+        if (event == NULL) {
+            return;
+        }
+        
+        CGPoint globalPos = CGEventGetLocation(event);
+        CFRelease(event);
+        
         // Normalize the coords within this display device, as
         // per Robot rules.        
         if (globalPos.x < CGRectGetMinX(globalDeviceBounds)) {
@@ -173,37 +179,49 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
 
     BOOL button1, button2, button3;
 
-    UInt32 bstate = GetCurrentButtonState();
-    button1 = ((bstate & (1 << 0)) != 0); // left
-    button2 = ((bstate & (1 << 1)) != 0); // right
-    button3 = ((bstate & (1 << 2)) != 0); // other
-
+    CGMouseButton button; 
+    CGEventType type;
+    
     // When moving, the buttons aren't changed from their current state.
     if (mouseMoveAction == JNI_FALSE) {
         // Some of the buttons are changing state.
-
+        
         // Left
         if (mouse1DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
-            button1 = (mouse1DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN);
+            button = kCGMouseButtonLeft;
+            if (mouse1DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+                type = kCGEventLeftMouseDown;
+            } else {
+                type = kCGEventLeftMouseUp;
+            }
+            
+            postMouseEvent(point, button, type);
         }
-
+        
         // Other
         if (mouse2DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
-            button2 = (mouse2DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN);
+            button = kCGMouseButtonCenter;          
+            if (mouse2DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+                type = kCGEventOtherMouseDown;
+            } else {
+                type = kCGEventOtherMouseUp;                
+            }
+            
+            postMouseEvent(point, button, type);
         }
-
+        
         // Right
         if (mouse3DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
-            button3 = (mouse3DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN);
+            button = kCGMouseButtonRight;           
+            if (mouse3DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+                type = kCGEventRightMouseDown;
+            } else {
+                type = kCGEventRightMouseUp;
+            }
+            
+            postMouseEvent(point, button, type);
         }
-    }
-
-    // CGPostMouseEvent takes left, right, other.
-    err = CGPostMouseEvent(point, true, k_JAVA_ROBOT_NUMBER_KNOWN_BUTTONS,
-                           button1, button2, button3);
-    if (err != kCGErrorSuccess) {
-        CreateJavaException(env, err);
-    }
+    }   
 
     JNF_COCOA_EXIT(env);
 }
@@ -217,10 +235,12 @@ JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_mouseWheel
     (JNIEnv *env, jobject peer, jint wheelAmt)
 {
-    CGError err = CGPostScrollWheelEvent(k_JAVA_ROBOT_WHEEL_COUNT, wheelAmt);
-    if (err != kCGErrorSuccess) {
-        CreateJavaException(env, err);
-    }
+    CGEventRef event = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine,
+                                                    k_JAVA_ROBOT_WHEEL_COUNT, wheelAmt);                                                     
+    if (event != NULL) {
+        CGEventPost(kCGSessionEventTap, event);
+        CFRelease(event);
+    }   
 }
 
 /*
@@ -233,10 +253,10 @@ Java_sun_lwawt_macosx_CRobot_keyEvent
     (JNIEnv *env, jobject peer, jint javaKeyCode, jboolean keyPressed)
 {
     CGKeyCode keyCode = GetCGKeyCode(javaKeyCode);
-    
-    CGError err = CGPostKeyboardEvent(0, keyCode, keyPressed);
-    if (err != kCGErrorSuccess) {
-        CreateJavaException(env, err);
+    CGEventRef event = CGEventCreateKeyboardEvent(NULL, keyCode, keyPressed);
+    if (event != NULL) {
+        CGEventPost(kCGSessionEventTap, event);
+        CFRelease(event);
     }
 }
 
@@ -371,7 +391,7 @@ InitContext(CGDirectDisplayID display)
     }
     
     CGLSetCurrentContext(glContextObj);
-    CGLSetFullScreen(glContextObj);
+    CGLSetFullScreenOnDisplay(glContextObj, CGDisplayIDToOpenGLDisplayMask(display));  
     
     return glContextObj;
 }
@@ -383,6 +403,15 @@ void cleanContext(CGLContextObj glContextObj)
     CGLSetCurrentContext(0);
     CGLClearDrawable(glContextObj);  // disassociate from full screen
     CGLDestroyContext(glContextObj); // and destroy the context
+}
+
+static void postMouseEvent(const CGPoint point, CGMouseButton button, CGEventType type)
+{
+    CGEventRef mouseEvent = CGEventCreateMouseEvent(NULL, type, point, button);
+    if (mouseEvent != NULL) {
+        CGEventPost(kCGSessionEventTap, mouseEvent);
+        CFRelease(mouseEvent);
+    }
 }
 
 // NOTE: Don't modify this table directly. It is machine generated. See below.

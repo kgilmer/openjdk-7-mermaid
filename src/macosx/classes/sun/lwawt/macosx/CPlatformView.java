@@ -164,20 +164,21 @@ public class CPlatformView extends CFRetainedResource {
         switch (event.getType()) {
             case CocoaConstants.NSLeftMouseDown:
             case CocoaConstants.NSRightMouseDown:
-                // TODO: case CocoaConstants.NSOtherMouseDown:
+            case CocoaConstants.NSOtherMouseDown:
                 jEventType = MouseEvent.MOUSE_PRESSED;
                 break;
             case CocoaConstants.NSLeftMouseUp:
             case CocoaConstants.NSRightMouseUp:
-                // TODO: case CocoaConstants.NSOtherMouseUp:
+            case CocoaConstants.NSOtherMouseUp:
                 jEventType = MouseEvent.MOUSE_RELEASED;
                 break;
             case CocoaConstants.NSMouseMoved:
                 jEventType = MouseEvent.MOUSE_MOVED;
                 break;
+
             case CocoaConstants.NSLeftMouseDragged:
             case CocoaConstants.NSRightMouseDragged:
-                // TODO: case CocoaConstants.NSOtherMouseDragged:
+            case CocoaConstants.NSOtherMouseDragged:
                 jEventType = MouseEvent.MOUSE_DRAGGED;
                 break;
             // Intentionally left Entered without any action as the peer should keep track
