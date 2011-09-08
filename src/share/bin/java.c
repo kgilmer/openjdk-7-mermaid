@@ -70,7 +70,8 @@ static jboolean printUsage = JNI_FALSE;   /* print and exit*/
 static jboolean printXUsage = JNI_FALSE;  /* print and exit*/
 static char     *showSettings = NULL;      /* print but continue */
 
-#ifdef __APPLE__
+#ifdef MACOSX
+#include <objc/objc-auto.h>
 static jboolean continueInSameThread = JNI_FALSE; /* start VM in current thread */
 #endif
 
@@ -124,8 +125,11 @@ static void SetPaths(int argc, char **argv);
 static void DumpState();
 static jboolean RemovableOption(char *option);
 
-#ifdef __APPLE__
+#ifdef MACOSX
 static int ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv, int mode, char *what, int ret);
+static void SetMainClassForAWT(JNIEnv *env, jclass mainClass);
+static void SetXDockArgForAWT(const char *arg);
+static void SetXStartOnFirstThreadArg();
 #endif
 
 /* Maximum supported entries from jvm.cfg. */
@@ -323,7 +327,7 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
     /* Show the splash screen if needed */
     ShowSplashScreen();
 
-#ifdef __APPLE__
+#ifdef MACOSX
     if (continueInSameThread == JNI_TRUE) {
         return ContinueInSameThread(&ifn, argc, argv, mode, what, ret);
     } else {
@@ -391,6 +395,10 @@ JavaMain(void * _args)
     int ret = 0;
     jlong start, end;
 
+#ifdef MACOSX
+    objc_registerThreadWithCollector();
+#endif
+    
     /* Initialize the virtual machine */
     start = CounterGet();
     if (!InitializeJVM(&vm, &env, &ifn)) {
@@ -459,6 +467,10 @@ JavaMain(void * _args)
      */
     mainClass = LoadMainClass(env, mode, what);
     CHECK_EXCEPTION_NULL_LEAVE(mainClass);
+#ifdef MACOSX
+    // if we got here, we know that "what" is a main class, and it has been loaded
+    SetMainClassForAWT(env, mainClass);
+#endif
 
     /*
      * The LoadMainClass not only loads the main class, it will also ensure
@@ -1022,11 +1034,11 @@ ParseArguments(int *pargc, char ***pargv,
         } else if (JLI_StrCmp(arg, "-X") == 0) {
             printXUsage = JNI_TRUE;
             return JNI_TRUE;
-#ifdef __APPLE__
+#ifdef MACOSX
         } else if (JLI_StrCmp(arg, "-XstartOnFirstThread") == 0) {
-            continueInSameThread = JNI_TRUE;
+            SetXStartOnFirstThreadArg();
         } else if (JLI_StrCCmp(arg, "-Xdock:") == 0) {
-           // XXXDARWIN: Apple VM supports configuration of Dock icon and name via -Xdock:
+            SetXDockArgForAWT(arg);
 #endif            
 /*
  * The following case checks for -XshowSettings OR -XshowSetting:SUBOPT.
@@ -1639,11 +1651,18 @@ ReadKnownVMs(const char *jrepath, const char * arch, jboolean speculative)
     char *altVMName = NULL;
     char *serverClassVMName = NULL;
     static char *whiteSpace = " \t";
+    const char *arch_path;
     if (JLI_IsTraceLauncher()) {
         start = CounterGet();
     }
+
     JLI_Snprintf(jvmCfgName, sizeof(jvmCfgName), "%s%slib%s%s%sjvm.cfg",
-        jrepath, FILESEP, FILESEP, arch, FILESEP);
+        jrepath, FILESEP, FILESEP,
+#ifdef MACOSX
+        "", "");
+#else
+        arch, FILESEP);
+#endif
 
     jvmCfg = fopen(jvmCfgName, "r");
     if (jvmCfg == NULL) {
@@ -1919,10 +1938,10 @@ ContinueInNewThread(InvocationFunctions* ifn, int argc, char **argv,
     }
 }
 
-#ifdef __APPLE__
+#ifdef MACOSX
 static int
 ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv,
-		     int mode, char *what, int ret)
+                    int mode, char *what, int ret)
 {
         
     /*
@@ -1954,6 +1973,48 @@ ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv,
         
         return (ret != 0) ? ret : rslt;
     }
+}
+
+static void SetMainClassForAWT(JNIEnv *env, jclass mainClass) {
+    jclass classClass = NULL;
+    NULL_CHECK(classClass = FindBootStrapClass(env, "java/lang/Class"));
+    
+    jmethodID getCanonicalNameMID = NULL;
+    NULL_CHECK(getCanonicalNameMID = (*env)->GetMethodID(env, classClass, "getCanonicalName", "()Ljava/lang/String;"));
+    
+    jstring mainClassString = NULL;
+    NULL_CHECK(mainClassString = (*env)->CallObjectMethod(env, mainClass, getCanonicalNameMID));
+    
+    const char *mainClassName = NULL;
+    NULL_CHECK(mainClassName = (*env)->GetStringUTFChars(env, mainClassString, NULL));
+    
+    char envVar[80];
+    snprintf(envVar, sizeof(envVar), "JAVA_MAIN_CLASS_%d", getpid());
+    setenv(envVar, mainClassName, 1);
+    
+    (*env)->ReleaseStringUTFChars(env, mainClassString, mainClassName);
+}
+
+static void SetXDockArgForAWT(const char *arg) {
+    char envVar[80];
+    if (strstr(arg, "-Xdock:name=") == arg) {
+        snprintf(envVar, sizeof(envVar), "APP_NAME_%d", getpid());
+        setenv(envVar, (arg + 12), 1);
+    }
+    
+    if (strstr(arg, "-Xdock:icon=") == arg) {
+        snprintf(envVar, sizeof(envVar), "APP_ICON_%d", getpid());
+        setenv(envVar, (arg + 12), 1);
+    }
+}
+
+static void SetXStartOnFirstThreadArg() {
+    continueInSameThread = JNI_TRUE;
+    // Set a variable that tells us we started on the main thread.
+    // This is used by the AWT during startup. (See awt.m)
+    char envVar[80];
+    snprintf(envVar, sizeof(envVar), "JAVA_STARTED_ON_FIRST_THREAD_%d", getpid());
+    setenv(envVar, "1", 1);
 }
 #endif
 

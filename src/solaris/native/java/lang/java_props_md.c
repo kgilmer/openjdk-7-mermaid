@@ -42,6 +42,11 @@
 #include <time.h>
 #include <errno.h>
 
+#ifdef MACOSX
+#include <dlfcn.h>
+#include <Security/AuthSession.h>
+#endif
+
 #if defined(_ALLBSD_SOURCE)
 #if !defined(P_tmpdir)
 #include <paths.h>
@@ -68,6 +73,8 @@
 #include <dlfcn.h>
 #include <sys/stat.h>
 #endif
+
+
 
 /* Take an array of string pairs (map of key->value) and a string (key).
  * Examine each pair in the map to see if the first string (key) matches the
@@ -348,6 +355,54 @@ static char* getEmbeddedToolkit() {
 }
 #endif
 
+#ifdef MACOSX
+/* There are several toolkit options on Mac OS X, so we should try to
+ * pick the "best" one, given what we know about the environment Java
+ * is running under
+ */
+enum PreferredToolkit_enum {
+    unset = 0, CToolkit, XToolkit, HToolkit
+};
+typedef enum PreferredToolkit_enum PreferredToolkit;
+
+static PreferredToolkit getPreferredToolkitFromEnv() {
+    char *envVar = getenv("AWT_TOOLKIT");
+    if (envVar == NULL) return unset;
+    
+    if (strcasecmp(envVar, "CToolkit") == 0) return CToolkit;
+    if (strcasecmp(envVar, "XToolkit") == 0) return XToolkit;
+    if (strcasecmp(envVar, "HToolkit") == 0) return HToolkit;
+    return unset;
+}
+
+static bool isInAquaSession() {
+    // Is the WindowServer available?
+    SecuritySessionId session_id;
+    SessionAttributeBits session_info;
+    OSStatus status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
+    if (status != noErr) return false;
+    if (!(session_info & sessionHasGraphicAccess)) return false;
+    return true;
+}
+
+static bool isXDisplayDefined() {
+    return getenv("DISPLAY") != NULL;
+}
+
+static PreferredToolkit getPreferredToolkit() {
+    static PreferredToolkit pref = unset;
+    if (pref != unset) return pref;
+    
+    PreferredToolkit prefFromEnv = getPreferredToolkitFromEnv();
+    if (prefFromEnv != unset) return pref = prefFromEnv;
+    
+    if (isInAquaSession()) return pref = CToolkit;
+    if (isXDisplayDefined()) return pref = XToolkit;
+    return pref = HToolkit;
+}
+
+#endif
+
 /* This function gets called very early, before VM_CALLS are setup.
  * Do not use any of the VM_CALLS entries!!!
  */
@@ -363,6 +418,14 @@ GetJavaProperties(JNIEnv *env)
 
     /* tmp dir */
     sprops.tmp_dir = P_tmpdir;
+#ifdef MACOSX
+    /* darwin has a per-user temp dir */
+    static char tmp_path[PATH_MAX];
+    int pathSize = confstr(_CS_DARWIN_USER_TEMP_DIR, tmp_path, PATH_MAX);
+    if (pathSize > 0 && pathSize <= PATH_MAX) {
+        sprops.tmp_dir = tmp_path;
+    }
+#endif /* MACOSX */
 
     /* Printing properties */
     sprops.printerJob = "sun.print.PSPrinterJob";
@@ -371,13 +434,42 @@ GetJavaProperties(JNIEnv *env)
     sprops.patch_level = "unknown";
 
     /* Java 2D properties */
+#ifdef MACOSX
+    PreferredToolkit prefToolkit = getPreferredToolkit();
+    switch (prefToolkit) {
+        case CToolkit:
+            sprops.graphics_env = "sun.awt.CGraphicsEnvironment";
+            break;
+        case XToolkit:
+#endif
     sprops.graphics_env = "sun.awt.X11GraphicsEnvironment";
-
+#ifdef MACOSX
+            break;
+        default:
+            sprops.graphics_env = "sun.awt.HeadlessGraphicsEnvironment";
+            break;
+    }
+#endif
+    /* AWT properties */
 #ifdef JAVASE_EMBEDDED
     sprops.awt_toolkit = getEmbeddedToolkit();
     if (sprops.awt_toolkit == NULL) // default as below
 #endif
+#ifdef MACOSX
+        switch (prefToolkit) {
+            case CToolkit:
+                sprops.awt_toolkit = "sun.lwawt.macosx.LWCToolkit";
+                break;
+            case XToolkit:
+#endif
     sprops.awt_toolkit = "sun.awt.X11.XToolkit";
+#ifdef MACOSX
+                break;
+            default:
+                sprops.graphics_env = "sun.awt.HToolkit";
+                break;
+        }
+#endif
 
     /* This is used only for debugging of font problems. */
     v = getenv("JAVA2D_FONTPATH");
@@ -405,12 +497,30 @@ GetJavaProperties(JNIEnv *env)
 
     /* os properties */
     {
+        sprops.os_arch = ARCHPROPNAME;
+
+#ifdef MACOSX
+        // need dlopen/dlsym trick to avoid pulling in JavaRuntimeSupport before libjava.dylib is loaded
+        
+        void *jrsFwk = dlopen("/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/JavaRuntimeSupport", RTLD_LAZY | RTLD_LOCAL);
+        
+        char *(*copyOSName)() = dlsym(jrsFwk, "JRSCopyOSName");
+        sprops.os_name = copyOSName ? copyOSName() : "Unknown";
+        
+        char *(*copyOSVersion)() = dlsym(jrsFwk, "JRSCopyOSVersion");
+        sprops.os_version = copyOSVersion ? copyOSVersion() : "Unknown";
+        
+#ifdef __x86_64__
+        sprops.os_arch = "x86_64";
+#elif defined(__i386__)
+        sprops.os_arch = "i386";
+#endif
+#else
         struct utsname name;
         uname(&name);
         sprops.os_name = strdup(name.sysname);
         sprops.os_version = strdup(name.release);
-
-        sprops.os_arch = ARCHPROPNAME;
+#endif
 
         if (getenv("GNOME_DESKTOP_SESSION_ID") != NULL) {
             sprops.desktop = "gnome";

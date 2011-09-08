@@ -53,7 +53,7 @@ LAUNCHER_PLATFORM_SRC = $(PLATFORM_SRC)/bin
 ifeq ($(ZERO_BUILD), true)
 ERGO_FAMILY=zero
 else
-ifeq ($(ARCH_FAMILY), amd64)
+ifneq (,$(findstring $(ARCH_FAMILY), amd64 x86_64))
 ERGO_FAMILY=i586
 else
 ERGO_FAMILY=$(ARCH_FAMILY)
@@ -106,16 +106,18 @@ OTHER_CPPFLAGS += $(LIBARCH_DEFINES) -DPACKAGE_PATH=\"$(PACKAGE_PATH)\"
 
 
 ifneq ($(PLATFORM), windows)	# UNIX systems
+ifneq ($(PLATFORM), macosx)
         LD_RUNPATH_EXTRAS += ..
 	LIB_LOCATION = $(LIBDIR)/$(LIBARCH)/jli
-	# Note: its important to keep this order meaning -lc is the
-	# last library otherwise it could cause compatibility issues
-	# by pulling in SUNW_private symbols from libc
-	LDLIBS = $(LIBDL) -lc
 ifeq ($(USE_PTHREADS),true)
 	LDLIBS += -lpthread
 endif # USE_PTHREADS 
 endif # PLATFORM
+endif # PLATFORM
+
+ifeq ($(PLATFORM), macosx)
+	LIB_LOCATION = $(LIBDIR)/jli
+endif
 
 ifeq ($(PLATFORM), windows)
 	EXTRA_LIBS = advapi32.lib \
@@ -171,18 +173,25 @@ library:: $(STATIC_LIBRARY)
 
 endif	# PLATFORM
 
-ifeq ($(PLATFORM), bsd)
+ifneq (,$(findstring $(PLATFORM), bsd macosx))
+
+ifeq ($(PLATFORM), macosx)
+# Some Obj-C code is embedded in java_md.c, so need to inform compiler
+CFLAGS_$(VARIANT)/java_md.o = -Os -x objective-c
+# Needed for linking the various launchers
+LDFLAGS += -framework Cocoa -framework Security -framework ApplicationServices
+endif
 
 STATIC_LIBRARY_DIR = $(OBJDIR)/static
 STATIC_LIBRARY_NAME = lib$(LIBRARY).a
 STATIC_LIBRARY = $(STATIC_LIBRARY_DIR)/$(STATIC_LIBRARY_NAME)
 
-$(STATIC_LIBRARY_DIR): $(OBJDIR)
+$(STATIC_LIBRARY_DIR): | $(OBJDIR)
 	@$(MKDIR) $(STATIC_LIBRARY_DIR)
 
 $(STATIC_LIBRARY): $(STATIC_LIBRARY_DIR)
 	@$(prep-target)
-	$(AR) -r $@ $(FILES_o)
+	$(AR) $(ARFLAGS) $@ $(FILES_o)
 
 library:: $(STATIC_LIBRARY)
 

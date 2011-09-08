@@ -213,7 +213,7 @@ OGLSD_InitTextureObject(OGLSDOps *oglsdo,
     j2d_glBindTexture(texTarget, texID);
     j2d_glTexImage2D(texTarget, 0, format,
                      texWidth, texHeight, 0,
-                     format, GL_UNSIGNED_BYTE, NULL);
+                     format, GL_UNSIGNED_INT_8_8_8_8, NULL);
 
     oglsdo->isOpaque = isOpaque;
     oglsdo->xOffset = 0;

@@ -249,7 +249,7 @@ public class BsdVirtualMachine extends HotSpotVirtualMachine {
         // First check for a .java_pid<pid> file in the working directory
         // of the target process
         String fn = ".java_pid" + pid;
-        File f = new File(tmpdir, path);
+        File f = new File(tmpdir, fn);
 	return f.exists() ? f.getPath() : null;
     }
 

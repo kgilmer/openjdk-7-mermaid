@@ -27,6 +27,11 @@ BUILDDIR = ../..
 PACKAGE = javax.sound
 LIBRARY = jsound
 PRODUCT = sun
+
+ifeq ($(PLATFORM),macosx)
+CPLUSPLUSLIBRARY = true
+endif
+
 include $(BUILDDIR)/common/Defs.gmk
 
 # include defines for sound
@@ -77,6 +82,7 @@ FILES_copydirs = \
 	$(FILES_mkdirs)
 
 FILES_c += $(FILES_$(PLATFORM))
+FILES_cpp += $(FILES_cpp_$(PLATFORM))
 
 
 #
@@ -105,6 +111,22 @@ ifeq ($(PLATFORM), linux)
   #MXSPP_ADD = $(PLATFORM)-$(ARCH)/
 endif # PLATFORM linux
 
+ifeq ($(PLATFORM), macosx)
+  CPPFLAGS += -DUSE_PORTS=TRUE \
+              -DUSE_DAUDIO=TRUE \
+              -DUSE_PLATFORM_MIDI_OUT=TRUE \
+              -DUSE_PLATFORM_MIDI_IN=TRUE
+
+  INCLUDE_PORTS = TRUE
+  INCLUDE_DAUDIO = TRUE
+  INCLUDE_MIDI = TRUE
+
+  LDFLAGS += -framework CoreAudio -framework CoreFoundation \
+             -framework CoreServices -framework AudioUnit -lstdc++ \
+             -framework CoreMIDI
+  CXXFLAGS += -I`xcode-select -print-path`/Extras/CoreAudio/PublicUtility
+endif
+
 # XXXBSD: ???
 ifeq ($(PLATFORM), bsd)
 ifeq ($(OS_VENDOR), FreeBSD)
@@ -112,12 +134,12 @@ ifeq ($(OS_VENDOR), FreeBSD)
   SUBDIRS += jsoundalsa
   EXTRA_SOUND_JNI_LIBS += jsoundalsa
 else
-    # build with empty MIDI i/o
-    INCLUDE_MIDI = TRUE
-    # build with empty ports
-    INCLUDE_PORTS = TRUE
-    # build with empty direct audio
-    INCLUDE_DAUDIO = TRUE
+  # build with empty MIDI i/o
+  INCLUDE_MIDI = TRUE
+  # build with empty ports
+  INCLUDE_PORTS = TRUE
+  # build with empty direct audio
+  INCLUDE_DAUDIO = TRUE
 endif
 endif # PLATFORM bsd
 
@@ -163,9 +185,8 @@ CPPFLAGS += \
 #
 # Add to the ambient VPATH.
 #
-vpath %.c $(SHARE_SRC)/native/com/sun/media/sound
-vpath %.c $(PLATFORM_SRC)/native/com/sun/media/sound
-vpath %.cpp $(PLATFORM_SRC)/native/com/sun/media/sound
+vpath %.c   $(call NativeSrcDirList,,native/com/sun/media/sound)
+vpath %.cpp $(call NativeSrcDirList,,native/com/sun/media/sound)
 
 
 #

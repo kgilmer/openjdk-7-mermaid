@@ -94,6 +94,12 @@ INIT += $(GENSRCDIR)/java/lang/UNIXProcess.java
 
 endif # PLATFORM
 
+FILES_c    +=   java_props_md.c
+
+ifeq ($(PLATFORM), macosx)
+CFLAGS_$(VARIANT)/java_props_md.o = -Os -x objective-c
+endif
+
 #
 # Make sure first rule does 'all'
 #
@@ -166,7 +172,9 @@ OTHER_INCLUDES += -I$(PLATFORM_SRC)/native/java/util
 #
 ifneq ($(PLATFORM), windows)
 ifneq ($(PLATFORM), bsd)
+ifneq ($(PLATFORM), macosx)
 HAVE_ALTZONE=true
+endif
 endif
 endif
 
@@ -209,7 +217,14 @@ OTHER_LDLIBS += $(JVMLIB) -libpath:$(OBJDIR)/../../../fdlibm/$(OBJDIRNAME) fdlib
 else
 OTHER_LDLIBS += $(JVMLIB) -lverify $(LIBSOCKET) $(LIBNSL) $(LIBDL) \
 		-L$(OBJDIR)/../../../fdlibm/$(OBJDIRNAME) -lfdlibm.$(ARCH)
+ifeq ($(PLATFORM), macosx)
+OTHER_LDLIBS += \
+	-framework CoreFoundation \
+	-framework Security \
+	-framework SystemConfiguration
 endif
+endif
+
 
 #
 # Rules.
@@ -245,8 +260,15 @@ ifneq ($(PLATFORM),windows)
 # UNIXProcess.java is different for solaris and linux. We need to copy
 # the correct UNIXProcess.java over to $(GENSRCDIR)/java/lang/.
 
-$(GENSRCDIR)/java/lang/UNIXProcess.java: \
+ifeq ($(PLATFORM), macosx)
+PLATFORM_UNIX_PROCESS = \
+    $(PLATFORM_SRC)/classes/java/lang/UNIXProcess.java.bsd
+else
+PLATFORM_UNIX_PROCESS = \
     $(PLATFORM_SRC)/classes/java/lang/UNIXProcess.java.$(PLATFORM)
+endif
+
+$(GENSRCDIR)/java/lang/UNIXProcess.java: $(PLATFORM_UNIX_PROCESS)
 	$(install-file)
 
 clean:: 

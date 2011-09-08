@@ -99,7 +99,15 @@ endif
 ifneq "$(origin ALT_COMPILER_PATH)" "undefined"
   COMPILER_PATH :=$(call PrefixPath,$(ALT_COMPILER_PATH))
 else
+ ifeq ($(OS_VENDOR), Apple)
+  ifndef DEVELOPER_DIR
+   DEVELOPER_DIR = $(shell /usr/bin/xcode-select -print-path)/usr/bin/
+  endif
+  
+  COMPILER_PATH  := $(call DirExists,$(DEVELOPER_DIR),/usr/bin/,/NOT-SET)
+ else
   COMPILER_PATH  =/usr/bin/
+ endif
 endif
 
 # OPENWIN_HOME: path to where the X11 environment is installed.

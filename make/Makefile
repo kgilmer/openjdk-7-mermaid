@@ -232,7 +232,7 @@ import_product:
 
 all build:: sanity-all post-sanity-all
 
-SUBDIRS       = tools java javax sun com
+SUBDIRS       = tools java javax sun apple com
 SUBDIRS_tools = launchers
 SUBDIRS_misc  = org sunw jpda mkdemo mksample
 
