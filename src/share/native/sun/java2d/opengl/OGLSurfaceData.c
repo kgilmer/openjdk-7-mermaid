@@ -558,12 +558,12 @@ OGLSD_SetNativeDimensions(JNIEnv *env, OGLSDOps *oglsdo,
 }
 
 /**
- * Disposes of all native resources associated with this surface.
+ * Deletes native OpenGL resources associated with this surface.
  */
 void
-OGLSD_Flush(JNIEnv *env, OGLSDOps *oglsdo)
+OGLSD_Delete(JNIEnv *env, OGLSDOps *oglsdo)
 {
-    J2dTraceLn1(J2D_TRACE_INFO, "OGLSD_Flush: type=%d",
+    J2dTraceLn1(J2D_TRACE_INFO, "OGLSD_Delete: type=%d",
                 oglsdo->drawableType);
 
     if (oglsdo->drawableType == OGLSD_TEXTURE) {

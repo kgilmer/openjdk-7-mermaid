@@ -25,6 +25,7 @@
 
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 
+#import "CGLGraphicsConfig.h"
 #import "ThreadUtilities.h"
 #import "AWTView.h"
 #import "AWTEvent.h"
@@ -57,12 +58,12 @@ AWT_ASSERT_APPKIT_THREAD;
     if (self == nil) return self;
 
     m_cPlatformView = cPlatformView;
-
+#if USE_INTERMEDIATE_BUFFER
     cglLayer = [CGLLayer layer];
     
     [self setWantsLayer: YES];
     [self.layer addSublayer: (CALayer *)cglLayer];
-
+#endif
     return self;
 }
 

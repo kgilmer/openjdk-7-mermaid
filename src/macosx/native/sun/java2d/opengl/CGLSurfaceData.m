@@ -128,8 +128,8 @@ JNF_COCOA_ENTER(env);
         if (oglsdo->textureID != 0) {
             j2d_glDeleteTextures(1, &oglsdo->textureID);
             oglsdo->textureID = 0;
-        }        
-#else        
+        }
+#else
         // detach the NSView from the NSOpenGLContext
         CGLGraphicsConfigInfo *cglInfo = cglsdo->configInfo;
         OGLContext *oglc = cglInfo->context;
@@ -247,17 +247,6 @@ OGLSD_MakeOGLContextCurrent(JNIEnv *env, OGLSDOps *srcOps, OGLSDOps *dstOps)
     if (currentContext != NULL) {
         j2d_glFlush();
     }
-
-#if USE_INTERMEDIATE_BUFFER
-    // looks like we should also explicitly re-cache layers between context changes
-    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
-        AWT_ASSERT_APPKIT_THREAD;
-        
-        AWTView *view = dstCGLOps->peerData;
-        [view.cglLayer setNeedsDisplay];
-    }];
-
-#endif
     
     if (dstOps->drawableType == OGLSD_FBOBJECT) {
         // first make sure we have a current context (if the context isn't
@@ -369,14 +358,14 @@ jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
         j2d_glDeleteTextures(1, &oglsdo->textureID);
         oglsdo->textureID = 0;
     }
-    
+
     CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
     jboolean result =
         OGLSurfaceData_initFBObject(env, NULL, ptr_to_jlong(oglsdo), oglsdo->isOpaque,
                                     isTexNonPow2Available(cglsdo->configInfo),
                                     isTexRectAvailable(cglsdo->configInfo),
                                     oglsdo->width, oglsdo->height);
-    
+
     // NOTE: OGLSD_WINDOW type is reused for offscreen rendering
     //       when intermediate buffer is enabled
     oglsdo->drawableType = OGLSD_WINDOW;
@@ -386,7 +375,7 @@ jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     layer.textureID = oglsdo->textureID;
     layer.textureWidth = oglsdo->width;
     layer.textureHeight = oglsdo->height;
-
+    
     return result;
 }
 
@@ -445,6 +434,22 @@ JNF_COCOA_ENTER(env);
     [[NSOpenGLContext currentContext] flushBuffer];
 JNF_COCOA_EXIT(env);
 }
+
+void
+OGLSD_Flush(JNIEnv *env)
+{
+#if USE_INTERMEDIATE_BUFFER
+    OGLSDOps *dstOps = OGLRenderQueue_GetCurrentDestination();
+    if (dstOps != NULL) {
+        [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+            AWT_ASSERT_APPKIT_THREAD;
+            CGLSDOps *dstCGLOps = (CGLSDOps *)dstOps->privOps;        
+            AWTView *view = dstCGLOps->peerData;
+            [view.cglLayer setNeedsDisplay];
+        }];
+    }
+#endif    
+}    
 
 #pragma mark -
 #pragma mark "--- CGLSurfaceData methods ---"
