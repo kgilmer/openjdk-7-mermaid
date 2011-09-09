@@ -277,6 +277,8 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     }
 
     void (^starter)() = ^() {
+        NSAutoreleasePool *pool = [NSAutoreleasePool new];
+        
         BOOL wasOnMainThread = onMainThread;
         
         setUpAWTAppKit(swtMode, headless);
@@ -334,6 +336,8 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
             
             // Proceed to exit this call as there is no reason to run the NSApplication event loop.
         }
+        
+        [pool drain];
     };
     
     if (onMainThread) {
