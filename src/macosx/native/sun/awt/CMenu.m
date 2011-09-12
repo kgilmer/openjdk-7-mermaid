@@ -38,7 +38,7 @@
 - (id)initWithPeer:(jobject)peer {
 AWT_ASSERT_APPKIT_THREAD;
     // Create the new NSMenu
-    self = [super initWithPeer:peer];
+    self = [super initWithPeer:peer asSeparator:[NSNumber numberWithBool:NO]];
     if (self) {
         fMenu = [NSMenu javaMenuWithTitle:@""];
         [fMenu retain];
