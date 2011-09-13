@@ -193,8 +193,7 @@ class CRobot implements RobotPeer {
     @Override
     public int getRGBPixel(int x, int y) {
         int c[] = new int[1];
-        getScreenPixels(fDevice.getCoreGraphicsScreen(),
-                        new Rectangle(x, y, 1, 1), c);
+        getScreenPixels(new Rectangle(x, y, 1, 1), c);
         return c[0];
     }
     
@@ -213,7 +212,7 @@ class CRobot implements RobotPeer {
         Rectangle intersection = screenBounds.intersection(bounds);
         
         int c[] = new int[intersection.width * intersection.height];
-        getScreenPixels(fDevice.getCoreGraphicsScreen(), intersection, c);
+        getScreenPixels(intersection, c);
         
         if (!intersection.equals(bounds)) {
             // Since we are returning a smaller array than the code expects,
@@ -241,8 +240,8 @@ class CRobot implements RobotPeer {
                                    int button3DesiredState,
                                    boolean moveAction);
     private native void keyEvent(int javaKeyCode, boolean keydown);
-    private void getScreenPixels(int screen, Rectangle r, int[] pixels){
-        nativeGetScreenPixels(screen, r.x, r.y, r.width, r.height, pixels);
+    private void getScreenPixels(Rectangle r, int[] pixels){
+        nativeGetScreenPixels(r.x, r.y, r.width, r.height, pixels);
     }
-    private native void nativeGetScreenPixels(int screen, int x, int y, int width, int height, int[] pixels);
+    private native void nativeGetScreenPixels(int x, int y, int width, int height, int[] pixels);
 }

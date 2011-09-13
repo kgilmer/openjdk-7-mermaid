@@ -44,28 +44,9 @@
 #define k_JAVA_ROBOT_NUMBER_KNOWN_BUTTONS    3
 #define k_JAVA_ROBOT_WHEEL_COUNT 1
 
-#if defined(_LITTLE_ENDIAN__)
-#define PIXEL_DATA_TYPE GL_UNSIGNED_INT_8_8_8_8
-#else
-#define PIXEL_DATA_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
-#endif
-
 #if !defined(kCGBitmapByteOrder32Host)
 #define kCGBitmapByteOrder32Host 0
 #endif
-
-// Data struct for the screen grabs via CoreGraphics
-struct screenDataProviderData 
-{
-    unsigned char*  base_addr;      /* READ ONLY */
-    size_t          numRows;        /* READ ONLY */
-    size_t          bytesPerRow;    /* READ ONLY */
-    unsigned char*  max;            /* READ ONLY */
-    
-    size_t          row;            /* current row */
-    unsigned char*  offset;         /* current raw pointer */
-};
-typedef struct screenDataProviderData screenDataProviderData;
 
 static inline CGKeyCode GetCGKeyCode(jint javaKeyCode);
 
@@ -73,7 +54,8 @@ static void SwizzleBitmap(void* data, int rowBytes, int height);
 static void cleanContext(CGLContextObj glContextObj);
 static CGLContextObj InitContext(CGDirectDisplayID display);
 
-static void postMouseEvent(const CGPoint point, CGMouseButton button, CGEventType type);
+static void postMouseEvent(const CGPoint point, CGMouseButton button, 
+                           CGEventType type);
 
 
 static void
@@ -92,7 +74,7 @@ CreateJavaException(JNIEnv* env, CGError err)
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_initRobot
-    (JNIEnv *env, jobject peer)
+(JNIEnv *env, jobject peer)
 {
     // Set things up to let our app act like a synthetic keyboard and mouse.
     // Always set all states, in case Apple ever changes default behaviors.
@@ -106,12 +88,15 @@ Java_sun_lwawt_macosx_CRobot_initRobot
         CGEnableEventStateCombining(TRUE);
         
         // Don't let our events block local hardware events
-        CGSetLocalEventsFilterDuringSupressionState(kCGEventFilterMaskPermitAllEvents,
-                                                    kCGEventSupressionStateSupressionInterval);
-        CGSetLocalEventsFilterDuringSupressionState(kCGEventFilterMaskPermitAllEvents,
-                                                    kCGEventSupressionStateRemoteMouseDrag);
+        CGSetLocalEventsFilterDuringSupressionState(
+                                    kCGEventFilterMaskPermitAllEvents,
+                                    kCGEventSupressionStateSupressionInterval);
+        CGSetLocalEventsFilterDuringSupressionState(
+                                    kCGEventFilterMaskPermitAllEvents,
+                                    kCGEventSupressionStateRemoteMouseDrag);
     }
 }    
+
 /*
  * Class:     sun_lwawt_macosx_CRobot
  * Method:    mouseEvent
@@ -119,26 +104,26 @@ Java_sun_lwawt_macosx_CRobot_initRobot
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_mouseEvent
-    (JNIEnv *env, jobject peer,
-     jint screenIndex, jint mouseLastX, jint mouseLastY,
-     jint mouse1DesiredState, jint mouse2DesiredState,
-     jint mouse3DesiredState, jboolean mouseMoveAction)
+(JNIEnv *env, jobject peer,
+ jint screenIndex, jint mouseLastX, jint mouseLastY,
+ jint mouse1State, jint mouse2State,
+ jint mouse3State, jboolean mouseMoveAction)
 {
     JNF_COCOA_ENTER(env);
-
+    
     // This is the native method called when Robot mouse events occur.
     // The CRobot tracks the mouse position, and which button was
     // pressed. If the mouse position is unknown it is obtained from
     // CGEvents. The peer also tracks the mouse button desired state,
     // the appropriate key modifier state, and whether the mouse action
     // is simply a mouse move with no mouse button state changes.
-
+    
     CGError err = kCGErrorSuccess;
     
     CGDirectDisplayID displayID =
-        FindCGDirectDisplayIDForScreenIndex(screenIndex);
+    FindCGDirectDisplayIDForScreenIndex(screenIndex);
     CGRect globalDeviceBounds = CGDisplayBounds(displayID);
-
+    
     // Set unknown mouse location, if needed.
     if ((mouseLastX == sun_lwawt_macosx_CRobot_MOUSE_LOCATION_UNKNOWN) ||
         (mouseLastY == sun_lwawt_macosx_CRobot_MOUSE_LOCATION_UNKNOWN))
@@ -166,19 +151,18 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
         else if (globalPos.y > CGRectGetMaxY(globalDeviceBounds)) {
             globalPos.y = CGRectGetMaxY(globalDeviceBounds);
         }
-
+        
         mouseLastX = (jint)globalPos.x;
         mouseLastY = (jint)globalPos.y;
     }
-
-//volatile, otherwise it warns that variable might be clobbered by 'longjmp' or 'vfork'
+    
+    // volatile, otherwise it warns that it might be clobbered by 'longjmp' 
     volatile CGPoint point;
-//Translate the device relative point into a valid global CGPoint.
+    
+    // Translate the device relative point into a valid global CGPoint.
     point.x = mouseLastX + globalDeviceBounds.origin.x;
     point.y = mouseLastY + globalDeviceBounds.origin.y;
-
-    BOOL button1, button2, button3;
-
+    
     CGMouseButton button; 
     CGEventType type;
     
@@ -187,9 +171,9 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
         // Some of the buttons are changing state.
         
         // Left
-        if (mouse1DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
+        if (mouse1State != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
             button = kCGMouseButtonLeft;
-            if (mouse1DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            if (mouse1State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
                 type = kCGEventLeftMouseDown;
             } else {
                 type = kCGEventLeftMouseUp;
@@ -199,9 +183,9 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
         }
         
         // Other
-        if (mouse2DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
+        if (mouse2State != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
             button = kCGMouseButtonCenter;          
-            if (mouse2DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            if (mouse2State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
                 type = kCGEventOtherMouseDown;
             } else {
                 type = kCGEventOtherMouseUp;                
@@ -211,9 +195,9 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
         }
         
         // Right
-        if (mouse3DesiredState != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
+        if (mouse3State != sun_lwawt_macosx_CRobot_BUTTON_STATE_UNKNOWN) {
             button = kCGMouseButtonRight;           
-            if (mouse3DesiredState == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            if (mouse3State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
                 type = kCGEventRightMouseDown;
             } else {
                 type = kCGEventRightMouseUp;
@@ -222,7 +206,7 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
             postMouseEvent(point, button, type);
         }
     }   
-
+    
     JNF_COCOA_EXIT(env);
 }
 
@@ -233,10 +217,12 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_mouseWheel
-    (JNIEnv *env, jobject peer, jint wheelAmt)
+(JNIEnv *env, jobject peer, jint wheelAmt)
 {
-    CGEventRef event = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine,
-                                                    k_JAVA_ROBOT_WHEEL_COUNT, wheelAmt);                                                     
+    CGEventRef event = CGEventCreateScrollWheelEvent(NULL, 
+                                            kCGScrollEventUnitLine, 
+                                            k_JAVA_ROBOT_WHEEL_COUNT, wheelAmt);    
+    
     if (event != NULL) {
         CGEventPost(kCGSessionEventTap, event);
         CFRelease(event);
@@ -250,7 +236,7 @@ Java_sun_lwawt_macosx_CRobot_mouseWheel
  */
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_keyEvent
-    (JNIEnv *env, jobject peer, jint javaKeyCode, jboolean keyPressed)
+(JNIEnv *env, jobject peer, jint javaKeyCode, jboolean keyPressed)
 {
     CGKeyCode keyCode = GetCGKeyCode(javaKeyCode);
     CGEventRef event = CGEventCreateKeyboardEvent(NULL, keyCode, keyPressed);
@@ -268,55 +254,51 @@ Java_sun_lwawt_macosx_CRobot_keyEvent
 JNIEXPORT void JNICALL
 Java_sun_lwawt_macosx_CRobot_nativeGetScreenPixels
 (JNIEnv *env, jobject peer,
- jint screenIndex, jint x, jint y, jint width, jint height, jintArray pixels)
+ jint x, jint y, jint width, jint height, jintArray pixels)
 {
     JNF_COCOA_ENTER(env);
-  
-    // The array of pixels has been set up to hold enough jint's for the pixels.
-    // Also notice that the rect (bounds) and pixels (int array) passed from
-    // the Java layer are in terms of points, not pixels.  We need to take
-    // care of the HiDPI scenarios.
-  
-    jint screenX = x;
-    jint screenY = y;
-    jint screenWidth = width;
-    jint screenHeight = height;
     
-    CGDirectDisplayID displayID =
-    FindCGDirectDisplayIDForScreenIndex(screenIndex);
+    jint picX = x;
+    jint picY = y;
+    jint picWidth = width;
+    jint picHeight = height;
     
-    CGLContextObj glContextObj = InitContext(displayID);
-    if (glContextObj == NULL) {
-        return;
+    CGRect screenRect = CGRectMake(picX, picY, picWidth, picHeight);
+    CGImageRef screenPixelsImage = CGWindowListCreateImage(screenRect, 
+                                        kCGWindowListOptionOnScreenOnly, 
+                                        kCGNullWindowID, kCGWindowImageDefault);
+    
+    if (screenPixelsImage == NULL) {
+        return;        
     }
     
-    jint displayHeight = (jint) CGDisplayPixelsHigh(displayID);
+    // get a pointer to the Java int array
+    void *jPixelData = (*env)->GetPrimitiveArrayCritical(env, pixels, 0);
     
-    glReadBuffer(GL_FRONT);
+    // create a graphics context around the Java int array
+    CGColorSpaceRef picColorSpace = CGColorSpaceCreateWithName(
+                                            kCGColorSpaceGenericRGB);
+    CGContextRef jPicContextRef = CGBitmapContextCreate(
+                                            jPixelData, 
+                                            picWidth, picHeight, 
+                                            8, picWidth * sizeof(jint),
+                                            picColorSpace, 
+                                            kCGBitmapByteOrder32Host | 
+                                            kCGImageAlphaPremultipliedFirst);
     
-    // Get a handle on the native int array.
-    void* jPixelData = (*env)->GetPrimitiveArrayCritical(env, pixels, 0);
+    CGColorSpaceRelease(picColorSpace);
     
-    // Finish all OpenGL commands.
-    glFinish();
+    // flip, scale, and color correct the screen image into the Java pixels
+    CGRect bounds = { { 0, 0 }, { picWidth, picHeight } };
+    CGContextDrawImage(jPicContextRef, bounds, screenPixelsImage);
+    CGContextFlush(jPicContextRef);
     
-    // Read framebuffer into our bitmap.
-    // Calculates the window coordinates of the lower left corner corresponding
-    // to the Java rectangle.
+    // cleanup
+    CGContextRelease(jPicContextRef);
+    CGImageRelease(screenPixelsImage);
     
-    glReadPixels(screenX, displayHeight - screenY - screenHeight,
-                 screenWidth, screenHeight,
-                 GL_BGRA,
-                 PIXEL_DATA_TYPE,
-                 jPixelData);
-    
-    // Invert the pixels for Java's sake.
-    SwizzleBitmap(jPixelData, screenWidth * sizeof(jint), screenHeight);
-    
-    cleanContext(glContextObj);
-    
-    // Get our pixels
-    (*env)->ReleasePrimitiveArrayCritical(env, pixels, jPixelData, 0);
+    // release the Java int array back up to the JVM
+    (*env)->ReleasePrimitiveArrayCritical(env, pixels, jPixelData, 0);    
     
     JNF_COCOA_EXIT(env);
 }
@@ -325,87 +307,8 @@ Java_sun_lwawt_macosx_CRobot_nativeGetScreenPixels
  * Helper methods
  ****************************************************/
 
-// Called from getScreenPixels JNI impl.
-static void
-SwizzleBitmap(void* data, int rowBytes, int height)
-{
-    int top, bottom;
-    void* buffer;
-    void* topP;
-    void* bottomP;
-    void* base;
-
-    top = 0;
-    bottom = height - 1;
-    base = data;
-    buffer = malloc(rowBytes);
-
-    while (top < bottom) {
-        topP = (void *)((top * rowBytes) + (intptr_t)base);
-        bottomP = (void *)((bottom * rowBytes) + (intptr_t)base);
-
-        /*
-         * Save and swap scanlines.
-         *
-         * This code does a simple in-place exchange with a temp buffer.
-         * If you need to reformat the pixels, replace the first two bcopy()
-         * calls with your own custom pixel reformatter.
-         */
-        bcopy( topP, buffer, rowBytes );
-        bcopy( bottomP, topP, rowBytes );
-        bcopy( buffer, bottomP, rowBytes );
-
-        ++top;
-        --bottom;
-    }
-    free( buffer );
-}
-
-// Called from getScreenPixels JNI impl.
-static CGLContextObj
-InitContext(CGDirectDisplayID display)
-{
-    CGLContextObj glContextObj;
-    CGLPixelFormatObj pixelFormatObj;
-    GLint numPixelFormats;
-    
-    CGLPixelFormatAttribute attribs[] = {
-        kCGLPFAFullScreen,
-        kCGLPFADisplayMask,
-        CGDisplayIDToOpenGLDisplayMask(display),
-        0
-    };
-    
-    CGLChoosePixelFormat(attribs, &pixelFormatObj, &numPixelFormats);
-    if (pixelFormatObj == NULL) {
-        printf("No full screen pixel format\n");
-        return 0;
-    }
-
-    CGLCreateContext(pixelFormatObj, NULL, &glContextObj);
-    CGLDestroyPixelFormat(pixelFormatObj);
-    
-    if (glContextObj == NULL) {
-        printf("Unable to create Full Screen context\n");
-        return 0;
-    }
-    
-    CGLSetCurrentContext(glContextObj);
-    CGLSetFullScreenOnDisplay(glContextObj, CGDisplayIDToOpenGLDisplayMask(display));  
-    
-    return glContextObj;
-}
-
-// Called from getScreenPixels JNI impl.
-static
-void cleanContext(CGLContextObj glContextObj)
-{
-    CGLSetCurrentContext(0);
-    CGLClearDrawable(glContextObj);  // disassociate from full screen
-    CGLDestroyContext(glContextObj); // and destroy the context
-}
-
-static void postMouseEvent(const CGPoint point, CGMouseButton button, CGEventType type)
+static void postMouseEvent(const CGPoint point, CGMouseButton button, 
+                           CGEventType type)
 {
     CGEventRef mouseEvent = CGEventCreateMouseEvent(NULL, type, point, button);
     if (mouseEvent != NULL) {
