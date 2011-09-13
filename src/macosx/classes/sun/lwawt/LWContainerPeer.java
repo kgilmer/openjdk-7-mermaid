@@ -127,7 +127,7 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
     /*
      * Returns a copy of the childPeer collection.
      */
-    private List<LWComponentPeer> getChildren() {
+    protected List<LWComponentPeer> getChildren() {
         synchronized (getPeerTreeLock()) {
             Object copy = ((LinkedList)childPeers).clone();
             return (List<LWComponentPeer>)copy;

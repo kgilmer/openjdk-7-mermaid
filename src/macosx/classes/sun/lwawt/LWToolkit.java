@@ -330,7 +330,10 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ScrollPanePeer createScrollPane(ScrollPane target) {
-        throw new RuntimeException("not implemented");
+        LWScrollPanePeer peer = new LWScrollPanePeer(target);
+        targetCreatedPeer(target, peer);
+        peer.initialize();
+        return peer;
     }
 
     @Override
