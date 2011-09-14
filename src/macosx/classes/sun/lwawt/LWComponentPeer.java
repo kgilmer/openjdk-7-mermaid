@@ -183,7 +183,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 }
 
                 public Point getLocationOnScreen() {
-                    return getTarget().getLocationOnScreen();
+                    return LWComponentPeer.this.getLocationOnScreen();
                 }
 
                 public int getX() {
