@@ -23,6 +23,7 @@
  * questions.
  */
 
+#import "CGLGraphicsConfig.h"
 #import "CGLLayer.h"
 #import "ThreadUtilities.h"
 
