@@ -133,9 +133,18 @@ JNF_COCOA_ENTER(env);
         }
     } else if (oglsdo->drawableType == OGLSD_WINDOW) {
 #if USE_INTERMEDIATE_BUFFER
+        // REMIND: duplicates code in OGLSD_Delete invoked from the Dispose thread
         if (oglsdo->textureID != 0) {
             j2d_glDeleteTextures(1, &oglsdo->textureID);
             oglsdo->textureID = 0;
+        }
+        if (oglsdo->depthID != 0) {
+            j2d_glDeleteRenderbuffersEXT(1, &oglsdo->depthID);
+            oglsdo->depthID = 0;
+        }
+        if (oglsdo->fbobjectID != 0) {
+            j2d_glDeleteFramebuffersEXT(1, &oglsdo->fbobjectID);
+            oglsdo->fbobjectID = 0;
         }
 #else
         // detach the NSView from the NSOpenGLContext
@@ -374,10 +383,7 @@ BOOL isTexRectAvailable(CGLGraphicsConfigInfo *cglinfo) {
 jboolean RecreateBuffer(JNIEnv *env, OGLSDOps *oglsdo)
 {
     // destroy previous buffer first
-    if (oglsdo->textureID != 0) {
-        j2d_glDeleteTextures(1, &oglsdo->textureID);
-        oglsdo->textureID = 0;
-    }
+    OGLSD_DestroyOGLSurface(env, oglsdo);
 
     CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
     jboolean result =
@@ -436,8 +442,7 @@ jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     CGLSDOps *cglsdo = (CGLSDOps *)oglsdo->privOps;
     // destroy previous buffer first
     if (oglsdo->textureID != 0) {
-        j2d_glDeleteTextures(1, &oglsdo->textureID);
-        oglsdo->textureID = 0;
+        OGLSD_DestroyOGLSurface(env, oglsdo);
 		if (cglsdo->surfaceRef != NULL) {
             CFRelease(cglsdo->surfaceRef);
             cglsdo->surfaceRef = NULL;
