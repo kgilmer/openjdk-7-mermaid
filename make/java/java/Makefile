@@ -97,6 +97,10 @@ endif # PLATFORM
 FILES_c    +=   java_props_md.c
 
 ifeq ($(PLATFORM), macosx)
+FILES_java += 	java/util/prefs/MacOSXPreferences.java \
+		java/util/prefs/MacOSXPreferencesFile.java \
+		java/util/prefs/MacOSXPreferencesFactory.java
+
 CFLAGS_$(VARIANT)/java_props_md.o = -Os -x objective-c
 endif
 
