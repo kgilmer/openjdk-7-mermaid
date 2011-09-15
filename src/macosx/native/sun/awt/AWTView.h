@@ -55,7 +55,10 @@
     BOOL fInPressAndHold;
     BOOL fPAHNeedsToSelect;
 
+    id cglLayer; // is a sublayer of view.layer
 }
+
+@property (nonatomic, retain) id cglLayer;
 
 - (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
 - (void) deliverJavaMouseEvent: (NSEvent *) event;

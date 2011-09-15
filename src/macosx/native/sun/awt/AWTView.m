@@ -23,6 +23,8 @@
  * questions.
  */
 
+#import "CGLGraphicsConfig.h"
+
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
 #import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
@@ -35,6 +37,7 @@
 #import "JavaTextAccessibility.h"
 #import "GeomUtilities.h"
 #import "OSVersion.h"
+#import "CGLLayer.h"
 
 @interface AWTView()
 @property (retain) CDropTarget *_dropTarget;
@@ -57,6 +60,7 @@ static BOOL shouldUsePressAndHold() {
 
 @synthesize _dropTarget;
 @synthesize _dragSource;
+@synthesize cglLayer;
 
 // Note: Must be called on main (AppKit) thread only
 - (id) initWithRect: (NSRect) rect
@@ -68,7 +72,6 @@ AWT_ASSERT_APPKIT_THREAD;
     if (self == nil) return self;
 
     m_cPlatformView = cPlatformView;
-    
     fInputMethodLOCKABLE = NULL;
     fKeyEventsNeeded = NO;
     fProcessingKeystroke = NO;
@@ -77,6 +80,11 @@ AWT_ASSERT_APPKIT_THREAD;
     fInPressAndHold = NO;
     fPAHNeedsToSelect = NO;
 
+#if USE_INTERMEDIATE_BUFFER
+    cglLayer = [CGLLayer layer];
+    [self setWantsLayer: YES];
+    [self.layer addSublayer: (CALayer *)cglLayer];
+#endif
     return self;
 }
 

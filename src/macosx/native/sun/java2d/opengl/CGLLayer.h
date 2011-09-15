@@ -23,25 +23,26 @@
  * questions.
  */
 
-#ifndef CGLSurfaceData_h_Included
-#define CGLSurfaceData_h_Included
+#ifndef CGLLayer_h_Included
+#define CGLLayer_h_Included
 
-#import <IOSurface/IOSurface.h>
+#import "AWTView.h"
 
-#import "OGLSurfaceData.h"
-#import "CGLGraphicsConfig.h"
-#import "AWTWindow.h"
+@interface CGLLayer : CAOpenGLLayer
+{    
+    // intermediate buffer
+    GLuint textureID; 
+    GLenum target;
+    float textureWidth;
+    float textureHeight;
+}
 
-/**
- * The CGLSDOps structure contains the CGL-specific information for a given
- * OGLSurfaceData.  It is referenced by the native OGLSDOps structure.
- */
-typedef struct _CGLSDOps {
-    AWTView               *peerData;
-    GLclampf              argb[4]; // background clear color
-    NSOpenGLPixelBuffer   *pbuffer;
-    CGLGraphicsConfigInfo *configInfo;  
-    IOSurfaceRef          surfaceRef;
-} CGLSDOps;
+@property (readwrite, assign) GLuint textureID;
+@property (readwrite, assign) GLenum target;
+@property (readwrite, assign) float textureWidth;
+@property (readwrite, assign) float textureHeight;
 
-#endif /* CGLSurfaceData_h_Included */
+- (void) _blitTexture;
+@end
+
+#endif /* CGLLayer_h_Included */

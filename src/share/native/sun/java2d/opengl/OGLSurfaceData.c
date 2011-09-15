@@ -211,7 +211,7 @@ OGLSD_InitTextureObject(OGLSDOps *oglsdo,
     // a texture object once with 2^n dimensions, and then use
     // glTexSubImage2D() to provide further updates)
     j2d_glGenTextures(1, &texID);
-    j2d_glBindTexture(texTarget, texID);
+    j2d_glBindTexture(texTarget, texID);    
     j2d_glTexImage2D(texTarget, 0, format,
                      texWidth, texHeight, 0,
                      format, size, NULL);
@@ -396,6 +396,16 @@ Java_sun_java2d_opengl_OGLSurfaceData_initFBObject
      jboolean texNonPow2, jboolean texRect,
      jint width, jint height)
 {
+    return OGLSurfaceData_initFBObject(env, oglsd, pData, isOpaque,
+                                       texNonPow2, texRect, width, height);
+}
+
+jboolean OGLSurfaceData_initFBObject
+    (JNIEnv *env, jobject oglsd,
+     jlong pData, jboolean isOpaque,
+     jboolean texNonPow2, jboolean texRect,
+     jint width, jint height)
+{
     OGLSDOps *oglsdo = (OGLSDOps *)jlong_to_ptr(pData);
     GLuint fbobjectID, depthID;
 
@@ -549,12 +559,12 @@ OGLSD_SetNativeDimensions(JNIEnv *env, OGLSDOps *oglsdo,
 }
 
 /**
- * Disposes of all native resources associated with this surface.
+ * Deletes native OpenGL resources associated with this surface.
  */
 void
-OGLSD_Flush(JNIEnv *env, OGLSDOps *oglsdo)
+OGLSD_Delete(JNIEnv *env, OGLSDOps *oglsdo)
 {
-    J2dTraceLn1(J2D_TRACE_INFO, "OGLSD_Flush: type=%d",
+    J2dTraceLn1(J2D_TRACE_INFO, "OGLSD_Delete: type=%d",
                 oglsdo->drawableType);
 
     if (oglsdo->drawableType == OGLSD_TEXTURE) {

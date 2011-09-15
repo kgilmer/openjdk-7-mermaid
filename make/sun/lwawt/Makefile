@@ -81,8 +81,9 @@ OTHER_LDLIBS += \
 	-framework ExceptionHandling \
 	-framework JavaNativeFoundation \
 	-framework JavaRuntimeSupport \
-	-framework OpenGL
-
+	-framework OpenGL \
+	-framework IOSurface \
+        -framework QuartzCore
 CPPFLAGS += \
         -I$(CLASSHDRDIR) \
         -I$(SHARE_SRC)/native/sun/awt/debug \
