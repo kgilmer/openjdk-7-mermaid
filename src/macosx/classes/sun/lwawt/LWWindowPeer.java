@@ -758,6 +758,18 @@ public class LWWindowPeer
         }
     }
 
+
+    /**
+     * Does the actual painting 
+     */
+    @Override
+    public void repaintPeer(int x, int y, int width, int height) {
+        if (isShowing() && width != 0 && height != 0) {
+            paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
+            postPaintEvent(x, y, width, height);
+        }
+    }
+
     /*
      * Repaints the given rectangle of the back buffer and flushes it
      * to the screen. This method should only be called on EDT.

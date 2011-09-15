@@ -1206,9 +1206,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     public void repaintPeer(int x, int y, int width, int height) {
-        if (isShowing() && width != 0 && height != 0) {
-            paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
-            postPaintEvent(x, y, width, height);
+        LWContainerPeer parentPeer = getContainerPeer();
+        if (parentPeer != null) {
+            Rectangle dirtyRect = new Rectangle(bounds.width, bounds.height).
+                    intersection(new Rectangle(x, y, width, height));
+            parentPeer.repaintPeer(bounds.x + dirtyRect.x, bounds.y + dirtyRect.y,
+                    dirtyRect.width, dirtyRect.height);
         }
     }
 
