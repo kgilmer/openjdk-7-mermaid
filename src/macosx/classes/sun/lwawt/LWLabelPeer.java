@@ -23,6 +23,7 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
 import java.awt.Label;
@@ -31,59 +32,47 @@ import java.awt.peer.LabelPeer;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
-class LWLabelPeer
-    extends LWComponentPeer<Label, JLabel>
-    implements LabelPeer
-{
-    public LWLabelPeer(Label target) {
+final class LWLabelPeer extends LWComponentPeer<Label, JLabel>
+        implements LabelPeer {
+
+    LWLabelPeer(final Label target) {
         super(target);
     }
 
     @Override
     protected JLabel createDelegate() {
-        final JLabel delegate = new JLabel();
-        delegate.setText(getTarget().getText());
-        delegate.setHorizontalAlignment(
-                convertAlignment(getTarget().getAlignment()));
-        return delegate;
+        return new JLabel();
     }
 
     @Override
-    public void setText(String text) {
-        synchronized (getDelegateLock()) {
-            getDelegate().setText(text);
-        }
-        repaintPeer();
+    public void initialize() {
+        super.initialize();
+        setText(getTarget().getText());
+        setAlignment(getTarget().getAlignment());
     }
-    
-    public String getText() {
+
+    @Override
+    public void setText(final String label) {
         synchronized (getDelegateLock()) {
-            return getDelegate().getText();
+            getDelegate().setText(label);
         }
     }
 
     @Override
-    public void setAlignment(int alignment) {
+    public void setAlignment(final int alignment) {
         synchronized (getDelegateLock()) {
             getDelegate().setHorizontalAlignment(convertAlignment(alignment));
         }
-        repaintPeer();
     }
-    
-    private int convertAlignment(int alignment) {
-        final int swingAlignment;
-        switch(alignment) {
-            default:
-            case Label.LEFT:
-                swingAlignment = SwingConstants.LEFT;
-                break;
+
+    private static int convertAlignment(final int alignment) {
+        switch (alignment) {
             case Label.CENTER:
-                swingAlignment = SwingConstants.CENTER;
-                break;
+                return SwingConstants.CENTER;
             case Label.RIGHT:
-                swingAlignment = SwingConstants.RIGHT;
-                break;
+                return SwingConstants.RIGHT;
+            default:
+                return SwingConstants.LEFT;
         }
-        return swingAlignment;
     }
 }

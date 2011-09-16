@@ -23,44 +23,49 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
 import java.awt.Button;
-import java.awt.AWTEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.peer.ButtonPeer;
 
 import javax.swing.JButton;
 
-class LWButtonPeer
-    extends LWComponentPeer<Button, JButton>
-    implements ButtonPeer, ActionListener
-{
-    public LWButtonPeer(Button target) {
+final class LWButtonPeer extends LWComponentPeer<Button, JButton>
+        implements ButtonPeer, ActionListener {
+
+    LWButtonPeer(final Button target) {
         super(target);
     }
 
     @Override
     protected JButton createDelegate() {
-        JButton delegate = new JButton();
-        delegate.setText(getTarget().getLabel());
-        delegate.addActionListener(this);
-        return delegate;
+        return new JButton();
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(),  ActionEvent.ACTION_PERFORMED,
-                getTarget().getActionCommand(), e.getWhen(), e.getModifiers()));
+    public void initialize() {
+        super.initialize();
+        setLabel(getTarget().getLabel());
+        synchronized (getDelegateLock()) {
+            getDelegate().addActionListener(this);
+        }
     }
 
     @Override
-    public void setLabel(String label) {
+    public void actionPerformed(final ActionEvent e) {
+        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
+                                  getTarget().getActionCommand(), e.getWhen(),
+                                  e.getModifiers()));
+    }
+
+    @Override
+    public void setLabel(final String label) {
         synchronized (getDelegateLock()) {
             getDelegate().setText(label);
         }
-        repaintPeer();
     }
 
     @Override
