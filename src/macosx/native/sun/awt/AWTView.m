@@ -150,7 +150,6 @@ AWT_ASSERT_APPKIT_THREAD;
 #endif
         if (![inputManager handleMouseEvent:event]) {            
             [self deliverJavaMouseEvent: event];
-            mouseDownButtonMask |= NSLeftMouseDownMask;
         } else {
 #if IM_DEBUG
             NSLog(@"-> Event was handled.");
@@ -159,33 +158,27 @@ AWT_ASSERT_APPKIT_THREAD;
     } else {
         NSLog(@"-> IM does not want to handle event");
         [self deliverJavaMouseEvent: event];
-        mouseDownButtonMask |= NSLeftMouseDownMask;
     }
 }
 
 - (void) mouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask &= ~NSLeftMouseDownMask;
 }
 
 - (void) rightMouseDown: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask |= NSRightMouseDownMask;
 }
 
 - (void) rightMouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask &= ~NSRightMouseDownMask;
 }
 
 - (void) otherMouseDown: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask |= NSOtherMouseDownMask;
 }
 
 - (void) otherMouseUp: (NSEvent *)event {
     [self deliverJavaMouseEvent: event];
-    mouseDownButtonMask &= ~NSOtherMouseDownMask;
 }
 
 - (void) mouseMoved: (NSEvent *)event {
@@ -294,7 +287,7 @@ AWT_ASSERT_APPKIT_THREAD;
         clickCount = [event clickCount];
     }
 
-    jint modifiers = GetJavaMouseModifiers(event, mouseDownButtonMask);
+    jint modifiers = GetJavaMouseModifiers(event);
     static JNF_CLASS_CACHE(jc_NSEvent, "sun/lwawt/macosx/event/NSEvent");
     static JNF_CTOR_CACHE(jctor_NSEvent, jc_NSEvent, "(IIIIIIIIDD)V");
     jobject jEvent = JNFNewObject(env, jctor_NSEvent,

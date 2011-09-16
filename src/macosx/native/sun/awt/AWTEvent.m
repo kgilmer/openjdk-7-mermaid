@@ -704,29 +704,31 @@ NsMouseModifiersToJavaModifiers(NSEvent *event)
     }
 }
 
-jint GetJavaMouseModifiers(NSEvent *event, NSInteger mouseDownButtonMask)
+jint GetJavaMouseModifiers(NSEvent *event)
 {
     // Mousing needs the key modifiers
     jint modifiers = NsKeyModifiersToJavaModifiers([event modifierFlags]);
     
-    // Now add the mouse specific modifiers
-    modifiers |= NsMouseModifiersToJavaModifiers(event);
-
-    NSUInteger nsEventMask = NSEventMaskFromType([event type]);
-
-    // mouseEntered/mouseExited events don't know about the pressed mouse buttons
-    if ([event type] == NSMouseEntered || [event type] == NSMouseExited) {
-       nsEventMask |= mouseDownButtonMask;
+    
+    /* 
+     * Ask Quartz about mouse buttons state
+     */
+    
+    if (CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, 
+                                 kCGMouseButtonLeft)) {
+        modifiers |= java_awt_event_InputEvent_BUTTON1_DOWN_MASK;        
     }
-
-    if (nsEventMask & (NSLeftMouseDownMask | NSLeftMouseDraggedMask)) {
-        modifiers |= java_awt_event_InputEvent_BUTTON1_DOWN_MASK;
-    } else if (nsEventMask & (NSRightMouseDownMask | NSRightMouseDraggedMask)) {
-        modifiers |= java_awt_event_InputEvent_BUTTON3_DOWN_MASK;
-    } else if (nsEventMask & (NSOtherMouseDownMask | NSOtherMouseDraggedMask)) {
-        modifiers |= java_awt_event_InputEvent_BUTTON2_DOWN_MASK;
+    
+    if (CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, 
+                                 kCGMouseButtonRight)) {
+        modifiers |= java_awt_event_InputEvent_BUTTON3_DOWN_MASK;        
     }
-
+    
+    if (CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, 
+                                 kCGMouseButtonCenter)) {
+        modifiers |= java_awt_event_InputEvent_BUTTON2_DOWN_MASK;        
+    }    
+    
     return modifiers;
 }
 
@@ -749,24 +751,6 @@ NSButtonToJavaButton(NSInteger nsButtonNumber)
     return jbutton;
 }
 
-/*
- * Converts an NSEvent button number to a MouseEvent button mask constant.
- */
-static jint
-NSButtonToJavaButtonMask(NSInteger nsButtonNumber)
-{
-    jint jbuttonMask = 0;
-
-    if (nsButtonNumber == 0) { // left
-        jbuttonMask = java_awt_event_InputEvent_BUTTON1_DOWN_MASK;
-    } else if (nsButtonNumber == 1) { // right
-        jbuttonMask = java_awt_event_InputEvent_BUTTON3_DOWN_MASK;
-    } else if (nsButtonNumber == 2) { // middle
-        jbuttonMask = java_awt_event_InputEvent_BUTTON2_DOWN_MASK;
-    }
-    
-    return jbuttonMask;
-}
 
 static BOOL isDragging = NO;
 
@@ -776,13 +760,14 @@ DeliverMouseClickedEvent(JNIEnv *env, NSEvent *event, jobject peer)
     NSPoint pt = [event locationInWindow];
     NSPoint pOnScreen = [NSEvent mouseLocation];
     jint etype = java_awt_event_MouseEvent_MOUSE_CLICKED;
-    jint modifiers = GetJavaMouseModifiers(event, 0);
+    jint modifiers = GetJavaMouseModifiers(event);
     jint clickCount = [event clickCount];
     jint button = NSButtonToJavaButton([event buttonNumber]);
 
     if (env != NULL) {
         static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
-        static JNF_MEMBER_CACHE(jm_deliverMouseEvent, jc_CPlatformView, "deliverMouseEvent", "(IIIIFFFF)V");
+        static JNF_MEMBER_CACHE(jm_deliverMouseEvent, jc_CPlatformView, 
+                                "deliverMouseEvent", "(IIIIFFFF)V");
         JNFCallVoidMethod(env, peer, jm_deliverMouseEvent,
                           etype, modifiers,
                           clickCount, button,
@@ -832,8 +817,10 @@ DeliverKeyTypedEvents(JNIEnv *env, NSEvent *nsEvent, jobject peer)
             unichar theChar = GetJavaCharacter(nsEvent, i);
             if (theChar != java_awt_event_KeyEvent_CHAR_UNDEFINED) {
                 if (env != NULL) {
-                    static JNF_CLASS_CACHE(jc_CPlatformView, "sun/lwawt/macosx/CPlatformView");
-                    static JNF_MEMBER_CACHE(jm_deliverKeyEvent, jc_CPlatformView, "deliverKeyEvent", "(IICII)V");
+                    static JNF_CLASS_CACHE(jc_CPlatformView, 
+                                           "sun/lwawt/macosx/CPlatformView");
+                    static JNF_MEMBER_CACHE(jm_deliverKeyEvent, jc_CPlatformView, 
+                                            "deliverKeyEvent", "(IICII)V");
                     JNFCallVoidMethod(env, peer, jm_deliverKeyEvent,
                                       java_awt_event_KeyEvent_KEY_TYPED,
                                       javaModifiers,
