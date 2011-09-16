@@ -34,6 +34,8 @@ import javax.swing.plaf.*;
 
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
+
+import com.apple.eio.FileManager;
 import com.apple.laf.AquaIcon.*;
 import com.apple.laf.AquaUtils.LazySingleton;
 import sun.lwawt.macosx.CImage;
@@ -84,23 +86,19 @@ public class AquaImageFactory {
     }
     
     static Image getGenericJavaIcon() {
-        // TODO: port eAWT classes
-//        return java.security.AccessController.doPrivileged(new PrivilegedAction<Image>() {
-//            public Image run() {
-//                return com.apple.eawt.Application.getApplication().getDockIconImage();
-//            }
-//        });
-        return new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB_PRE);
+        return java.security.AccessController.doPrivileged(new PrivilegedAction<Image>() {
+            public Image run() {
+                return com.apple.eawt.Application.getApplication().getDockIconImage();
+            }
+        });
     }
     
     static String getPathToThisApplication() {
-        // TODO: port eIO classes
-//        return java.security.AccessController.doPrivileged(new PrivilegedAction<String>() {
-//            public String run() {
-//                return FileManager.getPathToApplicationBundle();
-//            }
-//        });
-        return "/tmp";
+        return java.security.AccessController.doPrivileged(new PrivilegedAction<String>() {
+            public String run() {
+                return FileManager.getPathToApplicationBundle();
+            }
+        });
     }
     
     static IconUIResource getAppIconCompositedOn(final SystemIcon systemIcon) {

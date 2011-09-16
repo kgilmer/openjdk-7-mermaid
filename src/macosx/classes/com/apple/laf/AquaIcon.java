@@ -32,7 +32,6 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-import sun.lwawt.macosx.CImage;
 import apple.laf.JRSUIConstants.Size;
 import apple.laf.*;
 
@@ -199,14 +198,12 @@ public class AquaIcon {
             final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIState.getInstance());
             initIconPainter(painter);
 
-            final BufferedImage bufferedImage = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
-            final CImage nsImage = AquaUtils.getCImageCreator().createFromImage(bufferedImage);
-            // TODO: implement rendering to NSImage/CImage
-//            final Graphics nsImageG = nsImage.getGraphics();
-//            painter.paint(nsImageG, null, 0, 0, getIconWidth(), getIconHeight());
-//            nsImageG.dispose();
-
-            return nsImage.toImage();
+            final BufferedImage img = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
+            final Graphics g = img.getGraphics();
+            g.setClip(new Rectangle(0, 0, getIconWidth(), getIconHeight()));
+            painter.paint(g, null, 0, 0, getIconWidth(), getIconHeight());
+            g.dispose();
+            return img;
         }
             
         public abstract void initIconPainter(final AquaPainter<JRSUIState> painter);

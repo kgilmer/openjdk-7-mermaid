@@ -54,22 +54,20 @@ static void CImage_CopyArrayIntoNSImageRep
 static void CImage_CopyNSImageIntoArray
 (NSImage *srcImage, jint *dstPixels, int width, int height)
 {
-    NSBitmapImageRep *srcRep = [NSBitmapImageRep imageRepWithData:[srcImage TIFFRepresentation]];
-    jint *srcPixels = (jint *)[srcRep bitmapData];
-    int x, y;
-    // TODO: test this on big endian systems (not sure if its correct)...
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
-            jint pix = srcPixels[x];
-            jint a = (pix >> 24) & 0xff;
-            jint b = (pix >> 16) & 0xff;
-            jint g = (pix >>  8) & 0xff;
-            jint r = (pix      ) & 0xff;
-            dstPixels[x] = (a << 24) | (r << 16) | (g << 8) | b;
-        }
-        srcPixels += width; // TODO: use explicit scanStride
-        dstPixels += width;
-    }
+    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef cgRef = CGBitmapContextCreate(dstPixels, width, height, 8, width * 4, colorspace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+    CGColorSpaceRelease(colorspace);
+    NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgRef flipped:NO];
+    CGContextRelease(cgRef);
+    NSGraphicsContext *oldContext = [[NSGraphicsContext currentContext] retain];
+    [NSGraphicsContext setCurrentContext:context];
+    NSRect rect = NSMakeRect(0, 0, width, height);
+    [srcImage drawInRect:rect
+                fromRect:rect
+               operation:NSCompositeSourceOver
+                fraction:1.0];
+    [NSGraphicsContext setCurrentContext:oldContext];
+    [oldContext release];
 }
 
 /*
