@@ -91,7 +91,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     (*env)->DeleteGlobalRef(env, m_cPlatformView);
     m_cPlatformView = NULL;
     
@@ -265,7 +265,7 @@ AWT_ASSERT_APPKIT_THREAD;
 -(void) deliverJavaMouseEvent: (NSEvent *) event {
     [AWTToolkit eventCountPlusPlus];
 
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     
     NSPoint eventLocation = [event locationInWindow];
     NSPoint localPoint = [self convertPoint: eventLocation fromView: nil];
@@ -332,7 +332,7 @@ AWT_ASSERT_APPKIT_THREAD;
 
 -(void) deliverJavaKeyEventHelper: (NSEvent *) event {
     [AWTToolkit eventCountPlusPlus];
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     // Pulled as-is as it's highly-depend on native code.
     DeliverJavaKeyEvent(env, event, m_cPlatformView);
 }
@@ -354,7 +354,7 @@ AWT_ASSERT_APPKIT_THREAD;
 AWT_ASSERT_APPKIT_THREAD;
     
     [super drawRect:dirtyRect];
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     if (env != NULL) {
 /*
         if ([self inLiveResize]) {

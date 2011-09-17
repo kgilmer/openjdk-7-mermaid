@@ -30,10 +30,8 @@
 #import "ThreadUtilities.h"
 
 
-extern JavaVM* jvm;
+extern JavaVM *jvm;
 static JNIEnv *appKitEnv = NULL;
-
-static pthread_key_t sJniEnvKey = 0;
 
 static NSArray *sPerformModes = nil;
 static NSArray *sAWTPerformModes = nil;
@@ -198,28 +196,17 @@ NSUInteger sPerformCount = 0;
 @implementation ThreadUtilities
 
 + (JNIEnv*)getJNIEnv {
-    JNIEnv *env = pthread_getspecific(sJniEnvKey);
-    
-    if (env == nil) {
-        (*jvm)->AttachCurrentThread(jvm, (void **)&env, nil);
-        pthread_setspecific(sJniEnvKey, (void *)env);
-    }
-    
-    return env;
-}
-
-+ (JNIEnv*)getJNIEnvUncached {
-    JNIEnv *env = NULL;
-    (*jvm)->AttachCurrentThread(jvm, (void **)&env, nil);
-    return env;
-}
-
-+ (JNIEnv*)getAppKitJNIEnv {
-    AWT_ASSERT_APPKIT_THREAD;
+AWT_ASSERT_APPKIT_THREAD;
     if (appKitEnv == NULL) {
         (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void **)&appKitEnv, NULL);
     }
     return appKitEnv;
+}
+
++ (JNIEnv*)getJNIEnvUncached {
+    JNIEnv *env = NULL;
+    (*jvm)->AttachCurrentThreadAsDaemon(jvm, (void **)&env, nil);
+    return env;
 }
 
 + (void)initialize {
@@ -230,9 +217,6 @@ NSUInteger sPerformCount = 0;
     // Thread: ?
 
     if (sPerformModes == nil) {
-        // Create JNI key
-        pthread_key_create(&sJniEnvKey, NULL);
-        
         // Create list of Run Loop modes to perform on
         // The default performSelector, with no mode argument, runs in Default,
         // ModalPanel, and EventTracking modes

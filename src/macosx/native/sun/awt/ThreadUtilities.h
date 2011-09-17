@@ -137,7 +137,6 @@ __attribute__((visibility("default")))
 
 + (JNIEnv*)getJNIEnv;
 + (JNIEnv*)getJNIEnvUncached;
-+ (JNIEnv*)getAppKitJNIEnv;
 
 + (void)performOnMainThread:(SEL)aSelector onObject:(id)target withObject:(id)arg waitUntilDone:(BOOL)wait awtMode:(BOOL)inAWT;
 

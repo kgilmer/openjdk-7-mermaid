@@ -67,7 +67,7 @@ AWT_ASSERT_APPKIT_THREAD;
 // Events
 - (void)handleAction:(NSMenuItem *)sender {
 AWT_ASSERT_APPKIT_THREAD;
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
 JNF_COCOA_ENTER(env);
 
     if (fIsCheckbox) {

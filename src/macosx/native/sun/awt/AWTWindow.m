@@ -163,7 +163,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     [self.javaPlatformWindow setJObject:nil withEnv:env];
     
     [super dealloc];
@@ -289,7 +289,7 @@ AWT_ASSERT_APPKIT_THREAD;
 AWT_ASSERT_APPKIT_THREAD;
     
     [AWTToolkit eventCountPlusPlus];
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
     static JNF_MEMBER_CACHE(jm_deliverWindowClosingEvent, jc_CPlatformWindow, "deliverWindowClosingEvent", "()V");
     JNFCallVoidMethod(env, platformWindow, jm_deliverWindowClosingEvent);
@@ -340,7 +340,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) _deliverWindowFocusEvent:(BOOL)focused {
 AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
     static JNF_MEMBER_CACHE(jm_deliverWindowFocusEvent, jc_CPlatformWindow, "deliverWindowFocusEvent", "(Z)V");
     JNFCallVoidMethod(env, platformWindow, jm_deliverWindowFocusEvent, (jboolean)focused);
@@ -365,7 +365,7 @@ AWT_ASSERT_APPKIT_THREAD;
 AWT_ASSERT_APPKIT_THREAD;
     [AWTToolkit eventCountPlusPlus];
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
     static JNF_MEMBER_CACHE(jm_windowDidBecomeMain, jc_CPlatformWindow, "windowDidBecomeMain", "()V");
     JNFCallVoidMethod(env, platformWindow, jm_windowDidBecomeMain);
@@ -374,7 +374,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (BOOL)windowShouldClose:(id)sender {
 AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getAppKitJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
     static JNF_MEMBER_CACHE(jm_windowShouldClose, jc_CPlatformWindow, "windowShouldClose", "()Z");
     return (BOOL) JNFCallBooleanMethod(env, platformWindow, jm_windowShouldClose);
