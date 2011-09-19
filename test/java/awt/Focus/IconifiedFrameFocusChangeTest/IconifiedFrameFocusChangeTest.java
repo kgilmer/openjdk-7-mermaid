@@ -35,12 +35,13 @@ import java.awt.*;
 import java.applet.Applet;
 import java.awt.event.*;
 import test.java.awt.regtesthelpers.Util;
+import javax.swing.SwingUtilities;
 
 public class IconifiedFrameFocusChangeTest extends Applet {
     Frame testFrame = new Frame("Test Frame");
     Frame otherFrame = new Frame("Other Frame");
-    Button testButton = new Button("test button");
-    Button otherButton = new Button("other button");
+    final Button testButton = new Button("test button");
+    final Button otherButton = new Button("other button");
     Robot robot;
 
     public static void main(String[] args) {
@@ -60,7 +61,12 @@ public class IconifiedFrameFocusChangeTest extends Applet {
 
         testButton.addFocusListener(new FocusAdapter() {
             public void focusLost(FocusEvent e) {
-                testButton.requestFocus();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        testButton.requestFocus();
+                    }
+                });
             }
         });
     }
