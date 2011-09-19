@@ -154,7 +154,6 @@ public class DialogCloseTest extends TestCase  {
         return yesyes;
     }
 
-
     
     public static Test suite() {
         return new TestSuite(DialogCloseTest.class);
