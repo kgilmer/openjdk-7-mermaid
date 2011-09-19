@@ -68,8 +68,11 @@ public class R1400112FloatPrecisionTest extends TestCase {
         assertTrue ("Math on doubles is functional", Math.abs(resultingDouble - origDouble) <  ERRMARGIN );
     }
 
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run(suite());
+    public static void main (String[] args) throws RuntimeException {
+        TestResult tr = junit.textui.TestRunner.run(suite());
+        if ((tr.errorCount() != 0) || (tr.failureCount() != 0)) {
+            throw new RuntimeException("### FAILED: unexpected JUnit errors or failures.");
+        }
     }
 }
 

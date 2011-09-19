@@ -25,7 +25,6 @@
  * @test
  * @summary Quicklook test ButtonBasics -- Test some basic functionality of Buttons
  * @summary com.apple.junit.java.awt.button
- * @author  Barry Langdon-Lassagne; ported to jtreg by David Durrence
  */
 
 import java.awt.Button;
