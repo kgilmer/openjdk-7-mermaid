@@ -77,8 +77,11 @@ public class TheyCallMeMrComponent extends TestCase {
         return new TestSuite( TheyCallMeMrComponent.class);
     }
     
-    public static void main( String[] args ) {
-        junit.textui.TestRunner.run( suite() );
+    public static void main (String[] args) throws RuntimeException {
+        TestResult tr = junit.textui.TestRunner.run(suite());
+        if((tr.errorCount() != 0) || (tr.failureCount() != 0)) {
+            throw new RuntimeException("### Unexpected JUnit errors or failures.");
+        }
     }
 }
 
