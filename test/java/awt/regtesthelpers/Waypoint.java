@@ -22,7 +22,6 @@
  */
 
 /*
- * @author  M McDougall; ported to jtreg by David Durrence
  * @summary This is a utility for coordinating the flow of events on different threads.
  * @summary com.apple.junit.utils
  */
@@ -31,8 +30,13 @@ package test.java.awt.regtesthelpers;
 
 public class Waypoint {
     static final String MSG = "Waypoint timed out";    
-    static final int TIMEOUT = 5000;    // Wait up to five seconds for our clear() to be called
+    // Wait up to five seconds for our clear() to be called
+    static final int TIMEOUT = 5000;
     boolean clear = false;
+    
+    public Waypoint() {
+        
+    }
     
     //
     //    Pause for either TIMEOUT millis or until clear() is called
@@ -90,14 +94,12 @@ public class Waypoint {
         return clear;
     }
 
-
     //
     //    For re-use of a waypoint.  Be careful.
     //
     synchronized public void reset() {
         clear = false;
     }
-
 
 }
 

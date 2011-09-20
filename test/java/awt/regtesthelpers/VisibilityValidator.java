@@ -22,7 +22,6 @@
  */
 
 /*
- * @author  M McDougall; ported to jtreg by David Durrence
  * @summary Utility routines that wait for a window to be displayed or for colors to be visible
  * @summary com.apple.junit.utils
  */
