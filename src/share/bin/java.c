@@ -2009,6 +2009,13 @@ static void SetXDockArgForAWT(const char *arg) {
 }
 
 static void SetXStartOnFirstThreadArg() {
+// XXX: BEGIN HACK
+    // short circuit hack for <https://bugs.eclipse.org/bugs/show_bug.cgi?id=211625>
+    // need a way to get AWT/Swing apps launched when spawned from Eclipse,
+    // which currently has no UI to not pass the -XstartOnFirstThread option
+    if (getenv("HACK_IGNORE_START_ON_FIRST_THREAD") != NULL) return;
+// XXX: END HACK
+    
     continueInSameThread = JNI_TRUE;
     // Set a variable that tells us we started on the main thread.
     // This is used by the AWT during startup. (See awt.m)
