@@ -22,18 +22,15 @@
  */
 
 /*
- * @author  David Durrence
  * @summary Utility routines that wait for a window to be displayed or for colors to be visible
  * @summary com.apple.junit.utils
  */
 
 package test.java.awt.regtesthelpers;
 
-
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.util.TimerTask;
-
 import javax.swing.JButton;
 
 public class RobotUtilities {

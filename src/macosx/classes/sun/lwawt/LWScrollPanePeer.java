@@ -94,13 +94,16 @@ public class LWScrollPanePeer
     public void layout() {
         super.layout();
         synchronized (getDelegateLock()) {
-            Component view = getDelegate().getViewport().getView();
-            view.setBounds(getViewPeer().getBounds());
-            view.setPreferredSize(getViewPeer().getPreferredSize());
-            view.setMinimumSize(getViewPeer().getMinimumSize());
-            getDelegate().invalidate();
-            getDelegate().validate();
-            getViewPeer().setBounds(view.getBounds());
+            LWComponentPeer viewPeer = getViewPeer();
+            if (viewPeer != null) {
+                Component view = getDelegate().getViewport().getView();
+                view.setBounds(viewPeer.getBounds());
+                view.setPreferredSize(viewPeer.getPreferredSize());
+                view.setMinimumSize(viewPeer.getMinimumSize());
+                getDelegate().invalidate();
+                getDelegate().validate();
+                viewPeer.setBounds(view.getBounds());
+            }
         }
     }
 
