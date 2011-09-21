@@ -29,7 +29,7 @@
  @summary It also tests whether environment variables with extended chars 
  @summary are passed correctly.
  @summary com.apple.junit.java.lang.Runtime;
- @run main RuntimeExecTest002
+ @run main RuntimeExecExtendedCharsTest
  */
 
 import junit.framework.*;
