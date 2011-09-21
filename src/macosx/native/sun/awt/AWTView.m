@@ -81,7 +81,7 @@ AWT_ASSERT_APPKIT_THREAD;
     fPAHNeedsToSelect = NO;
 
 #if USE_INTERMEDIATE_BUFFER
-    cglLayer = [CGLLayer layer];
+    self.cglLayer = [CGLLayer layer];    
     [self setWantsLayer: YES];
     [self.layer addSublayer: (CALayer *)cglLayer];
 #endif
@@ -91,6 +91,10 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
     
+#if USE_INTERMEDIATE_BUFFER
+    self.cglLayer = nil;
+#endif
+
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     (*env)->DeleteGlobalRef(env, m_cPlatformView);
     m_cPlatformView = NULL;

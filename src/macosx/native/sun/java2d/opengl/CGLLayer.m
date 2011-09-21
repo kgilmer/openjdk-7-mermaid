@@ -55,7 +55,7 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
-    return sharedPixelFormat.CGLPixelFormatObj;    
+    return CGLRetainPixelFormat(sharedPixelFormat.CGLPixelFormatObj);
 }
 
 - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat {
