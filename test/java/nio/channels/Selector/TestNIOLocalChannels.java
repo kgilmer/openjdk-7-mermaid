@@ -23,10 +23,11 @@
 
 /**
  @test
- @summary This tests the basic functionality of sockets and selectors via
- local channels. It starts a server on one Thread, then it starts a client on
- another thread. It then checks for the validity of the data transfered between
- them. If the data is not transmitted correctly the tests reports an error.
+ @summary This tests the basic functionality of sockets and selectors via local channels. 
+ @summary It starts a server on one Thread, then it starts a client on another thread. 
+ @summary It then checks for the validity of the data transfered betweenthem. 
+ @summary If the data is not transmitted correctly the tests reports an error.
+ @summary com.apple.junit.java.nio.Selector
  @library ../../regtesthelpers
  @run main TestNIOLocalChannels
  */

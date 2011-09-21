@@ -24,6 +24,7 @@
 /**
  @test
  @summary Test of java.nio.Channel.
+ @summary com.apple.junit.java.nio.channels
  @run main FileChannel_transferFrom
  */
 

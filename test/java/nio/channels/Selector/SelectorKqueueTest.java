@@ -23,6 +23,7 @@
 
 /**
  @test
+ @summary com.apple.junit.java.nio.Selector
  @library ../../regtesthelpers
  @run main SelectorKqueueTest
  */

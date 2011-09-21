@@ -23,9 +23,9 @@
 
 /**
  @test
- @summary Test to make sure kqueues work in 64-bit. We create two socket 
- channels and write to them. We then use a Selector on those two 
- channels and make sure select() returns us a non-zero value.
+ @summary Test to make sure kqueues work in 64-bit. We create two socket channels and write to them. 
+ @summary We then use a Selector on those two channels and make sure select() returns us a non-zero value.
+ @summary com.apple.junit.java.nio.Selector
  @run main Kqueues64bitTest_R4258155
  */
 
