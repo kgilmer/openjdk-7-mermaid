@@ -38,14 +38,14 @@ import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 
 public class IndexColorModelTest extends TestCase {
-private static BufferedImage image1;
-private static BufferedImage image2;
+    private static BufferedImage image1;
+    private static BufferedImage image2;
 
-private static byte[] reds = {(byte)0, (byte)0};
-private static byte[] greens = {(byte)0, (byte)0};
-private static byte[] blues = {(byte)255, (byte)255}; 
+    private static byte[] reds = {(byte)0, (byte)0};
+    private static byte[] greens = {(byte)0, (byte)0};
+    private static byte[] blues = {(byte)255, (byte)255}; 
 
-private JFrame frame;
+    private JFrame frame;
 
     public void testColor() throws Exception {
         VisibilityValidator.setVisibleAndConfirm( frame);
@@ -63,9 +63,8 @@ private JFrame frame;
 
     protected void tearDown() {
            frame.dispose();
-        }
-    
-    
+    }
+
     public static void main (String[] args) throws RuntimeException {
         TestResult tr = junit.textui.TestRunner.run(suite());
         if ((tr.errorCount() != 0) || (tr.failureCount() != 0)) {
@@ -77,8 +76,7 @@ private JFrame frame;
         frame = new JFrame();
         frame.setSize(new Dimension(200, 100));
         JPanel panel = new JPanel() {
-            public void paint(Graphics g)
-            {
+            public void paint(Graphics g) {
                 super.paint(g);
                 paintOntoPanel((Graphics2D)g);
             }
