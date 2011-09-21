@@ -216,7 +216,10 @@ public class CPlatformView extends CFRetainedResource {
                 // That's the reaction on the PRESSED (not RELEASED) event as it comes to
                 // appear in MacOSX.
                 // Modifier keys (shift, etc) don't want to send TYPED events.
-                if (javaKeyType == KeyEvent.KEY_PRESSED && testChar != KeyEvent.CHAR_UNDEFINED) {
+                // On the other hand we don't want to generate keyTyped events
+                // for clipboard related shortcuts like Meta + [CVX]
+                boolean isMetaDown = (javaModifiers & KeyEvent.META_DOWN_MASK) != 0;
+                if (!isMetaDown && javaKeyType == KeyEvent.KEY_PRESSED && testChar != KeyEvent.CHAR_UNDEFINED) {
                     peer.dispatchKeyEvent(KeyEvent.KEY_TYPED, System.currentTimeMillis(), javaModifiers, KeyEvent.VK_UNDEFINED, testChar, KeyEvent.KEY_LOCATION_UNKNOWN);
                 }
             }
