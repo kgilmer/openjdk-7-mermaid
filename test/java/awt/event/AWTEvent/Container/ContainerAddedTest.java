@@ -21,7 +21,7 @@
  * questions.
  */
 
-/**
+/*
  @test
  @summary Verify the proper number of ComponentEvents are delivered
  @summary com.apple.junit.java.awt.Event;
