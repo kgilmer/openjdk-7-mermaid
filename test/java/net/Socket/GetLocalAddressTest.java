@@ -23,17 +23,28 @@
 
 /*
  * @test
- * @summary <rdar://problem/4659174> getLocalAddress() on a connected socket was
- * @summary returning 0.0.0.0 instead of the actual local address.
+ * @summary Test for <rdar://problem/4659174>. getLocalAddress() on a connected socket was returning 0.0.0.0 instead of the actual local address.
  * @summary com.apple.junit.java.net
- * @author Pratik Solanki, ported to jtreg by David Durrence
  */
+
+import junit.framework.*;
 import java.net.*;
 
-public class GetLocalAddressTest
-{
-    public static void main(String[] args) throws Exception {
-        String sHostname = "java.net";
+public class GetLocalAddressTest extends TestCase {
+    public static Test suite() {
+        return new TestSuite(GetLocalAddressTest.class);
+    }
+
+    public static void main (String[] args) throws RuntimeException {
+        TestResult tr = junit.textui.TestRunner.run(suite());
+        if ((tr.errorCount() != 0) || (tr.failureCount() != 0)) {
+            throw new RuntimeException("### FAILED: unexpected JUnit errors or failures.");
+        }
+    }
+
+    public void testGetLocalAddress() throws Exception
+    {
+        String sHostname = "apple.com";
         InetAddress ina = InetAddress.getByName( sHostname );
         InetSocketAddress isa = new InetSocketAddress( ina, 80 );
         Socket s = new Socket();
@@ -43,11 +54,11 @@ public class GetLocalAddressTest
         String preferIPv6addresses = System.getProperty("java.net.preferIPv6Addresses");
         if (preferIPv6addresses != null && preferIPv6addresses.equals("true")) {
             if (hostname.equals("::")) {
-                throw new Exception("Invalid anyLocalAddress returned from getLocalAddress (IPv6)");
+                assertTrue("Invalid anyLocalAddress returned from getLocalAddress (IPv6)", false);
             }
         } else {
             if (hostname.equals("0.0.0.0")) {
-                throw new Exception("Invalid anyLocalAddress returned from getLocalAddress (IPv4)");
+                assertTrue("Invalid anyLocalAddress returned from getLocalAddress (IPv4)", false);
             }
         }
     }
