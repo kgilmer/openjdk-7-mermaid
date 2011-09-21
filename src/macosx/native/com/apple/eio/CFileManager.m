@@ -226,7 +226,7 @@ JNF_COCOA_ENTER(env);
                                                 destination:nil 
                                                       files:[NSArray arrayWithObject:[path lastPathComponent]] 
                                                         tag:&res];
-        returnValue = res != 0;
+        returnValue = (res == 0);
     }];
 	
 JNF_COCOA_EXIT(env);
