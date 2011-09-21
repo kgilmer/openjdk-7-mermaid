@@ -21,12 +21,15 @@
  * questions.
  */
 
+/*
+ * @summary A collection of utilities for testing the contents of BufferedImages
+ * @summary com.apple.junit.utils
+ */
+
+package test.java.awt.regtesthelpers;
+
 import java.awt.image.BufferedImage;
 import java.io.*;
-
-//
-//    A collection of utilities for testing the contents of BufferedImages
-//
 
 public class BITestUtils {
 
