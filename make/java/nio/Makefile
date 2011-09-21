@@ -323,12 +323,21 @@ FILES_gen += \
 	sun/nio/fs/UnixConstants.java
 endif # PLATFORM = bsd, macosx
 
+ifeq ($(PLATFORM), macosx)
+FILES_java += \
+    sun/nio/ch/KQueueSelectorProvider.java \
+    sun/nio/ch/KQueueSelectorImpl.java \
+    sun/nio/ch/KQueueArrayWrapper.java
+
+FILES_c += \
+    KQueueArrayWrapper.c
+endif # PLATFORM = macosx
+
 #
 # Find platform-specific C source files
 #
-vpath %.c $(PLATFORM_SRC)/native/sun/nio/fs
-vpath %.c $(PLATFORM_SRC)/native/sun/nio/ch
-vpath %.c $(SHARE_SRC)/native/sun/nio/ch
+vpath %.c $(call NativeSrcDirList,,native/sun/nio/fs)
+vpath %.c $(call NativeSrcDirList,,native/sun/nio/ch)
 
 #
 # Various variables

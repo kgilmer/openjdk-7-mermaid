@@ -50,6 +50,8 @@ public class SelProvider {
             } else {
                 throw new RuntimeException("Test does not recognize this operating system");
             }
+        } else if (osname.contains("Mac OS X")) {
+            expected = "sun.nio.ch.KQueueSelectorProvider";
         } else
             return;
         if (!spName.equals(expected))
