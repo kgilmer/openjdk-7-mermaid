@@ -77,14 +77,22 @@ public class CPlatformView extends CFRetainedResource {
         // and therefore we need to account insets before
         // recreating the surface data
         Insets insets = peer.getInsets();
-        
-        long screenPtr = CWrapper.NSWindow.screen(nsWindowPtr);
-        Rectangle screenBounds = CWrapper.NSScreen.frame(screenPtr).getBounds();
-        
+
+        Rectangle screenBounds;
+        final long screenPtr = CWrapper.NSWindow.screen(nsWindowPtr);
+        try {
+            screenBounds = CWrapper.NSScreen.frame(screenPtr).getBounds();
+        } finally {
+            CWrapper.NSObject.release(screenPtr);
+        }
+
         // the move/size notification from the underlying system comes
         // but it contains a bounds smaller than the whole screen
         // and therefore we need to create the synthetic notifications
-        peer.notifyReshape(screenBounds.x - insets.left, screenBounds.y - insets.bottom, screenBounds.width + insets.left + insets.right, screenBounds.height + insets.top + insets.bottom);
+        peer.notifyReshape(screenBounds.x - insets.left,
+                           screenBounds.y - insets.bottom,
+                           screenBounds.width + insets.left + insets.right,
+                           screenBounds.height + insets.top + insets.bottom);
     }
     
     public void exitFullScreenMode() {

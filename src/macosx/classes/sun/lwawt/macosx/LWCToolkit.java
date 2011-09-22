@@ -276,9 +276,14 @@ public class LWCToolkit extends LWToolkit {
     public Insets getScreenInsets(final GraphicsConfiguration gc) {
         final CGraphicsConfig cgc = (CGraphicsConfig) gc;
         final int displayId = cgc.getDevice().getCoreGraphicsScreen();
+        Rectangle fullScreen, workArea;
         final long screen = CWrapper.NSScreen.screenByDisplayId(displayId);
-        Rectangle fullScreen = CWrapper.NSScreen.frame(screen).getBounds();
-        Rectangle workArea = CWrapper.NSScreen.visibleFrame(screen).getBounds();
+        try {
+            fullScreen = CWrapper.NSScreen.frame(screen).getBounds();
+            workArea = CWrapper.NSScreen.visibleFrame(screen).getBounds();
+        } finally {
+            CWrapper.NSObject.release(screen);
+        }
         // Convert between Cocoa's coordinate system and Java.
         return new Insets(fullScreen.height - workArea.height - workArea.y,
                           workArea.x, workArea.y,

@@ -292,7 +292,9 @@ JNF_COCOA_ENTER(env);
     
     AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
     [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
-        screenPtr = ptr_to_jlong([window screen]);
+        const NSScreen *screen = [window screen];
+        CFRetain(screen); // GC
+        screenPtr = ptr_to_jlong(screen);
     }];
 
 JNF_COCOA_EXIT(env);
@@ -602,6 +604,7 @@ JNF_COCOA_ENTER(env);
             NSDictionary *screenInfo = [screen deviceDescription];
             NSNumber *screenID = [screenInfo objectForKey:@"NSScreenNumber"];
             if ([screenID intValue] == displayID){
+                CFRetain(screen); // GC
                 screenPtr = ptr_to_jlong(screen);
                 break;
             }
