@@ -57,7 +57,6 @@ static CGLContextObj InitContext(CGDirectDisplayID display);
 static void postMouseEvent(const CGPoint point, CGMouseButton button, 
                            CGEventType type);
 
-
 static void
 CreateJavaException(JNIEnv* env, CGError err)
 {
@@ -163,8 +162,8 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
     point.x = mouseLastX + globalDeviceBounds.origin.x;
     point.y = mouseLastY + globalDeviceBounds.origin.y;
     
-    CGMouseButton button; 
-    CGEventType type;
+    CGMouseButton button = kCGMouseButtonLeft; 
+    CGEventType type = kCGEventMouseMoved;
     
     // When moving, the buttons aren't changed from their current state.
     if (mouseMoveAction == JNI_FALSE) {
@@ -177,9 +176,7 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
                 type = kCGEventLeftMouseDown;
             } else {
                 type = kCGEventLeftMouseUp;
-            }
-            
-            postMouseEvent(point, button, type);
+            }            
         }
         
         // Other
@@ -189,9 +186,7 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
                 type = kCGEventOtherMouseDown;
             } else {
                 type = kCGEventOtherMouseUp;                
-            }
-            
-            postMouseEvent(point, button, type);
+            }            
         }
         
         // Right
@@ -202,10 +197,21 @@ Java_sun_lwawt_macosx_CRobot_mouseEvent
             } else {
                 type = kCGEventRightMouseUp;
             }
-            
-            postMouseEvent(point, button, type);
         }
-    }   
+    } else {
+        // could be mouse moved or mouse dragged
+        if (mouse1State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            type = kCGEventLeftMouseDragged;
+        } else if (mouse2State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            type = kCGEventOtherMouseDragged;            
+        } else if (mouse3State == sun_lwawt_macosx_CRobot_BUTTON_STATE_DOWN) {
+            type = kCGEventRightMouseDragged;            
+        } else {
+            type = kCGEventMouseMoved;
+        }
+    }
+    
+    postMouseEvent(point, button, type);    
     
     JNF_COCOA_EXIT(env);
 }
