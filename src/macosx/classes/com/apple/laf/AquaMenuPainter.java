@@ -33,6 +33,8 @@ import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicHTML;
 import javax.swing.text.View;
 
+import sun.swing.SwingUtilities2;
+
 import apple.laf.JRSUIConstants.*;
 
 import com.apple.laf.AquaIcon.InvertableIcon;
@@ -251,7 +253,7 @@ public class AquaMenuPainter {
             final int yAccel = acceleratorRect.y + fm.getAscent();
             if (modifiersString.equals("")) {
                 // just draw the keyString
-                g.drawString(keyString, acceleratorRect.x, yAccel);
+            	SwingUtilities2.drawString(c, g, keyString, acceleratorRect.x, yAccel);
             } else {
                 final int modifiers = accelerator.getModifiers();
                 int underlinedChar = 0;
@@ -262,15 +264,15 @@ public class AquaMenuPainter {
 
                 if (leftToRight) {
                     g.setFont(acceleratorFont);
-                    drawString(g, modifiersString, underlinedChar, acceleratorRect.x, yAccel, isEnabled, isSelected);
+                    drawString(g, c, modifiersString, underlinedChar, acceleratorRect.x, yAccel, isEnabled, isSelected);
                     g.setFont(f);
-                    g.drawString(keyString, acceleratorRect.x + acceleratorRect.width - emWidth, yAccel);
+                    SwingUtilities2.drawString(c, g, keyString, acceleratorRect.x + acceleratorRect.width - emWidth, yAccel);
                 } else {
                     final int xAccel = acceleratorRect.x + emWidth;
                     g.setFont(acceleratorFont);
-                    drawString(g, modifiersString, underlinedChar, xAccel, yAccel, isEnabled, isSelected);
+                    drawString(g, c, modifiersString, underlinedChar, xAccel, yAccel, isEnabled, isSelected);
                     g.setFont(f);
-                    g.drawString(keyString, xAccel - fm.stringWidth(keyString), yAccel);
+                    SwingUtilities2.drawString(c, g, keyString, xAccel - fm.stringWidth(keyString), yAccel);
                 }
             }
         }
@@ -282,7 +284,7 @@ public class AquaMenuPainter {
                 v.paint(g, textRect);
             } else {
                 final int mnemonic = (AquaMnemonicHandler.isMnemonicHidden() ? -1 : model.getMnemonic());
-                drawString(g, text, mnemonic, textRect.x, textRect.y + fm.getAscent(), isEnabled, isSelected);
+                drawString(g, c, text, mnemonic, textRect.x, textRect.y + fm.getAscent(), isEnabled, isSelected);
             }
         }
 
@@ -407,7 +409,7 @@ public class AquaMenuPainter {
      *  The first occurence of underlineChar in text will be underlined. The matching is
      *  not case sensitive.
      */
-    public void drawString(final Graphics g, final String text, final int underlinedChar, final int x, final int y, final boolean isEnabled, final boolean isSelected) {
+    public void drawString(final Graphics g, final JComponent c, final String text, final int underlinedChar, final int x, final int y, final boolean isEnabled, final boolean isSelected) {    	
         char lc, uc;
         int index = -1, lci, uci;
 
@@ -423,17 +425,7 @@ public class AquaMenuPainter {
             else index = (lci < uci) ? lci : uci;
         }
 
-        g.drawString(text, x, y);
-        if (index != -1) {
-            final FontMetrics fm = g.getFontMetrics();
-//            Rectangle underlineRect = new Rectangle();
-
-            final int underlineRectX = x + fm.stringWidth(text.substring(0, index));
-            final int underlineRectY = y;
-            final int underlineRectWidth = fm.charWidth(text.charAt(index));
-            final int underlineRectHeight = 1;
-            g.fillRect(underlineRectX, underlineRectY + fm.getDescent() - 1, underlineRectWidth, underlineRectHeight);
-        }
+    	SwingUtilities2.drawStringUnderlineCharAt(c, g, text, index, x, y);
     }
 
     /*

@@ -39,6 +39,7 @@ import sun.awt.AppContext;
 
 import sun.lwawt.macosx.CImage;
 import sun.lwawt.macosx.CImage.Creator;
+import sun.swing.SwingUtilities2;
 
 import com.apple.laf.AquaImageFactory.SlicedImageControl;
 
@@ -219,12 +220,12 @@ public class AquaUtils {
         public void paint(final Graphics g, int x, int y, int w, int h);
     }
     
-    public static void paintDropShadowText(final Graphics g, final Font font, final FontMetrics metrics, final int x, final int y, final int offsetX, final int offsetY, final Color textColor, final Color shadowColor, final String text) {
+    public static void paintDropShadowText(final Graphics g, final JComponent c, final Font font, final FontMetrics metrics, final int x, final int y, final int offsetX, final int offsetY, final Color textColor, final Color shadowColor, final String text) {
         g.setFont(font);
         g.setColor(shadowColor);
-        g.drawString(text, x + offsetX, y + offsetY + metrics.getAscent());
+        SwingUtilities2.drawString(c, g, text, x + offsetX, y + offsetY + metrics.getAscent());
         g.setColor(textColor);
-        g.drawString(text, x, y + metrics.getAscent());
+        SwingUtilities2.drawString(c, g, text, x, y + metrics.getAscent());
     }
     
     public static class ShadowBorder implements Border {

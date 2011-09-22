@@ -34,6 +34,8 @@ import java.beans.PropertyVetoException;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
+import sun.swing.SwingUtilities2;
+
 /**
  * From MacDockIconUI
  *
@@ -272,9 +274,9 @@ public class AquaInternalFrameDockIconUI extends DesktopIconUI implements MouseL
             }
             
             g.setColor(Color.black);
-            g.drawString(text, x, 2 + ascent);
+            SwingUtilities2.drawString(this, g, text, x, 2 + ascent);
             g.setColor(Color.white);
-            g.drawString(text, x, 1 + ascent);
+            SwingUtilities2.drawString(this, g, text, x, 1 + ascent);
         }
 
         public void show(final Component invoker) {

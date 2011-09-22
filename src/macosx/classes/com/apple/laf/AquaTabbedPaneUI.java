@@ -36,6 +36,7 @@ import javax.swing.plaf.*;
 import javax.swing.text.View;
 
 import sun.java2d.SunGraphics2D;
+import sun.swing.SwingUtilities2;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
@@ -355,7 +356,7 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         }
 
         g2d.setFont(font);
-        g2d.drawString(title, textRect.x, textRect.y + metrics.getAscent()); // ThemeConstants.kSmallTabsTextPadding);
+        SwingUtilities2.drawString(tabPane, g2d, title, textRect.x, textRect.y + metrics.getAscent());
     }
     
     protected void rotateGraphics(final Graphics2D g2d, final Rectangle tabRect, final Rectangle textRect, final Rectangle iconRect, final int tabPlacement) {

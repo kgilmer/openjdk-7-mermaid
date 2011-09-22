@@ -41,6 +41,8 @@ import javax.swing.filechooser.*;
 import javax.swing.plaf.*;
 import javax.swing.table.*;
 
+import sun.swing.SwingUtilities2;
+
 public class AquaFileChooserUI extends FileChooserUI {
     /* FileView icons */
     protected Icon directoryIcon = null;
@@ -1050,16 +1052,16 @@ public class AquaFileChooserUI extends FileChooserUI {
                     g.fillRect(textX - 1, paintTextR.y, paintTextR.width + 2, fm.getAscent() + 2);
 
                     g.setColor(getForeground());
-                    g.drawString(clippedText, textX, textY);
+                    SwingUtilities2.drawString(filechooser, g, clippedText, textX, textY);
                 } else {
                     final Color background = getBackground();
                     g.setColor(background);
                     g.fillRect(textX - 1, paintTextR.y, paintTextR.width + 2, fm.getAscent() + 2);
 
                     g.setColor(background.brighter());
-                    g.drawString(clippedText, textX, textY);
+                    SwingUtilities2.drawString(filechooser, g, clippedText, textX, textY);
                     g.setColor(background.darker());
-                    g.drawString(clippedText, textX + 1, textY + 1);
+                    SwingUtilities2.drawString(filechooser, g, clippedText, textX + 1, textY + 1);
                 }
             }
         }

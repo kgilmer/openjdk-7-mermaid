@@ -36,6 +36,8 @@ import javax.swing.plaf.*;
 import javax.swing.plaf.basic.*;
 import javax.swing.text.View;
 
+import sun.swing.SwingUtilities2;
+
 import apple.laf.JRSUIConstants.Size;
 
 import com.apple.laf.AquaButtonExtendedTypes.TypeSpecifier;
@@ -413,7 +415,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
             /*** paint the text disabled ***/
             g.setColor(defaultDisabledTextColor);
         }
-        BasicGraphicsUtils.drawStringUnderlineCharAt(g, text, mnemonicIndex, localTextRect.x, localTextRect.y + fm.getAscent());
+        SwingUtilities2.drawStringUnderlineCharAt(c, g, text, mnemonicIndex, localTextRect.x, localTextRect.y + fm.getAscent());
     }
     
     protected void paintText(final Graphics g, final AbstractButton b, final Rectangle localTextRect, final String text) {

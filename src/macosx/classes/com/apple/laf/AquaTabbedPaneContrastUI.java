@@ -36,6 +36,8 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.View;
 
+import sun.swing.SwingUtilities2;
+
 import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
 import apple.laf.JRSUIConstants.State;
 
@@ -63,13 +65,14 @@ public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
                 boolean enabled = tabPane.isEnabled() && tabPane.isEnabledAt(tabIndex);
                 Color textColor = getSelectedTabTitleColor(enabled, pressed);
                 Color shadowColor = getSelectedTabTitleShadowColor(enabled);
-                AquaUtils.paintDropShadowText(g2d, font, metrics, textRect.x, textRect.y, 0, 1, textColor, shadowColor, title);
+                AquaUtils.paintDropShadowText(g2d, tabPane, font, metrics, textRect.x, textRect.y, 0, 1, textColor, shadowColor, title);
+                return;
             } 
         } else {
             g2d.setColor(color);
         }
         g2d.setFont(font);
-        g2d.drawString(title, textRect.x, textRect.y + metrics.getAscent());
+        SwingUtilities2.drawString(tabPane, g2d, title, textRect.x, textRect.y + metrics.getAscent());
     }
     
     protected static Color getSelectedTabTitleColor(boolean enabled, boolean pressed) {

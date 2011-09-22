@@ -32,6 +32,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
 
+import sun.swing.SwingUtilities2;
+
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.TitleBarHeightState;
@@ -207,7 +209,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
             } else {
                 g.setColor(Color.white);
             }
-            g.drawString(text, x + startXPosition + iconWidth, y + baseline + 1);
+            SwingUtilities2.drawString(frame, g, text, x + startXPosition + iconWidth, y + baseline + 1);
             
             if (isSelected || fIsUtility) {
                 g.setColor(selectedTextColor);
@@ -215,7 +217,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
                 g.setColor(notSelectedTextColor);
             }
             
-            g.drawString(text, x + startXPosition + iconWidth, y + baseline);
+            SwingUtilities2.drawString(frame, g, text, x + startXPosition + iconWidth, y + baseline);
             g.setFont(f);
         }
 

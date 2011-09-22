@@ -30,6 +30,8 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.plaf.UIResource;
 
+import sun.swing.SwingUtilities2;
+
 class AquaComboBoxRenderer extends AquaComboBoxRendererInternal implements UIResource {
     public AquaComboBoxRenderer(final JComboBox comboBox) {
         super(comboBox);
@@ -155,7 +157,7 @@ class AquaComboBoxRendererInternal extends JLabel implements ListCellRenderer {
             if (fChecked && !fEditable && fDrawCheckedItem) {
                 final int y = getHeight() - 4;
                 g.setColor(getForeground());
-                g.drawString("\u2713", 6, y);
+                SwingUtilities2.drawString(fComboBox, g, "\u2713", 6, y);
             }
         }
         super.paintComponent(g);

@@ -81,7 +81,7 @@ public class AquaLabelUI extends BasicLabelUI {
         // if our background is still something we set then we can use our happy background color.
         if (background instanceof UIResource) {
             g.setColor(getDisabledLabelColor(l));
-            BasicGraphicsUtils.drawStringUnderlineCharAt(g, s, accChar, textX, textY);
+            SwingUtilities2.drawStringUnderlineCharAt(l, g, s, accChar, textX, textY);
         } else {
             super.paintDisabledText(l, g, s, textX, textY);
         }

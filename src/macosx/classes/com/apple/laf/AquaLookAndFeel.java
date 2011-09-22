@@ -133,7 +133,6 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
      * @see #uninitialize
      * @see UIManager#setLookAndFeel
      */
-    private int fOldAntiAliasingHint = 0;
     public void initialize() {
         java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.LoadLibraryAction("osxui"));
         java.security.AccessController.doPrivileged(new PrivilegedAction<Object>(){
@@ -148,18 +147,6 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
         final ScreenPopupFactory spf = new ScreenPopupFactory();
         spf.setActive(true);
         PopupFactory.setSharedInstance(spf);
-
-        // TODO: Force antialiasing when the facilities to do so are present
-        /*
-        fOldAntiAliasingHint = RuntimeOptions.getTextAntialiasing();
-
-        // only force anti-aliasing if we are still default. If not defaul let the developer property work
-        // <rdar://problem/3719623> Anti-aliasing remains on even when -Dapple.awt.textantialiasing=off
-        if (fOldAntiAliasingHint == SunHints.INTVAL_TEXT_ANTIALIAS_DEFAULT) {
-            RuntimeOptions.setTextAntialiasing(SunHints.INTVAL_TEXT_ANTIALIAS_ON);
-        }
-        RuntimeOptions.getCurrentOptions().optionsUpdated();
-        */
         
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventPostProcessor(AquaMnemonicHandler.getInstance());
     }
@@ -179,11 +166,6 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
             ((ScreenPopupFactory)popupFactory).setActive(false);
         }
         
-        // TODO: Commented out for now
-        /*
-        RuntimeOptions.setTextAntialiasing(fOldAntiAliasingHint);
-        RuntimeOptions.getCurrentOptions().optionsUpdated();
-        */
         super.uninitialize();
     }
 
@@ -995,9 +977,7 @@ public class AquaLookAndFeel extends BasicLookAndFeel {
 
         table.putDefaults(defaults);
         
-        // TODO: use the correct hint when it is available
-        //boolean aaCond = (fOldAntiAliasingHint != SunHints.INTVAL_TEXT_ANTIALIAS_OFF);
-        Object aaTextInfo = SwingUtilities2.AATextInfo.getAATextInfo(true/*aaCond*/);
+        Object aaTextInfo = SwingUtilities2.AATextInfo.getAATextInfo(true);
         table.put(SwingUtilities2.AA_TEXT_PROPERTY_KEY, aaTextInfo);
     }
 
