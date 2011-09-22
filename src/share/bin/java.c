@@ -72,6 +72,7 @@ static char     *showSettings = NULL;      /* print but continue */
 
 #ifdef MACOSX
 #include <objc/objc-auto.h>
+#include <dispatch/dispatch.h>
 static jboolean continueInSameThread = JNI_FALSE; /* start VM in current thread */
 #endif
 
@@ -126,7 +127,6 @@ static void DumpState();
 static jboolean RemovableOption(char *option);
 
 #ifdef MACOSX
-static int ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv, int mode, char *what, int ret);
 static void SetMainClassForAWT(JNIEnv *env, jclass mainClass);
 static void SetXDockArgForAWT(const char *arg);
 static void SetXStartOnFirstThreadArg();
@@ -329,14 +329,22 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
 
 #ifdef MACOSX
     if (continueInSameThread == JNI_TRUE) {
-        return ContinueInSameThread(&ifn, argc, argv, mode, what, ret);
-    } else {
-        return ContinueInNewThread(&ifn, argc, argv, mode, what, ret);
+        // need to block this thread against the main thread
+        // so signals get caught correctly
+        __block int rslt;
+        dispatch_sync(dispatch_get_main_queue(), ^(void){
+            JavaMainArgs args;
+            args.argc = argc;
+            args.argv = argv;
+            args.mode = mode;
+            args.what = what;
+            args.ifn = ifn;
+            rslt = JavaMain((void*)&args);
+        });
+        return rslt;
     }
-#else
-    return ContinueInNewThread(&ifn, argc, argv, mode, what, ret);
 #endif
-
+    return ContinueInNewThread(&ifn, argc, argv, mode, what, ret);
 }
 /*
  * Always detach the main thread so that it appears to have ended when
@@ -1939,42 +1947,6 @@ ContinueInNewThread(InvocationFunctions* ifn, int argc, char **argv,
 }
 
 #ifdef MACOSX
-static int
-ContinueInSameThread(InvocationFunctions* ifn, int argc, char **argv,
-                    int mode, char *what, int ret)
-{
-        
-    /*
-     * If user doesn't specify stack size, check if VM has a preference.
-     * Note that HotSpot no longer supports JNI_VERSION_1_1 but it will
-     * return its default stack size through the init args structure.
-     */
-    if (threadStackSize == 0) {
-        struct JDK1_1InitArgs args1_1;
-        memset((void*)&args1_1, 0, sizeof(args1_1));
-        args1_1.version = JNI_VERSION_1_1;
-        ifn->GetDefaultJavaVMInitArgs(&args1_1);  /* ignore return value */
-        if (args1_1.javaStackSize > 0) {
-            threadStackSize = args1_1.javaStackSize;
-        }
-    }
-    
-    { /* Create create JVM and invoke main method */
-        JavaMainArgs args;
-        int rslt;
-        
-        args.argc = argc;
-        args.argv = argv;
-        args.mode = mode;
-        args.what = what;
-        args.ifn = *ifn;
-        
-        rslt = JavaMain((void*)&args);
-        
-        return (ret != 0) ? ret : rslt;
-    }
-}
-
 static void SetMainClassForAWT(JNIEnv *env, jclass mainClass) {
     jclass classClass = NULL;
     NULL_CHECK(classClass = FindBootStrapClass(env, "java/lang/Class"));
