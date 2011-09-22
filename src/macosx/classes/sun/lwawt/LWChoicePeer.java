@@ -23,10 +23,10 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
 import java.awt.Choice;
-import java.awt.AWTEvent;
 import java.awt.Point;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -34,53 +34,58 @@ import java.awt.peer.ChoicePeer;
 
 import javax.swing.JComboBox;
 
-class LWChoicePeer
-    extends LWComponentPeer<Choice, LWChoicePeer.JComboBoxDelegate>
-    implements ChoicePeer
-{
-    LWChoicePeer(Choice target) {
+final class LWChoicePeer extends LWComponentPeer<Choice, JComboBox<String>>
+        implements ChoicePeer, ItemListener {
+
+    LWChoicePeer(final Choice target) {
         super(target);
     }
 
     @Override
-    protected JComboBoxDelegate createDelegate() {
-        final Choice ch = (Choice)getTarget();
-
-        final JComboBoxDelegate combo = new JComboBoxDelegate();
-
-        for (int i = 0; i < ch.getItemCount(); i++) {
-            combo.addItem(ch.getItem(i));
-        }
-
-        // NOTE: the listener must be added at the very end, otherwise it fires
-        // events upon initialization of the combo box.
-        combo.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                // AWT Choice sends SELECTED event only whereas JComboBox
-                // sends both SELECTED and DESELECTED.
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    Choice target = (Choice)LWChoicePeer.this.getTarget();
-                    ItemEvent itemEvent = new ItemEvent(target,
-                            ItemEvent.ITEM_STATE_CHANGED, combo.getSelectedItem(),
-                            ItemEvent.SELECTED);
-                    postEvent(itemEvent);
-                }
-            }
-        });
-
-        return combo;
+    protected JComboBox<String> createDelegate() {
+        return new JComboBoxDelegate();
     }
 
     @Override
-    public void add(String item, int index) {
+    public void initialize() {
+        super.initialize();
+        final Choice choice = getTarget();
+        final JComboBox<String> combo = getDelegate();
+        synchronized (getDelegateLock()) {
+            final int count = choice.getItemCount();
+            for (int i = 0; i < count; ++i) {
+                combo.addItem(choice.getItem(i));
+            }
+            select(choice.getSelectedIndex());
+
+            // NOTE: the listener must be added at the very end, otherwise it
+            // fires events upon initialization of the combo box.
+            combo.addItemListener(this);
+        }
+    }
+
+    @Override
+    public void itemStateChanged(final ItemEvent event) {
+        // AWT Choice sends SELECTED event only whereas JComboBox
+        // sends both SELECTED and DESELECTED.
+        if (event.getStateChange() == ItemEvent.SELECTED) {
+            synchronized (getDelegateLock()) {
+                getTarget().select(getDelegate().getSelectedIndex());
+            }
+            postEvent(new ItemEvent(getTarget(), ItemEvent.ITEM_STATE_CHANGED,
+                                    event.getItem(), ItemEvent.SELECTED));
+        }
+    }
+
+    @Override
+    public void add(final String item, final int index) {
         synchronized (getDelegateLock()) {
             getDelegate().insertItemAt(item, index);
         }
     }
 
     @Override
-    public void remove(int index) {
+    public void remove(final int index) {
         synchronized (getDelegateLock()) {
             getDelegate().removeItemAt(index);
         }
@@ -94,23 +99,29 @@ class LWChoicePeer
     }
 
     @Override
-    public void select(int index) {
+    public void select(final int index) {
         synchronized (getDelegateLock()) {
             getDelegate().setSelectedIndex(index);
         }
     }
 
+    @Override
     public boolean isFocusable() {
         return true;
     }
 
-    class JComboBoxDelegate
-	extends JComboBox
-    {
+    private final class JComboBoxDelegate extends JComboBox<String> {
+
+        // Empty non private constructor was added because access to this
+        // class shouldn't be emulated by a synthetic accessor method.
+        JComboBoxDelegate() {
+            super();
+        }
+
         //Needed for proper popup menu location
         @Override
         public Point getLocationOnScreen() {
-            return getTarget().getLocationOnScreen();
+            return LWChoicePeer.this.getLocationOnScreen();
         }
     }
 }
