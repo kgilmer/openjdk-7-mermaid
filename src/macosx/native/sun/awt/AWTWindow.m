@@ -285,16 +285,6 @@ AWT_ASSERT_APPKIT_THREAD;
     [self _deliverMoveResizeEvent];
 }
 
-- (void)windowWillClose:(NSNotification *)notification {
-AWT_ASSERT_APPKIT_THREAD;
-    
-    [AWTToolkit eventCountPlusPlus];
-    JNIEnv *env = [ThreadUtilities getJNIEnv];
-    jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
-    static JNF_MEMBER_CACHE(jm_deliverWindowClosingEvent, jc_CPlatformWindow, "deliverWindowClosingEvent", "()V");
-    JNFCallVoidMethod(env, platformWindow, jm_deliverWindowClosingEvent);
-}
-
 - (void)windowDidExpose:(NSNotification *)notification {
 AWT_ASSERT_APPKIT_THREAD;
     
@@ -373,11 +363,14 @@ AWT_ASSERT_APPKIT_THREAD;
 
 - (BOOL)windowShouldClose:(id)sender {
 AWT_ASSERT_APPKIT_THREAD;
-    
+    [AWTToolkit eventCountPlusPlus];
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
-    static JNF_MEMBER_CACHE(jm_windowShouldClose, jc_CPlatformWindow, "windowShouldClose", "()Z");
-    return (BOOL) JNFCallBooleanMethod(env, platformWindow, jm_windowShouldClose);
+    static JNF_MEMBER_CACHE(jm_deliverWindowClosingEvent, jc_CPlatformWindow, "deliverWindowClosingEvent", "()V");
+    JNFCallVoidMethod(env, platformWindow, jm_deliverWindowClosingEvent);    
+    
+    // The window will be closed (if allowed) as result of sending Java event
+    return NO;
 }
 
 @end // AWTWindow

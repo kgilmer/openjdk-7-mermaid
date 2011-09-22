@@ -729,11 +729,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     }
     
     private void deliverWindowClosingEvent() {
-        if (owner != null) {
-            CWrapper.NSWindow.removeChildWindow(owner.getNSWindowPtr(), getNSWindowPtr());
+        if (peer.getBlocker() == null)  {
+            peer.postEvent(new WindowEvent(target, WindowEvent.WINDOW_CLOSING));
         }
-        
-        peer.postEvent(new WindowEvent(target, WindowEvent.WINDOW_CLOSING));
     }
     
     private void deliverIconify(final boolean iconify) {
@@ -806,10 +804,5 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         if (checkBlocking()) return;
         // If it's not blocked, make sure it's above its siblings
         orderAboveSiblings();
-    }
-
-    private boolean windowShouldClose() {
-        assert CThreading.assertAppKit();
-        return peer.getBlocker() == null;
     }
 }
