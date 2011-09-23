@@ -111,7 +111,13 @@ public class CCustomCursor extends Cursor {
     CImage fCImage;
     long getImageData() {
         if (fCImage == null) {
-            fCImage = CImage.getCreator().createFromImage(fImage);
+            try {
+                fCImage = CImage.getCreator().createFromImage(fImage);
+            } catch (IllegalArgumentException iae) {
+                // Silently return null - we want to hide cursor by providing an empty
+                // ByteArray or just null
+                return 0L;
+            }
         }
         
         return fCImage.ptr;

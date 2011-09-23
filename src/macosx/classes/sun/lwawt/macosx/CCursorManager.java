@@ -65,7 +65,7 @@ public class CCursorManager extends LWCursorManager {
             final CCustomCursor customCursor = ((CCustomCursor)cursor);
             final long imagePtr = customCursor.getImageData();
             final Point hotSpot = customCursor.getHotSpot();
-            nativeSetCustomCursor(imagePtr, hotSpot.x, hotSpot.y);
+            if(imagePtr != 0L) nativeSetCustomCursor(imagePtr, hotSpot.x, hotSpot.y);
             return;
         }
         
