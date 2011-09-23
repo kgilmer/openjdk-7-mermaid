@@ -46,8 +46,6 @@ import java.awt.peer.ComponentPeer;
 import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 import sun.awt.AWTAccessor;
 import sun.awt.CausedFocusEvent;
@@ -142,6 +140,19 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private static final Object APPLICATION_LAF_KEY = new Object();
     private final LWDelegateKeyboardFocusManager delegateKFM = new LWDelegateKeyboardFocusManager();
+
+    private final static LookAndFeel systemLookAndFeel;
+
+    static {
+        // System LaF is inited here to make it thread safe
+        String laf = UIManager.getSystemLookAndFeelClassName();
+        try {
+            Class<?> lafClass = Class.forName(laf);
+            systemLookAndFeel = (LookAndFeel) lafClass.newInstance();
+        } catch (Exception e) {
+            throw new InternalError(e.getCause().toString());
+        }
+    }
 
     public LWComponentPeer(T target) {
         this.target = target;
@@ -260,7 +271,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // leads to reentrant painting and various NPE 
         LookAndFeel laf = UIManager.getLookAndFeel();
         if (!laf.isNativeLookAndFeel()) {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            setLookAndFeel(getSystemLookAndFeel());
         }
         if (getDelegate() != null) {
             synchronized (getDelegateLock()) {
@@ -268,7 +279,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             }
         }
         if (!laf.isNativeLookAndFeel()) {
-            setLookAndFeel(laf.getClass().getName());
+            setLookAndFeel(laf);
         }
     }
 
@@ -1080,7 +1091,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         LookAndFeel currentLookAndFeel = UIManager.getLookAndFeel();
         AppContext.getAppContext().put(APPLICATION_LAF_KEY, currentLookAndFeel);
         if (!currentLookAndFeel.isNativeLookAndFeel()) {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            setLookAndFeel(getSystemLookAndFeel());
         }
     }
 
@@ -1092,7 +1103,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     private void uninstallDelegateLookAndFeel() {
         LookAndFeel appLaf = (LookAndFeel) AppContext.getAppContext().get(APPLICATION_LAF_KEY);
         if (!appLaf.isNativeLookAndFeel()) {
-            setLookAndFeel(appLaf.getClass().getName());
+            setLookAndFeel(appLaf);
         }
         AppContext.getAppContext().remove(APPLICATION_LAF_KEY);
     }
@@ -1310,9 +1321,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         wp.flushOffscreenGraphics(localToWindow(r));
     }
 
-    private void setLookAndFeel(String className) {
+    private static LookAndFeel getSystemLookAndFeel() {
+        return systemLookAndFeel;
+    }
+
+    private void setLookAndFeel(LookAndFeel laf) {
         try {
-            UIManager.setLookAndFeel(className);
+            UIManager.setLookAndFeel(laf);
         } catch (Exception e) {
             throw new InternalError(e.getCause().toString());
         }
