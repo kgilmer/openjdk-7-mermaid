@@ -396,7 +396,11 @@ JNF_COCOA_ENTER(env);
     // Max Advance for Font Direction (Strictly horizontal)
     // TODO(cpc): hacking for now; no public API for this?
     //mx = (CGFloat)fontMetrics->maxAdvanceWidth * scaleX; 
-    mx = 12.0 * scaleX;
+    // mx = 12.0 * scaleX;
+    // Alexander Zuev: Using font's bounding box - at least it works for me
+    CGRect fontRect = CGFontGetFontBBox(cgFont);
+    mx = fontRect.size.width * scaleX;
+
 
     /*
      * ascent:   no need to set ascentX - it will be zero.
