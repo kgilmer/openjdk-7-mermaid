@@ -399,8 +399,9 @@ JNF_COCOA_ENTER(env);
     // mx = 12.0 * scaleX;
     // Alexander Zuev: Using font's bounding box - at least it works for me
     CGRect fontRect = CGFontGetFontBBox(cgFont);
-    mx = fontRect.size.width * scaleX;
-
+    CGFloat fontWidth = fontRect.size.width;
+    if(fontRect.origin.x < 0) fontWidth -= fontRect.origin.x;
+    mx = fontWidth * scaleX;
 
     /*
      * ascent:   no need to set ascentX - it will be zero.
