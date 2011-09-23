@@ -376,7 +376,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public boolean isDesktopSupported() {
-        throw new RuntimeException("not implemented");
+        return false;
     }
 
     @Override
