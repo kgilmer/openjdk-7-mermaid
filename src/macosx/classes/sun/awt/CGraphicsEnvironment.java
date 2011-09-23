@@ -26,6 +26,7 @@
 package sun.awt;
 
 import java.awt.*;
+import java.awt.print.*;
 import java.util.*;
 
 import sun.java2d.*;
@@ -191,4 +192,5 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
         }
         return allFontsWithLogical;
     }
+    
 }

@@ -484,6 +484,18 @@ public class PrintJob2D extends PrintJob implements Printable, Runnable {
                 pageFormat.setOrientation(PageFormat.PORTRAIT);
                 }
 
+            
+            // MACOSX change
+            // <rdar://problem/2937917> REGR: Print Dialog does not appear
+            if (jobAttributes.getDialog() == DialogType.NATIVE) {
+                PageFormat oldPF = pageFormat;
+                PageFormat newPF = printerJob.pageDialog(oldPF);
+                if (oldPF == newPF) return false;
+                pageFormat = newPF;
+            }
+            // MACOSX
+
+            
             printerJob.setPrintable(this, pageFormat);
 
         }
@@ -791,7 +803,7 @@ public class PrintJob2D extends PrintJob implements Printable, Runnable {
          */
 
         currentGraphics = graphicsToBeDrawn.pop();
-
+ 
         if (currentGraphics instanceof PeekGraphics) {
             ( (PeekGraphics) currentGraphics).setAWTDrawingOnly();
             graphicsDrawn.append(currentGraphics);

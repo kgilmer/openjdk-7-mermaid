@@ -71,7 +71,15 @@ FILES_objc = \
         LWCToolkit.m \
         ThreadUtilities.m \
         GeomUtilities.m \
-        PropertiesUtilities.m
+        PropertiesUtilities.m \
+        CPrinterJob.m \
+        PrintModel.m \
+        PrinterSurfaceData.m \
+        PrinterView.m \
+        QuartzSurfaceData.m \
+        QuartzRenderer.m \
+        CTextPipe.m \
+        ImageSurfaceData.m
 
 FILES_c = \
         OGLBlitLoops.c \

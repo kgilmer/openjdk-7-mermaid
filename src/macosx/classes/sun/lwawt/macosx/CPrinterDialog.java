@@ -23,18 +23,28 @@
  * questions.
  */
 
-#ifndef macosx_port_awt_debug_h
-#define macosx_port_awt_debug_h
+package sun.lwawt.macosx;
 
-#import <Cocoa/Cocoa.h>
+import java.awt.*;
 
-
-#define kInternalError "java/lang/InternalError"
-
-#define AWT_DEBUG_LOG(str) \
-    NSLog(@"Cocoa AWT: %@ %@", str, [NSThread callStackSymbols])
-
-#define AWT_DEBUG_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
-
-#endif
+public abstract class CPrinterDialog extends Dialog {
+    private final CPrinterJob fPrinterJob; // used from native
+    
+    CPrinterDialog(Frame parent, CPrinterJob printerJob) {
+        super(parent, true);
+        fPrinterJob = printerJob;
+        setLayout(null);
+    }
+    
+    private boolean retval = false;
+    
+    public void setRetVal(boolean ret) {
+        retval = ret;
+    }
+    
+    public boolean getRetVal() {
+        return retval;
+    }
+    
+    protected abstract boolean showDialog();
+}

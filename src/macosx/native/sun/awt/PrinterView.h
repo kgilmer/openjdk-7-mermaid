@@ -23,18 +23,32 @@
  * questions.
  */
 
-#ifndef macosx_port_awt_debug_h
-#define macosx_port_awt_debug_h
-
 #import <Cocoa/Cocoa.h>
+#import <jni.h>
 
+@interface PrinterView : NSView {
+    jobject fPrinterJob; // CPrinterJob
+    jobject fCurPageFormat;
+    jobject fCurPainter;
+    jobject fCurPeekGraphics;
+    
+    jint fFirstPage, fLastPage;
+}
 
-#define kInternalError "java/lang/InternalError"
+- (id)initWithFrame:(NSRect)aRect withEnv:(JNIEnv*)env withPrinterJob:(jobject)printerJob;
 
-#define AWT_DEBUG_LOG(str) \
-    NSLog(@"Cocoa AWT: %@ %@", str, [NSThread callStackSymbols])
+- (void)setFirstPage:(jint)firstPage lastPage:(jint)lastPage;
 
-#define AWT_DEBUG_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
+- (void)releaseReferences:(JNIEnv*)env;
 
-#endif
+- (void)drawRect:(NSRect)aRect;
+
+- (NSString*)printJobTitle;
+- (BOOL)knowsPageRange:(NSRangePointer)aRange;
+- (NSRect)rectForPage:(NSInteger)pageNumber;
+
+- (BOOL)cancelCheck:(JNIEnv*)env;
+
+- (void)complete:(JNIEnv*)env;
+
+@end

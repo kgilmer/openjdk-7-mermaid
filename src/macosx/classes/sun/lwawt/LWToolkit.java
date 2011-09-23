@@ -27,17 +27,17 @@ package sun.lwawt;
 
 import java.awt.*;
 import java.awt.List;
-import java.awt.datatransfer.Clipboard;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.peer.DragSourceContextPeer;
-import java.awt.image.ColorModel;
+import java.awt.datatransfer.*;
+import java.awt.dnd.*;
+import java.awt.dnd.peer.*;
+import java.awt.image.*;
 import java.awt.peer.*;
 import java.security.*;
 import java.util.*;
 
-import sun.lwawt.macosx.CDragSourceContextPeer;
-
 import sun.awt.*;
+import sun.lwawt.macosx.*;
+import sun.print.*;
 
 public abstract class LWToolkit extends SunToolkit implements Runnable {
 
@@ -232,8 +232,20 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
         return createDelegatedPeer(target, delegate);
     }
 
+    
+    CPrinterDialogPeer createCPrinterDialog(CPrinterDialog target) {
+        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
+        CPrinterDialogPeer peer = new CPrinterDialogPeer(target, delegate);
+        targetCreatedPeer(target, peer);
+        return peer;
+    }
+    
     @Override
     public DialogPeer createDialog(Dialog target) {
+        if (target instanceof CPrinterDialog) {
+            return createCPrinterDialog((CPrinterDialog)target);
+        } 
+        
         PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
         return createDelegatedPeer(target, delegate);
     }
@@ -408,9 +420,22 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
         return new LWMouseInfoPeer();
     }
 
-    @Override
-    public PrintJob getPrintJob(Frame frame, String jobtitle, Properties props) {
-        throw new RuntimeException("not implemented");
+    public PrintJob getPrintJob(Frame frame, String doctitle, Properties props) {
+        return getPrintJob(frame, doctitle, null, null);
+    }
+
+    public PrintJob getPrintJob(Frame frame, String doctitle, JobAttributes jobAttributes, PageAttributes pageAttributes) {
+        if (GraphicsEnvironment.isHeadless()) {
+            throw new IllegalArgumentException();
+        }
+        
+        PrintJob2D printJob = new PrintJob2D(frame, doctitle, jobAttributes, pageAttributes);
+        
+        if (printJob.printDialog() == false) {
+            printJob = null;
+        }
+        
+        return printJob;
     }
 
     @Override

@@ -26,12 +26,6 @@
 #import <AppKit/AppKit.h>
 #import "CoreTextSupport.h"
 
-// Basic struct that holds everything CoreText is interested in
-typedef struct CTS_ProviderStruct {
-    const UniChar         *unicodes;
-    CFIndex                length;
-    CFMutableDictionaryRef attributes;
-} CTS_ProviderStruct;
 
 /*
  * Callback for CoreText which uses the CoreTextProviderStruct to

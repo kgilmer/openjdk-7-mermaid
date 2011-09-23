@@ -47,12 +47,7 @@ import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import sun.awt.AWTAccessor;
-import sun.awt.CausedFocusEvent;
-import sun.awt.PaintEventDispatcher;
-import sun.awt.RepaintArea;
-import sun.awt.SunToolkit;
-import sun.awt.AppContext;
+import sun.awt.*;
 
 import sun.awt.event.IgnorePaintEvent;
 
@@ -659,7 +654,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     @Override
     public void print(Graphics g) {
-        // TODO: not implemented
+        Component c = getTarget();
+        if (c instanceof Container) {
+            SunGraphicsCallback.PrintHeavyweightComponentsCallback.getInstance().
+                runComponents(((Container)getTarget()).getComponents(), g,
+                    SunGraphicsCallback.LIGHTWEIGHTS |
+                    SunGraphicsCallback.HEAVYWEIGHTS);
+        } else {
+            c.print(g);
+        }
     }
 
     @Override

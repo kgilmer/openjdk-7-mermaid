@@ -428,7 +428,11 @@ GetJavaProperties(JNIEnv *env)
 #endif /* MACOSX */
 
     /* Printing properties */
+#ifdef MACOSX
+    sprops.printerJob = "sun.lwawt.macosx.CPrinterJob";
+#else
     sprops.printerJob = "sun.print.PSPrinterJob";
+#endif
 
     /* patches/service packs installed */
     sprops.patch_level = "unknown";

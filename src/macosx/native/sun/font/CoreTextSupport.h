@@ -54,3 +54,11 @@ CTFontRef CTS_CopyCTFallbackFontAndGlyphForUnicode(const AWTFont *font, const UT
 
 // Breakup a 32 bit unicode value into the component surrogate pairs
 void CTS_BreakupUnicodeIntoSurrogatePairs(int uniChar, UTF16Char charRef[]);
+
+
+// Basic struct that holds everything CoreText is interested in
+typedef struct CTS_ProviderStruct {
+    const UniChar         *unicodes;
+    CFIndex                length;
+    CFMutableDictionaryRef attributes;
+} CTS_ProviderStruct;

@@ -23,18 +23,41 @@
  * questions.
  */
 
-#ifndef macosx_port_awt_debug_h
-#define macosx_port_awt_debug_h
-
-#import <Cocoa/Cocoa.h>
+package sun.lwawt.macosx;
 
 
-#define kInternalError "java/lang/InternalError"
+import java.io.*;
+import javax.print.attribute.*;
 
-#define AWT_DEBUG_LOG(str) \
-    NSLog(@"Cocoa AWT: %@ %@", str, [NSThread callStackSymbols])
+public final class NSPrintInfo implements PrintJobAttribute, PrintRequestAttribute, Serializable, Cloneable {
 
-#define AWT_DEBUG_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
-
-#endif
+    private long fNSPrintInfo;
+    
+    public NSPrintInfo(long nsPrintInfo) {
+        fNSPrintInfo = nsPrintInfo;
+    }
+    
+    public long getValue() {
+        return fNSPrintInfo;
+    }
+    
+    public boolean equals(Object object) {
+        return (object != null && object instanceof NSPrintInfo && fNSPrintInfo == ((NSPrintInfo)object).fNSPrintInfo);
+    }
+    
+    public int hashCode() {
+        return (int)fNSPrintInfo;
+    }
+    
+    public String toString() {
+        return "" + fNSPrintInfo;
+    }
+    
+    public final Class<? extends Attribute> getCategory() {
+        return NSPrintInfo.class;
+    }
+    
+    public final String getName() {
+        return "nsPrintInfo";
+    }
+}

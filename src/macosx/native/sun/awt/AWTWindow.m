@@ -328,9 +328,9 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 - (void) _deliverWindowFocusEvent:(BOOL)focused {
-AWT_ASSERT_APPKIT_THREAD;
+//AWT_ASSERT_APPKIT_THREAD;
     
-    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
     static JNF_MEMBER_CACHE(jm_deliverWindowFocusEvent, jc_CPlatformWindow, "deliverWindowFocusEvent", "(Z)V");
     JNFCallVoidMethod(env, platformWindow, jm_deliverWindowFocusEvent, (jboolean)focused);

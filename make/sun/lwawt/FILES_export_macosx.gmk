@@ -38,6 +38,12 @@ FILES_export = \
         sun/awt/image/ImageRepresentation.java \
         sun/awt/image/GifImageDecoder.java \
         sun/awt/image/NativeLibLoader.java \
+        sun/java2d/CRenderer.java \
+        sun/java2d/CompositeCRenderer.java \
+        sun/java2d/DataBufferNIOInt.java \
+        sun/java2d/IntegerNIORaster.java \
+        sun/java2d/OSXSurfaceData.java \
+        sun/java2d/OSXOffScreenSurfaceData.java \
         sun/java2d/loops/Blit.java \
         sun/java2d/loops/BlitBg.java \
         sun/java2d/loops/ScaledBlit.java \
@@ -101,6 +107,19 @@ FILES_export = \
         sun/lwawt/LWWindowPeer.java \
         sun/lwawt/PlatformWindow.java \
         sun/lwawt/SelectionClearListener.java \
+        sun/lwawt/macosx/CPrinterDevice.java \
+        sun/lwawt/macosx/CPrinterDialog.java \
+        sun/lwawt/macosx/CPrinterDialogPeer.java \
+        sun/lwawt/macosx/CPrinterGraphics.java \
+        sun/lwawt/macosx/CPrinterGraphicsConfig.java \
+        sun/lwawt/macosx/CPrinterJob.java \
+        sun/lwawt/macosx/CPrinterJobDialog.java \
+        sun/lwawt/macosx/CPrinterPageDialog.java \
+        sun/lwawt/macosx/CPrinterSurfaceData.java \
+        sun/lwawt/macosx/CTextPipe.java \
+        sun/java2d/CRenderer.java \
+        sun/lwawt/macosx/EventDispatchAccess.java \
+        sun/lwawt/macosx/NSPrintInfo.java \
         sun/lwawt/macosx/CAccessibility.java \
         sun/lwawt/macosx/CAccessible.java \
         sun/lwawt/macosx/CFRetainedResource.java \
@@ -166,7 +185,7 @@ FILES_export = \
         sun/java2d/opengl/OGLTextRenderer.java \
         sun/java2d/opengl/CGLGraphicsConfig.java \
         sun/java2d/opengl/CGLSurfaceData.java \
-        sun/awt/ExtendedKeyCodes.java
+        sun/awt/ExtendedKeyCodes.java 
 
 FILES_export2 = \
         java/awt/AlphaComposite.java \
@@ -244,4 +263,8 @@ FILES_export2 = \
         java/awt/event/NativeLibLoader.java \
         java/awt/peer/ComponentPeer.java \
         java/awt/dnd/DnDConstants.java \
-        sun/awt/CausedFocusEvent.java
+        sun/awt/CausedFocusEvent.java \
+        java/awt/print/PageFormat.java \
+        java/awt/print/Pageable.java \
+        java/awt/print/Printable.java \
+        java/awt/BasicStroke.java

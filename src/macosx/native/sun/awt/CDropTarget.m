@@ -77,7 +77,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 	
 	
     if (control != nil) {
-		JNIEnv *env = [ThreadUtilities getJNIEnv];
+        JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
         fComponent = JNFNewGlobalRef(env, jcomponent);
         fDropTarget = JNFNewGlobalRef(env, jdropTarget);
 		

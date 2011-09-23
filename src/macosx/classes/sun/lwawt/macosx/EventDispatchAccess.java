@@ -23,18 +23,17 @@
  * questions.
  */
 
-#ifndef macosx_port_awt_debug_h
-#define macosx_port_awt_debug_h
+package sun.lwawt.macosx;
 
-#import <Cocoa/Cocoa.h>
-
-
-#define kInternalError "java/lang/InternalError"
-
-#define AWT_DEBUG_LOG(str) \
-    NSLog(@"Cocoa AWT: %@ %@", str, [NSThread callStackSymbols])
-
-#define AWT_DEBUG_BUG_REPORT_MESSAGE \
-    NSLog(@"\tPlease file a bug report at http://java.net/jira/browse/MACOSX_PORT with this message and a reproducible test case.")
-
-#endif
+// This exists strictly to work around the fact that java.awt.Conditional isn't a public class.
+// It uses java reflection to get the EventDispatchThread class and call a MacOSX only
+// method on it.
+//
+// NOTE: This uses reflection in its implementation, so it is not for performance critical code.
+// 
+// See java.awt.EventDispatchThread and apple.awt.CPrintJob for more.
+//
+public abstract class EventDispatchAccess {
+    public native void pumpEventsAndWait();
+    public abstract boolean evaluate();
+}
