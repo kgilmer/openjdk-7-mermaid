@@ -40,7 +40,7 @@ jdk-jre-bundle-setup:
 	
 	# link .jre primary executable, and point the .jdk primary executable at the .jre link
 	$(MKDIR) -p $(JRE_BUNDLE_DIR)/MacOS
-	ln -s ../Home/lib/libjava.dylib $(JRE_BUNDLE_DIR)/MacOS/
+	ln -s ../Home/lib/jli/libjli.dylib $(JRE_BUNDLE_DIR)/MacOS/
 	ln -s Home/$(THIS_JDK_VERSION).jre/Contents/MacOS $(JDK_BUNDLE_DIR)/
 
 jdk-jre-bundle-files:
