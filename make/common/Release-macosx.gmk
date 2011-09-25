@@ -60,10 +60,6 @@ jdk-jre-bundle-files:
 	$(RM) -r $(JRE_BUNDLE_DIR)/Home/bundle
 	ln -s ../.. $(JRE_BUNDLE_DIR)/Home/bundle
 	ln -s jre/bundle $(JDK_BUNDLE_DIR)/Home/
-	
-	# create a drag-destination for the bundle
-	$(RM) $(ABS_OUTPUTDIR)/j2sdk-bundle/JavaVirtualMachines
-	ln -s /Library/Java/JavaVirtualMachines $(ABS_OUTPUTDIR)/j2sdk-bundle/
 
 copy-jre-mac-resources:
 	$(MKDIR) -p $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
