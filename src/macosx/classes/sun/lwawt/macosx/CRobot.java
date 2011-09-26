@@ -87,24 +87,27 @@ class CRobot implements RobotPeer {
      */
     @Override
     public void mousePress(int buttons) {
-        if ((buttons & InputEvent.BUTTON1_MASK) != 0) {
+        if ((buttons & InputEvent.BUTTON1_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON1_DOWN_MASK) != 0) {
             fMouse1DesiredState = BUTTON_STATE_DOWN;
         } else {
             fMouse1DesiredState = BUTTON_STATE_UNKNOWN;
         }
-        
-        if ((buttons & InputEvent.BUTTON2_MASK) != 0) {
+
+        if ((buttons & InputEvent.BUTTON2_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON2_DOWN_MASK) != 0) {
             fMouse2DesiredState = BUTTON_STATE_DOWN;
         } else {
             fMouse2DesiredState = BUTTON_STATE_UNKNOWN;
         }
-        
-        if ((buttons & InputEvent.BUTTON3_MASK) != 0) {
+
+        if ((buttons & InputEvent.BUTTON3_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON3_DOWN_MASK) != 0) {
             fMouse3DesiredState = BUTTON_STATE_DOWN;
         } else {
             fMouse3DesiredState = BUTTON_STATE_UNKNOWN;
         }
-        
+
         fMouseMoveAction = false;
         
         mouseEvent(fDevice.getCoreGraphicsScreen(), fMouseLastX, fMouseLastY,
@@ -120,19 +123,22 @@ class CRobot implements RobotPeer {
      */
     @Override
     public void mouseRelease(int buttons) {
-        if ((buttons & InputEvent.BUTTON1_MASK) != 0) {
+        if ((buttons & InputEvent.BUTTON1_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON1_DOWN_MASK) != 0) {
             fMouse1DesiredState = BUTTON_STATE_UP;
         } else {
             fMouse1DesiredState = BUTTON_STATE_UNKNOWN;
         }
-        
-        if ((buttons & InputEvent.BUTTON2_MASK) != 0) {
+
+        if ((buttons & InputEvent.BUTTON2_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON2_DOWN_MASK) != 0) {
             fMouse2DesiredState = BUTTON_STATE_UP;
         } else {
             fMouse2DesiredState = BUTTON_STATE_UNKNOWN;
         }
-        
-        if ((buttons & InputEvent.BUTTON3_MASK) != 0) {
+
+        if ((buttons & InputEvent.BUTTON3_MASK) != 0 ||
+                (buttons & InputEvent.BUTTON3_DOWN_MASK) != 0) {
             fMouse3DesiredState = BUTTON_STATE_UP;
         } else {
             fMouse3DesiredState = BUTTON_STATE_UNKNOWN;
