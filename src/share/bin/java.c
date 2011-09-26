@@ -268,6 +268,7 @@ JLI_Launch(int argc, char ** argv,              /* main argc, argc */
 
     ifn.CreateJavaVM = 0;
     ifn.GetDefaultJavaVMInitArgs = 0;
+    ifn.GetCreatedJavaVMs = 0;
 
     if (JLI_IsTraceLauncher()) {
         start = CounterGet();

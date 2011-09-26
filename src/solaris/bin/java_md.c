@@ -115,23 +115,23 @@ extern char **environ;
  *      entries, but actual strings can be more efficient (with many compilers).
  */
 #if defined(__FreeBSD__)
-static const char *system_dir	= PACKAGE_PATH "/openjdk7";
-static const char *user_dir	= "/java";
+static const char *system_dir  = PACKAGE_PATH "/openjdk7";
+static const char *user_dir    = "/java";
 #elif defined(__NetBSD__)
-static const char *system_dir	= PACKAGE_PATH "/openjdk7";
-static const char *user_dir	= "/java";
+static const char *system_dir  = PACKAGE_PATH "/openjdk7";
+static const char *user_dir    = "/java";
 #elif defined(__OpenBSD__)
-static const char *system_dir	= PACKAGE_PATH "/openjdk7";
-static const char *user_dir	= "/java";
+static const char *system_dir  = PACKAGE_PATH "/openjdk7";
+static const char *user_dir    = "/java";
 #elif defined(__APPLE__)
-static const char *system_dir	= PACKAGE_PATH "/openjdk7";
-static const char *user_dir	= "/java";
+static const char *system_dir  = PACKAGE_PATH "/openjdk7";
+static const char *user_dir    = "/java";
 #elif defined(__linux__)
-static const char *system_dir   = PACKAGE_PATH "/java";
-static const char *user_dir     = "/java";
+static const char *system_dir  = PACKAGE_PATH "/java";
+static const char *user_dir    = "/java";
 #else /* Solaris */
-static const char *system_dir   = "/usr/jdk";
-static const char *user_dir     = "/jdk";
+static const char *system_dir  = "/usr/jdk";
+static const char *user_dir    = "/jdk";
 #endif
 
 /* Store the name of the executable once computed */
@@ -280,6 +280,92 @@ GetArchPath(int nbits)
 
 #ifdef MACOSX
 
+/*
+ * Exports the JNI interface from libjli
+ * 
+ * This allows client code to link against the .jre/.jdk bundles,
+ * and not worry about trying to pick a HotSpot to link against.
+ * 
+ * Switching architectures is unsupported, since client code has
+ * made that choice before the JVM was requested.
+ */
+
+static InvocationFunctions *sExportedJNIFunctions = NULL;
+static char *sPreferredJVMType = NULL;
+
+static InvocationFunctions *GetExportedJNIFunctions() {
+    if (sExportedJNIFunctions != NULL) return sExportedJNIFunctions;
+    
+    char jrePath[PATH_MAX];
+    jboolean gotJREPath = GetJREPath(jrePath, sizeof(jrePath), GetArch(), JNI_FALSE);
+    if (!gotJREPath) {
+        JLI_ReportErrorMessage("Failed to GetJREPath()");
+        return NULL;
+    }
+    
+    char *preferredJVM = sPreferredJVMType;
+    if (preferredJVM == NULL) {
+#if defined(__i386__)
+        preferredJVM = "client";
+#elif defined(__x86_64__)
+        preferredJVM = "server";
+#else
+#error "Unknown architecture - needs definition"
+#endif        
+    }
+    
+    char jvmPath[PATH_MAX];
+    jboolean gotJVMPath = GetJVMPath(jrePath, preferredJVM, jvmPath, sizeof(jvmPath), GetArch(), CURRENT_DATA_MODEL);
+    if (!gotJVMPath) {
+        JLI_ReportErrorMessage("Failed to GetJVMPath()");
+        return NULL;
+    }
+    
+    InvocationFunctions *fxns = malloc(sizeof(InvocationFunctions));
+    jboolean vmLoaded = LoadJavaVM(jvmPath, fxns);
+    if (!vmLoaded) {
+        JLI_ReportErrorMessage("Failed to LoadJavaVM()");
+        return NULL;
+    }
+    
+    return sExportedJNIFunctions = fxns;
+}
+
+JNIEXPORT jint JNICALL
+JNI_GetDefaultJavaVMInitArgs(void *args) {
+    InvocationFunctions *ifn = GetExportedJNIFunctions();
+    if (ifn == NULL) return JNI_ERR;
+    return ifn->GetDefaultJavaVMInitArgs(args);
+}
+
+JNIEXPORT jint JNICALL
+JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args) {
+    InvocationFunctions *ifn = GetExportedJNIFunctions();
+    if (ifn == NULL) return JNI_ERR;
+    return ifn->CreateJavaVM(pvm, penv, args);
+}
+
+JNIEXPORT jint JNICALL
+JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs) {
+    InvocationFunctions *ifn = GetExportedJNIFunctions();
+    if (ifn == NULL) return JNI_ERR;
+    return ifn->GetCreatedJavaVMs(vmBuf, bufLen, nVMs);
+}
+
+/*
+ * Allow JLI-aware launchers to specify a client/server preference
+ */
+JNIEXPORT void JNICALL
+JLI_SetPreferredJVM(const char *prefJVM) {
+    if (sPreferredJVMType != NULL) {
+        free(sPreferredJVMType);
+        sPreferredJVMType = NULL;
+    }
+    
+    if (prefJVM == NULL) return;
+    sPreferredJVMType = strdup(prefJVM);
+}
+
 static BOOL awtLoaded = NO;
 static pthread_mutex_t awtLoaded_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  awtLoaded_cv = PTHREAD_COND_INITIALIZER;
@@ -305,7 +391,7 @@ static void *apple_main (void *arg)
     if (main_fptr == NULL) {
         main_fptr = (int (*)())dlsym(RTLD_DEFAULT, "main");
         if (main_fptr == NULL) {
-            fprintf(stderr, "error locating main entrypoint\n");
+            JLI_ReportErrorMessageSys("error locating main entrypoint\n");
             exit(1);
         }
     }
@@ -315,6 +401,19 @@ static void *apple_main (void *arg)
 }
 
 static void dummyTimer(CFRunLoopTimerRef timer, void *info) {}
+
+static void ParkEventLoop() {
+    // RunLoop needs at least one source, and 1e20 is pretty far into the future
+    CFRunLoopTimerRef t = CFRunLoopTimerCreate(kCFAllocatorDefault, 1.0e20, 0.0, 0, 0, dummyTimer, NULL);
+    CFRunLoopAddTimer(CFRunLoopGetCurrent(), t, kCFRunLoopDefaultMode);
+    CFRelease(t);
+    
+    // Park this thread in the main run loop.
+    int32_t result;
+    do {
+        result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0e20, false);
+    } while (result != kCFRunLoopRunFinished);
+}
 
 /*
  * Mac OS X mandates that the GUI event loop run on very first thread of
@@ -337,25 +436,15 @@ static void MacOSXStartup(int argc, char *argv[]) {
     // Fire up the main thread
     pthread_t main_thr;
     if (pthread_create(&main_thr, NULL, &apple_main, &args) != 0) {
-        fprintf(stderr, "Could not create main thread: %s\n", strerror(errno));
+        JLI_ReportErrorMessageSys("Could not create main thread: %s\n", strerror(errno));
         exit(1);
     }
     if (pthread_detach(main_thr)) {
-        fprintf(stderr, "pthread_detach() failed: %s\n", strerror(errno));
+        JLI_ReportErrorMessageSys("pthread_detach() failed: %s\n", strerror(errno));
         exit(1);
     }
     
-    // RunLoop needs at least one source, and 1e20 is pretty far into the future
-    CFRunLoopTimerRef t = CFRunLoopTimerCreate(kCFAllocatorDefault, 1.0e20, 0.0, 0, 0, dummyTimer, NULL);
-    CFRunLoopAddTimer(CFRunLoopGetCurrent(), t, kCFRunLoopDefaultMode);
-    CFRelease(t);
-    
-    // Park this thread in the main run loop.
-    int32_t result;
-    do {
-        result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0e20, false);
-    } while (result != kCFRunLoopRunFinished);
-    return;
+    ParkEventLoop();
 }
 
 #endif
@@ -995,6 +1084,36 @@ GetJREPath(char *path, jint pathsize, const char * arch, jboolean speculative)
         }
 #endif
     }
+    
+#ifdef MACOSX
+    
+    /* try to find ourselves instead */
+    Dl_info selfInfo;
+    dladdr(&GetJREPath, &selfInfo);
+    
+    char *realPathToSelf = realpath(selfInfo.dli_fname, path);
+    if (realPathToSelf != path) {
+        return JNI_FALSE;
+    }
+    
+    size_t pathLen = strlen(realPathToSelf);
+    if (pathLen == 0) {
+        return JNI_FALSE;
+    }
+    
+    const char lastPathComponent[] = "/lib/jli/libjli.dylib";
+    size_t sizeOfLastPathComponent = sizeof(lastPathComponent) - 1;
+    if (pathLen < sizeOfLastPathComponent) {
+        return JNI_FALSE;
+    }
+    
+    size_t indexOfLastPathComponent = pathLen - sizeOfLastPathComponent;
+    if (0 == strncmp(realPathToSelf + indexOfLastPathComponent, lastPathComponent, sizeOfLastPathComponent - 1)) {
+        realPathToSelf[indexOfLastPathComponent + 1] = '\0';
+        return JNI_TRUE;
+    }
+    
+#endif
 
     if (!speculative)
       JLI_ReportErrorMessage(JRE_ERROR8 JAVA_DLL);
@@ -1071,6 +1190,13 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
     ifn->GetDefaultJavaVMInitArgs = (GetDefaultJavaVMInitArgs_t)
         dlsym(libjvm, "JNI_GetDefaultJavaVMInitArgs");
     if (ifn->GetDefaultJavaVMInitArgs == NULL) {
+        JLI_ReportErrorMessage(DLL_ERROR2, jvmpath, dlerror());
+        return JNI_FALSE;
+    }
+    
+    ifn->GetCreatedJavaVMs = (GetCreatedJavaVMs_t)
+    dlsym(libjvm, "JNI_GetCreatedJavaVMs");
+    if (ifn->GetCreatedJavaVMs == NULL) {
         JLI_ReportErrorMessage(DLL_ERROR2, jvmpath, dlerror());
         return JNI_FALSE;
     }
@@ -1588,9 +1714,9 @@ UnsetEnv(char *name)
 int64_t
 CounterGet()
 {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (tv.tv_sec * 1000) + tv.tv_usec;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000) + tv.tv_usec;
 }
 #endif
 
