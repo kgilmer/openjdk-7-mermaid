@@ -798,6 +798,18 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
     oglsdo->height = height;
 
     if (oglsdo->drawableType == OGLSD_WINDOW) {
+JNF_COCOA_ENTER(env);
+#ifdef USE_INTERMEDIATE_BUFFER
+        if (newSize) {
+#ifdef USE_IOS
+            RecreateIOSBuffer(env, oglsdo);
+#else
+            RecreateBuffer(env, oglsdo);
+#endif
+        }
+#endif
+JNF_COCOA_EXIT(env);        
+        
         OGLContext_SetSurfaces(env, ptr_to_jlong(oglsdo), ptr_to_jlong(oglsdo));
         
         // we have to explicitly tell the NSOpenGLContext that its target
@@ -807,15 +819,7 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
         CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
         
 JNF_COCOA_ENTER(env);
-#if USE_INTERMEDIATE_BUFFER
-        if (newSize) {
-#ifdef USE_IOS
-            RecreateIOSBuffer(env, oglsdo);
-#else
-            RecreateBuffer(env, oglsdo);
-#endif
-        }
-#else
+#ifndef USE_INTERMEDIATE_BUFFER
         [ctxinfo->context update];
 #endif
 JNF_COCOA_EXIT(env);
