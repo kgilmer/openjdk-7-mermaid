@@ -277,7 +277,8 @@ public final class JRSUIControl {
     
     Hit getHitForPoint(final double x, final double y, final double w, final double h, final double hitX, final double hitY) {
         sync();
-        final Hit hit = JRSUIConstants.getHit(getNativeHitPart(cfDictionaryPtr, priorEncodedProperties, currentEncodedProperties, x, y, w, h, hitX, hitY));
+        // reflect hitY about the midline of the control before sending to native
+        final Hit hit = JRSUIConstants.getHit(getNativeHitPart(cfDictionaryPtr, priorEncodedProperties, currentEncodedProperties, x, y, w, h, hitX, 2 * y + h - hitY));
         priorEncodedProperties = currentEncodedProperties;
         return hit;
     }
