@@ -36,6 +36,7 @@ import java.text.DateFormat;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.*;
 import javax.swing.filechooser.*;
 import javax.swing.plaf.*;
@@ -142,6 +143,8 @@ public class AquaFileChooserUI extends FileChooserUI {
         installDefaults(filechooser);
         installComponents(filechooser);
         installListeners(filechooser);
+
+        AquaUtils.enforceComponentOrientation(filechooser, ComponentOrientation.getOrientation(Locale.getDefault()));
     }
 
     public void uninstallUI(final JComponent c) {
@@ -1486,7 +1489,7 @@ public class AquaFileChooserUI extends FileChooserUI {
         if (accessory != null) {
             getAccessoryPanel().add(accessory);
         }
-        centerPanel.add(getAccessoryPanel(), BorderLayout.WEST);
+        centerPanel.add(getAccessoryPanel(), BorderLayout.LINE_START);
 
         // Directory list(table), right-justified, resizable
         final JPanel p = createList(fc);
@@ -1526,40 +1529,29 @@ public class AquaFileChooserUI extends FileChooserUI {
         // fDirectoryPanel: New, Open, Cancel, Approve buttons, right-justified, 82x22
         // (sometimes the NewFolder and OpenFolder buttons are invisible)
         fDirectoryPanel = new JPanel();
-        final SpringLayout layout = new SpringLayout();
-        fDirectoryPanel.setLayout(layout);
-
+        fDirectoryPanel.setLayout(new BoxLayout(fDirectoryPanel, BoxLayout.PAGE_AXIS));
+        JPanel directoryPanel = new JPanel(new BorderLayout());
+        JPanel newFolderButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+        newFolderButtonPanel.add(Box.createHorizontalStrut(20));
         fNewFolderButton = createNewFolderButton(); // Because we hide it depending on style
-        fDirectoryPanel.add(fNewFolderButton);
+        newFolderButtonPanel.add(fNewFolderButton);
+        directoryPanel.add(newFolderButtonPanel, BorderLayout.LINE_START);
+        JPanel approveCancelButtonPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0));
         fOpenButton = createButton(kOpenDirectory, openButtonText);
-        fDirectoryPanel.add(fOpenButton);
+        approveCancelButtonPanel.add(fOpenButton);
+        approveCancelButtonPanel.add(Box.createHorizontalStrut(8));
         fCancelButton = createButton(kCancel, null);
-        fDirectoryPanel.add(fCancelButton);
-
+        approveCancelButtonPanel.add(fCancelButton);
+        approveCancelButtonPanel.add(Box.createHorizontalStrut(8));
         // The ApproveSelection button
         fApproveButton = new JButton();
         fApproveButton.addActionListener(fApproveSelectionAction);
-        fDirectoryPanel.add(fApproveButton);
-
-        // Save button should be 20 pixels away from right (east) edge of the panel.
-        //  and 5 pixels below the top of the panel.
-        layout.putConstraint(SpringLayout.NORTH, fApproveButton, 5, SpringLayout.NORTH, fDirectoryPanel);
-        layout.putConstraint(SpringLayout.EAST, fApproveButton, -20, SpringLayout.EAST, fDirectoryPanel);
-
-        // Cancel button should be 12 pixels away from the save button and 5 pixels below the top of the panel.
-        layout.putConstraint(SpringLayout.NORTH, fCancelButton, 5, SpringLayout.NORTH, fDirectoryPanel);
-        layout.putConstraint(SpringLayout.EAST, fCancelButton, -8, SpringLayout.WEST, fApproveButton);
-
-        // Open button should be 12 pixels away from the Cancel button and 5 pixels below the top of the panel.
-        layout.putConstraint(SpringLayout.NORTH, fOpenButton, 5, SpringLayout.NORTH, fDirectoryPanel);
-        layout.putConstraint(SpringLayout.EAST, fOpenButton, -8, SpringLayout.WEST, fCancelButton);
-
-        // New Folder button is 20 pixels from the left side and 5 below the top of the panel.
-        layout.putConstraint(SpringLayout.NORTH, fNewFolderButton, 5, SpringLayout.NORTH, fDirectoryPanel);
-        layout.putConstraint(SpringLayout.WEST, fNewFolderButton, 20, SpringLayout.WEST, fDirectoryPanel);
-
-        layout.putConstraint(SpringLayout.SOUTH, fDirectoryPanel, 12, SpringLayout.SOUTH, fCancelButton);
-
+        approveCancelButtonPanel.add(fApproveButton);
+        approveCancelButtonPanel.add(Box.createHorizontalStrut(20));
+        directoryPanel.add(approveCancelButtonPanel, BorderLayout.LINE_END);
+        fDirectoryPanel.add(Box.createVerticalStrut(5));
+        fDirectoryPanel.add(directoryPanel);
+        fDirectoryPanel.add(Box.createVerticalStrut(12));        
         fDirectoryPanelSpacer = Box.createRigidArea(hstrut10);
 
         if (fc.getControlButtonsAreShown()) {
@@ -1744,10 +1736,20 @@ public class AquaFileChooserUI extends FileChooserUI {
         fFileList.setDropTarget(dragAndDropTarget);
         
         final JScrollPane scrollpane = new JScrollPane(fFileList, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollpane.setComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
+        scrollpane.setCorner(ScrollPaneConstants.UPPER_TRAILING_CORNER, new ScrollPaneCornerPanel());
         p.add(scrollpane, BorderLayout.CENTER);
         return p;
     }
 
+    protected class ScrollPaneCornerPanel extends JPanel {
+        final Border border = UIManager.getBorder("TableHeader.cellBorder");
+        
+        protected void paintComponent(final Graphics g) {
+            border.paintBorder(this, g, 0, 0, getWidth() + 1, getHeight());
+        }
+    }
+    
     JComboBox directoryComboBox;
     DirectoryComboBoxModel fDirectoryComboBoxModel;
     private final Action directoryComboBoxAction = new DirectoryComboBoxAction();

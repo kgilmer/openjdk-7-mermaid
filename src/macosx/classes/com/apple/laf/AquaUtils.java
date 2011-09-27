@@ -54,6 +54,15 @@ public class AquaUtils {
         return c.getComponentOrientation().isLeftToRight();
     }
     
+    public static void enforceComponentOrientation(Component c, ComponentOrientation orientation) {
+        c.setComponentOrientation(orientation);
+        if (c instanceof Container) {
+            for (Component child : ((Container)c).getComponents()) {
+                enforceComponentOrientation(child, orientation);
+            }
+        }
+    }
+    
     private static CImage.Creator getCImageCreatorInternal() {
         return java.security.AccessController.doPrivileged(new PrivilegedAction<CImage.Creator>() {
             public Creator run() {
