@@ -33,16 +33,18 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 # Files
 #
-AUTO_FILES_JAVA_DIRS = com/apple/concurrent com/apple/eio
+AUTO_FILES_JAVA_DIRS = com/apple/concurrent com/apple/eio java/util/prefs apple/security
 
 FILES_objc += \
     Dispatch.m \
     CFileManager.m \
+    KeystoreImpl.m \
     MacOSXPreferencesFile.m
 
 FILES_export += \
 	com/apple/concurrent/LibDispatchNative.java \
 	com/apple/eio/FileManager.java \
+	apple/security/KeychainStore.java \
 	java/util/prefs/MacOSXPreferencesFile.java
 
 #
@@ -61,6 +63,7 @@ include $(BUILDDIR)/common/Library.gmk
 #
 vpath %.m   $(call NativeSrcDirList,,native/com/apple/concurrent)
 vpath %.m   $(call NativeSrcDirList,,native/com/apple/eio)
+vpath %.m   $(call NativeSrcDirList,,native/apple/security)
 vpath %.m   $(call NativeSrcDirList,,native/java/util)
 
 CPPFLAGS += \
@@ -72,4 +75,5 @@ OTHER_LDLIBS = \
     -framework Cocoa \
     -framework ApplicationServices \
     -framework JavaNativeFoundation \
-    -framework JavaRuntimeSupport
+    -framework JavaRuntimeSupport \
+    -framework Security
