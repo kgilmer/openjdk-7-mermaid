@@ -32,20 +32,20 @@ import javax.swing.border.Border;
 import apple.laf.JRSUIConstants.Widget;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public abstract class AquaGroupBorder extends AquaBorder {
-    static final LazySingletonFromDefaultConstructor<? extends Border> tabbedPaneGroupBorder = new LazySingletonFromDefaultConstructor<TabbedPane>(TabbedPane.class);
+    static final RecyclableSingletonFromDefaultConstructor<? extends Border> tabbedPaneGroupBorder = new RecyclableSingletonFromDefaultConstructor<TabbedPane>(TabbedPane.class);
     public static Border getTabbedPaneGroupBorder() {
         return tabbedPaneGroupBorder.get();
     }
 
-    static final LazySingletonFromDefaultConstructor<? extends Border> titleBorderGroupBorder = new LazySingletonFromDefaultConstructor<Titled>(Titled.class);
+    static final RecyclableSingletonFromDefaultConstructor<? extends Border> titleBorderGroupBorder = new RecyclableSingletonFromDefaultConstructor<Titled>(Titled.class);
     public static Border getBorderForTitledBorder() {
         return titleBorderGroupBorder.get();
     }
 
-    static final LazySingletonFromDefaultConstructor<? extends Border> titlelessGroupBorder = new LazySingletonFromDefaultConstructor<Titleless>(Titleless.class);
+    static final RecyclableSingletonFromDefaultConstructor<? extends Border> titlelessGroupBorder = new RecyclableSingletonFromDefaultConstructor<Titleless>(Titleless.class);
     public static Border getTitlelessBorder() {
         return titlelessGroupBorder.get();
     }

@@ -38,7 +38,7 @@ import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.TitleBarHeightState;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 import com.apple.laf.AquaInternalFrameBorderMetrics;
 
 public class AquaInternalFrameBorder implements Border, UIResource {
@@ -54,7 +54,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
 
     private static final int kContentTester = 100; // For getting region insets
     
-    static final LazySingleton<AquaInternalFrameBorder> documentWindowFrame = new LazySingleton<AquaInternalFrameBorder>() {
+    static final RecyclableSingleton<AquaInternalFrameBorder> documentWindowFrame = new RecyclableSingleton<AquaInternalFrameBorder>() {
         protected AquaInternalFrameBorder getInstance() {
             return new AquaInternalFrameBorder(WindowType.DOCUMENT);
         }
@@ -63,7 +63,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         return documentWindowFrame.get();
     }
 
-    static final LazySingleton<AquaInternalFrameBorder> utilityWindowFrame = new LazySingleton<AquaInternalFrameBorder>() {
+    static final RecyclableSingleton<AquaInternalFrameBorder> utilityWindowFrame = new RecyclableSingleton<AquaInternalFrameBorder>() {
         protected AquaInternalFrameBorder getInstance() {
             return new AquaInternalFrameBorder(WindowType.UTILITY);
         }
@@ -72,7 +72,7 @@ public class AquaInternalFrameBorder implements Border, UIResource {
         return utilityWindowFrame.get();
     }
 
-    static final LazySingleton<AquaInternalFrameBorder> dialogWindowFrame = new LazySingleton<AquaInternalFrameBorder>() {
+    static final RecyclableSingleton<AquaInternalFrameBorder> dialogWindowFrame = new RecyclableSingleton<AquaInternalFrameBorder>() {
         protected AquaInternalFrameBorder getInstance() {
             return new AquaInternalFrameBorder(WindowType.DOCUMENT);
         }

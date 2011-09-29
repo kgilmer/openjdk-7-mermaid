@@ -34,16 +34,18 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicSliderUI;
 
 import apple.laf.*;
+import apple.laf.JRSUIUtils.NineSliceMetricsProvider;
 import apple.laf.JRSUIConstants.*;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaImageFactory.NineSliceMetrics;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaSliderUI extends BasicSliderUI implements Sizeable {
 //    static final Dimension roundThumbSize = new Dimension(21 + 4, 21 + 4); // +2px on both sides for focus fuzz
 //    static final Dimension pointingThumbSize = new Dimension(19 + 4, 22 + 4);
         
-    protected static final LazySingleton<SizeDescriptor> roundThumbDescriptor = new LazySingleton<SizeDescriptor>() {
+    protected static final RecyclableSingleton<SizeDescriptor> roundThumbDescriptor = new RecyclableSingleton<SizeDescriptor>() {
         protected SizeDescriptor getInstance() {
             return new SizeDescriptor(new SizeVariant(25, 25)) {
                 public SizeVariant deriveSmall(final SizeVariant v) {
@@ -55,7 +57,7 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
             };
         }
     };
-    protected static final LazySingleton<SizeDescriptor> pointingThumbDescriptor = new LazySingleton<SizeDescriptor>() {
+    protected static final RecyclableSingleton<SizeDescriptor> pointingThumbDescriptor = new RecyclableSingleton<SizeDescriptor>() {
         protected SizeDescriptor getInstance() {
             return new SizeDescriptor(new SizeVariant(23, 26)) {
                 public SizeVariant deriveSmall(final SizeVariant v) {
@@ -68,7 +70,15 @@ public class AquaSliderUI extends BasicSliderUI implements Sizeable {
         }
     };
     
-    final AquaPainter<JRSUIState> trackPainter = AquaPainter.create(JRSUIStateFactory.getSliderTrack());
+    static final AquaPainter<JRSUIState> trackPainter = AquaPainter.create(JRSUIStateFactory.getSliderTrack(), new NineSliceMetricsProvider() {
+        @Override
+        public NineSliceMetrics getNineSliceMetricsForState(JRSUIState state) {
+            if (state.is(Orientation.VERTICAL)) {
+                return new NineSliceMetrics(5, 7, 0, 0, 3, 3, true, false, true);
+            }
+            return new NineSliceMetrics(7, 5, 3, 3, 0, 0, true, true, false);
+        }
+    });
     final AquaPainter<JRSUIState> thumbPainter = AquaPainter.create(JRSUIStateFactory.getSliderThumb());
     
     protected Color tickColor;

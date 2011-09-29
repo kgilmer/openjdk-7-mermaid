@@ -31,7 +31,7 @@ import java.security.PrivilegedAction;
 
 import javax.swing.plaf.UIResource;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaNativeResources {
     static {
@@ -48,7 +48,7 @@ public class AquaNativeResources {
         }
     }
 
-    static final LazySingleton<Color> sBackgroundColor = new LazySingleton<Color>() {
+    static final RecyclableSingleton<Color> sBackgroundColor = new RecyclableSingleton<Color>() {
         @Override
         protected Color getInstance() {
             final long backgroundID = getWindowBackgroundColor();

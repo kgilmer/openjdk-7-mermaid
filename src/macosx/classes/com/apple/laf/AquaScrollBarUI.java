@@ -39,7 +39,7 @@ import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ScrollBarState;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaScrollBarUI extends ScrollBarUI {
     private static final int kInitialDelay = 300;
@@ -154,7 +154,7 @@ public class AquaScrollBarUI extends ScrollBarUI {
         return State.ACTIVE;
     }
     
-    static final LazySingleton<Map<Hit, ScrollBarPart>> hitToPressedPartMap = new LazySingleton<Map<Hit,ScrollBarPart>>(){
+    static final RecyclableSingleton<Map<Hit, ScrollBarPart>> hitToPressedPartMap = new RecyclableSingleton<Map<Hit,ScrollBarPart>>(){
         @Override
         protected Map<Hit, ScrollBarPart> getInstance() {
             final Map<Hit, ScrollBarPart> map = new HashMap<Hit, ScrollBarPart>(7);

@@ -36,7 +36,7 @@ import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaTextFieldBorder extends AquaBorder {
-    protected static final LazySingleton<AquaTextFieldBorder> instance = new LazySingletonFromDefaultConstructor<AquaTextFieldBorder>(AquaTextFieldBorder.class);
+    protected static final RecyclableSingleton<AquaTextFieldBorder> instance = new RecyclableSingletonFromDefaultConstructor<AquaTextFieldBorder>(AquaTextFieldBorder.class);
     public static AquaTextFieldBorder getTextFieldBorder() {
         return instance.get();
     }

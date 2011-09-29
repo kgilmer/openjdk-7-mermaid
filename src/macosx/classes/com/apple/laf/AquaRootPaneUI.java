@@ -34,8 +34,8 @@ import javax.swing.event.*;
 import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicRootPaneUI;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 /**
  * From AquaRootPaneUI.java
@@ -46,7 +46,7 @@ import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
  * AquaRootPaneUI is a singleton object 
  */
 public class AquaRootPaneUI extends BasicRootPaneUI implements AncestorListener, WindowListener, ContainerListener {
-    private static final LazySingleton<AquaRootPaneUI> sRootPaneUI = new LazySingletonFromDefaultConstructor<AquaRootPaneUI>(AquaRootPaneUI.class);
+    private static final RecyclableSingleton<AquaRootPaneUI> sRootPaneUI = new RecyclableSingletonFromDefaultConstructor<AquaRootPaneUI>(AquaRootPaneUI.class);
 
     final static int kDefaultButtonPaintDelayBetweenFrames = 50;
     JButton fCurrentDefaultButton = null;

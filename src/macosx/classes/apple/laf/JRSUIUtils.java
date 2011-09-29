@@ -25,6 +25,8 @@
 
 package apple.laf;
 
+import com.apple.laf.AquaImageFactory.NineSliceMetrics;
+
 import apple.laf.JRSUIConstants.*;
 
 public class JRSUIUtils {
@@ -107,5 +109,9 @@ public class JRSUIUtils {
         public static Hit getHitForPoint(final JRSUIControl control, final double x, final double y, final double w, final double h, final double hitX, final double hitY) {
             return control.getHitForPoint(x, y, w, h, hitX, hitY);
         }
+    }
+    
+    public interface NineSliceMetricsProvider {
+    	public NineSliceMetrics getNineSliceMetricsForState(JRSUIState state);
     }
 }

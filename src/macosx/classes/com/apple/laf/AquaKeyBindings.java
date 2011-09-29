@@ -33,11 +33,11 @@ import javax.swing.UIDefaults.LazyValue;
 import javax.swing.text.*;
 import javax.swing.text.DefaultEditorKit.DefaultKeyTypedAction;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaKeyBindings {
-    static final LazySingleton<AquaKeyBindings> instance = new LazySingletonFromDefaultConstructor<AquaKeyBindings>(AquaKeyBindings.class);
+    static final RecyclableSingleton<AquaKeyBindings> instance = new RecyclableSingletonFromDefaultConstructor<AquaKeyBindings>(AquaKeyBindings.class);
     static AquaKeyBindings instance() {
         return instance.get();
     }

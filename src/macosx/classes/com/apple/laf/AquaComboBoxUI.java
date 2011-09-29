@@ -39,7 +39,7 @@ import com.apple.laf.ClientPropertyApplicator.Property;
 import apple.laf.JRSUIConstants.Size;
 
 import com.apple.laf.AquaUtilControlSize.Sizeable;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 // Inspired by MetalComboBoxUI, which also has a combined text-and-arrow button for noneditables
 public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
@@ -545,7 +545,7 @@ public class AquaComboBoxUI extends BasicComboBoxUI implements Sizeable {
     }
     
     @SuppressWarnings("unchecked")
-    static final LazySingleton<ClientPropertyApplicator<JComboBox, AquaComboBoxUI>> APPLICATOR = new LazySingleton<ClientPropertyApplicator<JComboBox, AquaComboBoxUI>>() {
+    static final RecyclableSingleton<ClientPropertyApplicator<JComboBox, AquaComboBoxUI>> APPLICATOR = new RecyclableSingleton<ClientPropertyApplicator<JComboBox, AquaComboBoxUI>>() {
         @Override
         protected ClientPropertyApplicator<JComboBox, AquaComboBoxUI> getInstance() {
             return new ClientPropertyApplicator<JComboBox, AquaComboBoxUI>(

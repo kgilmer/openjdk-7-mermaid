@@ -31,10 +31,10 @@ import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicToolTipUI;
 
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaToolTipUI extends BasicToolTipUI {
-    static final LazySingletonFromDefaultConstructor<AquaToolTipUI> sharedAquaInstance = new LazySingletonFromDefaultConstructor<AquaToolTipUI>(AquaToolTipUI.class);
+    static final RecyclableSingletonFromDefaultConstructor<AquaToolTipUI> sharedAquaInstance = new RecyclableSingletonFromDefaultConstructor<AquaToolTipUI>(AquaToolTipUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
         return sharedAquaInstance.get();

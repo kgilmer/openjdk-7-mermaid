@@ -34,8 +34,8 @@ import com.apple.laf.AquaUtilControlSize.*;
 import com.apple.laf.AquaUtils.*;
 
 public class AquaButtonRadioUI extends AquaButtonLabeledUI {
-    protected static final LazySingleton<AquaButtonRadioUI> instance = new LazySingletonFromDefaultConstructor<AquaButtonRadioUI>(AquaButtonRadioUI.class); 
-    protected static final LazySingleton<ImageIcon> sizingIcon = new LazySingleton<ImageIcon>() {
+    protected static final RecyclableSingleton<AquaButtonRadioUI> instance = new RecyclableSingletonFromDefaultConstructor<AquaButtonRadioUI>(AquaButtonRadioUI.class); 
+    protected static final RecyclableSingleton<ImageIcon> sizingIcon = new RecyclableSingleton<ImageIcon>() {
         protected ImageIcon getInstance() {
             return new ImageIcon(AquaNativeResources.getRadioButtonSizerImage());
         }

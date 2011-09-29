@@ -143,7 +143,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         southPane = c;
     }
     
-    static final LazySingleton<Icon> closeIcon = new LazySingleton<Icon>() {
+    static final RecyclableSingleton<Icon> closeIcon = new RecyclableSingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_CLOSE_BOX);
         }
@@ -152,7 +152,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         return closeIcon.get();
     }
 
-    static final LazySingleton<Icon> minimizeIcon = new LazySingleton<Icon>() {
+    static final RecyclableSingleton<Icon> minimizeIcon = new RecyclableSingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_COLLAPSE_BOX);
         }
@@ -161,7 +161,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         return minimizeIcon.get();
     }
 
-    static final LazySingleton<Icon> zoomIcon = new LazySingleton<Icon>() {
+    static final RecyclableSingleton<Icon> zoomIcon = new RecyclableSingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaInternalFrameButtonIcon(Widget.TITLE_BAR_ZOOM_BOX);
         }
@@ -760,7 +760,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         public CompoundUIBorder(final Border inside, final Border outside) { super(inside, outside); }
     }
     
-    abstract static class InternalFrameShadow extends LazySingleton<Border> {
+    abstract static class InternalFrameShadow extends RecyclableSingleton<Border> {
         abstract Border getForegroundShadowBorder();
         abstract Border getBackgroundShadowBorder();
         
@@ -788,7 +788,7 @@ public class AquaInternalFrameUI extends BasicInternalFrameUI implements SwingCo
         }
     }
     
-    static final LazySingleton<Icon> RESIZE_ICON = new LazySingleton<Icon>() {
+    static final RecyclableSingleton<Icon> RESIZE_ICON = new RecyclableSingleton<Icon>() {
         protected Icon getInstance() {
             return new AquaIcon.CachableJRSUIIcon(11, 11) {
                 public void initIconPainter(final AquaPainter<JRSUIState> iconState) {

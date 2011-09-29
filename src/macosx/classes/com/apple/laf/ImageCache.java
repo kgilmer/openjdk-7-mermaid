@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.concurrent.locks.*;
 
 import apple.laf.JRSUIState;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 /**
  * ImageCache - A fixed pixel count sized cache of Images keyed by arbitrary set of arguments. All images are held with
@@ -53,7 +53,7 @@ class ImageCache {
     private final ReferenceQueue<Image> referenceQueue = new ReferenceQueue<Image>();
     
     // Singleton Instance
-    private static final LazySingleton<ImageCache> instance = new LazySingleton<ImageCache>() {
+    private static final RecyclableSingleton<ImageCache> instance = new RecyclableSingleton<ImageCache>() {
         @Override
         protected ImageCache getInstance() {
             return new ImageCache();

@@ -35,7 +35,7 @@ import javax.swing.plaf.basic.BasicTableHeaderUI;
 import javax.swing.table.*;
 import com.apple.laf.ClientPropertyApplicator;
 import com.apple.laf.ClientPropertyApplicator.Property;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaTableHeaderUI extends BasicTableHeaderUI {
     private int originalHeaderAlignment;
@@ -67,7 +67,7 @@ public class AquaTableHeaderUI extends BasicTableHeaderUI {
         super.uninstallDefaults();
     }
     
-    final static LazySingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>> TABLE_HEADER_APPLICATORS = new LazySingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>>() {
+    final static RecyclableSingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>> TABLE_HEADER_APPLICATORS = new RecyclableSingleton<ClientPropertyApplicator<JTableHeader, JTableHeader>>() {
         @Override
         protected ClientPropertyApplicator<JTableHeader, JTableHeader> getInstance() {
             return new ClientPropertyApplicator<JTableHeader, JTableHeader>(

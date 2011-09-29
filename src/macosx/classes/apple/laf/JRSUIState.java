@@ -84,6 +84,10 @@ public class JRSUIState {
         return encodedState == ((JRSUIState)obj).encodedState && getClass().equals(obj.getClass());
     }
     
+    public boolean is(Property property) {
+    	return (byte)((derivedEncodedState & property.encoding.mask) >> property.encoding.shift) == property.ordinal;
+    }
+    
     @Override
     public int hashCode() {
         return (int)(encodedState ^ (encodedState >>> 32)) ^ getClass().hashCode();

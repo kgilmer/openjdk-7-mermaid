@@ -41,12 +41,12 @@ import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ValueState;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaProgressBarUI extends ProgressBarUI implements ChangeListener, PropertyChangeListener, AncestorListener, Sizeable {
     private static final boolean ADJUSTTIMER = true;
     
-    protected static final LazySingleton<SizeDescriptor> sizeDescriptor = new LazySingleton<SizeDescriptor>() {
+    protected static final RecyclableSingleton<SizeDescriptor> sizeDescriptor = new RecyclableSingleton<SizeDescriptor>() {
         @Override
         protected SizeDescriptor getInstance() {
             return new SizeDescriptor(new SizeVariant(146, 20)) {

@@ -36,7 +36,7 @@ import apple.laf.JRSUIConstants.Size;
 import apple.laf.*;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaIcon {
     interface InvertableIcon extends Icon {
@@ -226,7 +226,7 @@ public class AquaIcon {
         }
     }
     
-    static class SystemIconSingleton extends LazySingleton<SystemIcon> {
+    static class SystemIconSingleton extends RecyclableSingleton<SystemIcon> {
         final String selector;
         
         public SystemIconSingleton(String selector) {
@@ -239,7 +239,7 @@ public class AquaIcon {
         }
     }
     
-    static class SystemIconUIResourceSingleton extends LazySingleton<IconUIResource> {
+    static class SystemIconUIResourceSingleton extends RecyclableSingleton<IconUIResource> {
         final String selector;
         
         public SystemIconUIResourceSingleton(String selector) {

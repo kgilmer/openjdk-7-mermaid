@@ -36,8 +36,8 @@ import javax.swing.plaf.*;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaUtilControlSize {
     protected final static String CLIENT_PROPERTY_KEY = "JComponent.sizeVariant";
@@ -47,7 +47,7 @@ public class AquaUtilControlSize {
         void applySizeFor(final JComponent c, final Size size);
     }
     
-    protected static final LazySingleton<PropertySizeListener> sizeListener = new LazySingletonFromDefaultConstructor<PropertySizeListener>(PropertySizeListener.class);
+    protected static final RecyclableSingleton<PropertySizeListener> sizeListener = new RecyclableSingletonFromDefaultConstructor<PropertySizeListener>(PropertySizeListener.class);
     protected static PropertySizeListener getSizeListener() {
         return sizeListener.get();
     }

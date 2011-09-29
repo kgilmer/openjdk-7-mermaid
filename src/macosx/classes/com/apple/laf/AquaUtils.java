@@ -28,6 +28,7 @@ package com.apple.laf;
 import java.awt.*;
 import java.awt.image.*;
 import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
 import java.util.*;
@@ -77,7 +78,7 @@ public class AquaUtils {
         });
     }
     
-    private static final LazySingleton<CImage.Creator> cImageCreator = new LazySingleton<CImage.Creator>() {
+    private static final RecyclableSingleton<CImage.Creator> cImageCreator = new RecyclableSingleton<CImage.Creator>() {
         @Override
         protected Creator getInstance() {
             return getCImageCreatorInternal();
@@ -136,8 +137,21 @@ public class AquaUtils {
         abstract int getGreyFor(final int gray);
     }
     
-    public abstract static class LazySingleton<T> {
+    public abstract static class RecyclableObject<T> {
+        protected SoftReference<T> objectRef = null;
         
+        public T get() {
+            T referent = null;
+            if (objectRef != null && (referent = objectRef.get()) != null) return referent;
+            referent = create();
+            objectRef = new SoftReference<T>(referent);
+            return referent;
+        }
+        
+        protected abstract T create();
+    }
+    
+    public abstract static class RecyclableSingleton<T> {
         public T get() {
             final AppContext appContext = AppContext.getAppContext();
             SoftReference<T> ref = (SoftReference<T>) appContext.get(this);
@@ -159,10 +173,10 @@ public class AquaUtils {
         protected abstract T getInstance();
     }
     
-    public static class LazySingletonFromDefaultConstructor<T> extends LazySingleton<T> {
+    public static class RecyclableSingletonFromDefaultConstructor<T> extends RecyclableSingleton<T> {
         protected final Class<T> clazz;
         
-        public LazySingletonFromDefaultConstructor(final Class<T> clazz) {
+        public RecyclableSingletonFromDefaultConstructor(final Class<T> clazz) {
             this.clazz = clazz;
         }
         
@@ -195,7 +209,7 @@ public class AquaUtils {
         protected abstract V getInstance(final K key);
     }
     
-    static final LazySingleton<Boolean> enableAnimations = new LazySingleton<Boolean>() {
+    static final RecyclableSingleton<Boolean> enableAnimations = new RecyclableSingleton<Boolean>() {
         @Override
         protected Boolean getInstance() {
             final String sizeProperty = (String)java.security.AccessController.doPrivileged((PrivilegedAction<?>)new sun.security.action.GetPropertyAction(ANIMATIONS_SYSTEM_PROPERTY));
@@ -206,7 +220,7 @@ public class AquaUtils {
         return enableAnimations.get();
     }
     
-    static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec == TicksToEventTime(3) from HIToolbox/Menus/Source/MenuEvents.cp
+    static final int MENU_BLINK_DELAY = 50; // 50ms == 3/60 sec, according to the spec
     protected static void blinkMenu(final Selectable selectable) {
         if (!animationsEnabled()) return;
         try {
@@ -321,6 +335,10 @@ public class AquaUtils {
         }
     }
     
+    public interface NineSliceMetricsProvider {
+        
+    }
+    
 //    static void debugFrame(String name, Image image) {
 //        JFrame f = new JFrame(name);
 //        f.setContentPane(new JLabel(new ImageIcon(image)));
@@ -343,7 +361,7 @@ public class AquaUtils {
         return false;
     }
     
-    private static LazySingleton<Method> getJComponentGetFlagMethod = new LazySingleton<Method>() {
+    private static RecyclableSingleton<Method> getJComponentGetFlagMethod = new RecyclableSingleton<Method>() {
         protected Method getInstance() {
             return java.security.AccessController.doPrivileged(
                 new PrivilegedAction<Method>() {

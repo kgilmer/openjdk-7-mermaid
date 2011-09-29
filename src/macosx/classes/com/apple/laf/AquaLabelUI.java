@@ -33,11 +33,11 @@ import javax.swing.plaf.basic.*;
 
 import sun.swing.SwingUtilities2;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaLabelUI extends BasicLabelUI {
-    protected static final  LazySingleton<AquaLabelUI> aquaLabelUI = new LazySingletonFromDefaultConstructor<AquaLabelUI>(AquaLabelUI.class);
+    protected static final  RecyclableSingleton<AquaLabelUI> aquaLabelUI = new RecyclableSingletonFromDefaultConstructor<AquaLabelUI>(AquaLabelUI.class);
 
     public static ComponentUI createUI(final JComponent c) {
         return aquaLabelUI.get();

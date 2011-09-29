@@ -38,16 +38,16 @@ import apple.laf.JRSUIConstants.*;
 import apple.laf.JRSUIState.ValueState;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public abstract class AquaButtonLabeledUI extends AquaButtonToggleUI implements Sizeable {
-    protected static LazySizingIcon regularIcon = new LazySizingIcon(18);
-    protected static LazySizingIcon smallIcon = new LazySizingIcon(16);
-    protected static LazySizingIcon miniIcon = new LazySizingIcon(14);
+    protected static RecyclableSizingIcon regularIcon = new RecyclableSizingIcon(18);
+    protected static RecyclableSizingIcon smallIcon = new RecyclableSizingIcon(16);
+    protected static RecyclableSizingIcon miniIcon = new RecyclableSizingIcon(14);
     
-    protected static class LazySizingIcon extends LazySingleton<Icon> {
+    protected static class RecyclableSizingIcon extends RecyclableSingleton<Icon> {
         final int iconSize;
-        public LazySizingIcon(final int iconSize) { this.iconSize = iconSize; }
+        public RecyclableSizingIcon(final int iconSize) { this.iconSize = iconSize; }
         
         protected Icon getInstance() {
             return new ImageIcon(new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB_PRE));

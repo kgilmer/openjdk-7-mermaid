@@ -34,10 +34,10 @@ import javax.swing.*;
 import javax.swing.plaf.UIResource;
 import javax.swing.text.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaHighlighter extends DefaultHighlighter implements UIResource {
-    static final LazySingleton<LayerPainter> instance = new LazySingleton<LayerPainter>() {
+    static final RecyclableSingleton<LayerPainter> instance = new RecyclableSingleton<LayerPainter>() {
         protected LayerPainter getInstance() {
             return new AquaHighlightPainter(null);
         }

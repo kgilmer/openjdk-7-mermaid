@@ -38,8 +38,8 @@ import sun.swing.SwingUtilities2;
 import apple.laf.JRSUIConstants.*;
 
 import com.apple.laf.AquaIcon.InvertableIcon;
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 /**
  * AquaMenuPainter, implements paintMenuItem to avoid code duplication
@@ -121,7 +121,7 @@ public class AquaMenuPainter {
         return buf.toString();
     }
     
-    static final LazySingleton<AquaMenuPainter> sPainter = new LazySingletonFromDefaultConstructor<AquaMenuPainter>(AquaMenuPainter.class);
+    static final RecyclableSingleton<AquaMenuPainter> sPainter = new RecyclableSingletonFromDefaultConstructor<AquaMenuPainter>(AquaMenuPainter.class);
     static AquaMenuPainter instance() {
         return sPainter.get();
     }
@@ -129,15 +129,15 @@ public class AquaMenuPainter {
     static final int defaultMenuItemGap = 2;
     static final int kAcceleratorArrowSpace = 16; // Accel space doesn't overlap arrow space, even though items can't have both
     
-    static class LazyBorder extends LazySingleton<Border> {
+    static class RecyclableBorder extends RecyclableSingleton<Border> {
         final String borderName;
-        LazyBorder(final String borderName) { this.borderName = borderName; }
+        RecyclableBorder(final String borderName) { this.borderName = borderName; }
         protected Border getInstance() { return UIManager.getBorder(borderName); }
     }
     
-    protected final LazyBorder menuBarPainter = new LazyBorder("MenuBar.backgroundPainter");
-    protected final LazyBorder selectedMenuBarItemPainter = new LazyBorder("MenuBar.selectedBackgroundPainter");
-    protected final LazyBorder selectedMenuItemPainter = new LazyBorder("MenuItem.selectedBackgroundPainter");
+    protected final RecyclableBorder menuBarPainter = new RecyclableBorder("MenuBar.backgroundPainter");
+    protected final RecyclableBorder selectedMenuBarItemPainter = new RecyclableBorder("MenuBar.selectedBackgroundPainter");
+    protected final RecyclableBorder selectedMenuItemPainter = new RecyclableBorder("MenuItem.selectedBackgroundPainter");
     
     public void paintMenuBarBackground(final Graphics g, final int width, final int height, final JComponent c) {
         g.setColor(c == null ? Color.white : c.getBackground());
@@ -253,7 +253,7 @@ public class AquaMenuPainter {
             final int yAccel = acceleratorRect.y + fm.getAscent();
             if (modifiersString.equals("")) {
                 // just draw the keyString
-            	SwingUtilities2.drawString(c, g, keyString, acceleratorRect.x, yAccel);
+                SwingUtilities2.drawString(c, g, keyString, acceleratorRect.x, yAccel);
             } else {
                 final int modifiers = accelerator.getModifiers();
                 int underlinedChar = 0;
@@ -409,7 +409,7 @@ public class AquaMenuPainter {
      *  The first occurence of underlineChar in text will be underlined. The matching is
      *  not case sensitive.
      */
-    public void drawString(final Graphics g, final JComponent c, final String text, final int underlinedChar, final int x, final int y, final boolean isEnabled, final boolean isSelected) {    	
+    public void drawString(final Graphics g, final JComponent c, final String text, final int underlinedChar, final int x, final int y, final boolean isEnabled, final boolean isSelected) {        
         char lc, uc;
         int index = -1, lci, uci;
 
@@ -425,7 +425,7 @@ public class AquaMenuPainter {
             else index = (lci < uci) ? lci : uci;
         }
 
-    	SwingUtilities2.drawStringUnderlineCharAt(c, g, text, index, x, y);
+        SwingUtilities2.drawStringUnderlineCharAt(c, g, text, index, x, y);
     }
 
     /*

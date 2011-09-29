@@ -35,7 +35,7 @@ import javax.swing.plaf.*;
 import javax.swing.plaf.basic.BasicTreeUI;
 import javax.swing.tree.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;

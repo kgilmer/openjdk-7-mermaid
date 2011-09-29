@@ -34,11 +34,11 @@ import javax.swing.border.Border;
 import javax.swing.plaf.*;
 import javax.swing.text.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaTextPasswordFieldUI extends AquaTextFieldUI {
-    static final LazySingleton<CapsLockSymbolPainter> capsLockPainter = new LazySingletonFromDefaultConstructor<CapsLockSymbolPainter>(CapsLockSymbolPainter.class);
+    static final RecyclableSingleton<CapsLockSymbolPainter> capsLockPainter = new RecyclableSingletonFromDefaultConstructor<CapsLockSymbolPainter>(CapsLockSymbolPainter.class);
     static CapsLockSymbolPainter getCapsLockPainter() {
         return capsLockPainter.get();
     }

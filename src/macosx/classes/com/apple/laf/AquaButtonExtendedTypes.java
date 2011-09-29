@@ -34,7 +34,7 @@ import javax.swing.border.Border;
 import apple.laf.JRSUIConstants.*;
 
 import com.apple.laf.AquaUtilControlSize.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 /**
  * All the "magic numbers" in this class should go away once
@@ -128,7 +128,7 @@ public class AquaButtonExtendedTypes {
         return typeDefinitions.get().get(name);
     }
     
-    protected final static LazySingleton<Map<String, TypeSpecifier>> typeDefinitions = new LazySingleton<Map<String, TypeSpecifier>>() {
+    protected final static RecyclableSingleton<Map<String, TypeSpecifier>> typeDefinitions = new RecyclableSingleton<Map<String, TypeSpecifier>>() {
         protected Map<String, TypeSpecifier> getInstance() {
             return getAllTypes();
         }

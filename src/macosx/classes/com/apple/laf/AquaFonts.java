@@ -32,50 +32,50 @@ import java.util.Map;
 
 import javax.swing.plaf.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaFonts {
     private static final String MAC_DEFAULT_FONT_NAME = "Lucida Grande";
     
-    private static final LazySingleton<FontUIResource> lucida9Pt = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida9Pt = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 9);
         }
     };
     //private static final FontUIResource lucida10Pt = new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 10);
-    private static final LazySingleton<FontUIResource> lucida11Pt = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida11Pt = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 11);
         }
     };
-    private static final LazySingleton<FontUIResource> lucida12Pt = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida12Pt = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 12);
         }
     };
-    private static final LazySingleton<FontUIResource> lucida13Pt = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida13Pt = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 13);
         }
     };
-    private static final LazySingleton<FontUIResource> lucida14Pt = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida14Pt = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.PLAIN, 14);
         }
     };
     
-    private static final LazySingleton<FontUIResource> lucida13PtBold = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida13PtBold = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.BOLD, 13);
         }
     };
-    private static final LazySingleton<FontUIResource> lucida14PtBold = new LazySingleton<FontUIResource>() {
+    private static final RecyclableSingleton<FontUIResource> lucida14PtBold = new RecyclableSingleton<FontUIResource>() {
         @Override
         protected FontUIResource getInstance() {
             return new DerivedUIResourceFont(MAC_DEFAULT_FONT_NAME, Font.BOLD, 14);

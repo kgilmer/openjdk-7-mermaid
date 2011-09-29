@@ -37,7 +37,8 @@ import apple.laf.JRSUIConstants.*;
 
 import com.apple.eio.FileManager;
 import com.apple.laf.AquaIcon.*;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableObject;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 import sun.lwawt.macosx.CImage;
 
 public class AquaImageFactory {
@@ -180,7 +181,7 @@ public class AquaImageFactory {
         }, 20, 20);
     }
     
-    static class NamedImageSingleton extends LazySingleton<Image> {
+    static class NamedImageSingleton extends RecyclableSingleton<Image> {
         final String namedImage;
         
         NamedImageSingleton(final String namedImage) {
@@ -193,7 +194,7 @@ public class AquaImageFactory {
         }
     }
     
-    static class IconUIResourceSingleton extends LazySingleton<IconUIResource> {
+    static class IconUIResourceSingleton extends RecyclableSingleton<IconUIResource> {
         final NamedImageSingleton holder;
         
         public IconUIResourceSingleton(final NamedImageSingleton holder) {
@@ -260,47 +261,81 @@ public class AquaImageFactory {
         return new InvertableImageIcon(AquaUtils.generateLightenedImage(Toolkit.getDefaultToolkit().getImage("NSImage://NSMenuMixedState"), 25));
     }
 
+    public static class NineSliceMetrics {
+        public final int wCut, eCut, nCut, sCut;
+        public final int minW, minH;
+        public final boolean showMiddle, stretchH, stretchV;
+        
+        public NineSliceMetrics(final int minWidth, final int minHeight, final int westCut, final int eastCut, final int northCut, final int southCut) {
+            this(minWidth, minHeight, westCut, eastCut, northCut, southCut, true);
+        }
+        
+        public NineSliceMetrics(final int minWidth, final int minHeight, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean showMiddle) {
+            this(minWidth, minHeight, westCut, eastCut, northCut, southCut, showMiddle, true, true);
+        }
+        
+        public NineSliceMetrics(final int minWidth, final int minHeight, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean showMiddle, final boolean stretchHorizontally, final boolean stretchVertically) {
+            this.wCut = westCut; this.eCut = eastCut; this.nCut = northCut; this.sCut = southCut;
+            this.minW = minWidth; this.minH = minHeight;
+            this.showMiddle = showMiddle; this.stretchH = stretchHorizontally; this.stretchV = stretchVertically;
+        }
+    }
+    
     /*
      * A "paintable" which holds nine images, which represent a sliced up initial 
-     * image that can be streched from it's middles.
+     * image that can be streched from its middles.
      */
     public static class SlicedImageControl {
         final BufferedImage NW, N, NE;
         final BufferedImage W, C, E;
         final BufferedImage SW, S, SE;
         
-        final int wCut, eCut;
-        final int nCut, sCut;
+        final NineSliceMetrics metrics;
         
         final int totalWidth, totalHeight;
         final int centerColWidth, centerRowHeight;
         
-        public SlicedImageControl(final Image img, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean useMiddle) {
-            this.wCut = westCut; this.eCut = eastCut;
-            this.nCut = northCut; this.sCut = southCut;
-            
-            totalWidth = img.getWidth(null);
-            totalHeight = img.getHeight(null);
-            centerColWidth = totalWidth - westCut - eastCut;
-            centerRowHeight = totalHeight - northCut - southCut;
-            
-            NW = createSlice(img, 0, 0, westCut, northCut);
-            N = createSlice(img, westCut, 0, centerColWidth, northCut);
-            NE = createSlice(img, totalWidth - eastCut, 0, eastCut, northCut);
-            W = createSlice(img, 0, northCut, westCut, centerRowHeight);
-            C = useMiddle ? createSlice(img, westCut, northCut, centerColWidth, centerRowHeight) : null;
-            E = createSlice(img, totalWidth - eastCut, northCut, eastCut, centerRowHeight);
-            SW = createSlice(img, 0, totalHeight - southCut, westCut, southCut);
-            S = createSlice(img, westCut, totalHeight - southCut, centerColWidth, southCut);
-            SE = createSlice(img, totalWidth - eastCut, totalHeight - southCut, eastCut, southCut);
+        public SlicedImageControl(final Image img, final int westCut, final int eastCut, final int northCut, final int southCut) {
+            this(img, westCut, eastCut, northCut, southCut, true);
         }
         
+        public SlicedImageControl(final Image img, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean useMiddle) {
+            this(img, westCut, eastCut, northCut, southCut, useMiddle, true, true);
+        }
+        
+        public SlicedImageControl(final Image img, final int westCut, final int eastCut, final int northCut, final int southCut, final boolean useMiddle, final boolean stretchHorizontally, final boolean stretchVertically) {
+            this(img, new NineSliceMetrics(img.getWidth(null), img.getHeight(null), westCut, eastCut, northCut, southCut, useMiddle, stretchHorizontally, stretchVertically));
+        }
+        
+        public SlicedImageControl(final Image img, final NineSliceMetrics metrics) {
+            this.metrics = metrics;
+            
+            if (img.getWidth(null) != metrics.minW || img.getHeight(null) != metrics.minH) {
+                throw new IllegalArgumentException("SlicedImageControl: template image and NineSliceMetrics don't agree on minimum dimensions");
+            }
+            
+            totalWidth = metrics.minW;
+            totalHeight = metrics.minH;
+            centerColWidth = totalWidth - metrics.wCut - metrics.eCut;
+            centerRowHeight = totalHeight - metrics.nCut - metrics.sCut;
+            
+            NW = createSlice(img, 0, 0, metrics.wCut, metrics.nCut);
+            N = createSlice(img, metrics.wCut, 0, centerColWidth, metrics.nCut);
+            NE = createSlice(img, totalWidth - metrics.eCut, 0, metrics.eCut, metrics.nCut);
+            W = createSlice(img, 0, metrics.nCut, metrics.wCut, centerRowHeight);
+            C = metrics.showMiddle ? createSlice(img, metrics.wCut, metrics.nCut, centerColWidth, centerRowHeight) : null;
+            E = createSlice(img, totalWidth - metrics.eCut, metrics.nCut, metrics.eCut, centerRowHeight);
+            SW = createSlice(img, 0, totalHeight - metrics.sCut, metrics.wCut, metrics.sCut);
+            S = createSlice(img, metrics.wCut, totalHeight - metrics.sCut, centerColWidth, metrics.sCut);
+            SE = createSlice(img, totalWidth - metrics.eCut, totalHeight - metrics.sCut, metrics.eCut, metrics.sCut);
+        }
+                
         static BufferedImage createSlice(final Image img, final int x, final int y, final int w, final int h) {
             if (w == 0 || h == 0) return null;
             
             final BufferedImage slice = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB_PRE);
             final Graphics2D g2d = slice.createGraphics();
-            g2d.drawImage(img, -x, -y, null);
+            g2d.drawImage(img, 0, 0, w, h, x, y, x + w, y + h, null);
             g2d.dispose();
             
             return slice;
@@ -319,27 +354,44 @@ public class AquaImageFactory {
         }
         
         void paintStretchedMiddles(final Graphics g, final int w, final int h) {
-            if (NW != null) g.drawImage(NW, 0, 0, null);
-            if (N != null) g.drawImage(N, wCut, 0, w - eCut - wCut, nCut, null);
-            if (NE != null) g.drawImage(NE, w - eCut, 0, null);
-            if (W != null) g.drawImage(W, 0, nCut, wCut, h - nCut - sCut, null);
-            if (C != null) g.drawImage(C, wCut, nCut, w - eCut - wCut, h - nCut - sCut, null);
-            if (E != null) g.drawImage(E, w - eCut, nCut, eCut, h - nCut - sCut, null);
-            if (SW != null) g.drawImage(SW, 0, h - sCut, null);
-            if (S != null) g.drawImage(S, wCut, h - sCut, w - eCut - wCut, sCut, null);
-            if (SE != null) g.drawImage(SE, w - eCut, h - sCut, null);
+            int baseX = metrics.stretchH ? 0 : ((w / 2) - (totalWidth / 2));
+            int baseY = metrics.stretchV ? 0 : ((h / 2) - (totalHeight / 2));
+            int adjustedWidth = metrics.stretchH ? w : totalWidth;
+            int adjustedHeight = metrics.stretchV ? h : totalHeight;
+            
+            if (NW != null) g.drawImage(NW, baseX, baseY, null);
+            if (N != null) g.drawImage(N, baseX + metrics.wCut, baseY, adjustedWidth - metrics.eCut - metrics.wCut, metrics.nCut, null);
+            if (NE != null) g.drawImage(NE, baseX + adjustedWidth - metrics.eCut, baseY, null);
+            if (W != null) g.drawImage(W, baseX, baseY + metrics.nCut, metrics.wCut, adjustedHeight - metrics.nCut - metrics.sCut, null);
+            if (C != null) g.drawImage(C, baseX + metrics.wCut, baseY + metrics.nCut, adjustedWidth - metrics.eCut - metrics.wCut, adjustedHeight - metrics.nCut - metrics.sCut, null);
+            if (E != null) g.drawImage(E, baseX + adjustedWidth - metrics.eCut, baseY + metrics.nCut, metrics.eCut, adjustedHeight - metrics.nCut - metrics.sCut, null);
+            if (SW != null) g.drawImage(SW, baseX, baseY + adjustedHeight - metrics.sCut, null);
+            if (S != null) g.drawImage(S, baseX + metrics.wCut, baseY + adjustedHeight - metrics.sCut, adjustedWidth - metrics.eCut - metrics.wCut, metrics.sCut, null);
+            if (SE != null) g.drawImage(SE, baseX + adjustedWidth - metrics.eCut, baseY + adjustedHeight - metrics.sCut, null);
+            
+            /*
+            if (NW != null) {g.setColor(Color.GREEN); g.fillRect(baseX, baseY, NW.getWidth(), NW.getHeight());}
+            if (N != null) {g.setColor(Color.RED); g.fillRect(baseX + metrics.wCut, baseY, adjustedWidth - metrics.eCut - metrics.wCut, metrics.nCut);}
+            if (NE != null) {g.setColor(Color.BLUE); g.fillRect(baseX + adjustedWidth - metrics.eCut, baseY, NE.getWidth(), NE.getHeight());}
+            if (W != null) {g.setColor(Color.PINK); g.fillRect(baseX, baseY + metrics.nCut, metrics.wCut, adjustedHeight - metrics.nCut - metrics.sCut);}
+            if (C != null) {g.setColor(Color.ORANGE); g.fillRect(baseX + metrics.wCut, baseY + metrics.nCut, adjustedWidth - metrics.eCut - metrics.wCut, adjustedHeight - metrics.nCut - metrics.sCut);}
+            if (E != null) {g.setColor(Color.CYAN); g.fillRect(baseX + adjustedWidth - metrics.eCut, baseY + metrics.nCut, metrics.eCut, adjustedHeight - metrics.nCut - metrics.sCut);}
+            if (SW != null) {g.setColor(Color.MAGENTA); g.fillRect(baseX, baseY + adjustedHeight - metrics.sCut, SW.getWidth(), SW.getHeight());}
+            if (S != null) {g.setColor(Color.DARK_GRAY); g.fillRect(baseX + metrics.wCut, baseY + adjustedHeight - metrics.sCut, adjustedWidth - metrics.eCut - metrics.wCut, metrics.sCut);}
+            if (SE != null) {g.setColor(Color.YELLOW); g.fillRect(baseX + adjustedWidth - metrics.eCut, baseY + adjustedHeight - metrics.sCut, SE.getWidth(), SE.getHeight());}
+            */
         }
         
         void paintCompressed(final Graphics g, final int w, final int h) {
             final double heightRatio = h > totalHeight ? 1.0 : (double)h / (double)totalHeight;
             final double widthRatio = w > totalWidth ? 1.0 : (double)w / (double)totalWidth;
             
-            final int northHeight = (int)(nCut * heightRatio);
-            final int southHeight = (int)(sCut * heightRatio);
+            final int northHeight = (int)(metrics.nCut * heightRatio);
+            final int southHeight = (int)(metrics.sCut * heightRatio);
             final int centerHeight = h - northHeight - southHeight;
             
-            final int westWidth = (int)(wCut * widthRatio);
-            final int eastWidth = (int)(eCut * widthRatio);
+            final int westWidth = (int)(metrics.wCut * widthRatio);
+            final int eastWidth = (int)(metrics.eCut * widthRatio);
             final int centerWidth = w - westWidth - eastWidth;
             
             if (NW != null) g.drawImage(NW, 0, 0, westWidth, northHeight, null);
@@ -352,6 +404,21 @@ public class AquaImageFactory {
             if (S != null) g.drawImage(S, westWidth, h - southHeight, centerWidth, southHeight, null);
             if (SE != null) g.drawImage(SE, w - eastWidth, h - southHeight, eastWidth, southHeight, null);
         }
+    }
+    
+    public abstract static class RecyclableSlicedImageControl extends RecyclableObject<SlicedImageControl> {
+        final NineSliceMetrics metrics;
+        
+        public RecyclableSlicedImageControl(final NineSliceMetrics metrics) {
+            this.metrics = metrics;
+        }
+        
+        @Override
+        protected SlicedImageControl create() {
+            return new SlicedImageControl(createTemplateImage(metrics.minW, metrics.minH), metrics);
+        }
+        
+        protected abstract Image createTemplateImage(final int width, final int height);
     }
     
     // when we use SystemColors, we need to proxy the color with something that implements UIResource,

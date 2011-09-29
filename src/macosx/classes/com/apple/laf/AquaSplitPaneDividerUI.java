@@ -36,8 +36,8 @@ import apple.laf.*;
 import apple.laf.JRSUIConstants.State;
 
 import com.apple.laf.AquaUtils.LazyKeyedSingleton;
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
     final AquaPainter<JRSUIState> painter = AquaPainter.create(JRSUIStateFactory.getSplitPaneDivider());
@@ -204,7 +204,7 @@ public class AquaSplitPaneDividerUI extends BasicSplitPaneDivider {
     }
     
     static class HorizontalSplitDividerGradientPainter implements Border {
-        private static final LazySingleton<HorizontalSplitDividerGradientPainter> instance = new LazySingletonFromDefaultConstructor<HorizontalSplitDividerGradientPainter>(HorizontalSplitDividerGradientPainter.class);
+        private static final RecyclableSingleton<HorizontalSplitDividerGradientPainter> instance = new RecyclableSingletonFromDefaultConstructor<HorizontalSplitDividerGradientPainter>(HorizontalSplitDividerGradientPainter.class);
         static HorizontalSplitDividerGradientPainter instance() {
             return instance.get();
         }

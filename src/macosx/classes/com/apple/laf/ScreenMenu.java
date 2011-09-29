@@ -219,7 +219,7 @@ class ScreenMenu extends Menu implements ContainerListener, ComponentListener, S
                     }
                     // Send a mouseEntered to the current hilited item, if it wasn't 0.
                     if (target != null) {
-                    	LWToolkit.postEvent(new MouseEvent(target, MouseEvent.MOUSE_ENTERED, when, modifiers, x - targetRect.x, y - targetRect.y, 0, false));
+                        LWToolkit.postEvent(new MouseEvent(target, MouseEvent.MOUSE_ENTERED, when, modifiers, x - targetRect.x, y - targetRect.y, 0, false));
                     }
                     fLastMouseEventTarget = target;
                     fLastTargetRect = targetRect;

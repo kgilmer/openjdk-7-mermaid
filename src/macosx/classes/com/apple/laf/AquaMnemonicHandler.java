@@ -30,11 +30,11 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 public class AquaMnemonicHandler {
-    static final LazySingleton<AltProcessor> altProcessor = new LazySingletonFromDefaultConstructor<AltProcessor>(AltProcessor.class);
+    static final RecyclableSingleton<AltProcessor> altProcessor = new RecyclableSingletonFromDefaultConstructor<AltProcessor>(AltProcessor.class);
     public static KeyEventPostProcessor getInstance() {
         return altProcessor.get();
     }

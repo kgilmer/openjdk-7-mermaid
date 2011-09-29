@@ -41,20 +41,20 @@ import javax.swing.text.InternationalFormatter;
 import apple.laf.*;
 import apple.laf.JRSUIConstants.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
-import com.apple.laf.AquaUtils.LazySingletonFromDefaultConstructor;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
+import com.apple.laf.AquaUtils.RecyclableSingletonFromDefaultConstructor;
 
 /**
  * This is originally derived from BasicSpinnerUI, but they made everything private
  * so we can't subclass!
  */
 public class AquaSpinnerUI extends SpinnerUI {
-    private static final LazySingleton<? extends PropertyChangeListener> propertyChangeListener = new LazySingletonFromDefaultConstructor<PropertyChangeHandler>(PropertyChangeHandler.class);
+    private static final RecyclableSingleton<? extends PropertyChangeListener> propertyChangeListener = new RecyclableSingletonFromDefaultConstructor<PropertyChangeHandler>(PropertyChangeHandler.class);
     static PropertyChangeListener getPropertyChangeListener() { 
         return propertyChangeListener.get();
     }
     
-    private static final LazySingleton<ArrowButtonHandler> nextButtonHandler = new LazySingleton<ArrowButtonHandler>() {
+    private static final RecyclableSingleton<ArrowButtonHandler> nextButtonHandler = new RecyclableSingleton<ArrowButtonHandler>() {
         @Override
         protected ArrowButtonHandler getInstance() {
             return new ArrowButtonHandler("increment", true);
@@ -63,7 +63,7 @@ public class AquaSpinnerUI extends SpinnerUI {
     static ArrowButtonHandler getNextButtonHandler() {
         return nextButtonHandler.get();
     }
-    private static final LazySingleton<ArrowButtonHandler> previousButtonHandler = new LazySingleton<ArrowButtonHandler>() {
+    private static final RecyclableSingleton<ArrowButtonHandler> previousButtonHandler = new RecyclableSingleton<ArrowButtonHandler>() {
         @Override
         protected ArrowButtonHandler getInstance() {
             return new ArrowButtonHandler("decrement", false);

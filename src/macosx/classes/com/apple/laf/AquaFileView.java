@@ -33,7 +33,7 @@ import java.util.Map.Entry;
 import javax.swing.Icon;
 import javax.swing.filechooser.FileView;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 class AquaFileView extends FileView {
     private static final boolean DEBUG = false;
@@ -69,7 +69,7 @@ class AquaFileView extends FileView {
     private static native int getNativeLSInfo(final byte[] pathBytes, final boolean isDirectory);
     private static native String getNativePathForResolvedAlias(final byte[] absolutePath, final boolean isDirectory);
     
-    static final LazySingleton<String> machineName = new LazySingleton<String>() {
+    static final RecyclableSingleton<String> machineName = new RecyclableSingleton<String>() {
         @Override
         protected String getInstance() {
             return getNativeMachineName();

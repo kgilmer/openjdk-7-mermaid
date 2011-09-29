@@ -90,7 +90,7 @@ public class AquaTextFieldSearch {
         return (c.getClientProperty(FIND_POPUP_KEY) instanceof JPopupMenu);
     }
     
-    protected static final LazySingleton<SearchFieldBorder> instance = new LazySingletonFromDefaultConstructor<SearchFieldBorder>(SearchFieldBorder.class);
+    protected static final RecyclableSingleton<SearchFieldBorder> instance = new RecyclableSingletonFromDefaultConstructor<SearchFieldBorder>(SearchFieldBorder.class);
     public static SearchFieldBorder getSearchTextFieldBorder() {
         return instance.get();
     }

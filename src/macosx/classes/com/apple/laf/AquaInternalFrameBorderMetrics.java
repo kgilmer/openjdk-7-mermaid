@@ -28,7 +28,7 @@ package com.apple.laf;
 import java.awt.Font;
 
 import apple.laf.JRSUIUtils;
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public abstract class AquaInternalFrameBorderMetrics {
     private static final boolean useLegacyBorderMetrics = JRSUIUtils.InternalFrame.shouldUseLegacyBorderMetrics();
@@ -55,7 +55,7 @@ public abstract class AquaInternalFrameBorderMetrics {
         }
     }
     
-    private static final LazySingleton<AquaInternalFrameBorderMetrics> standardMetrics = new LazySingleton<AquaInternalFrameBorderMetrics>() {
+    private static final RecyclableSingleton<AquaInternalFrameBorderMetrics> standardMetrics = new RecyclableSingleton<AquaInternalFrameBorderMetrics>() {
         @Override
         protected AquaInternalFrameBorderMetrics getInstance() {
             return new AquaInternalFrameBorderMetrics() {
@@ -72,7 +72,7 @@ public abstract class AquaInternalFrameBorderMetrics {
         }
     };
     
-    private static final LazySingleton<AquaInternalFrameBorderMetrics> utilityMetrics = new LazySingleton<AquaInternalFrameBorderMetrics>() {
+    private static final RecyclableSingleton<AquaInternalFrameBorderMetrics> utilityMetrics = new RecyclableSingleton<AquaInternalFrameBorderMetrics>() {
         @Override
         protected AquaInternalFrameBorderMetrics getInstance() {    
             return new AquaInternalFrameBorderMetrics() {
@@ -89,7 +89,7 @@ public abstract class AquaInternalFrameBorderMetrics {
         }
     };
     
-    private static final LazySingleton<AquaInternalFrameBorderMetrics> legacyStandardMetrics = new LazySingleton<AquaInternalFrameBorderMetrics>() {
+    private static final RecyclableSingleton<AquaInternalFrameBorderMetrics> legacyStandardMetrics = new RecyclableSingleton<AquaInternalFrameBorderMetrics>() {
         @Override
         protected AquaInternalFrameBorderMetrics getInstance() {
             return new AquaInternalFrameBorderMetrics() {
@@ -106,7 +106,7 @@ public abstract class AquaInternalFrameBorderMetrics {
         }
     };
     
-    private static final LazySingleton<AquaInternalFrameBorderMetrics> legacyUtilityMetrics = new LazySingleton<AquaInternalFrameBorderMetrics>() {            
+    private static final RecyclableSingleton<AquaInternalFrameBorderMetrics> legacyUtilityMetrics = new RecyclableSingleton<AquaInternalFrameBorderMetrics>() {            
         @Override
         protected AquaInternalFrameBorderMetrics getInstance() {
             return new AquaInternalFrameBorderMetrics() {

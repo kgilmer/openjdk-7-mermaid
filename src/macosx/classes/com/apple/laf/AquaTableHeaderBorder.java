@@ -34,7 +34,7 @@ import javax.swing.plaf.UIResource;
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
 
-import com.apple.laf.AquaUtils.LazySingleton;
+import com.apple.laf.AquaUtils.RecyclableSingleton;
 
 public class AquaTableHeaderBorder extends AbstractBorder {
     protected static final int SORT_NONE = 0;
@@ -125,7 +125,7 @@ public class AquaTableHeaderBorder extends AbstractBorder {
         return State.ACTIVE;
     }
     
-    static final LazySingleton<Border> alternateBorder = new LazySingleton<Border>() {
+    static final RecyclableSingleton<Border> alternateBorder = new RecyclableSingleton<Border>() {
         @Override
         protected Border getInstance() {
             return BorderFactory.createRaisedBevelBorder();
