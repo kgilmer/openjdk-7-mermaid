@@ -394,15 +394,8 @@ JNF_COCOA_ENTER(env);
     ly = (CGFloat)CGFontGetLeading(cgFont) * scaleY;
     
     // Max Advance for Font Direction (Strictly horizontal)
-    // TODO(cpc): hacking for now; no public API for this?
-    //mx = (CGFloat)fontMetrics->maxAdvanceWidth * scaleX; 
-    // mx = 12.0 * scaleX;
-    // Alexander Zuev: Using font's bounding box - at least it works for me
-    CGRect fontRect = CGFontGetFontBBox(cgFont);
-    CGFloat fontWidth = fontRect.size.width;
-    if(fontRect.origin.x < 0) fontWidth -= fontRect.origin.x;
-    mx = fontWidth * scaleX;
-
+    mx = [awtfont->fFont maximumAdvancement].width;
+	
     /*
      * ascent:   no need to set ascentX - it will be zero.
      * descent:  no need to set descentX - it will be zero.
