@@ -43,8 +43,7 @@
 #include <errno.h>
 
 #ifdef MACOSX
-#include <dlfcn.h>
-#include <Security/AuthSession.h>
+#include "java_props_macosx.h"
 #endif
 
 #if defined(_ALLBSD_SOURCE)
@@ -147,7 +146,12 @@ static int ParseLocale(int cat, char ** std_language, char ** std_script,
     char *lc;
 
     /* Query the locale set for the category */
+    
+#ifdef MACOSX
+    lc = setupMacOSXLocale(); // malloc'd memory, need to free
+#else
     lc = setlocale(cat, NULL);
+#endif
 
 #ifndef __linux__
     if (lc == NULL) {
@@ -185,7 +189,9 @@ static int ParseLocale(int cat, char ** std_language, char ** std_script,
      */
 
     strcpy(temp, lc);
-
+#ifdef MACOSX
+    free(lc); // malloced memory
+#endif
     /* Parse the language, country, encoding, and variant from the
      * locale.  Any of the elements may be missing, but they must occur
      * in the order language_country.encoding@variant, and must be
@@ -321,7 +327,6 @@ static int ParseLocale(int cat, char ** std_language, char ** std_script,
         }
 #endif
     }
-
     return 1;
 }
 
@@ -355,53 +360,6 @@ static char* getEmbeddedToolkit() {
 }
 #endif
 
-#ifdef MACOSX
-/* There are several toolkit options on Mac OS X, so we should try to
- * pick the "best" one, given what we know about the environment Java
- * is running under
- */
-enum PreferredToolkit_enum {
-    unset = 0, CToolkit, XToolkit, HToolkit
-};
-typedef enum PreferredToolkit_enum PreferredToolkit;
-
-static PreferredToolkit getPreferredToolkitFromEnv() {
-    char *envVar = getenv("AWT_TOOLKIT");
-    if (envVar == NULL) return unset;
-    
-    if (strcasecmp(envVar, "CToolkit") == 0) return CToolkit;
-    if (strcasecmp(envVar, "XToolkit") == 0) return XToolkit;
-    if (strcasecmp(envVar, "HToolkit") == 0) return HToolkit;
-    return unset;
-}
-
-static bool isInAquaSession() {
-    // Is the WindowServer available?
-    SecuritySessionId session_id;
-    SessionAttributeBits session_info;
-    OSStatus status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
-    if (status != noErr) return false;
-    if (!(session_info & sessionHasGraphicAccess)) return false;
-    return true;
-}
-
-static bool isXDisplayDefined() {
-    return getenv("DISPLAY") != NULL;
-}
-
-static PreferredToolkit getPreferredToolkit() {
-    static PreferredToolkit pref = unset;
-    if (pref != unset) return pref;
-    
-    PreferredToolkit prefFromEnv = getPreferredToolkitFromEnv();
-    if (prefFromEnv != unset) return pref = prefFromEnv;
-    
-    if (isInAquaSession()) return pref = CToolkit;
-    if (isXDisplayDefined()) return pref = XToolkit;
-    return pref = HToolkit;
-}
-
-#endif
 
 /* This function gets called very early, before VM_CALLS are setup.
  * Do not use any of the VM_CALLS entries!!!
@@ -504,16 +462,7 @@ GetJavaProperties(JNIEnv *env)
         sprops.os_arch = ARCHPROPNAME;
 
 #ifdef MACOSX
-        // need dlopen/dlsym trick to avoid pulling in JavaRuntimeSupport before libjava.dylib is loaded
-        
-        void *jrsFwk = dlopen("/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/JavaRuntimeSupport", RTLD_LAZY | RTLD_LOCAL);
-        
-        char *(*copyOSName)() = dlsym(jrsFwk, "JRSCopyOSName");
-        sprops.os_name = copyOSName ? copyOSName() : "Unknown";
-        
-        char *(*copyOSVersion)() = dlsym(jrsFwk, "JRSCopyOSVersion");
-        sprops.os_version = copyOSVersion ? copyOSVersion() : "Unknown";
-        
+        setOSNameAndVersion(&sprops);
 #ifdef __x86_64__
         sprops.os_arch = "x86_64";
 #elif defined(__i386__)
@@ -620,6 +569,11 @@ GetJavaProperties(JNIEnv *env)
      */
     setPathEnvironment("NLSPATH=/usr/dt/lib/nls/msg/%L/%N.cat");
     setPathEnvironment("XFILESEARCHPATH=/usr/dt/app-defaults/%L/Dt");
+#endif
+
+    
+#ifdef MACOSX
+    setProxyProperties(&sprops);
 #endif
 
     return &sprops;
