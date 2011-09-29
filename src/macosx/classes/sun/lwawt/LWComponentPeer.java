@@ -46,6 +46,7 @@ import java.awt.peer.ComponentPeer;
 import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.beans.PropertyChangeListener;
 
 import sun.awt.*;
 
@@ -261,20 +262,20 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         setBounds(target.getBounds());
         setEnabled(target.isEnabled());
         setVisible(target.isVisible());
-        // it is important to update the UI here,
-        // updating in the paint method
-        // leads to reentrant painting and various NPE 
-        LookAndFeel laf = UIManager.getLookAndFeel();
-        if (!laf.isNativeLookAndFeel()) {
-            setLookAndFeel(getSystemLookAndFeel());
-        }
-        if (getDelegate() != null) {
-            synchronized (getDelegateLock()) {
+        synchronized (getDelegateLock()) {
+            if (getDelegate() != null) {
+                // it is important to update the UI here,
+                // updating in the paint method
+                // leads to reentrant painting and various NPE
+                LookAndFeel laf = UIManager.getLookAndFeel();
+                if (!laf.isNativeLookAndFeel()) {
+                    setLookAndFeel(getSystemLookAndFeel());
+                }
                 SwingUtilities.updateComponentTreeUI(getDelegate());
+                if (!laf.isNativeLookAndFeel()) {
+                    setLookAndFeel(laf);
+                }
             }
-        }
-        if (!laf.isNativeLookAndFeel()) {
-            setLookAndFeel(laf);
         }
     }
 
@@ -1329,10 +1330,20 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     private void setLookAndFeel(LookAndFeel laf) {
+        // We need to remove all PCL to hide the LAF changing from the users,
+        // we add them back after LAF is change
+        PropertyChangeListener[] listeners = UIManager.getPropertyChangeListeners();
+        for (PropertyChangeListener listener : listeners) {
+            UIManager.removePropertyChangeListener(listener);
+        }
         try {
             UIManager.setLookAndFeel(laf);
         } catch (Exception e) {
             throw new InternalError(e.getCause().toString());
+        } finally {
+            for (PropertyChangeListener listener : listeners) {
+                UIManager.addPropertyChangeListener(listener);
+            }
         }
     }
 
