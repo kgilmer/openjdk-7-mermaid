@@ -23,6 +23,7 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
 import java.awt.Panel;
@@ -30,16 +31,15 @@ import java.awt.peer.PanelPeer;
 
 import javax.swing.JPanel;
 
-public class LWPanelPeer
-    extends LWContainerPeer<Panel, JPanel>
-    implements PanelPeer
-{
-    public LWPanelPeer(Panel target) {
+final class LWPanelPeer extends LWContainerPeer<Panel, JPanel>
+        implements PanelPeer {
+
+    LWPanelPeer(final Panel target) {
         super(target);
     }
 
     @Override
     public JPanel createDelegate() {
-	return new JPanel();
+        return new JPanel();
     }
 }

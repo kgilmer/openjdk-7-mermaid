@@ -124,14 +124,6 @@ public class LWCToolkit extends LWToolkit {
     }
     
     @Override
-    public PanelPeer createPanel(Panel target) {
-        LWPanelPeer peer = new LWPanelPeer(target);
-        targetCreatedPeer(target, peer);
-        peer.initialize();
-        return peer;
-    }
-
-    @Override
     public PopupMenuPeer createPopupMenu(PopupMenu target) {
         PopupMenuPeer peer = new CPopupMenu(target);
         targetCreatedPeer(target, peer);

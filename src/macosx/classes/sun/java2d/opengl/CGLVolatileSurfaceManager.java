@@ -31,6 +31,7 @@ import java.awt.Component;
 import java.awt.GraphicsConfiguration;
 import java.awt.Transparency;
 import java.awt.image.ColorModel;
+import java.awt.peer.ComponentPeer;
 
 import sun.awt.image.SunVolatileImage;
 import sun.awt.image.VolatileSurfaceManager;
@@ -78,8 +79,7 @@ public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
     protected SurfaceData initAcceleratedSurface() {
         SurfaceData sData = null;
         Component comp = vImg.getComponent();
-        LWCanvasPeer peer =
-            (comp != null) ? (LWCanvasPeer)comp.getPeer() : null;
+        final ComponentPeer peer = (comp != null) ? comp.getPeer() : null;
 
         try {
             boolean createVSynced = false;
