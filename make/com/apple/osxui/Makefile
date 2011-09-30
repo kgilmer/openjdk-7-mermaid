@@ -33,7 +33,7 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 # Files
 #
-AUTO_FILES_JAVA_DIRS = com/apple/laf com/apple/eawt
+AUTO_FILES_JAVA_DIRS = apple/laf com/apple/laf com/apple/eawt
 
 FILES_objc = \
         $(TARGDIR)AquaFileView.m \

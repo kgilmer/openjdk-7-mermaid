@@ -33,25 +33,32 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 # Files
 #
-AUTO_FILES_JAVA_DIRS = com/apple/concurrent com/apple/eio java/util/prefs apple/security
+AUTO_FILES_JAVA_DIRS = apple/launcher apple/security com/apple/concurrent com/apple/eio java/util/prefs
 
 FILES_objc += \
     Dispatch.m \
     CFileManager.m \
     KeystoreImpl.m \
+    JavaAppLauncher.m \
     MacOSXPreferencesFile.m
 
 FILES_export += \
 	com/apple/concurrent/LibDispatchNative.java \
 	com/apple/eio/FileManager.java \
 	apple/security/KeychainStore.java \
+	apple/launcher/JavaAppLauncher.java \
 	java/util/prefs/MacOSXPreferencesFile.java
+
+# TODO: couldn't figure out how to get resources working
+#LOCALE_SET_DEFINITION = jre
+#RESOURCE_BUNDLES_UNCOMPILED_PROPERTIES = apple/launcher/appLauncherErrors.properties
+
 
 #
 # Rules
 #
 include $(BUILDDIR)/common/Mapfile-vers.gmk
-include $(BUILDDIR)/common/Library.gmk
+include $(BUILDDIR)/common/Classes.gmk
 
 
 #
@@ -63,6 +70,7 @@ include $(BUILDDIR)/common/Library.gmk
 #
 vpath %.m   $(call NativeSrcDirList,,native/com/apple/concurrent)
 vpath %.m   $(call NativeSrcDirList,,native/com/apple/eio)
+vpath %.m   $(call NativeSrcDirList,,native/apple/launcher)
 vpath %.m   $(call NativeSrcDirList,,native/apple/security)
 vpath %.m   $(call NativeSrcDirList,,native/java/util)
 
