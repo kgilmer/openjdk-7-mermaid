@@ -614,6 +614,23 @@ OGLSD_Flush(JNIEnv *env)
             CGLSDOps *dstCGLOps = (CGLSDOps *)dstOps->privOps;        
             AWTView *view = dstCGLOps->peerData;
             [view.cglLayer setNeedsDisplay];
+#ifdef REMOTELAYER
+            /* If there's a remote layer (being used for testing)
+             * then we want to have that also receive the texture.
+             * First sync. up its dimensions with that of the layer
+             * we have attached to the local window and tell it that
+             * it also needs to copy the texture.
+             */
+             CGLLayer* cglLayer = (CGLLayer*)view.cglLayer;
+             if (cglLayer.remoteLayer != nil) {
+                 CGLLayer* remoteLayer = cglLayer.remoteLayer;
+                 remoteLayer.target = GL_TEXTURE_2D;
+                 remoteLayer.textureID = cglLayer.textureID;
+                 remoteLayer.textureWidth = cglLayer.textureWidth;
+                 remoteLayer.textureHeight = cglLayer.textureHeight;
+                 [remoteLayer setNeedsDisplay];
+            }
+#endif /* REMOTELAYER */
         }];
     }
 #endif    

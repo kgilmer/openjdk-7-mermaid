@@ -35,12 +35,24 @@
     GLenum target;
     float textureWidth;
     float textureHeight;
+#ifdef REMOTELAYER
+    CGLLayer *parentLayer;
+    CGLLayer *remoteLayer;
+    NSObject<JRSRemoteLayer> *jrsRemoteLayer;
+#endif /* REMOTELAYER */
 }
 
 @property (readwrite, assign) GLuint textureID;
 @property (readwrite, assign) GLenum target;
 @property (readwrite, assign) float textureWidth;
 @property (readwrite, assign) float textureHeight;
+
+#ifdef REMOTELAYER
+@property (nonatomic, retain) CGLLayer *parentLayer;
+@property (nonatomic, retain) CGLLayer *remoteLayer;
+@property (nonatomic, retain) NSObject<JRSRemoteLayer> *jrsRemoteLayer;
+#endif
+
 
 - (void) _blitTexture;
 @end

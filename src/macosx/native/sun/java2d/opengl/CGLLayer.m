@@ -36,6 +36,11 @@ extern NSOpenGLContext *sharedContext;
 @synthesize target;
 @synthesize textureWidth;
 @synthesize textureHeight;
+#ifdef REMOTELAYER
+@synthesize parentLayer;
+@synthesize remoteLayer;
+@synthesize jrsRemoteLayer;
+#endif
 
 - (id)init
 {
@@ -47,7 +52,6 @@ AWT_ASSERT_APPKIT_THREAD;
     // NOTE: async=YES means that the layer is re-cached periodically
     self.asynchronous = FALSE;
     self.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;        
-    
     textureID = 0; // texture will be created by rendering pipe
 	target = 0;
 	
@@ -66,11 +70,11 @@ AWT_ASSERT_APPKIT_THREAD;
 
 // use texture (intermediate buffer) as src and blit it to the layer
 - (void) _blitTexture
-{    
+{   
     if (textureID == 0) {
         return;
     }
-    
+ 
     glEnable(target);    
     glBindTexture(target, textureID);
     
@@ -87,7 +91,7 @@ AWT_ASSERT_APPKIT_THREAD;
     glTexCoord2f(swid, shgt); glVertex2f( 1.0f,  1.0f);
     glTexCoord2f(0.0f, shgt); glVertex2f(-1.0f,  1.0f);
     glEnd();
-    
+
     glBindTexture(target, 0);
     glDisable(target);
 }
@@ -98,11 +102,11 @@ AWT_ASSERT_APPKIT_THREAD;
     
     // Set the current context to the one given to us.
     CGLSetCurrentContext(glContext);
-     
-    glViewport(0, 0, textureWidth, textureHeight);
-    
-    [self _blitTexture];
-    
+
+        glViewport(0, 0, textureWidth, textureHeight);
+
+	[self _blitTexture];
+	
     // Call super to finalize the drawing. By default all it does is call glFlush().
     [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
     

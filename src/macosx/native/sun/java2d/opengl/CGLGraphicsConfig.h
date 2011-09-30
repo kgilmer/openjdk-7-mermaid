@@ -59,7 +59,35 @@
 #ifndef USE_IOS
 /* Do we we need this if we are using all off-screen drawing ? */
 #define USE_NSVIEW_FOR_SCRATCH 1
+
+/* Uncomment to have an additional CAOGLLayer instance tied to
+ * each instance, which can be used to test remoting the layer
+ * to an out of process window. The additional layer is needed
+ * because a layer can only be attached to one context (view/window).
+ * This is only for testing purposes and can be removed if/when no
+ * longer needed.
+ */
+//#ifdef USE_INTERMEDIATE_BUFFER
+//#define REMOTELAYER 1
+//#endif
+
+#ifdef REMOTELAYER
+#import <JavaRuntimeSupport/JRSRemoteLayer.h>
+#import <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
+#import <sys/socket.h>
+#import <sys/un.h>
+
+extern mach_port_t JRSRemotePort;
+extern int remoteSocketFD;
+extern void sendLayerID(int layerID);
+
+#endif /* REMOTELAYER */
+
 #endif
+
+
 
 /**
  * The CGLGraphicsConfigInfo structure contains information specific to a
