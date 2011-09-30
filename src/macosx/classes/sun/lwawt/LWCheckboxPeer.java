@@ -65,19 +65,22 @@ class LWCheckboxPeer
         // after the current event is processed
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                postEvent(new ItemEvent(getTarget(), ItemEvent.ITEM_STATE_CHANGED,
-                        getTarget().getLabel(), e.getStateChange()));
-
+                boolean postEvent = true;
                 CheckboxGroup group = getTarget().getCheckboxGroup();
                 if (group != null) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                    if (e.getStateChange() == ItemEvent.SELECTED && group.getSelectedCheckbox() != getTarget()) {
                         group.setSelectedCheckbox(getTarget());
                     } else if (group.getSelectedCheckbox() == getTarget()) {
                         // don't want to leave the group with no selected checkbox
                         getTarget().setState(true);
+                        postEvent = false;
                     }
                 } else {
                     getTarget().setState(e.getStateChange() == ItemEvent.SELECTED);
+                }
+                if(postEvent) {
+                    postEvent(new ItemEvent(getTarget(), ItemEvent.ITEM_STATE_CHANGED,
+                            getTarget().getLabel(), e.getStateChange()));
                 }
             }
         });
