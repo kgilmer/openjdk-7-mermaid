@@ -413,8 +413,14 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         if (owner != null) {
             CWrapper.NSWindow.removeChildWindow(owner.getNSWindowPtr(), getNSWindowPtr());
         }
-        contentView.dispose();
-        super.dispose();
+        // Make sure window is ordered out before it is disposed, we could order it out right here or
+        // we could postpone the disposal, I think postponing is probably better. 
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                contentView.dispose();
+                CPlatformWindow.super.dispose();
+            }
+        });
     }
 
     @Override // PlatformWindow
