@@ -1038,7 +1038,7 @@ public class LWWindowPeer
 
         LWKeyboardFocusManagerPeer manager = getLWToolkit().getKeyboardFocusManagerPeer();
 
-        Window oppositeWindow = manager.getCurrentFocusedWindow();
+        Window oppositeWindow = becomesFocused ? manager.getCurrentFocusedWindow() : null;
         // TODO: ungrab
         manager.setFocusedWindow(becomesFocused ? LWWindowPeer.this : null);
 

@@ -35,6 +35,7 @@ FILES_objc = \
         CGraphicsDevice.m \
         CGraphicsEnv.m \
         CCharToGlyphMapper.m \
+        CSystemColors.m \
         AWTFont.m \
         CGGlyphOutlines.m \
         CGGlyphImages.m \

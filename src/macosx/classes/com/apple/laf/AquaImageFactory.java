@@ -35,11 +35,12 @@ import javax.swing.plaf.*;
 import apple.laf.JRSUIState;
 import apple.laf.JRSUIConstants.*;
 
+import sun.lwawt.macosx.LWCToolkit;
+
 import com.apple.eio.FileManager;
 import com.apple.laf.AquaIcon.*;
 import com.apple.laf.AquaUtils.RecyclableObject;
 import com.apple.laf.AquaUtils.RecyclableSingleton;
-import sun.lwawt.macosx.CImage;
 
 public class AquaImageFactory {
     public static IconUIResource getConfirmImageIcon() {
@@ -456,17 +457,14 @@ public class AquaImageFactory {
     }
     
     public static Color getFocusRingColorUIResource() {
-        // TODO: un-hardcode Color value
-        return new Color(75, 137, 208);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.KEYBOARD_FOCUS_COLOR));
+        return new SystemColorProxy(LWCToolkit.getAppleColor(LWCToolkit.KEYBOARD_FOCUS_COLOR));
     }
     
     public static Color getSelectionInactiveBackgroundColorUIResource() {
-        // TODO: un-hardcode Color value
-        return new Color(202, 202, 202);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.INACTIVE_SELECTION_BACKGROUND_COLOR));
+        return new SystemColorProxy(LWCToolkit.getAppleColor(LWCToolkit.INACTIVE_SELECTION_BACKGROUND_COLOR));
     }
     
     public static Color getSelectionInactiveForegroundColorUIResource() {
-        // TODO: un-hardcode Color value
-        return new Color(0, 0, 0);//SystemColorProxy(CToolkit.getAppleColor(CToolkit.INACTIVE_SELECTION_FOREGROUND_COLOR));
+        return new SystemColorProxy(LWCToolkit.getAppleColor(LWCToolkit.INACTIVE_SELECTION_FOREGROUND_COLOR));
     }
 }

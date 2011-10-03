@@ -84,6 +84,67 @@ public class LWCToolkit extends LWToolkit {
     	SunToolkit.setDataTransfererClassName("sun.lwawt.macosx.CDataTransferer");
     }
     
+    /*
+     * System colors with default initial values, overwritten by toolkit if system values differ and are available.
+     */
+    private final static int NUM_APPLE_COLORS = 3;
+    public final static int KEYBOARD_FOCUS_COLOR = 0;
+    public final static int INACTIVE_SELECTION_BACKGROUND_COLOR = 1;
+    public final static int INACTIVE_SELECTION_FOREGROUND_COLOR = 2;
+    private static int[] appleColors = { 
+        0xFF808080, // keyboardFocusColor = Color.gray;
+        0xFFC0C0C0, // secondarySelectedControlColor
+        0xFF303030, // controlDarkShadowColor
+    };
+    
+    private native void loadNativeColors(final int[] systemColors, final int[] appleColors);
+    
+    protected void loadSystemColors(final int[] systemColors) {                                            
+        if (systemColors == null) return;
+        loadNativeColors(systemColors, appleColors);
+    }
+
+    private static class AppleSpecificColor extends Color {
+        int index;
+        public AppleSpecificColor(int index) {
+            super(appleColors[index]);
+            this.index = index;
+        }
+        
+        public int getRGB() {
+            return appleColors[index];
+        }
+    }
+    
+    /**
+     * Returns Apple specific colors that we may expose going forward.
+     *
+     */
+    public static Color getAppleColor(int color) {
+        return new AppleSpecificColor(color);    
+    }
+    
+    static void systemColorsChanged() {
+        // This is only called from native code.
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                AccessController.doPrivileged (new PrivilegedAction<Object>() {
+                    public Object run() {
+                        try {
+                            final Method updateColorsMethod = SystemColor.class.getDeclaredMethod("updateSystemColors", new Class[0]);
+                            updateColorsMethod.setAccessible(true);
+                            updateColorsMethod.invoke(null, new Object[0]);
+                        } catch (final Throwable e) {
+                        	e.printStackTrace();
+                            // swallow this if something goes horribly wrong
+                        }
+                        return null;
+                    }
+                });
+            }
+           });
+    }
+    
     @Override
     protected PlatformWindow createPlatformWindow(PeerType peerType) {
         // TODO: window type

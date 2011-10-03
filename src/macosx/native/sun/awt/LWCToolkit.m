@@ -31,6 +31,7 @@
 #import "LWCToolkit.h"
 #import "ThreadUtilities.h"
 #import "AWT_debug.h"
+#import "CSystemColors.h"
 
 #import "sun_lwawt_macosx_LWCToolkit.h"
 
@@ -213,6 +214,58 @@ Java_sun_lwawt_macosx_LWCToolkit_initIDs
         static JNF_STATIC_MEMBER_CACHE(jsm_installToolkitThreadNameInJava, jc_LWCToolkit, "installToolkitThreadNameInJava", "()V");
         JNFCallStaticVoidMethod(env, jsm_installToolkitThreadNameInJava);
     });
+}
+
+static UInt32 RGB(NSColor *c) {
+    c = [c colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+    if (c == nil)
+    {
+        return -1; // opaque white
+    }
+    
+    CGFloat r, g, b, a;
+    [c getRed:&r green:&g blue:&b alpha:&a];
+    
+    UInt32 ir = (UInt32) (r*255+0.5), 
+    ig = (UInt32) (g*255+0.5),
+    ib = (UInt32) (b*255+0.5),
+    ia = (UInt32) (a*255+0.5);
+    
+    //    NSLog(@"%@ %d, %d, %d", c, ir, ig, ib);
+    
+    return ((ia & 0xFF) << 24) | ((ir & 0xFF) << 16) | ((ig & 0xFF) << 8) | ((ib & 0xFF) << 0);
+}
+
+void doLoadNativeColors(JNIEnv *env, jintArray jColors, BOOL useAppleColors) {
+    jint len = (*env)->GetArrayLength(env, jColors);
+    
+    UInt32 colorsArray[len];
+    UInt32 *colors = colorsArray;
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        NSUInteger i;
+        for (i = 0; i < len; i++) {
+            colors[i] = RGB([CSystemColors getColor:i useAppleColor:useAppleColors]);
+        }
+    }];
+    
+    jint *_colors = (*env)->GetPrimitiveArrayCritical(env, jColors, 0);
+    memcpy(_colors, colors, len * sizeof(UInt32));
+    (*env)->ReleasePrimitiveArrayCritical(env, jColors, _colors, 0);
+}
+
+/**
+ * Class:     sun_lwawt_macosx_LWCToolkit
+ * Method:    loadNativeColors
+ * Signature: ([I[I)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_LWCToolkit_loadNativeColors
+(JNIEnv *env, jobject peer, jintArray jSystemColors, jintArray jAppleColors)
+{
+JNF_COCOA_ENTER(env);
+    doLoadNativeColors(env, jSystemColors, NO);
+    doLoadNativeColors(env, jAppleColors, YES);
+JNF_COCOA_EXIT(env);
 }
 
 /*
