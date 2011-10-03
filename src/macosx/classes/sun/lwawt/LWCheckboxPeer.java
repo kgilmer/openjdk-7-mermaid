@@ -28,6 +28,7 @@ package sun.lwawt;
 import java.awt.*;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
+import java.awt.event.AWTEventListener;
 import java.awt.peer.CheckboxPeer;
 import java.beans.Transient;
 
@@ -127,8 +128,15 @@ class LWCheckboxPeer
         }
 
         public void setRadioButton(boolean b) {
-            remove(getCurrentButton());
-            add(b? rb: cb);
+            AWTEventListener toolkitListener = getToolkitAWTEventListener();
+            synchronized (Toolkit.getDefaultToolkit()) {
+                try {
+                    remove(getCurrentButton());
+                    add(b ? rb : cb);
+                } finally {
+                    setToolkitAWTEventListener(toolkitListener);
+                }
+            }
         }
 
         private JToggleButton getCurrentButton() {

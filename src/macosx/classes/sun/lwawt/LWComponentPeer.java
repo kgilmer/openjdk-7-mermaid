@@ -29,13 +29,7 @@ import java.awt.*;
 
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.peer.DropTargetPeer;
-import java.awt.event.ComponentEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.PaintEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 
 import java.awt.image.ColorModel;
 import java.awt.image.ImageObserver;
@@ -47,6 +41,7 @@ import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Field;
 
 import sun.awt.*;
 
@@ -127,7 +122,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     //   private volatile boolean paintPending;
     private volatile boolean isLayouting;
 
-    private final D delegate;
+    private D delegate = null;
     private Container delegateContainer;
     private Component delegateDropTarget;
 
@@ -150,6 +145,33 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
     }
 
+    private class DelegateContainer extends Container {
+        {
+            enableEvents(0xFFFFFFFF);
+        }
+
+        @Override
+        public boolean isLightweight() {
+            return false;
+        }
+
+        public Point getLocation() {
+            return getLocationOnScreen();
+        }
+
+        public Point getLocationOnScreen() {
+            return LWComponentPeer.this.getLocationOnScreen();
+        }
+
+        public int getX() {
+            return getLocation().x;
+        }
+
+        public int getY() {
+            return getLocation().y;
+        }
+    }
+
     public LWComponentPeer(T target) {
         this.target = target;
 
@@ -167,45 +189,27 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
 
         // the delegate must be created after the target is set
-        synchronized (getDelegateLock()) {
-            D delegate = createDelegate();
-            synchronized (getStateLock()) {
-                this.delegate = delegate;
+        AWTEventListener toolkitListener = null;
+        synchronized (Toolkit.getDefaultToolkit()) {
+            try {
+                toolkitListener = getToolkitAWTEventListener();
+                setToolkitAWTEventListener(null);
+
+                synchronized (getDelegateLock()) {
+                    delegate = createDelegate();
+                    if (delegate != null) {
+                        delegateContainer = new DelegateContainer();
+                        delegateContainer.add(delegate);
+                        delegateContainer.addNotify();
+                        delegate.addNotify();
+                    } else {
+                        return;
+                    }
+                }
+
+            } finally {
+                setToolkitAWTEventListener(toolkitListener);
             }
-            if (delegate == null) {
-                return;
-            }
-            delegateContainer = new Container() {
-                {
-                    enableEvents(0xFFFFFFFF);
-                }
-
-                @Override
-                public boolean isLightweight() {
-                    return false;
-                }
-
-                public Point getLocation() {
-                    return getLocationOnScreen();
-                }
-
-                public Point getLocationOnScreen() {
-                    return LWComponentPeer.this.getLocationOnScreen();
-                }
-
-                public int getX() {
-                    return getLocation().x;
-                }
-
-                public int getY() {
-                    return getLocation().y;
-                }
-            };
-//            AWTAccessor.getComponentAccessor().
-//                  setTreeLock(delegateContainer, delegateTreeLock);
-            delegateContainer.addNotify();
-            delegateContainer.add(delegate);
-            delegate.addNotify();
 
             // todo swing: later on we will probably have one global RM
             SwingUtilities3.setDelegateRepaintManager(delegate, new RepaintManager() {
@@ -229,6 +233,33 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             });
         }
     }
+
+    /**
+     * This method must be called under Toolkit.getDefaultToolkit() lock
+     * and followed by setToolkitAWTEventListener()
+     */
+    protected final AWTEventListener getToolkitAWTEventListener() {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        try {
+            Field field = Toolkit.class.getDeclaredField("eventListener");
+            field.setAccessible(true);
+            return (AWTEventListener) field.get(toolkit);
+        } catch (Exception e) {
+            throw new InternalError(e.toString());
+        }
+    }
+
+    protected final void setToolkitAWTEventListener(AWTEventListener listener) {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        try {
+            Field field = Toolkit.class.getDeclaredField("eventListener");
+            field.setAccessible(true);
+            field.set(toolkit, listener);
+        } catch (Exception e) {
+            throw new InternalError(e.toString());
+        }
+    }
+
 
     /**
      * This method is called under getDelegateLock().
@@ -581,7 +612,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // TODO: check for "use platform metrics" settings
         Graphics g = getWindowPeer().getOffscreenGraphics();
         try {
-            return g == null ? delegateContainer.getFontMetrics(f) : g.getFontMetrics(f);
+            if (g != null) {
+                return g.getFontMetrics(f);
+            } else {
+                synchronized (getDelegateLock()) {
+                    return delegateContainer.getFontMetrics(f);
+                }
+            }
         } finally {
             if (g != null) {
                 g.dispose();
@@ -658,9 +695,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         Component c = getTarget();
         if (c instanceof Container) {
             SunGraphicsCallback.PrintHeavyweightComponentsCallback.getInstance().
-                runComponents(((Container)getTarget()).getComponents(), g,
-                    SunGraphicsCallback.LIGHTWEIGHTS |
-                    SunGraphicsCallback.HEAVYWEIGHTS);
+                    runComponents(((Container) getTarget()).getComponents(), g,
+                            SunGraphicsCallback.LIGHTWEIGHTS |
+                                    SunGraphicsCallback.HEAVYWEIGHTS);
         } else {
             c.print(g);
         }
