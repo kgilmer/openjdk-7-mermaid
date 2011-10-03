@@ -26,48 +26,30 @@
 # Defines the release targets for Mac OS X build products
 
 JDK_BUNDLE_DIR = $(ABS_OUTPUTDIR)/j2sdk-bundle/$(THIS_JDK_VERSION).jdk/Contents
-JRE_BUNDLE_DIR = $(JDK_BUNDLE_DIR)/Home/$(THIS_JDK_VERSION).jre/Contents
+JRE_BUNDLE_DIR = $(ABS_OUTPUTDIR)/j2re-bundle/$(THIS_JDK_VERSION).jre/Contents
 
 MACOSX_SRC	 = $(JDK_TOPDIR)/src/macosx
-AQUA_PROPERTIES= $(MACOSX_SRC)/classes/com/apple/laf/resources/aqua.properties
 
 JDK_BUNDLE_VENDOR ?= UNDEFINED
 
-jdk-jre-bundle-setup:
-	# clean, create bundle scaffolding
+jre-bundle-setup:
+	$(RM) -r $(JRE_BUNDLE_DIR)
+
+jdk-bundle-setup:
 	$(RM) -r $(JDK_BUNDLE_DIR)
-	$(MKDIR) -p $(JRE_BUNDLE_DIR)
-	
-	# link .jre primary executable, and point the .jdk primary executable at the .jre link
+
+jre-bundle-files:
 	$(MKDIR) -p $(JRE_BUNDLE_DIR)/MacOS
-	ln -s ../Home/lib/jli/libjli.dylib $(JRE_BUNDLE_DIR)/MacOS/
-	ln -s Home/$(THIS_JDK_VERSION).jre/Contents/MacOS $(JDK_BUNDLE_DIR)/
-
-jdk-jre-bundle-files:
-	# copy JDK contents into the .jdk bundle
-	ditto $(JDK_IMAGE_DIR) $(JDK_BUNDLE_DIR)/Home
-	
-	# swizzle the jre directory for a .jre bundle with a symlink pointing into it's home
-	$(MV) $(JDK_BUNDLE_DIR)/Home/jre $(JRE_BUNDLE_DIR)/Home
-	ln -s $(THIS_JDK_VERSION).jre/Contents/Home $(JDK_BUNDLE_DIR)/Home/jre
-	
-	# write out Info.plists for both bundles
-	$(SED) -e "s/@@VENDOR@@/$(JDK_BUNDLE_VENDOR)/g" < $(MACOSX_SRC)/bundle/JDK-Info.plist > $(JDK_BUNDLE_DIR)/Info.plist
+	ln -s ../Home/jre/lib/libjli.dylib $(JRE_BUNDLE_DIR)/MacOS/
+	$(MV) $(JRE_IMAGE_DIR) $(JRE_BUNDLE_DIR)/Home
 	$(SED) -e "s/@@VENDOR@@/$(JDK_BUNDLE_VENDOR)/g" < $(MACOSX_SRC)/bundle/JRE-Info.plist > $(JRE_BUNDLE_DIR)/Info.plist
-	
-	# back-patch bundle symlinks for code that only knows how to find things from java.home
-	$(MV) $(JRE_BUNDLE_DIR)/Home/bundle/* $(JRE_BUNDLE_DIR)/
-	$(RM) -r $(JRE_BUNDLE_DIR)/Home/bundle
-	ln -s ../.. $(JRE_BUNDLE_DIR)/Home/bundle
-	ln -s jre/bundle $(JDK_BUNDLE_DIR)/Home/
 
-copy-jre-mac-resources:
-	$(MKDIR) -p $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
-	$(CP) $(AQUA_PROPERTIES) $(JRE_IMAGE_DIR)/bundle/Resources/English.lproj
+jdk-bundle-files:
+	$(MKDIR) -p $(JDK_BUNDLE_DIR)/MacOS
+	ln -s ../Home/jre/lib/libjli.dylib $(JDK_BUNDLE_DIR)/MacOS/
+	$(MV) $(JDK_IMAGE_DIR) $(JDK_BUNDLE_DIR)/Home
+	$(SED) -e "s/@@VENDOR@@/$(JDK_BUNDLE_VENDOR)/g" < $(MACOSX_SRC)/bundle/JDK-Info.plist > $(JDK_BUNDLE_DIR)/Info.plist
 
-trim-jdk-bundle:
-
-EXTRA_JRE_TARGETS   += copy-jre-mac-resources
-EXTRA_IMAGE_TARGETS += jdk-jre-bundle-setup jdk-jre-bundle-files trim-jdk-bundle
+EXTRA_IMAGE_TARGETS += jre-bundle-setup jdk-bundle-setup jre-bundle-files jdk-bundle-files
 
 .PHONY: $(EXTRA_JRE_TARGETS) $(EXTRA_IMAGE_TARGETS)
