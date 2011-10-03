@@ -41,7 +41,10 @@ final class LWLabelPeer extends LWComponentPeer<Label, JLabel>
 
     @Override
     protected JLabel createDelegate() {
-        return new JLabel();
+        JLabel label = new JLabel();
+        label.setOpaque(true);
+        label.setVerticalAlignment(JLabel.TOP);
+        return label;
     }
 
     @Override
