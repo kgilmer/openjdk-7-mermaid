@@ -242,6 +242,7 @@ static OSStatus AudioOutputCallback(void                    *inRefCon,
     err = device->buffer.GetTimeBounds(startTime, endTime);
 
     if (err) goto exit;
+    if (endTime < readTime) goto exit; // endTime can go backwards upon DAUDIO_Flush
     if (readTime + inNumberFrames >= endTime) {
         ClearAudioBufferList(ioData, endTime - readTime, inNumberFrames, device->asbd.mBytesPerFrame);
         inNumberFrames = endTime - readTime;
