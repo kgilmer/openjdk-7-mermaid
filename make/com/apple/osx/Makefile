@@ -36,11 +36,11 @@ include $(BUILDDIR)/common/Defs.gmk
 AUTO_FILES_JAVA_DIRS = apple/launcher apple/security com/apple/concurrent com/apple/eio java/util/prefs
 
 FILES_objc += \
-    Dispatch.m \
-    CFileManager.m \
-    KeystoreImpl.m \
-    JavaAppLauncher.m \
-    MacOSXPreferencesFile.m
+    $(TARGDIR)Dispatch.m \
+    $(TARGDIR)CFileManager.m \
+    $(TARGDIR)KeystoreImpl.m \
+    $(TARGDIR)JavaAppLauncher.m \
+    $(TARGDIR)MacOSXPreferencesFile.m
 
 FILES_export += \
 	com/apple/concurrent/LibDispatchNative.java \
@@ -58,7 +58,7 @@ FILES_export += \
 # Rules
 #
 include $(BUILDDIR)/common/Mapfile-vers.gmk
-include $(BUILDDIR)/common/Classes.gmk
+include $(BUILDDIR)/common/Library.gmk
 
 
 #
