@@ -497,7 +497,7 @@ static inline void contextTexturePath(JNIEnv* env, QuartzSDOps* qsdo)
 #pragma mark
 #pragma mark --- Context Setup ---
 
-inline void setDefaultColorSpace(CGContextRef cgRef)
+static inline void setDefaultColorSpace(CGContextRef cgRef)
 {
     static CGColorSpaceRef colorspace = NULL;
     if (colorspace == NULL)
