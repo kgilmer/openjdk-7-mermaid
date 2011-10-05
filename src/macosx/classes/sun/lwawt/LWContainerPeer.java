@@ -29,11 +29,8 @@ import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
-
 import java.awt.event.PaintEvent;
-
 import java.awt.peer.ContainerPeer;
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -238,6 +235,14 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
 		//TODO it is necessary?
         for (LWComponentPeer child : getChildren()) {
             child.setVisible(child.getTarget().isVisible());
+        }
+    }
+
+    @Override
+    public void setEnabled(final boolean e) {
+        super.setEnabled(e);
+        for (final LWComponentPeer child : getChildren()) {
+            child.setEnabled(e && child.getTarget().isEnabled());
         }
     }
 }

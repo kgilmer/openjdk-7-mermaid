@@ -30,11 +30,11 @@ import java.awt.peer.ListPeer;
 
 import javax.swing.*;
 
-class LWListPeer
+final class LWListPeer
         extends LWComponentPeer<List, LWListPeer.ScrollableJList>
         implements ListPeer {
 
-    public LWListPeer(List target) {
+    LWListPeer(List target) {
         super(target);
     }
 
@@ -119,7 +119,7 @@ class LWListPeer
         }
     }
 
-    class ScrollableJList extends JScrollPane {
+    final class ScrollableJList extends JScrollPane {
 
         private DefaultListModel<Object> model =
                 new DefaultListModel<Object>() {
@@ -151,6 +151,11 @@ class LWListPeer
         public DefaultListModel<Object> getModel() {
             return model;
         }
-    }
 
+        @Override
+        public void setEnabled(final boolean enabled) {
+            getViewport().getView().setEnabled(enabled);
+            super.setEnabled(enabled);
+        }
+    }
 }

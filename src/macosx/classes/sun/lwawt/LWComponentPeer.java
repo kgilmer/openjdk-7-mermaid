@@ -627,21 +627,28 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     @Override
-    public void setEnabled(boolean e) {
+    public void setEnabled(final boolean e) {
+        boolean status = e;
+        final LWComponentPeer cp = getContainerPeer();
+        if (cp != null) {
+            status &= cp.isEnabled();
+        }
         synchronized (getStateLock()) {
-            if (enabled == e) {
+            if (enabled == status) {
                 return;
             }
-            enabled = e;
+            enabled = status;
         }
+
         final D delegate = getDelegate();
 
         if (delegate != null) {
             synchronized (getDelegateLock()) {
-                delegate.setEnabled(e);
+                delegate.setEnabled(status);
             }
+        } else {
+            repaintPeer();
         }
-        repaintPeer();
     }
 
     // Helper method
@@ -1035,16 +1042,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 }
                 break;
         }
+
+        sendEventToDelegate(e);
+    }
+
+    private void sendEventToDelegate(final AWTEvent e){
         synchronized (getDelegateLock()) {
-            if (delegate == null) {
+            if (getDelegate() == null || !isShowing() || !isEnabled()) {
                 return;
             }
             installDelegateLookAndFeel();
             try {
                 AWTEvent delegateEvent = createDelegateEvent(e);
                 if (delegateEvent != null) {
-                    AWTAccessor.getComponentAccessor().processEvent(
-                            (Component) delegateEvent.getSource(), delegateEvent);
+                    AWTAccessor.getComponentAccessor()
+                               .processEvent((Component) delegateEvent.getSource(),
+                                             delegateEvent);
                     if (delegateEvent instanceof KeyEvent) {
                         KeyEvent ke = (KeyEvent) delegateEvent;
                         SwingUtilities.processKeyBindings(ke);
@@ -1069,7 +1082,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                     MouseWheelEvent.WHEEL_UNIT_SCROLL,
                     3, // TODO: wheel scroll amount
                     me.getWheelRotation());
-        } else if (e instanceof MouseEvent && isShowing()) {
+        } else if (e instanceof MouseEvent) {
             MouseEvent me = (MouseEvent) e;
 
             Component eventTarget = SwingUtilities.getDeepestComponentAt(delegate, me.getX(), me.getY());
@@ -1278,6 +1291,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * Determines whether this peer is showing on screen. This means that the
      * peer must be visible, and it must be in a container that is visible and
      * showing.
+     *
+     * @see #isVisible()
      */
     protected boolean isShowing() {
         synchronized (getPeerTreeLock()) {

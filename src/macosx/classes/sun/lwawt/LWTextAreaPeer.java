@@ -31,7 +31,7 @@ import java.awt.*;
 import java.awt.im.InputMethodRequests;
 import java.awt.peer.TextAreaPeer;
 
-class LWTextAreaPeer
+final class LWTextAreaPeer
         extends LWTextComponentPeer<TextArea, LWTextAreaPeer.ScrollableJTextArea>
         implements TextAreaPeer {
     private final static int DEFAULT_COLUMNS = 9;
@@ -187,6 +187,11 @@ class LWTextAreaPeer
             return (JTextArea) getViewport().getView();
         }
 
+        @Override
+        public void setEnabled(final boolean enabled) {
+            getViewport().getView().setEnabled(enabled);
+            super.setEnabled(enabled);
+        }
 
         @SuppressWarnings("serial")
         class JTextAreaDelegate extends JTextArea {

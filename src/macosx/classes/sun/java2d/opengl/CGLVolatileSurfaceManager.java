@@ -42,8 +42,6 @@ import sun.java2d.pipe.hw.ExtendedBufferCapabilities;
 import static sun.java2d.pipe.hw.AccelSurface.*;
 import static sun.java2d.pipe.hw.ExtendedBufferCapabilities.VSyncType.*;
 
-import sun.lwawt.LWCanvasPeer;
-
 public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
 
     private boolean accelerationEnabled;

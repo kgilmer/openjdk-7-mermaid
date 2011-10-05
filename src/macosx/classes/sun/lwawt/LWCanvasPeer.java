@@ -25,7 +25,6 @@
 
 package sun.lwawt;
 
-import java.awt.AWTEvent;
 import java.awt.BufferCapabilities;
 import java.awt.Canvas;
 import java.awt.Component;
@@ -37,11 +36,11 @@ import java.awt.peer.CanvasPeer;
 
 import javax.swing.JComponent;
 
-public class LWCanvasPeer
+final class LWCanvasPeer
     extends LWComponentPeer<Component, JComponent>
     implements CanvasPeer
 {
-    public LWCanvasPeer(Canvas target) {
+    LWCanvasPeer(final Canvas target) {
         super(target);
     }
 

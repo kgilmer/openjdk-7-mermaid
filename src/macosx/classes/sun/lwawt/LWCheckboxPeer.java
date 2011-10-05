@@ -113,7 +113,7 @@ class LWCheckboxPeer
         return true;
     }
 
-    class CheckboxDelegate extends JComponent {
+    final class CheckboxDelegate extends JComponent {
         private JCheckBox cb;
         private JRadioButton rb;
 
@@ -141,6 +141,12 @@ class LWCheckboxPeer
 
         private JToggleButton getCurrentButton() {
             return (JToggleButton) getComponent(0);
+        }
+
+        @Override
+        public void setEnabled(final boolean enabled) {
+            rb.setEnabled(enabled);
+            cb.setEnabled(enabled);
         }
 
         @Deprecated

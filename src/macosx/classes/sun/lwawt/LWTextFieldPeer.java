@@ -34,12 +34,8 @@ import java.awt.event.ActionListener;
 import java.awt.im.InputMethodRequests;
 import java.awt.peer.TextFieldPeer;
 
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.event.DocumentListener;
-
-class LWTextFieldPeer
+final class LWTextFieldPeer
         extends LWTextComponentPeer<TextField, JPasswordField>
         implements TextFieldPeer, ActionListener {
     private final static int DEFAULT_COLUMNS = 9;

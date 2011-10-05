@@ -55,10 +55,10 @@ final class LWButtonPeer extends LWComponentPeer<Button, JButton>
     }
 
     @Override
-    public void actionPerformed(final ActionEvent event) {
+    public void actionPerformed(final ActionEvent e) {
         postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
-                                  getTarget().getActionCommand(),
-                                  event.getWhen(), event.getModifiers()));
+                                  getTarget().getActionCommand(), e.getWhen(),
+                                  e.getModifiers()));
     }
 
     @Override

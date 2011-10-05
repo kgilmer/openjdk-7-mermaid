@@ -604,18 +604,21 @@ public class LWWindowPeer
             // to a peer from another window. So we must first check if this peer is
             // the same as lastWindowPeer
             if (lastWindowPeer == this) {
-                Point lp = lastMouseEventPeer.windowToLocal(x, y, lastWindowPeer);
-                postEvent(new MouseEvent(lastMouseEventPeer.getTarget(),
-                                         MouseEvent.MOUSE_EXITED,
-                                         when, modifiers,
-                                         lp.x, lp.y, screenX, screenY,
-                                         clickCount, popupTrigger, button));
+                if (isEnabled()) {
+                    Point lp = lastMouseEventPeer.windowToLocal(x, y,
+                                                                lastWindowPeer);
+                    postEvent(new MouseEvent(lastMouseEventPeer.getTarget(),
+                                             MouseEvent.MOUSE_EXITED, when,
+                                             modifiers, lp.x, lp.y, screenX,
+                                             screenY, clickCount, popupTrigger,
+                                             button));
+                }
                 lastMouseEventPeer = null;
             }
         } else {
             if (targetPeer != lastMouseEventPeer) {
                 // lastMouseEventPeer may be null if mouse was out of Java windows
-                if (lastMouseEventPeer != null) {
+                if (lastMouseEventPeer != null && lastMouseEventPeer.isEnabled()) {
                     // Sometimes, MOUSE_EXITED is not sent by delegate (or is sent a bit
                     // later), in which case lastWindowPeer is another window
                     if (lastWindowPeer != this) {
@@ -639,7 +642,7 @@ public class LWWindowPeer
                     }
                 }
                 lastMouseEventPeer = targetPeer;
-                if (targetPeer != null) {
+                if (targetPeer != null && targetPeer.isEnabled()) {
                     Point newp = targetPeer.windowToLocal(x, y, curWindowPeer);
                     postEvent(new MouseEvent(targetPeer.getTarget(),
                                              MouseEvent.MOUSE_ENTERED,
@@ -685,14 +688,19 @@ public class LWWindowPeer
                 targetPeer = this;
             }
 
+
             Point lp = targetPeer.windowToLocal(x, y, curWindowPeer);
-            MouseEvent event = new MouseEvent(targetPeer.getTarget(), id, when, modifiers,
-                                              lp.x, lp.y, screenX, screenY,
-                                              clickCount, popupTrigger, button);
-            postEvent(event);
+            if (targetPeer.isEnabled()) {
+                MouseEvent event = new MouseEvent(targetPeer.getTarget(), id,
+                                                  when, modifiers, lp.x, lp.y,
+                                                  screenX, screenY, clickCount,
+                                                  popupTrigger, button);
+                postEvent(event);
+            }
 
             if (id == MouseEvent.MOUSE_RELEASED) {
-                if ((mouseClickButtons & mouseButtonMask) != 0) {
+                if ((mouseClickButtons & mouseButtonMask) != 0
+                    && targetPeer.isEnabled()) {
                     postEvent(new MouseEvent(targetPeer.getTarget(),
                                              MouseEvent.MOUSE_CLICKED,
                                              when, modifiers,
@@ -719,8 +727,7 @@ public class LWWindowPeer
         Rectangle r = getBounds();
         // findPeerAt() expects parent coordinates
         final LWComponentPeer targetPeer = findPeerAt(r.x + x, r.y + y);
-        if (targetPeer == null) {
-            //TODO This can happen if this window is invisible. this is correct behavior in this case?
+        if (targetPeer == null || !targetPeer.isEnabled()) {
             return;
         }
 
