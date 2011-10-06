@@ -454,8 +454,24 @@ public final class JRSUIConstants {
         public static final SegmentTrailingSeparator YES = new SegmentTrailingSeparator(_yes);
     }
     
-    public static class NothingToScroll extends Property {
+    public static class SegmentLeadingSeparator extends Property {
         private static final byte SHIFT = SegmentTrailingSeparator.SHIFT + SegmentTrailingSeparator.SIZE;
+        private static final byte SIZE = 1;
+        private static final long MASK = (long)0x1 << SHIFT;
+        private static final PropertyEncoding leadingSeparator = new PropertyEncoding(MASK, SHIFT);
+        
+        SegmentLeadingSeparator(final byte value) {
+            super(leadingSeparator, value);
+        }
+        
+        private static final byte _no = 0;
+        public static final SegmentLeadingSeparator NO = new SegmentLeadingSeparator(_no);
+        private static final byte _yes = 1;
+        public static final SegmentLeadingSeparator YES = new SegmentLeadingSeparator(_yes);
+    }
+    
+    public static class NothingToScroll extends Property {
+        private static final byte SHIFT = SegmentLeadingSeparator.SHIFT + SegmentLeadingSeparator.SIZE;
         private static final byte SIZE = 1;
         private static final long MASK = (long)0x1 << SHIFT;
         private static final PropertyEncoding focused = new PropertyEncoding(MASK, SHIFT);

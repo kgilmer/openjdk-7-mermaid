@@ -453,7 +453,9 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
         painter.state.set(state);
         painter.state.set(isSelected || (state == State.INACTIVE && frameActive) ? BooleanValue.YES : BooleanValue.NO);
         painter.state.set(getSegmentPosition(first, last, isLeftToRight));
-        painter.state.set(getSegmentTrailingSeparator(nonRectIndex, tabPane.getSelectedIndex(), isLeftToRight));
+        final int selectedIndex = tabPane.getSelectedIndex();
+        painter.state.set(getSegmentTrailingSeparator(nonRectIndex, selectedIndex, isLeftToRight));
+        painter.state.set(getSegmentLeadingSeparator(nonRectIndex, selectedIndex, isLeftToRight));
         painter.state.set(tabPane.hasFocus() && isSelected ? Focused.YES : Focused.NO);
         painter.paint(g, tabPane, tabRect.x, tabRect.y, tabRect.width, tabRect.height);
         
@@ -489,6 +491,10 @@ public class AquaTabbedPaneUI extends AquaTabbedPaneCopyFromBasicUI {
 
     protected SegmentTrailingSeparator getSegmentTrailingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
         return SegmentTrailingSeparator.YES;
+    }
+    
+    protected SegmentLeadingSeparator getSegmentLeadingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
+        return SegmentLeadingSeparator.NO;
     }
     
     protected boolean isTabBeforeSelectedTab(final int index, final int selectedIndex, final boolean isLeftToRight) {

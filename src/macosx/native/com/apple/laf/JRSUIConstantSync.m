@@ -43,6 +43,7 @@
 #import "apple_laf_JRSUIConstants_ScrollBarPart.h"
 #import "apple_laf_JRSUIConstants_SegmentPosition.h"
 #import "apple_laf_JRSUIConstants_SegmentTrailingSeparator.h"
+#import "apple_laf_JRSUIConstants_SegmentLeadingSeparator.h"
 #import "apple_laf_JRSUIConstants_ShowArrows.h"
 #import "apple_laf_JRSUIConstants_Size.h"
 #import "apple_laf_JRSUIConstants_State.h"
@@ -73,6 +74,7 @@ static CFTypeRef nothingToScrollKey = NULL;
 static CFTypeRef arrowsOnlyKey = NULL;
 static CFTypeRef frameOnlyKey = NULL;
 static CFTypeRef segmentTrailingSeparatorKey = NULL;
+static CFTypeRef segmentLeadingSeparatorKey = NULL;
 static CFTypeRef windowFrameDrawClippedKey = NULL;
 static CFTypeRef windowFrameDrawTitleSeparatorKey = NULL;
 static CFTypeRef maximumValueKey = NULL;
@@ -97,6 +99,9 @@ static CFTypeRef animationTimeKey = NULL;
     key ## Key = JRSUIGetKey(JRS_CONSTANT(Key, key));                \
     if (key ## Key == NULL) return NO;
 
+#define ASSIGN_KEY_IF_EXISTS(key, constant)                          \
+    key ## Key = JRSUIGetKey(constant);
+
 static BOOL init_and_check_constant_coherency() {
     ASSIGN_KEY(widget);
     ASSIGN_KEY(state);
@@ -116,6 +121,7 @@ static BOOL init_and_check_constant_coherency() {
     ASSIGN_KEY(arrowsOnly);
     ASSIGN_KEY(frameOnly);
     ASSIGN_KEY(segmentTrailingSeparator);
+    ASSIGN_KEY_IF_EXISTS(segmentLeadingSeparator, 29); // kJRSUI_Key_segmentLeadingSeparator = 29
     ASSIGN_KEY(windowFrameDrawClipped);
     ASSIGN_KEY(windowFrameDrawTitleSeparator);
     ASSIGN_KEY(maximumValue);
@@ -321,6 +327,13 @@ BOOL _InitializeJRSProperties() {
     }                                                                \
 }
 
+#define IF_KEY_EXISTS_DO(key, operation)                             \
+{                                                                    \
+    if (key != NULL) {                                               \
+        operation;                                                   \
+    }                                                                \
+}
+
 jint _SyncEncodedProperties(JRSUIControlRef control, jlong oldProperties, jlong newProperties) {    
     if (!_InitializeJRSProperties()) abort();
     
@@ -343,6 +356,7 @@ jint _SyncEncodedProperties(JRSUIControlRef control, jlong oldProperties, jlong 
     IF_CHANGED_SET_KEYED_BOOLEAN(ArrowsOnly, arrowsOnlyKey, get_boolean_value_for);
     IF_CHANGED_SET_KEYED_BOOLEAN(FrameOnly, frameOnlyKey, get_boolean_value_for);
     IF_CHANGED_SET_KEYED_BOOLEAN(SegmentTrailingSeparator, segmentTrailingSeparatorKey, get_boolean_value_for);
+    IF_KEY_EXISTS_DO(segmentLeadingSeparatorKey, IF_CHANGED_SET_KEYED_BOOLEAN(SegmentLeadingSeparator, segmentLeadingSeparatorKey, get_boolean_value_for));
     IF_CHANGED_SET_KEYED_BOOLEAN(NothingToScroll, nothingToScrollKey, get_boolean_value_for);
     IF_CHANGED_SET_KEYED_BOOLEAN(WindowTitleBarSeparator, windowFrameDrawTitleSeparatorKey, get_boolean_value_for);
     IF_CHANGED_SET_KEYED_BOOLEAN(WindowClipCorners, windowFrameDrawClippedKey, get_boolean_value_for);

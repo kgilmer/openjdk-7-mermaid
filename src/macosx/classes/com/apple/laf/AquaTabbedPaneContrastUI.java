@@ -38,8 +38,7 @@ import javax.swing.text.View;
 
 import sun.swing.SwingUtilities2;
 
-import apple.laf.JRSUIConstants.SegmentTrailingSeparator;
-import apple.laf.JRSUIConstants.State;
+import apple.laf.JRSUIConstants.*;
 
 public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
     public static ComponentUI createUI(final JComponent c) {
@@ -111,5 +110,10 @@ public class AquaTabbedPaneContrastUI extends AquaTabbedPaneUI {
     protected SegmentTrailingSeparator getSegmentTrailingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
         if (isTabBeforeSelectedTab(index, selectedIndex, isLeftToRight)) return SegmentTrailingSeparator.NO;
         return SegmentTrailingSeparator.YES;
+    }
+    
+    protected SegmentLeadingSeparator getSegmentLeadingSeparator(final int index, final int selectedIndex, final boolean isLeftToRight) {
+        if (index == selectedIndex) return SegmentLeadingSeparator.YES;
+        return SegmentLeadingSeparator.NO;
     }
 }
