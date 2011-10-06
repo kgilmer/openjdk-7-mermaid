@@ -173,23 +173,24 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
      * specified relative to the peer's parent.
      */
     @Override
-    public LWComponentPeer findPeerAt(int x, int y) {
-        Rectangle r = getBounds();
-        if (!(r.contains(x, y) && isVisible())) {
-            return null;
-        }
-        // Translate to this container's coordinates to pass to children
-        x -= r.x;
-        y -= r.y;
-        synchronized (getPeerTreeLock()) {
-            for (int i = childPeers.size() - 1; i >= 0; i--) {
-                LWComponentPeer p = childPeers.get(i).findPeerAt(x, y);
-                if (p != null) {
-                    return p;
+    public final LWComponentPeer findPeerAt(int x, int y) {
+        LWComponentPeer peer = super.findPeerAt(x, y);
+        if (peer != null) {
+            final Rectangle r = getBounds();
+            // Translate to this container's coordinates to pass to children
+            x -= r.x;
+            y -= r.y;
+            synchronized (getPeerTreeLock()) {
+                for (int i = childPeers.size() - 1; i >= 0; --i) {
+                    LWComponentPeer p = childPeers.get(i).findPeerAt(x, y);
+                    if (p != null) {
+                        peer = p;
+                        break;
+                    }
                 }
             }
         }
-        return this;
+        return peer;
     }
 
     /*

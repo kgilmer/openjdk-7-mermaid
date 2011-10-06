@@ -105,6 +105,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // Bounds are relative to parent peer
     private Rectangle bounds = new Rectangle();
+    private Region shape;
 
     // Graphics attributes. Should be accessed under the state lock
     private Color foreground = null;
@@ -520,7 +521,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             }
         }
         Point locationInWindow = localToWindow(0, 0);
-        platformComponent.setBounds(locationInWindow.x, locationInWindow.y, bounds.width, bounds.height);
+        platformComponent.setBounds(locationInWindow.x, locationInWindow.y,
+                                    bounds.width, bounds.height);
     }
 
     public Rectangle getBounds() {
@@ -893,10 +895,17 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     @Override
-    public void applyShape(Region shape) {
-        // TODO: not implemented
+    public void applyShape(final Region shape) {
+        synchronized (getStateLock()) {
+            this.shape = shape;
+        }
     }
 
+    private Region getShape() {
+        synchronized (getStateLock()) {
+            return shape;
+        }
+    }
 
     // DropTargetPeer Method
     public synchronized void addDropTarget(DropTarget dt) {
@@ -1175,10 +1184,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * Finds a top-most visible component for the given point. The location is
      * specified relative to the peer's parent.
      */
-    public LWComponentPeer findPeerAt(int x, int y) {
-        synchronized (getStateLock()) {
-            return (getBounds().contains(x, y) && isVisible()) ? this : null;
-        }
+    public LWComponentPeer findPeerAt(final int x, final int y) {
+        final Rectangle r = getBounds();
+        final Region sh = getShape();
+        final boolean found = isVisible() && ((sh == null)
+                                              ? r.contains(x, y)
+                                              : sh.contains(x - r.x, y - r.y));
+        return found ? this : null;
     }
 
     /*
