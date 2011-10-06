@@ -37,8 +37,8 @@ import javax.swing.*;
 class LWCheckboxPeer
         extends LWComponentPeer<Checkbox, LWCheckboxPeer.CheckboxDelegate>
         implements CheckboxPeer, ItemListener {
-    LWCheckboxPeer(Checkbox target) {
-        super(target);
+    LWCheckboxPeer(Checkbox target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     @Override

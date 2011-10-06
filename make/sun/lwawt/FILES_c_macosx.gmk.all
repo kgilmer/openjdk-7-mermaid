@@ -35,6 +35,7 @@ FILES_objc = \
 	AWTInsets.m \
 	AWTView.m \
 	AWTWindow.m \
+	AWTSurfaceLayers.m \
 	CCursorManager.m \
 	CFileDialog.m \
 	CImage.m \
@@ -47,7 +48,8 @@ FILES_objc = \
         CTrayIcon.m \
         CWrapper.m \
         LWCToolkit.m \
-        ThreadUtilities.m
+        ThreadUtilities.m \
+        awt_DrawingSurface.m
 
 FILES_c = \
 	gifdecoder.c \

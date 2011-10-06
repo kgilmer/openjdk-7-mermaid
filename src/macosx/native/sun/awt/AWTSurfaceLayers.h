@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,35 +23,26 @@
  * questions.
  */
 
-#define _JNI_IMPLEMENTATION_
-#include <jawt.h>
-
-#include "awt.h"
-#include "awt_DrawingSurface.h"
+// REMIND: import <jawt_md.h>
+#import <JavaVM/jawt_md.h>
 
 /*
- * Get the AWT native structure.  This function returns JNI_FALSE if
- * an error occurs.
+ * The CALayer-based rendering model returns an object conforming
+ * to the JAWT_SurfaceLayers protocol
+ *
+ * @protocol JAWT_SurfaceLayers
+ * @property (readwrite, retain) CALayer *layer;
+ * @property (readonly) CALayer *windowLayer;
+ * @end
  */
-extern "C" JNIEXPORT jboolean JNICALL JAWT_GetAWT(JNIEnv* env, JAWT* awt)
-{
-    if (awt == NULL) {
-        return JNI_FALSE;
-    }
 
-    if (awt->version != JAWT_VERSION_1_3
-        && awt->version != JAWT_VERSION_1_4
-        && awt->version != JAWT_VERSION_1_7) {
-        return JNI_FALSE;
-    }
-
-    awt->GetDrawingSurface = DSGetDrawingSurface;
-    awt->FreeDrawingSurface = DSFreeDrawingSurface;
-    if (awt->version >= JAWT_VERSION_1_4) {
-        awt->Lock = DSLockAWT;
-        awt->Unlock = DSUnlockAWT;
-        awt->GetComponent = DSGetComponent;
-    }
-
-    return JNI_TRUE;
+@interface AWTSurfaceLayers : NSObject<JAWT_SurfaceLayers> {
+@private
+    CALayer *layer;
+    CALayer *windowLayer;
 }
+
+- (id) initWithWindowLayer: (CALayer *)windowLayer;
+- (void) setBounds: (CGRect)rect;
+
+@end

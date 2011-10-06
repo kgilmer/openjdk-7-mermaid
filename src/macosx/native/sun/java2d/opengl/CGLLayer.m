@@ -54,7 +54,7 @@ AWT_ASSERT_APPKIT_THREAD;
     self.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;        
     textureID = 0; // texture will be created by rendering pipe
 	target = 0;
-	
+    
     return self;
 }
 
@@ -114,3 +114,29 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 @end
+
+/*
+ * Class:     sun_java2d_opengl_CGLLayer
+ * Method:    nativeCreateLayer
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL
+Java_sun_java2d_opengl_CGLLayer_nativeCreateLayer
+(JNIEnv *env, jobject obj)
+{
+    __block CGLLayer *layer = nil;
+    
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+        
+        layer = [CGLLayer layer];
+        CFRetain(layer);
+    }];
+    
+JNF_COCOA_EXIT(env);
+    
+    return ptr_to_jlong(layer);
+}

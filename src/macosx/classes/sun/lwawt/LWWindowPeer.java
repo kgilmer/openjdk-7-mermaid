@@ -107,8 +107,10 @@ public class LWWindowPeer
      */
     private LWWindowPeer blocker;
 
-    public LWWindowPeer(Window target, PlatformWindow platformWindow) {
-        super(target);
+    public LWWindowPeer(Window target, PlatformComponent platformComponent,
+                        PlatformWindow platformWindow)
+    {
+        super(target, platformComponent);
         this.platformWindow = platformWindow;
 
         Window owner = target.getOwner();

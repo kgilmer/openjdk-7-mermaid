@@ -38,8 +38,8 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
     protected final static int MARGIN = 2;
     protected final static int SPACE = 1;
 
-    LWTextComponentPeer(T target) {
-        super(target);
+    LWTextComponentPeer(T target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     /* Returns height of the line in textarea or textfield */

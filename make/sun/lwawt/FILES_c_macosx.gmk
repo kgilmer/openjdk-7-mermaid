@@ -45,6 +45,7 @@ FILES_objc = \
         AWTEvent.m \
         AWTView.m \
         AWTWindow.m \
+	AWTSurfaceLayers.m \
         CCursorManager.m \
         CClipboard.m \
         CDataTransferer.m \
@@ -80,7 +81,8 @@ FILES_objc = \
         QuartzSurfaceData.m \
         QuartzRenderer.m \
         CTextPipe.m \
-        ImageSurfaceData.m
+        ImageSurfaceData.m \
+        awt_DrawingSurface.m
 
 FILES_c = \
         OGLBlitLoops.c \

@@ -34,8 +34,8 @@ final class LWListPeer
         extends LWComponentPeer<List, LWListPeer.ScrollableJList>
         implements ListPeer {
 
-    LWListPeer(List target) {
-        super(target);
+    LWListPeer(List target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     protected ScrollableJList createDelegate() {

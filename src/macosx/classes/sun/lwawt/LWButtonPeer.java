@@ -36,8 +36,8 @@ import javax.swing.JButton;
 final class LWButtonPeer extends LWComponentPeer<Button, JButton>
         implements ButtonPeer, ActionListener {
 
-    LWButtonPeer(final Button target) {
-        super(target);
+    LWButtonPeer(final Button target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     @Override

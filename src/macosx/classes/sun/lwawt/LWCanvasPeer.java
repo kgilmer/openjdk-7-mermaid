@@ -40,8 +40,8 @@ final class LWCanvasPeer
     extends LWComponentPeer<Component, JComponent>
     implements CanvasPeer
 {
-    LWCanvasPeer(final Canvas target) {
-        super(target);
+    LWCanvasPeer(final Canvas target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     @Override

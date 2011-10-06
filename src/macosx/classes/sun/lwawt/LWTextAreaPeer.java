@@ -38,8 +38,8 @@ final class LWTextAreaPeer
     private final static int DEFAULT_ROWS = 3;
     private final static int BORDERMARGIN = 5;
 
-    public LWTextAreaPeer(TextArea target) {
-        super(target);
+    public LWTextAreaPeer(TextArea target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     @Override

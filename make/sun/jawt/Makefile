@@ -35,6 +35,8 @@ include $(BUILDDIR)/common/Defs.gmk
 #
 ifeq ($(PLATFORM), windows)
 FILES_cpp = jawt.cpp
+else ifeq ($(PLATFORM), macosx) # PLATFORM
+FILES_objc = jawt.m
 else # PLATFORM
 FILES_c = jawt.c
 endif # PLATFORM
@@ -129,7 +131,9 @@ ifneq (,$(findstring $(PLATFORM), linux bsd))
 endif # PLATFORM
 
 ifeq ($(PLATFORM), macosx)
-OTHER_LDLIBS = -L$(LIBDIR) -lawt -L$(LIBDIR)/xawt -lmawt
+vpath %.m   $(call NativeSrcDirList,,native/sun/awt)
+OTHER_LDLIBS = -llwawt -L$(LIBDIR)/lwawt -Xlinker -rpath -Xlinker @loader_path/lwawt \
+               -framework Cocoa
 endif # PLATFORM
 
 endif # PLATFORM

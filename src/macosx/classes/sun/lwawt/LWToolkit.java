@@ -212,30 +212,35 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
      * Note that LWWindowPeer implements WindowPeer, FramePeer
      * and DialogPeer interfaces.
      */
-    private LWWindowPeer createDelegatedPeer(Window target, PlatformWindow delegate) {
-        LWWindowPeer peer = new LWWindowPeer(target, delegate);
+    private LWWindowPeer createDelegatedPeer(Window target, PlatformComponent platformComponent,
+                                             PlatformWindow platformWindow)
+    {
+        LWWindowPeer peer = new LWWindowPeer(target, platformComponent, platformWindow);
         targetCreatedPeer(target, peer);
-        targetDelegate(delegate, peer);
+        targetDelegate(platformWindow, peer);
         peer.initialize();
         return peer;
     }
 
     @Override
     public WindowPeer createWindow(Window target) {
-        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.SIMPLEWINDOW);
-        return createDelegatedPeer(target, delegate);
+        PlatformComponent platformComponent = createPlatformComponent();
+        PlatformWindow platformWindow = createPlatformWindow(LWWindowPeer.PeerType.SIMPLEWINDOW);
+        return createDelegatedPeer(target, platformComponent, platformWindow);
     }
 
     @Override
     public FramePeer createFrame(Frame target) {
-        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.FRAME);
-        return createDelegatedPeer(target, delegate);
+        PlatformComponent platformComponent = createPlatformComponent();
+        PlatformWindow platformWindow = createPlatformWindow(LWWindowPeer.PeerType.FRAME);
+        return createDelegatedPeer(target, platformComponent, platformWindow);
     }
 
     
     CPrinterDialogPeer createCPrinterDialog(CPrinterDialog target) {
-        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
-        CPrinterDialogPeer peer = new CPrinterDialogPeer(target, delegate);
+        PlatformComponent platformComponent = createPlatformComponent();
+        PlatformWindow platformWindow = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
+        CPrinterDialogPeer peer = new CPrinterDialogPeer(target, platformComponent, platformWindow);
         targetCreatedPeer(target, peer);
         return peer;
     }
@@ -246,8 +251,9 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
             return createCPrinterDialog((CPrinterDialog)target);
         } 
         
-        PlatformWindow delegate = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
-        return createDelegatedPeer(target, delegate);
+        PlatformComponent platformComponent = createPlatformComponent();
+        PlatformWindow platformWindow = createPlatformWindow(LWWindowPeer.PeerType.DIALOG);
+        return createDelegatedPeer(target, platformComponent, platformWindow);
     }
 
     @Override
@@ -261,7 +267,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ButtonPeer createButton(Button target) {
-        LWButtonPeer peer = new LWButtonPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWButtonPeer peer = new LWButtonPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -269,7 +276,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public CheckboxPeer createCheckbox(Checkbox target) {
-        LWCheckboxPeer peer = new LWCheckboxPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWCheckboxPeer peer = new LWCheckboxPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -282,7 +290,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ChoicePeer createChoice(Choice target) {
-        LWChoicePeer peer = new LWChoicePeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWChoicePeer peer = new LWChoicePeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -290,7 +299,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public LabelPeer createLabel(Label target) {
-        LWLabelPeer peer = new LWLabelPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWLabelPeer peer = new LWLabelPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -298,7 +308,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public CanvasPeer createCanvas(Canvas target) {
-        LWCanvasPeer peer = new LWCanvasPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWCanvasPeer peer = new LWCanvasPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -306,7 +317,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ListPeer createList(List target) {
-        LWListPeer peer = new LWListPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWListPeer peer = new LWListPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -329,7 +341,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public PanelPeer createPanel(Panel target) {
-        LWPanelPeer peer = new LWPanelPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWPanelPeer peer = new LWPanelPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -342,7 +355,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ScrollPanePeer createScrollPane(ScrollPane target) {
-        LWScrollPanePeer peer = new LWScrollPanePeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWScrollPanePeer peer = new LWScrollPanePeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -350,7 +364,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public ScrollbarPeer createScrollbar(Scrollbar target) {
-        LWScrollBarPeer peer = new LWScrollBarPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWScrollBarPeer peer = new LWScrollBarPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -358,7 +373,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public TextAreaPeer createTextArea(TextArea target) {
-        LWTextAreaPeer peer = new LWTextAreaPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWTextAreaPeer peer = new LWTextAreaPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -366,7 +382,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public TextFieldPeer createTextField(TextField target) {
-        LWTextFieldPeer peer = new LWTextFieldPeer(target);
+        PlatformComponent platformComponent = createPlatformComponent();
+        LWTextFieldPeer peer = new LWTextFieldPeer(target, platformComponent);
         targetCreatedPeer(target, peer);
         peer.initialize();
         return peer;
@@ -482,6 +499,8 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
      */
     protected abstract PlatformWindow createPlatformWindow(LWWindowPeer.PeerType peerType);
 
+    protected abstract PlatformComponent createPlatformComponent();
+    
     protected abstract FileDialogPeer createFileDialogPeer(FileDialog target);
     
     public static void targetDelegate(PlatformWindow delegate, LWWindowPeer peer) {

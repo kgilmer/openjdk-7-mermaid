@@ -40,8 +40,8 @@ final class LWTextFieldPeer
         implements TextFieldPeer, ActionListener {
     private final static int DEFAULT_COLUMNS = 9;
 
-    LWTextFieldPeer(TextField target) {
-        super(target);
+    LWTextFieldPeer(TextField target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     protected JPasswordField createDelegate() {

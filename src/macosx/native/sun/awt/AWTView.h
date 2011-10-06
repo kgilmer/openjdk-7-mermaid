@@ -57,7 +57,7 @@
 
 @property (nonatomic, retain) id cglLayer;
 
-- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView;
+- (id) initWithRect:(NSRect) rect platformView:(jobject)cPlatformView windowLayer:(CALayer*)windowLayer;
 - (void) deliverJavaMouseEvent: (NSEvent *) event;
 - (void) resetTrackingRect;
 - (void) deliverJavaKeyEventHelper: (NSEvent *) event;

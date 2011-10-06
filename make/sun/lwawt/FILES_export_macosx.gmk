@@ -140,6 +140,7 @@ FILES_export = \
         sun/lwawt/macosx/CMouseInfoPeer.java \
         sun/lwawt/macosx/CPlatformView.java \
         sun/lwawt/macosx/CPlatformWindow.java \
+        sun/lwawt/macosx/CPlatformComponent.java \
         sun/lwawt/macosx/CPopupMenu.java \
         sun/lwawt/macosx/CRobot.java \
         sun/lwawt/macosx/CSystemTray.java \
@@ -185,6 +186,7 @@ FILES_export = \
         sun/java2d/opengl/OGLTextRenderer.java \
         sun/java2d/opengl/CGLGraphicsConfig.java \
         sun/java2d/opengl/CGLSurfaceData.java \
+        sun/java2d/opengl/CGLLayer.java \
         sun/awt/ExtendedKeyCodes.java 
 
 FILES_export2 = \

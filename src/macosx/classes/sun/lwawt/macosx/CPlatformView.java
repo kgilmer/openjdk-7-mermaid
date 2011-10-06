@@ -30,15 +30,18 @@ import java.awt.event.*;
 import java.awt.image.VolatileImage;
 
 import sun.awt.CGraphicsConfig;
-import sun.java2d.SurfaceData;
 import sun.lwawt.LWWindowPeer;
 import sun.lwawt.macosx.event.NSEvent;
 
+import sun.java2d.SurfaceData;
+import sun.java2d.opengl.CGLLayer;
+
 public class CPlatformView extends CFRetainedResource {
-    private native long nativeCreateView(int x, int y, int width, int height);
+    private native long nativeCreateView(int x, int y, int width, int height, long windowLayerPtr);
     
     private LWWindowPeer peer;
     private SurfaceData surfaceData;
+    private CGLLayer windowLayer;
     
     public CPlatformView() {
         super(0, true);
@@ -46,7 +49,8 @@ public class CPlatformView extends CFRetainedResource {
     
     public void initialize(LWWindowPeer peer) {
         this.peer = peer;
-        setPtr(nativeCreateView(0, 0, 0, 0));
+        this.windowLayer = new CGLLayer();
+        setPtr(nativeCreateView(0, 0, 0, 0, windowLayer.getPointer()));
     }
     
     public long getAWTView() {
@@ -147,6 +151,16 @@ public class CPlatformView extends CFRetainedResource {
     
     public SurfaceData getSurfaceData() {
         return surfaceData;
+    }
+    
+    @Override
+    public void dispose() {
+        windowLayer.dispose();
+        super.dispose();
+    }
+    
+    public long getWindowLayer() {
+        return windowLayer.getPointer();
     }
     
     // ----------------------------------------------------------------------

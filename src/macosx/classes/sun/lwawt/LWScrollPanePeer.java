@@ -37,8 +37,8 @@ public class LWScrollPanePeer
         implements ScrollPanePeer, ChangeListener {
 
 
-    public LWScrollPanePeer(ScrollPane target) {
-        super(target);
+    public LWScrollPanePeer(ScrollPane target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     protected JScrollPane createDelegate() {

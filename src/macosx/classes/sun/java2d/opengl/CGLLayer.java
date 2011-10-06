@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,35 +23,19 @@
  * questions.
  */
 
-#define _JNI_IMPLEMENTATION_
-#include <jawt.h>
+package sun.java2d.opengl;
 
-#include "awt.h"
-#include "awt_DrawingSurface.h"
+import sun.lwawt.macosx.CFRetainedResource;
 
-/*
- * Get the AWT native structure.  This function returns JNI_FALSE if
- * an error occurs.
- */
-extern "C" JNIEXPORT jboolean JNICALL JAWT_GetAWT(JNIEnv* env, JAWT* awt)
-{
-    if (awt == NULL) {
-        return JNI_FALSE;
+public class CGLLayer extends CFRetainedResource {
+
+    private static native long nativeCreateLayer();
+    
+    public CGLLayer() {
+        super(nativeCreateLayer(), true);
     }
-
-    if (awt->version != JAWT_VERSION_1_3
-        && awt->version != JAWT_VERSION_1_4
-        && awt->version != JAWT_VERSION_1_7) {
-        return JNI_FALSE;
+    
+    public long getPointer() {
+        return ptr;
     }
-
-    awt->GetDrawingSurface = DSGetDrawingSurface;
-    awt->FreeDrawingSurface = DSFreeDrawingSurface;
-    if (awt->version >= JAWT_VERSION_1_4) {
-        awt->Lock = DSLockAWT;
-        awt->Unlock = DSUnlockAWT;
-        awt->GetComponent = DSGetComponent;
-    }
-
-    return JNI_TRUE;
 }

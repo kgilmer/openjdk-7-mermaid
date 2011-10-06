@@ -134,6 +134,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private final static LookAndFeel systemLookAndFeel;
 
+    private PlatformComponent platformComponent;
+            
     static {
         // System LaF is inited here to make it thread safe
         String laf = UIManager.getSystemLookAndFeelClassName();
@@ -172,8 +174,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
     }
 
-    public LWComponentPeer(T target) {
+    public LWComponentPeer(T target, PlatformComponent platformComponent) {
         this.target = target;
+        this.platformComponent = platformComponent;
 
         initializeContainerPeer();
         // Container peer is always null for LWWindowPeers, so
@@ -286,6 +289,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * LWToolkit object who is responsible for initialization.
      */
     public void initialize() {
+        platformComponent.initialize(target, this, getPlatformWindow());
         targetPaintArea = new RepaintArea();
         setBackground(target.getBackground());
         setForeground(target.getForeground());
@@ -384,6 +388,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         if (cp != null) {
             cp.removeChildPeer(this);
         }
+        platformComponent.dispose();
         LWToolkit.targetDisposedPeer(getTarget(), this);
     }
 
@@ -514,6 +519,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 handleResize(oldBounds.width, oldBounds.height, w, h);
             }
         }
+        Point locationInWindow = localToWindow(0, 0);
+        platformComponent.setBounds(locationInWindow.x, locationInWindow.y, bounds.width, bounds.height);
     }
 
     public Rectangle getBounds() {

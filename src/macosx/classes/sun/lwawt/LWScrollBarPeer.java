@@ -42,8 +42,8 @@ public class LWScrollBarPeer
     // We save the last value and don't fire event if not changed.
     private int currentValue;
     
-    public LWScrollBarPeer(Scrollbar target) {
-        super(target);
+    public LWScrollBarPeer(Scrollbar target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
         this.currentValue = target.getValue();
         
         synchronized (getDelegateLock()) {

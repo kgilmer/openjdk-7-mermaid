@@ -37,8 +37,8 @@ import javax.swing.JComboBox;
 final class LWChoicePeer extends LWComponentPeer<Choice, JComboBox<String>>
         implements ChoicePeer, ItemListener {
 
-    LWChoicePeer(final Choice target) {
-        super(target);
+    LWChoicePeer(final Choice target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
 
     @Override

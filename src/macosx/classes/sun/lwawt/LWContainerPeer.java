@@ -45,8 +45,8 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
     private List<LWComponentPeer> childPeers =
         new LinkedList<LWComponentPeer>();
 
-    public LWContainerPeer(T target) {
-        super(target);
+    public LWContainerPeer(T target, PlatformComponent platformComponent) {
+        super(target, platformComponent);
     }
     
     void addChildPeer(LWComponentPeer child) {

@@ -65,6 +65,7 @@ static BOOL shouldUsePressAndHold() {
 // Note: Must be called on main (AppKit) thread only
 - (id) initWithRect: (NSRect) rect
        platformView: (jobject) cPlatformView
+       windowLayer: (CALayer*) windowLayer
 {
 AWT_ASSERT_APPKIT_THREAD;
     // Initialize ourselves
@@ -81,7 +82,7 @@ AWT_ASSERT_APPKIT_THREAD;
     fPAHNeedsToSelect = NO;
 
 #if USE_INTERMEDIATE_BUFFER
-    self.cglLayer = [CGLLayer layer];    
+    self.cglLayer = windowLayer;
     [self setWantsLayer: YES];
     [self.layer addSublayer: (CALayer *)cglLayer];
 #ifdef REMOTELAYER
@@ -1152,7 +1153,7 @@ JNF_CLASS_CACHE(jc_CInputMethod, "sun/lwawt/macosx/CInputMethod");
  */
 JNIEXPORT jlong JNICALL
 Java_sun_lwawt_macosx_CPlatformView_nativeCreateView
-(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height)
+(JNIEnv *env, jobject obj, jint originX, jint originY, jint width, jint height, jlong windowLayerPtr)
 {
     __block AWTView *newView = nil;
     
@@ -1165,8 +1166,10 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
         AWT_ASSERT_APPKIT_THREAD;
         
+        CALayer *windowLayer = jlong_to_ptr(windowLayerPtr);
         AWTView *view = [[AWTView alloc] initWithRect:rect
-                                         platformView:cPlatformView];
+                                         platformView:cPlatformView
+                                         windowLayer:windowLayer];
         CFRetain(view);
         [view release]; // GC
         

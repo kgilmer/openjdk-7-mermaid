@@ -152,6 +152,11 @@ public class LWCToolkit extends LWToolkit {
     }
 
     @Override
+    protected PlatformComponent createPlatformComponent() {
+        return new CPlatformComponent();
+    }
+    
+    @Override
     protected FileDialogPeer createFileDialogPeer(FileDialog target) {
         return new CFileDialog(target);
     }
