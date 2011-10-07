@@ -292,9 +292,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     public void initialize() {
         platformComponent.initialize(target, this, getPlatformWindow());
         targetPaintArea = new RepaintArea();
-        setBackground(target.getBackground());
-        setForeground(target.getForeground());
-        setFont(target.getFont());
+        if (target.isBackgroundSet()) {
+            setBackground(target.getBackground());
+        }
+        if (target.isForegroundSet()) {
+            setForeground(target.getForeground());
+        }
+        if (target.isFontSet()) {
+            setFont(target.getFont());
+        }
         setBounds(target.getBounds());
         setEnabled(target.isEnabled());
         setVisible(target.isVisible());
@@ -560,6 +566,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     // Helper method
     protected Color getBackground() {
         synchronized (getStateLock()) {
+            if (background == null) {
+                LWContainerPeer parentPeer = getContainerPeer();
+                if (parentPeer != null) {
+                    return parentPeer.getBackground();
+                }
+            }
             return background;
         }
     }
@@ -584,6 +596,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     // Helper method
     protected Color getForeground() {
         synchronized (getStateLock()) {
+            if (foreground == null) {
+                LWContainerPeer parentPeer = getContainerPeer();
+                if (parentPeer != null) {
+                    return parentPeer.getForeground();
+                }
+            }
             return foreground;
         }
     }
@@ -608,6 +626,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     // Helper method
     protected Font getFont() {
         synchronized (getStateLock()) {
+            if (font == null) {
+                LWContainerPeer parentPeer = getContainerPeer();
+                if (parentPeer != null) {
+                    return parentPeer.getFont();
+                }
+            }
             return font;
         }
     }
@@ -1365,6 +1389,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                         AppContext.getAppContext().put(KeyboardFocusManager.class, delegateKFM);
                     }
                     try {
+                        delegate.setBackground(getBackground());
+                        delegate.setForeground(getForeground());
+                        delegate.setFont(getFont());
                         // JComponent.print() is guaranteed to not affect the double buffer
                         delegate.print(g);
                     } finally {

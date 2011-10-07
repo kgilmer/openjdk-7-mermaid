@@ -157,5 +157,26 @@ final class LWListPeer
             getViewport().getView().setEnabled(enabled);
             super.setEnabled(enabled);
         }
+
+        public void setBackground(Color bg) {
+            super.setBackground(bg);
+            if (getView() != null) {
+                getView().setBackground(bg);
+            }
+        }
+
+        public void setForeground(Color fg) {
+            super.setForeground(fg);
+            if (getView() != null) {
+                getView().setForeground(fg);
+            }
+        }
+
+        public void setFont(Font font) {
+            super.setFont(font);
+            if (getView() != null) {
+                getView().setFont(font);
+            }
+        }
     }
 }

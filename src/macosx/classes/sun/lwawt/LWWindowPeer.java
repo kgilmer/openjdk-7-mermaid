@@ -138,19 +138,16 @@ public class LWWindowPeer
         Font f = getTarget().getFont();
         if (f == null) {
             getTarget().setFont(DEFAULT_FONT);
-            setFont(DEFAULT_FONT);
         }
 
         Color bg = getTarget().getBackground();
         if (bg == null) {
             getTarget().setBackground(SystemColor.window);
-            setBackground(SystemColor.window);
         }
 
         Color fg = getTarget().getForeground();
         if (fg == null) {
             getTarget().setForeground(SystemColor.windowText);
-            setForeground(SystemColor.windowText);
         }
 
         if (getTarget() instanceof Frame) {
@@ -175,6 +172,23 @@ public class LWWindowPeer
         replaceSurfaceData(1, null);
     }
 
+
+    protected Color getBackground() {
+        Color color = super.getBackground();
+        return color == null ? SystemColor.window : color;
+    }
+
+    protected Color getForeground() {
+        Color color = super.getForeground();
+        return color == null ? SystemColor.windowText: color;
+    }
+
+
+    protected Font getFont() {
+        Font font = super.getFont();
+        return font == null ? DEFAULT_FONT : font;
+    }
+    
     // Just a helper method
     public PlatformWindow getPlatformWindow() {
         return platformWindow;

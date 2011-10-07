@@ -60,6 +60,7 @@ class LWCheckboxPeer
         getDelegate().getCurrentButton().addItemListener(this);
     }
 
+
     public void itemStateChanged(final ItemEvent e) {
         // group.setSelectedCheckbox() will repaint the component
         // to let LWCheckboxPeer correctly handle it we should call it
@@ -119,7 +120,9 @@ class LWCheckboxPeer
 
         CheckboxDelegate() {
             cb = new JCheckBox();
+            cb.setOpaque(true);
             rb = new JRadioButton();
+            rb.setOpaque(true);
             add(cb);
         }
 
@@ -158,6 +161,21 @@ class LWCheckboxPeer
         @Transient
         public Dimension getMinimumSize() {
             return getCurrentButton().getMinimumSize();
+        }
+
+        public void setBackground(Color bg) {
+            super.setBackground(bg);
+            getCurrentButton().setBackground(bg);
+        }
+
+        public void setForeground(Color fg) {
+            super.setForeground(fg);
+            getCurrentButton().setForeground(fg);
+        }
+
+        public void setFont(Font font) {
+            super.setFont(font);
+            getCurrentButton().setFont(font);
         }
     }
 }
