@@ -559,6 +559,17 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
                 
                 b.setBorder(AquaButtonExtendedTypes.getBorderForPosition(b, b.getClientProperty(BUTTON_TYPE), e.getNewValue()));
             }
+            
+            if ("componentOrientation".equals(propertyName)) {
+            	final Border border = b.getBorder();
+                if (!(border instanceof AquaBorder)) return;
+                
+                Object buttonType = b.getClientProperty(BUTTON_TYPE);
+                Object buttonPosition = b.getClientProperty(SEGMENTED_BUTTON_POSITION);
+                if (buttonType != null && buttonPosition != null) {
+                    b.setBorder(AquaButtonExtendedTypes.getBorderForPosition(b, buttonType, buttonPosition));
+                }
+            }
         }
         
         public void ancestorMoved(final AncestorEvent e) {}

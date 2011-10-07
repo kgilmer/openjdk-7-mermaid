@@ -42,8 +42,8 @@ import com.apple.laf.AquaUtils.RecyclableSingleton;
  * has been addressed, and we can cull widget metrics from the native system.
  */
 public class AquaButtonExtendedTypes {
-    protected static Border getBorderForPosition(final AbstractButton c, final Object type, final Object position) {
-        final String name = (position == null ? (String)type : type + "-" + position);
+    protected static Border getBorderForPosition(final AbstractButton c, final Object type, final Object logicalPosition) {
+        final String name = (logicalPosition == null ? (String)type : type + "-" + getRealPositionForLogicalPosition((String)logicalPosition, c.getComponentOrientation().isLeftToRight()));
         final TypeSpecifier specifier = getSpecifierByName(name);
         if (specifier == null) return null;
         
@@ -53,6 +53,14 @@ public class AquaButtonExtendedTypes {
         return ((AquaBorder)border).deriveBorderForSize(AquaUtilControlSize.getUserSizeFrom(c));
     }
     
+    protected static String getRealPositionForLogicalPosition(String logicalPosition, boolean leftToRight) {
+        if (!leftToRight) {
+            if ("first".equalsIgnoreCase(logicalPosition)) return "last";
+            if ("last".equalsIgnoreCase(logicalPosition)) return "first";
+        }
+        return logicalPosition;
+    }
+
     static abstract class TypeSpecifier {
         final String name;
         final boolean setIconFont;
