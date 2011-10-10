@@ -226,9 +226,19 @@ public class CStrike extends FontStrike {
     }
 
     Rectangle2D.Float getGlyphOutlineBounds(int glyphCode) {
-        Rectangle2D.Float floatRect = new Rectangle2D.Float();
-        getGlyphImageBounds(glyphCode, 0, 0, floatRect);
-        return floatRect;
+        GeneralPath gp = getGlyphOutline(glyphCode, 0f, 0f);
+        Rectangle2D r2d = gp.getBounds2D();
+        Rectangle2D.Float r2df;
+        if (r2d instanceof Rectangle2D.Float) {
+            r2df = (Rectangle2D.Float)r2d;
+        } else {
+            float x = (float)r2d.getX();
+            float y = (float)r2d.getY();
+            float w = (float)r2d.getWidth();
+            float h = (float)r2d.getHeight();
+            r2df = new Rectangle2D.Float(x, y, w, h);
+        }
+        return r2df;
     }
     
     // pt, result in device space
