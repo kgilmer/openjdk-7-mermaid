@@ -144,9 +144,6 @@ public class CFontManager extends SunFontManager {
         }
     }
 	
-    // createFont2D goes through native code to load fonts from files
-	static native Font2D loadFileFont(String fontPath);
-
     @Override
     public Font2D createFont2D(File fontFile, int fontFormat, boolean isCopy, CreatedFontTracker tracker) throws FontFormatException {
 
@@ -157,22 +154,10 @@ public class CFontManager extends SunFontManager {
     try {
     	switch (fontFormat) {    
     		case Font.TRUETYPE_FONT:
-    			font2D = loadFileFont(fontFilePath);
-    			if (font2D == null) {
-    				FileFont ff =  new TrueTypeFont(fontFilePath, null, 0, true);
-    				font2D = addToFontList(ff, Font2D.TTF_RANK);		
-    				if (font2D == null) throw new FontFormatException("Unrecognised Font Format");
-    			}
+                        font2D = new TrueTypeFont(fontFilePath, null, 0, true);
     			break;
     		case Font.TYPE1_FONT:
-    			font2D = loadFileFont(fontFilePath);
-    			if (font2D == null) {
-    				Type1Font t1f = new Type1Font(fontFilePath, null);
-    				font2D = addToFontList(t1f, Font2D.TYPE1_RANK);
-    				if (font2D == null) throw new FontFormatException("Unrecognised Font Format");
-    			}
-    			
-    			font2D = new Type1Font(fontFilePath, null, isCopy);
+                        font2D = new Type1Font(fontFilePath, null, isCopy);
     			break;
     		default:
     			throw new FontFormatException("Unrecognised Font Format");
