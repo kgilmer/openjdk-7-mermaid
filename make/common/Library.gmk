@@ -60,6 +60,7 @@ FILES_o  += $(patsubst %.cpp, %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notd
 
 ifeq ($(PLATFORM), macosx)
 FILES_o  += $(patsubst %.m,   %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_objc))))
+FILES_o  += $(patsubst %.mm,  %.$(OBJECT_SUFFIX), $(addprefix $(OBJDIR)/, $(notdir $(FILES_objcpp))))
 endif # PLATFORM
 
 INCREMENTAL_BUILD=false

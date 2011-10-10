@@ -183,6 +183,11 @@ $(OBJDIR)/%.$(OBJECT_SUFFIX): %.m
 	$(COMPILE.c) $(CC_OBJECT_OUTPUT_FLAG)$@ $(CFLAGS_GPROF) $<
 	@$(check-conventions)
 
+$(OBJDIR)/%.$(OBJECT_SUFFIX): %.mm
+	@$(prep-target)
+	$(COMPILE.cc) $(CC_OBJECT_OUTPUT_FLAG)$@ $(CFLAGS_GPROF) $<
+	@$(check-conventions)
+
 $(OBJDIR)/%.$(OBJECT_SUFFIX): %.c
 	@$(prep-target)
 	$(COMPILE.c) $(CC_OBJECT_OUTPUT_FLAG)$@ $(CFLAGS_GPROF) $<
