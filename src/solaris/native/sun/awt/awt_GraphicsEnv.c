@@ -428,8 +428,14 @@ getAllConfigs (JNIEnv *env, int screen, AwtScreenDataPtr screenDataPtr) {
     {
         xrenderLibHandle = dlopen("libXrender.so.1", RTLD_LAZY | RTLD_GLOBAL);
 
+#ifdef MACOSX
+#define XRENDER_LIB "/usr/X11/lib/libXrender.dylib"
+#else
+#define XRENDER_LIB "libXrender.so"
+#endif
+
         if (xrenderLibHandle == NULL) {
-            xrenderLibHandle = dlopen("libXrender.so",
+            xrenderLibHandle = dlopen(XRENDER_LIB,
                                       RTLD_LAZY | RTLD_GLOBAL);
         }
 
