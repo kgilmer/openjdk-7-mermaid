@@ -84,12 +84,15 @@ public final class SunNativeProvider extends Provider {
                             if (osname.startsWith("SunOS")) {
                                 gssLibs = new String[]{ "libgss.so" };
                             } else if (osname.startsWith("Linux") ||
-				       osname.startsWith("Darwin") ||
-				       osname.endsWith("BSD")) {
+				       			osname.endsWith("BSD")) {
                                 gssLibs = new String[]{
                                     "libgssapi.so",
                                     "libgssapi_krb5.so",
                                     "libgssapi_krb5.so.2",
+                                };
+                            } else if (osname.startsWith("Mac OS X")) {
+                            	gssLibs = new String[]{
+                                    "/usr/lib/sasl2/libgssapiv2.2.so",
                                 };
                             }
                         } else {
