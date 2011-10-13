@@ -28,12 +28,53 @@ package sun.font;
 import java.awt.Font;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 // Right now this class is final to avoid a problem with native code.
 // For some reason the JNI IsInstanceOf was not working correctly
 // so we are checking the class specifically. If we subclass this
 // we need to modify the native code in CFontWrapper.m
-public final class CFont extends Font2D {
+public final class CFont extends PhysicalFont {
+
+    /* CFontStrike doesn't call these methods so they are unimplemented.
+     * They are here to meet the requirements of PhysicalFont, needed
+     * because a CFont can sometimes be returned where a PhysicalFont
+     * is expected.
+     */
+    StrikeMetrics getFontMetrics(long pScalerContext) {
+       throw new InternalError("Not implemented");
+    }
+
+    float getGlyphAdvance(long pScalerContext, int glyphCode) {
+       throw new InternalError("Not implemented");
+    }
+
+    void getGlyphMetrics(long pScalerContext, int glyphCode,
+                                  Point2D.Float metrics) {
+       throw new InternalError("Not implemented");
+    }
+
+    long getGlyphImage(long pScalerContext, int glyphCode) {
+       throw new InternalError("Not implemented");
+    }
+
+    Rectangle2D.Float getGlyphOutlineBounds(long pScalerContext,
+                                                     int glyphCode) {
+       throw new InternalError("Not implemented");
+    }
+
+    GeneralPath getGlyphOutline(long pScalerContext, int glyphCode,
+                                         float x, float y) {
+       throw new InternalError("Not implemented");
+    }
+
+    GeneralPath getGlyphVectorOutline(long pScalerContext,
+                                               int[] glyphs, int numGlyphs,
+                                               float x, float y) {
+       throw new InternalError("Not implemented");
+    }
 
     private static native long createNativeFont(final String nativeFontName,
                                                 final int style,
