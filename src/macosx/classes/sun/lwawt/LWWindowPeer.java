@@ -96,9 +96,12 @@ public class LWWindowPeer
     private static int mouseClickButtons = 0;
 
     private volatile boolean cachedFocusableWindow;
-    
-    // TODO: move to PlatformWindow?
+
     private final static Font DEFAULT_FONT = new Font(Font.DIALOG, Font.PLAIN, 12);
+
+    private Color background;
+    private Color foreground;
+    private Font font;
 
     /**
      * Current modal blocker or null.
@@ -134,22 +137,6 @@ public class LWWindowPeer
 
         updateInsets(platformWindow.getInsets());
 
-        // It seems the window must always have a non-null font
-        Font f = getTarget().getFont();
-        if (f == null) {
-            getTarget().setFont(DEFAULT_FONT);
-        }
-
-        Color bg = getTarget().getBackground();
-        if (bg == null) {
-            getTarget().setBackground(SystemColor.window);
-        }
-
-        Color fg = getTarget().getForeground();
-        if (fg == null) {
-            getTarget().setForeground(SystemColor.windowText);
-        }
-
         if (getTarget() instanceof Frame) {
             setTitle(((Frame)getTarget()).getTitle());
             setState(((Frame)getTarget()).getExtendedState());
@@ -164,29 +151,62 @@ public class LWWindowPeer
 
         setOpacity(getTarget().getOpacity());
 
-        // TODO: icon images
-        // TODO: shape
-        // TODO: translucency
-
         // Create surface data and back buffer
         replaceSurfaceData(1, null);
     }
 
+    public void setBackground(Color c) {
+        final boolean changed;
+        synchronized (getStateLock()) {
+            changed = ((background != null) ? !background.equals(c) :
+                    ((c != null) && !c.equals(background)));
+                background = c;
+        }
+        if (changed) {
+            repaintPeer();
+        }
+    }
 
     protected Color getBackground() {
-        Color color = super.getBackground();
-        return color == null ? SystemColor.window : color;
+        synchronized (getStateLock()) {
+            return background;
+        }
+    }
+
+    public void setForeground(Color c) {
+        final boolean changed;
+        synchronized (getStateLock()) {
+            changed = ((foreground != null) ? !foreground.equals(c) :
+                    ((c != null) && !c.equals(foreground)));
+            foreground = c;
+        }
+        if (changed) {
+            repaintPeer();
+        }
     }
 
     protected Color getForeground() {
-        Color color = super.getForeground();
-        return color == null ? SystemColor.windowText: color;
+        synchronized (getStateLock()) {
+            return foreground;
+        }
     }
 
+    public void setFont(Font f) {
+        final boolean changed;
+        synchronized (getStateLock()) {
+            changed = ((font != null) ? !font.equals(f) :
+                    ((f != null) && !f.equals(font)));
+            font = f;
+        }
+        if (changed) {
+            repaintPeer();
+        }
+    }
 
     protected Font getFont() {
-        Font font = super.getFont();
-        return font == null ? DEFAULT_FONT : font;
+        synchronized (getStateLock()) {
+            return font == null ? DEFAULT_FONT : font;
+        }
     }
     
     // Just a helper method

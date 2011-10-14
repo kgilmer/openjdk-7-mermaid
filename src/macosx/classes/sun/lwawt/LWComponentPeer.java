@@ -41,6 +41,7 @@ import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.beans.PropertyChangeListener;
+import java.beans.Transient;
 import java.lang.reflect.Field;
 
 import sun.awt.*;
@@ -107,11 +108,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     private Rectangle bounds = new Rectangle();
     private Region shape;
 
-    // Graphics attributes. Should be accessed under the state lock
-    private Color foreground = null;
-    private Color background = null;
-    private Font font = null;
-
     // Component state. Should be accessed under the state lock
     private boolean visible = false;
     private boolean enabled = true;
@@ -173,6 +169,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         public int getY() {
             return getLocation().y;
         }
+
+        @Transient
+        public Color getBackground() {
+            return getTarget().getBackground();
+        }
+
+        @Transient
+        public Color getForeground() {
+            return getTarget().getForeground();
+        }
+
+        @Transient
+        public Font getFont() {
+            return getTarget().getFont();
+        }
+
     }
 
     public LWComponentPeer(T target, PlatformComponent platformComponent) {
@@ -317,7 +329,20 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 if (!laf.isNativeLookAndFeel()) {
                     setLookAndFeel(laf);
                 }
+                resetColorsAndFont(delegate);
+                // we must explicitly set the font here
+                // see Component.getFont_NoClientCode() for details
+                delegateContainer.setFont(target.getFont());
             }
+        }
+    }
+    
+    private void resetColorsAndFont(Container c) {
+        c.setBackground(null);
+        c.setForeground(null);
+        c.setFont(null);
+        for(int i = 0; i < c.getComponentCount(); i ++) {
+            resetColorsAndFont((Container) c.getComponent(i));
         }
     }
 
@@ -548,92 +573,70 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     @Override
     public void setBackground(Color c) {
-        synchronized (getStateLock()) {
-            background = c;
-        }
-
-        D delegate = getDelegate();
-
-        if (delegate != null &&
-                (getTarget().isBackgroundSet() || c == null)) {
-            synchronized (getDelegateLock()) {
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                // delegate will repaint the target
                 delegate.setBackground(c);
             }
         }
-        repaintPeer();
     }
 
-    // Helper method
     protected Color getBackground() {
-        synchronized (getStateLock()) {
-            if (background == null) {
-                LWContainerPeer parentPeer = getContainerPeer();
-                if (parentPeer != null) {
-                    return parentPeer.getBackground();
-                }
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                return delegate.getBackground();
             }
-            return background;
         }
+        return null;
     }
 
     @Override
     public void setForeground(Color c) {
-        synchronized (getStateLock()) {
-            foreground = c;
-        }
-
-        D delegate = getDelegate();
-
-        if (delegate != null &&
-                (getTarget().isForegroundSet() || c == null)) {
-            synchronized (getDelegateLock()) {
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                // delegate will repaint the target
                 delegate.setForeground(c);
             }
         }
-        repaintPeer();
     }
 
-    // Helper method
     protected Color getForeground() {
-        synchronized (getStateLock()) {
-            if (foreground == null) {
-                LWContainerPeer parentPeer = getContainerPeer();
-                if (parentPeer != null) {
-                    return parentPeer.getForeground();
-                }
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                return delegate.getForeground();
             }
-            return foreground;
         }
+        return null;
     }
 
     @Override
     public void setFont(Font f) {
-        synchronized (getStateLock()) {
-            font = f;
-        }
-
-        D delegate = getDelegate();
-
-        if (delegate != null &&
-                (getTarget().isFontSet() || f == null)) {
-            synchronized (getDelegateLock()) {
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                // delegate will repaint the target
                 delegate.setFont(f);
-            }
-        }
-        repaintPeer();
-    }
-
-    // Helper method
-    protected Font getFont() {
-        synchronized (getStateLock()) {
-            if (font == null) {
-                LWContainerPeer parentPeer = getContainerPeer();
-                if (parentPeer != null) {
-                    return parentPeer.getFont();
+                if (f == null) {
+                    // we must explicitly set the font here
+                    // see Component.getFont_NoClientCode() for details
+                    delegateContainer.setFont(getTarget().getFont());
                 }
             }
-            return font;
         }
+    }
+
+    protected Font getFont() {
+        synchronized (getDelegateLock()) {
+            D delegate = getDelegate();
+            if (delegate != null) {
+                return delegate.getFont();
+            }
+        }
+        return null;
     }
 
     @Override

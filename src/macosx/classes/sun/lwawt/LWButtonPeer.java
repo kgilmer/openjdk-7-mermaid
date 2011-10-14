@@ -31,7 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.peer.ButtonPeer;
 
-import javax.swing.JButton;
+import javax.swing.*;
 
 final class LWButtonPeer extends LWComponentPeer<Button, JButton>
         implements ButtonPeer, ActionListener {
@@ -51,14 +51,17 @@ final class LWButtonPeer extends LWComponentPeer<Button, JButton>
         setLabel(getTarget().getLabel());
         synchronized (getDelegateLock()) {
             getDelegate().addActionListener(this);
+            // Aqua doesn't support custom background for JButton
+            // so we want to use the system foreground as well  
+            getDelegate().setForeground(UIManager.getColor("Button.foreground"));
         }
     }
 
     @Override
     public void actionPerformed(final ActionEvent e) {
         postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
-                                  getTarget().getActionCommand(), e.getWhen(),
-                                  e.getModifiers()));
+                getTarget().getActionCommand(), e.getWhen(),
+                e.getModifiers()));
     }
 
     @Override
