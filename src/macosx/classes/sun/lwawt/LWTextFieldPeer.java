@@ -55,6 +55,9 @@ final class LWTextFieldPeer
 
     public void initialize() {
         super.initialize();
+        if (!getTarget().isBackgroundSet()) {
+            getTarget().setBackground(SystemColor.text);
+        }
         synchronized (getDelegateLock()) {
             getDelegate().setText(getTarget().getText());
             getDelegate().addActionListener(this);

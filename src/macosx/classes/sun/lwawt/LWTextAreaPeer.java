@@ -50,6 +50,9 @@ final class LWTextAreaPeer
 
     public void initialize() {
         super.initialize();
+        if (!getTarget().isBackgroundSet()) {
+            getTarget().setBackground(SystemColor.text);
+        }
         synchronized (getDelegateLock()) {
             getDelegate().getView().setText(getTarget().getText());
             getDelegate().setBorder(BorderFactory.createLoweredBevelBorder());
