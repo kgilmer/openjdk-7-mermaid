@@ -40,7 +40,8 @@ FILES_objc += \
     $(TARGDIR)CFileManager.m \
     $(TARGDIR)KeystoreImpl.m \
     $(TARGDIR)JavaAppLauncher.m \
-    $(TARGDIR)MacOSXPreferencesFile.m
+    $(TARGDIR)MacOSXPreferencesFile.m \
+    $(TARGDIR)SCDynamicStoreConfig.m
 
 FILES_export += \
 	com/apple/concurrent/LibDispatchNative.java \
@@ -84,4 +85,5 @@ OTHER_LDLIBS = \
     -framework ApplicationServices \
     -framework JavaNativeFoundation \
     -framework JavaRuntimeSupport \
-    -framework Security
+    -framework Security \
+    -framework SystemConfiguration
