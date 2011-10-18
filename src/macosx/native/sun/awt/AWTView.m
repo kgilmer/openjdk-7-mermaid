@@ -85,6 +85,9 @@ AWT_ASSERT_APPKIT_THREAD;
     self.cglLayer = windowLayer;
     [self setWantsLayer: YES];
     [self.layer addSublayer: (CALayer *)cglLayer];
+    [self setLayerContentsRedrawPolicy: NSViewLayerContentsRedrawDuringViewResize];
+    [self setLayerContentsPlacement: NSViewLayerContentsPlacementTopLeft];
+    [self setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];
 #ifdef REMOTELAYER
     CGLLayer *parentLayer = (CGLLayer*)self.cglLayer;
     parentLayer.parentLayer = NULL;

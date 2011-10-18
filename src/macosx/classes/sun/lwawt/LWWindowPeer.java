@@ -802,41 +802,6 @@ public class LWWindowPeer
     }
 
 
-    /**
-     * Does the actual painting 
-     */
-    @Override
-    public void repaintPeer(int x, int y, int width, int height) {
-        if (isShowing() && width != 0 && height != 0) {
-            paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
-            postPaintEvent(x, y, width, height);
-        }
-    }
-
-    /*
-     * Repaints the given rectangle of the back buffer and flushes it
-     * to the screen. This method should only be called on EDT.
-     */
-    @Override
-    protected void paintPeerDirtyRect(Rectangle r) {
-        if ((r == null) || r.isEmpty()) {
-            return;
-        }
-        
-        Graphics g = getOffscreenGraphics();
-        if (g == null) {
-            // Zero-sized window?
-            return;
-        }
-        try {
-            g.setClip(r.x, r.y, r.width, r.height);
-            peerPaint(g, r);
-        } finally {
-            g.dispose();
-        }
-        flushOffscreenGraphics(r);
-    }
-
     // ---- UTILITY METHODS ---- //
 
     private void postWindowStateChangedEvent(int newWindowState) {
@@ -925,32 +890,27 @@ public class LWWindowPeer
      * should be flushed to the screen. All the target painting
      * (Component.paint() method) should be done directly to the screen.
      */
-    protected Graphics getOffscreenGraphics() {
-        Image bb = getBackBuffer();
-        return bb != null ? bb.getGraphics() : null;
-    }
-
-    /*
-     * Flushes the given rectangle from the back buffer to the screen.
-     */
-    @Override
-    protected void flushOffscreenGraphics(Rectangle r) {
-        flushOffscreenGraphics(r.x, r.y, r.width, r.height);
-    }
-
-    private void flushOffscreenGraphics(int x, int y, int width, int height) {
-        Image bb = getBackBuffer();
-        if (bb != null) {
-            // g is a screen Graphics from the delegate
-            Graphics g = getGraphics();
-            try {
-                g.setClip(x, y, width, height);
-                g.drawImage(bb, x, y, x + width, y + height,
-                            x, y, x + width, y + height, null);
-            } finally {
-                g.dispose();
-            }
+    protected Graphics getOffscreenGraphics(Color fg, Color bg, Font f) {
+        final Image bb = getBackBuffer();
+        if (bb == null) {
+            return null;
         }
+        if (fg == null) {
+            fg = SystemColor.windowText;
+        }
+        if (bg == null) {
+            bg = SystemColor.window;
+        }
+        if (f == null) {
+            f = DEFAULT_FONT;
+        }
+        final Graphics2D g = (Graphics2D) bb.getGraphics();
+        if (g != null) {
+            g.setColor(fg);
+            g.setBackground(bg);
+            g.setFont(f);
+        }
+        return g;
     }
 
     /*

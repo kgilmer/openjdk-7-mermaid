@@ -25,6 +25,9 @@
 
 package sun.lwawt;
 
+import sun.awt.SunGraphicsCallback;
+
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -214,19 +217,22 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
      * bottom-most ones are painted first.
      */
     protected void peerPaintChildren(Graphics g, Rectangle r) {
-        for (LWComponentPeer child : getChildren()) {
-            Graphics cg = g.create();
-            try {
-                Rectangle toPaint = new Rectangle(r);
-                Rectangle childBounds = child.getBounds();
-                toPaint = toPaint.intersection(childBounds);
-                cg.clipRect(toPaint.x, toPaint.y, toPaint.width, toPaint.height);
-                cg.translate(childBounds.x, childBounds.y);
-                toPaint.translate(-childBounds.x, -childBounds.y);
-                child.peerPaint(cg, toPaint);
-            } finally {
-                cg.dispose();
-            }
+//        for (LWComponentPeer child : getChildren()) {
+//            Graphics cg = g.create();
+//            try {
+//                Rectangle toPaint = new Rectangle(r);
+//                Rectangle childBounds = child.getBounds();
+//                toPaint = toPaint.intersection(childBounds);
+//                cg.clipRect(toPaint.x, toPaint.y, toPaint.width, toPaint.height);
+//                cg.translate(childBounds.x, childBounds.y);
+//                toPaint.translate(-childBounds.x, -childBounds.y);
+//                child.peerPaint(cg, toPaint);
+//            } finally {
+//                cg.dispose();
+//            }
+//        }
+        for (final LWComponentPeer child : getChildren()) {
+            child.repaintPeer();
         }
     }
 
@@ -245,5 +251,23 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         for (final LWComponentPeer child : getChildren()) {
             child.setEnabled(e && child.getTarget().isEnabled());
         }
+    }
+
+    @Override
+    public void paint(final Graphics g) {
+        super.paint(g);
+        SunGraphicsCallback.PaintHeavyweightComponentsCallback.getInstance().
+            runComponents(getTarget().getComponents(), g,
+                          SunGraphicsCallback.LIGHTWEIGHTS
+                          | SunGraphicsCallback.HEAVYWEIGHTS);
+    }
+
+    @Override
+    public void print(final Graphics g) {
+        super.print(g);
+        SunGraphicsCallback.PrintHeavyweightComponentsCallback.getInstance().
+            runComponents(getTarget().getComponents(), g,
+                          SunGraphicsCallback.LIGHTWEIGHTS
+                          | SunGraphicsCallback.HEAVYWEIGHTS);
     }
 }

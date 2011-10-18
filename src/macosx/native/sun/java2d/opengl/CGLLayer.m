@@ -51,9 +51,11 @@ AWT_ASSERT_APPKIT_THREAD;
 
     // NOTE: async=YES means that the layer is re-cached periodically
     self.asynchronous = FALSE;
-    self.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;        
+    self.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+    self.contentsGravity = kCAGravityTopLeft;
+    self.needsDisplayOnBoundsChange = YES;
     textureID = 0; // texture will be created by rendering pipe
-	target = 0;
+    target = 0;
     
     return self;
 }
@@ -103,9 +105,9 @@ AWT_ASSERT_APPKIT_THREAD;
     // Set the current context to the one given to us.
     CGLSetCurrentContext(glContext);
 
-        glViewport(0, 0, textureWidth, textureHeight);
+    glViewport(0, 0, textureWidth, textureHeight);
 
-	[self _blitTexture];
+    [self _blitTexture];
 	
     // Call super to finalize the drawing. By default all it does is call glFlush().
     [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];

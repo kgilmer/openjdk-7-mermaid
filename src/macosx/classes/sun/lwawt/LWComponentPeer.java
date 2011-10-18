@@ -31,6 +31,7 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.peer.DropTargetPeer;
 import java.awt.event.*;
 
+import java.awt.geom.Area;
 import java.awt.image.ColorModel;
 import java.awt.image.ImageObserver;
 import java.awt.image.ImageProducer;
@@ -59,6 +60,7 @@ import javax.swing.RepaintManager;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 
+import sun.java2d.pipe.SpanIterator;
 import sun.lwawt.macosx.CDropTarget;
 
 import com.sun.java.swing.SwingUtilities3;
@@ -107,6 +109,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     // Bounds are relative to parent peer
     private Rectangle bounds = new Rectangle();
     private Region shape;
+    private Shape clip;
 
     // Component state. Should be accessed under the state lock
     private boolean visible = false;
@@ -474,10 +477,45 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // Don't check containerPeer for null as it can only happen
         // for windows, but this method is overridden in
         // LWWindowPeer and doesn't call super()
-        Graphics g = cp.getGraphics(fg, bg, f);
-        Rectangle bounds = getBounds();
-        g.translate(bounds.x, bounds.y);
-        g.clipRect(0, 0, bounds.width, bounds.height);
+        final Graphics2D g = (Graphics2D) cp.getGraphics(fg, bg, f);
+        if (g != null) {
+            final Rectangle bounds = getBounds();
+            g.translate(bounds.x, bounds.y);
+            if (clip != null) {
+                g.clip(clip);
+            } else {
+                g.clipRect(0, 0, bounds.width, bounds.height);
+            }
+        }
+        return g;
+    }
+
+    public Graphics getOffscreenGraphics() {
+        return getOffscreenGraphics(getForeground(), getBackground(), getFont());
+    }
+
+    /**
+     * This method returns a back buffer Graphics to render all the
+     * peers to. After the peer is painted, the back buffer contents
+     * should be flushed to the screen. All the target painting
+     * (Component.paint() method) should be done directly to the screen.
+     */
+    protected Graphics getOffscreenGraphics(final Color fg, final Color bg,
+                                            final Font f) {
+        final LWContainerPeer cp = getContainerPeer();
+        // Don't check containerPeer for null as it can only happen
+        // for windows, but this method is overridden in
+        // LWWindowPeer and doesn't call super()
+        final Graphics2D g = (Graphics2D) cp.getOffscreenGraphics(fg, bg, f);
+        if (g != null) {
+            final Rectangle bounds = getBounds();
+            g.translate(bounds.x, bounds.y);
+            if (clip != null) {
+                g.clip(clip);
+            } else {
+                g.clipRect(0, 0, bounds.width, bounds.height);
+            }
+        }
         return g;
     }
 
@@ -734,16 +772,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     @Override
-    public void print(Graphics g) {
-        Component c = getTarget();
-        if (c instanceof Container) {
-            SunGraphicsCallback.PrintHeavyweightComponentsCallback.getInstance().
-                    runComponents(((Container) getTarget()).getComponents(), g,
-                            SunGraphicsCallback.LIGHTWEIGHTS |
-                                    SunGraphicsCallback.HEAVYWEIGHTS);
-        } else {
-            c.print(g);
-        }
+    public void print(final Graphics g) {
+        getTarget().print(g);
     }
 
     @Override
@@ -923,14 +953,37 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     @Override
     public void applyShape(final Region shape) {
+        Area area = null;
+        if (shape != null) {
+            area = new Area();
+            final int[] span = new int[4];
+            final SpanIterator si = shape.getSpanIterator();
+            while (si.nextSpan(span)) {
+                area.add(new Area(new Rectangle(span[0], span[1], span[2],
+                                                span[3])));
+            }
+        }
         synchronized (getStateLock()) {
+            clip = area;
             this.shape = shape;
         }
+        LWContainerPeer cp = getContainerPeer();
+        if (cp != null) {
+            Rectangle r = getBounds();
+            cp.repaintPeer(r.x, r.y, r.width, r.height);
+        }
+        repaintPeer();
     }
 
     private Region getShape() {
         synchronized (getStateLock()) {
             return shape;
+        }
+    }
+
+    protected Shape getClip() {
+        synchronized (getStateLock()) {
+            return clip;
         }
     }
 
@@ -1275,25 +1328,25 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     /*
-     * Paints this peer dirty region. The painting is always started
-     * from the window to handle overlapped peers correctly. This
-     * method should only be called on EDT.
-     *
-     * Overridden in LWWindowPeer to do the actual painting.
+     * Repaints the given rectangle of the back buffer and flushes it
+     * to the screen. This method should only be called on EDT.
      */
-    protected void paintPeerDirtyRect(Rectangle dirty) {
-        LWWindowPeer wp = getWindowPeer();
-        // Don't check the window peer for null here as it can only
-        // be null for LWWindowPeer instances which have this
-        // method overridden and don't call to super
-        wp.paintPeerDirtyRect(localToWindow(dirty));
+    protected void paintPeerDirtyRect(final Rectangle r) {
+        if ((r == null) || r.isEmpty() || !isShowing()) {
+            return;
+        }
+
+        final Graphics g = getOffscreenGraphics();
+        if (g != null) {
+            try {
+                peerPaint(g, r);
+            } finally {
+                g.dispose();
+            }
+            flushOffscreenGraphics(r);
+        }
     }
 
-    // Just a helper method
-    protected void paintPeerDirtyRectOnEDT() {
-        Rectangle r = getBounds();
-        paintPeerDirtyRectOnEDT(new Rectangle(0, 0, r.width, r.height));
-    }
 
     // TODO: rename to repaintPeer()?
     protected void paintPeerDirtyRectOnEDT(final Rectangle dirty) {
@@ -1316,14 +1369,10 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         repaintPeer(0, 0, getBounds().width, getBounds().height);
     }
 
-    public void repaintPeer(int x, int y, int width, int height) {
-        LWContainerPeer parentPeer = getContainerPeer();
-        if (parentPeer != null) {
-            Rectangle dirtyRect = new Rectangle(bounds.width, bounds.height).
-                    intersection(new Rectangle(x, y, width, height));
-            parentPeer.repaintPeer(bounds.x + dirtyRect.x, bounds.y + dirtyRect.y,
-                    dirtyRect.width, dirtyRect.height);
-        }
+    public void repaintPeer(final int x, final int y, final int width,
+                            final int height) {
+        paintPeerDirtyRectOnEDT(new Rectangle(x, y, width, height));
+        postPaintEvent(x, y, width, height);
     }
 
     public void restorePeer() {
@@ -1375,11 +1424,18 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // By default, just fill the entire bounds with a bg color
         // TODO: sun.awt.noerasebackground
         if (delegate == null) {
-            g.setColor(getBackground());
-            g.fillRect(r.x, r.y, r.width, r.height);
+            g.clearRect(r.x, r.y, r.width, r.height);
         } else {
             if (!SwingUtilities.isEventDispatchThread()) {
                 throw new InternalError("Painting must be done on EDT");
+            }
+            //LW delegates does not fill whole bounds.
+            LWComponentPeer cp = getContainerPeer();
+            if (cp != null) {
+                Color c = g.getColor();
+                g.setColor(cp.getBackground());
+                g.fillRect(r.x, r.y, r.width, r.height);
+                g.setColor(c);
             }
             synchronized (getDelegateLock()) {
                 // I am taking this lock to block any calls to the real KeyboardFocusManager
@@ -1413,17 +1469,28 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     /*
-     * Flushes the given rectangle from the window backbuffer to
-     * the screen.
-     *
-     * Overridden in LWWindowPeer.
+     * Flushes the given rectangle from the back buffer to the screen.
      */
     protected void flushOffscreenGraphics(Rectangle r) {
-        LWWindowPeer wp = getWindowPeer();
-        // Don't check the window peer for null here as it can only
-        // be null for LWWindowPeer instances which have this
-        // method overridden and don't call to super
-        wp.flushOffscreenGraphics(localToWindow(r));
+        flushOffscreenGraphics(r.x, r.y, r.width, r.height);
+    }
+
+    private void flushOffscreenGraphics(int x, int y, int width, int height) {
+        Image bb = getWindowPeerOrSelf().getBackBuffer();
+        if (bb != null) {
+            // g is a screen Graphics from the delegate
+            final Graphics g = getGraphics();
+            if (g != null) {
+                try {
+                    Point p = localToWindow(new Point(0,0));
+                    g.drawImage(bb, x, y, x + width, y + height, p.x + x,
+                                p.y + y, p.x + x + width, p.y + y + height,
+                                null);
+                } finally {
+                    g.dispose();
+                }
+            }
+        }
     }
 
     private static LookAndFeel getSystemLookAndFeel() {
