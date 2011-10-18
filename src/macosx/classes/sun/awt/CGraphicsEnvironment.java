@@ -190,7 +190,7 @@ public class CGraphicsEnvironment extends SunGraphicsEnvironment {
             }
             allFontsWithLogical = newFonts;
         }
-        return allFontsWithLogical;
+        return java.util.Arrays.copyOf(allFontsWithLogical, allFontsWithLogical.length);
     }
     
 }
