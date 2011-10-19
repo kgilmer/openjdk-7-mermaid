@@ -26,6 +26,8 @@
 package sun.lwawt.macosx;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.peer.TrayIconPeer;
 
 public class CTrayIcon implements TrayIconPeer {
@@ -45,13 +47,15 @@ public class CTrayIcon implements TrayIconPeer {
 
     private CPopupMenu checkAndCreatePopupPeer() {
         CPopupMenu menuPeer = null;
-        try {
-            menuPeer = (CPopupMenu)popup.getPeer();
-            if (menuPeer == null) {
-                popup.addNotify();
+        if (popup != null) {
+            try {
+                menuPeer = (CPopupMenu)popup.getPeer();
+                if (menuPeer == null) {
+                    popup.addNotify();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        }catch (Exception e){
-            e.printStackTrace();
         }
         return menuPeer;
     }
@@ -65,6 +69,9 @@ public class CTrayIcon implements TrayIconPeer {
         
     //invocation from the AWTTrayIcon.m
     public long getPopupMenuModel(){
+        if(popup == null) {
+            return 0L;
+        }
     	return checkAndCreatePopupPeer().getModel();
     }
     
@@ -113,5 +120,13 @@ public class CTrayIcon implements TrayIconPeer {
     }
 
     private native void setNativeImage(final long model, final long nsimage, final boolean autosize);
+
+    //invocation from the AWTTrayIcon.m
+    public void performAction() {
+        ActionEvent evt = new ActionEvent(target, 0, "ACTION_TRIGGERED_BY_PEER");
+        for(ActionListener listener:target.getActionListeners()) {
+            listener.actionPerformed(evt);
+        }
+    }
 }
 

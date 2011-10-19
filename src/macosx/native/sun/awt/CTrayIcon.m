@@ -110,13 +110,26 @@
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     static JNF_CLASS_CACHE(jc_CTrayIcon, "sun/lwawt/macosx/CTrayIcon");
     static JNF_MEMBER_CACHE(jm_getPopupMenuModel, jc_CTrayIcon, "getPopupMenuModel", "()J");
+    static JNF_MEMBER_CACHE(jm_performAction, jc_CTrayIcon, "performAction", "()V");
     jlong res = JNFCallLongMethod(env, trayIcon.peer, jm_getPopupMenuModel);
-    CPopupMenu *cmenu = jlong_to_ptr(res);
-    [trayIcon.theItem popUpStatusItemMenu:[cmenu menu]];
+    if (res != 0) {
+        fprintf(stderr, "ZAV: res is %x\n", res);
+        CPopupMenu *cmenu = jlong_to_ptr(res);
+        [trayIcon.theItem popUpStatusItemMenu:[cmenu menu]];
+    } else {
+        JNFCallVoidMethod(env, trayIcon.peer, jm_performAction);
+    }
     [super mouseDown:e];
 }
 
-- (void) rightMouseDown:(NSEvent *)e { }
+- (void) rightMouseDown:(NSEvent *)e {
+    // Call CTrayIcon.performAction() method on right mouse press
+    JNIEnv *env = [ThreadUtilities getJNIEnv];
+    static JNF_CLASS_CACHE(jc_CTrayIcon, "sun/lwawt/macosx/CTrayIcon");
+    static JNF_MEMBER_CACHE(jm_performAction, jc_CTrayIcon, "performAction", "()V");
+    JNFCallVoidMethod(env, trayIcon.peer, jm_performAction);
+    [super rightMouseDown:e];
+}
 
 - (void) otherMouseDown:(NSEvent *)e { }
 
