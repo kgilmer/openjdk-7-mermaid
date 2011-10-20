@@ -203,8 +203,9 @@ public class CPlatformView extends CFRetainedResource {
             case CocoaConstants.NSOtherMouseDragged:
                 jEventType = MouseEvent.MOUSE_DRAGGED;
                 break;
-            // Intentionally left Entered without any action as the peer should keep track
-            // on the components' state
+            case CocoaConstants.NSMouseEntered:
+                jEventType = MouseEvent.MOUSE_ENTERED;
+                break;
             case CocoaConstants.NSMouseExited:
                 jEventType = MouseEvent.MOUSE_EXITED;
                 break;

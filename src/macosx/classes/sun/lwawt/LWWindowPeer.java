@@ -678,7 +678,7 @@ public class LWWindowPeer
                     }
                 }
                 lastMouseEventPeer = targetPeer;
-                if (targetPeer != null && targetPeer.isEnabled()) {
+                if (targetPeer != null && targetPeer.isEnabled() && id != MouseEvent.MOUSE_ENTERED) {
                     Point newp = targetPeer.windowToLocal(x, y, curWindowPeer);
                     postEvent(new MouseEvent(targetPeer.getTarget(),
                                              MouseEvent.MOUSE_ENTERED,
