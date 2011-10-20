@@ -113,7 +113,6 @@
     static JNF_MEMBER_CACHE(jm_performAction, jc_CTrayIcon, "performAction", "()V");
     jlong res = JNFCallLongMethod(env, trayIcon.peer, jm_getPopupMenuModel);
     if (res != 0) {
-        fprintf(stderr, "ZAV: res is %x\n", res);
         CPopupMenu *cmenu = jlong_to_ptr(res);
         [trayIcon.theItem popUpStatusItemMenu:[cmenu menu]];
     } else {
