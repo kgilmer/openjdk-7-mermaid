@@ -32,6 +32,7 @@
 
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
@@ -48,6 +49,8 @@ public class ClassLoaderLeakTest {
     private static Throwable launchFailure = null;
 
     public static void main(String[] args) {
+        Toolkit tk = Toolkit.getDefaultToolkit();
+
         doneSignal = new CountDownLatch(1);
         launchSignal = new CountDownLatch(1);
 
