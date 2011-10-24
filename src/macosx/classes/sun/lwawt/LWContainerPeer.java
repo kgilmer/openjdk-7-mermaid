@@ -231,15 +231,6 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         }
     }
 
-    @Override
-    public void setVisible(boolean v) {
-        super.setVisible(v);
-		//TODO it is necessary?
-        for (LWComponentPeer child : getChildren()) {
-            child.setVisible(child.getTarget().isVisible());
-        }
-    }
-
     protected Rectangle getContentSize() {
         Rectangle r = getBounds();
         return new Rectangle(r.width, r.height);
