@@ -146,9 +146,9 @@ static int ParseLocale(int cat, char ** std_language, char ** std_script,
     char *lc;
 
     /* Query the locale set for the category */
-    
+
 #ifdef MACOSX
-    lc = setupMacOSXLocale(); // malloc'd memory, need to free
+    lc = setupMacOSXLocale(cat); // malloc'd memory, need to free
 #else
     lc = setlocale(cat, NULL);
 #endif
@@ -571,7 +571,7 @@ GetJavaProperties(JNIEnv *env)
     setPathEnvironment("XFILESEARCHPATH=/usr/dt/app-defaults/%L/Dt");
 #endif
 
-    
+
 #ifdef MACOSX
     setProxyProperties(&sprops);
 #endif
