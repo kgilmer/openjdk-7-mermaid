@@ -486,6 +486,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             } else {
                 g.clipRect(0, 0, bounds.width, bounds.height);
             }
+            Rectangle parentContent = cp.getContentSize();
+            parentContent.translate(-bounds.x,-bounds.y);
+            g.clip(parentContent);
         }
         return g;
     }
@@ -515,6 +518,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             } else {
                 g.clipRect(0, 0, bounds.width, bounds.height);
             }
+            Rectangle parentContent = cp.getContentSize();
+            parentContent.translate(-bounds.x, -bounds.y);
+            g.clip(parentContent);
         }
         return g;
     }
@@ -1411,6 +1417,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 !r.intersects(new Rectangle(0, 0, b.width, b.height))) {
             return;
         }
+        g.clipRect(r.x, r.y, r.width, r.height);
         peerPaintSelf(g, r);
     }
 

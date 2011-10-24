@@ -27,7 +27,6 @@ package sun.lwawt;
 
 import sun.awt.SunGraphicsCallback;
 
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -178,11 +177,11 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
     @Override
     public final LWComponentPeer findPeerAt(int x, int y) {
         LWComponentPeer peer = super.findPeerAt(x, y);
-        if (peer != null) {
-            final Rectangle r = getBounds();
-            // Translate to this container's coordinates to pass to children
-            x -= r.x;
-            y -= r.y;
+        final Rectangle r = getBounds();
+        // Translate to this container's coordinates to pass to children
+        x -= r.x;
+        y -= r.y;
+        if (peer != null && getContentSize().contains(x, y)) {
             synchronized (getPeerTreeLock()) {
                 for (int i = childPeers.size() - 1; i >= 0; --i) {
                     LWComponentPeer p = childPeers.get(i).findPeerAt(x, y);
@@ -217,22 +216,18 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
      * bottom-most ones are painted first.
      */
     protected void peerPaintChildren(Graphics g, Rectangle r) {
-//        for (LWComponentPeer child : getChildren()) {
-//            Graphics cg = g.create();
-//            try {
-//                Rectangle toPaint = new Rectangle(r);
-//                Rectangle childBounds = child.getBounds();
-//                toPaint = toPaint.intersection(childBounds);
-//                cg.clipRect(toPaint.x, toPaint.y, toPaint.width, toPaint.height);
-//                cg.translate(childBounds.x, childBounds.y);
-//                toPaint.translate(-childBounds.x, -childBounds.y);
-//                child.peerPaint(cg, toPaint);
-//            } finally {
-//                cg.dispose();
-//            }
-//        }
-        for (final LWComponentPeer child : getChildren()) {
-            child.repaintPeer();
+        for (LWComponentPeer child : getChildren()) {
+            Graphics cg = child.getOffscreenGraphics();
+            try {
+                Rectangle toPaint = new Rectangle(r);
+                Rectangle childBounds = child.getBounds();
+                toPaint = toPaint.intersection(childBounds);
+                toPaint = toPaint.intersection(getContentSize());
+                toPaint.translate(-childBounds.x, -childBounds.y);
+                child.peerPaint(cg, toPaint);
+            } finally {
+                cg.dispose();
+            }
         }
     }
 
@@ -243,6 +238,11 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         for (LWComponentPeer child : getChildren()) {
             child.setVisible(child.getTarget().isVisible());
         }
+    }
+
+    protected Rectangle getContentSize() {
+        Rectangle r = getBounds();
+        return new Rectangle(r.width, r.height);
     }
 
     @Override

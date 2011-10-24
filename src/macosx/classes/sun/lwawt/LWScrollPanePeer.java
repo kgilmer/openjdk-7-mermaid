@@ -82,13 +82,9 @@ public class LWScrollPanePeer
         return getDelegate().getViewport().getView();
     }
 
-
-    protected void peerPaintChildren(Graphics g, Rectangle r) {
-        synchronized (getDelegateLock()) {
-            Rectangle viewRect = getDelegate().getViewport().getViewRect();
-            g.clipRect(0, 0, viewRect.width, viewRect.height);
-        }
-        super.peerPaintChildren(g, r);
+    protected Rectangle getContentSize() {
+        Rectangle viewRect = getDelegate().getViewport().getViewRect();
+        return new Rectangle(viewRect.width, viewRect.height);
     }
 
     public void layout() {
