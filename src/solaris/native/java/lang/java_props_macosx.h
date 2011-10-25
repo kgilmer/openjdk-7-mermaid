@@ -25,7 +25,7 @@
 
 #include "java_props.h"
 
-char *setupMacOSXLocale();
+char *setupMacOSXLocale(int cat);
 void setOSNameAndVersion(java_props_t *sprops);
 void setProxyProperties(java_props_t *sProps);
 
