@@ -208,14 +208,14 @@ abstract class LWContainerPeer<T extends Container, D extends JComponent>
         // First, paint myself
         super.peerPaint(g, r);
         // Second, paint all the children
-        peerPaintChildren(g, r);
+        peerPaintChildren(r);
     }
 
     /*
      * Paints all the child peers in the straight z-order, so the
      * bottom-most ones are painted first.
      */
-    protected void peerPaintChildren(Graphics g, Rectangle r) {
+    protected void peerPaintChildren(Rectangle r) {
         for (LWComponentPeer child : getChildren()) {
             Graphics cg = child.getOffscreenGraphics();
             try {

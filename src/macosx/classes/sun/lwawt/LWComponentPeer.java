@@ -52,6 +52,7 @@ import sun.awt.event.IgnorePaintEvent;
 import sun.awt.image.SunVolatileImage;
 import sun.awt.image.ToolkitImage;
 
+import sun.java2d.SunGraphics2D;
 import sun.java2d.pipe.Region;
 
 import javax.swing.JComponent;
@@ -477,31 +478,29 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // Don't check containerPeer for null as it can only happen
         // for windows, but this method is overridden in
         // LWWindowPeer and doesn't call super()
-        final Graphics2D g = (Graphics2D) cp.getGraphics(fg, bg, f);
+        SunGraphics2D g = (SunGraphics2D) cp.getGraphics(fg, bg, f);
         if (g != null) {
-            final Rectangle bounds = getBounds();
-            g.translate(bounds.x, bounds.y);
+            final Rectangle r = getBounds();
+            final Rectangle constr = r.intersection(cp.getContentSize());
+            g.constrain(constr.x, constr.y, constr.width, constr.height);
+            g.translate(r.x - constr.x, r.y - constr.y);
             if (clip != null) {
                 g.clip(clip);
-            } else {
-                g.clipRect(0, 0, bounds.width, bounds.height);
             }
-            Rectangle parentContent = cp.getContentSize();
-            parentContent.translate(-bounds.x,-bounds.y);
-            g.clip(parentContent);
         }
         return g;
     }
 
     public Graphics getOffscreenGraphics() {
-        return getOffscreenGraphics(getForeground(), getBackground(), getFont());
+        return getOffscreenGraphics(getForeground(), getBackground(),
+                                    getFont());
     }
 
     /**
-     * This method returns a back buffer Graphics to render all the
-     * peers to. After the peer is painted, the back buffer contents
-     * should be flushed to the screen. All the target painting
-     * (Component.paint() method) should be done directly to the screen.
+     * This method returns a back buffer Graphics to render all the peers to.
+     * After the peer is painted, the back buffer contents should be flushed to
+     * the screen. All the target painting (Component.paint() method) should be
+     * done directly to the screen.
      */
     protected Graphics getOffscreenGraphics(final Color fg, final Color bg,
                                             final Font f) {
@@ -509,18 +508,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         // Don't check containerPeer for null as it can only happen
         // for windows, but this method is overridden in
         // LWWindowPeer and doesn't call super()
-        final Graphics2D g = (Graphics2D) cp.getOffscreenGraphics(fg, bg, f);
+        SunGraphics2D g = (SunGraphics2D) cp.getOffscreenGraphics(fg, bg, f);
         if (g != null) {
-            final Rectangle bounds = getBounds();
-            g.translate(bounds.x, bounds.y);
+            final Rectangle r = getBounds();
+            final Rectangle constr = r.intersection(cp.getContentSize());
+            g.constrain(constr.x, constr.y, constr.width, constr.height);
+            g.translate(r.x - constr.x, r.y - constr.y);
             if (clip != null) {
                 g.clip(clip);
-            } else {
-                g.clipRect(0, 0, bounds.width, bounds.height);
             }
-            Rectangle parentContent = cp.getContentSize();
-            parentContent.translate(-bounds.x, -bounds.y);
-            g.clip(parentContent);
         }
         return g;
     }
