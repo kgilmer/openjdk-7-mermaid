@@ -43,6 +43,8 @@ import java.awt.peer.ContainerPeer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.beans.Transient;
 import java.lang.reflect.Field;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import sun.awt.*;
 
@@ -240,27 +242,35 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * and followed by setToolkitAWTEventListener()
      */
     protected final AWTEventListener getToolkitAWTEventListener() {
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        try {
-            Field field = Toolkit.class.getDeclaredField("eventListener");
-            field.setAccessible(true);
-            return (AWTEventListener) field.get(toolkit);
-        } catch (Exception e) {
-            throw new InternalError(e.toString());
-        }
+        return AccessController.doPrivileged(new PrivilegedAction<AWTEventListener>() {
+            public AWTEventListener run() {
+                Toolkit toolkit = Toolkit.getDefaultToolkit();
+                try {
+                    Field field = Toolkit.class.getDeclaredField("eventListener");
+                    field.setAccessible(true);
+                    return (AWTEventListener) field.get(toolkit);
+                } catch (Exception e) {
+                    throw new InternalError(e.toString());
+                }
+            }
+        });
     }
 
-    protected final void setToolkitAWTEventListener(AWTEventListener listener) {
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        try {
-            Field field = Toolkit.class.getDeclaredField("eventListener");
-            field.setAccessible(true);
-            field.set(toolkit, listener);
-        } catch (Exception e) {
-            throw new InternalError(e.toString());
-        }
+    protected final void setToolkitAWTEventListener(final AWTEventListener listener) {
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            public Void run() {
+                Toolkit toolkit = Toolkit.getDefaultToolkit();
+                try {
+                    Field field = Toolkit.class.getDeclaredField("eventListener");
+                    field.setAccessible(true);
+                    field.set(toolkit, listener);
+                } catch (Exception e) {
+                    throw new InternalError(e.toString());
+                }
+                return null;
+            }
+        });
     }
-
 
     /**
      * This method is called under getDelegateLock().
