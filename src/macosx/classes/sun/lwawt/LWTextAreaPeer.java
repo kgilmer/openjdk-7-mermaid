@@ -198,6 +198,11 @@ final class LWTextAreaPeer
 
         @SuppressWarnings("serial")
         class JTextAreaDelegate extends JTextArea {
+
+            public boolean hasFocus() {
+                return getTarget().hasFocus();
+            }
+
             public Point getLocationOnScreen() {
                 return getTarget().getLocationOnScreen();
             }

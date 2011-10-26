@@ -66,7 +66,6 @@ FILES_export = \
 	sun/awt/CGraphicsEnvironment.java \
 	sun/java2d/BackBufferCapsProvider.java \
 	sun/java2d/MacosxSurfaceManagerFactory.java \
-	sun/lwawt/LWDelegateKeyboardFocusManager.java \
 	sun/lwawt/LWButtonPeer.java \
 	sun/lwawt/LWCanvasPeer.java \
 	sun/lwawt/LWCheckboxPeer.java \

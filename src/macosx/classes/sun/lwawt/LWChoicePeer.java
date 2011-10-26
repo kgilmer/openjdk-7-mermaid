@@ -118,6 +118,10 @@ final class LWChoicePeer extends LWComponentPeer<Choice, JComboBox<String>>
             super();
         }
 
+        public boolean hasFocus() {
+            return getTarget().hasFocus();
+        }
+
         //Needed for proper popup menu location
         @Override
         public Point getLocationOnScreen() {

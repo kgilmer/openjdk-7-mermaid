@@ -78,10 +78,6 @@ public class LWScrollPanePeer
     }
 
 
-    protected Component getDelegateFocusOwner() {
-        return getDelegate().getViewport().getView();
-    }
-
     protected Rectangle getContentSize() {
         Rectangle viewRect = getDelegate().getViewport().getViewRect();
         return new Rectangle(viewRect.width, viewRect.height);

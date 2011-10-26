@@ -53,7 +53,6 @@ class LWCheckboxPeer
 
     public void initialize() {
         super.initialize();
-        getDelegate().setOpaque(false);
         getDelegate().setRadioButton(getTarget().getCheckboxGroup() != null);
         getDelegate().getCurrentButton().setText(getTarget().getLabel());
         getDelegate().getCurrentButton().setSelected(getTarget().getState());
@@ -119,10 +118,18 @@ class LWCheckboxPeer
         private JRadioButton rb;
 
         CheckboxDelegate() {
-            cb = new JCheckBox();
-            cb.setOpaque(true);
-            rb = new JRadioButton();
-            rb.setOpaque(true);
+            cb = new JCheckBox() {
+                public boolean hasFocus() {
+                    return getTarget().hasFocus();
+                }
+            };
+            cb.setOpaque(false);
+            rb = new JRadioButton() {
+                public boolean hasFocus() {
+                    return getTarget().hasFocus();
+                }
+            };
+            rb.setOpaque(false);
             add(cb);
         }
 
@@ -161,21 +168,6 @@ class LWCheckboxPeer
         @Transient
         public Dimension getMinimumSize() {
             return getCurrentButton().getMinimumSize();
-        }
-
-        public void setBackground(Color bg) {
-            super.setBackground(bg);
-            getCurrentButton().setBackground(bg);
-        }
-
-        public void setForeground(Color fg) {
-            super.setForeground(fg);
-            getCurrentButton().setForeground(fg);
-        }
-
-        public void setFont(Font font) {
-            super.setFont(font);
-            getCurrentButton().setFont(font);
         }
     }
 }

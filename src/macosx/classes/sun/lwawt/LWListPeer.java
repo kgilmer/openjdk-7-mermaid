@@ -134,7 +134,11 @@ final class LWListPeer
 
         ScrollableJList() {
             getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
-            JList<Object> list = new JList<Object>(model);
+            JList<Object> list = new JList<Object>(model) {
+                public boolean hasFocus() {
+                    return getTarget().hasFocus();
+                }
+            };
             getViewport().setView(list);
 
             // Pull the items from the target.

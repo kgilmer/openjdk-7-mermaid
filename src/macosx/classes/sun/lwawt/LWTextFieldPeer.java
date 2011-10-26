@@ -46,6 +46,11 @@ final class LWTextFieldPeer
 
     protected JPasswordField createDelegate() {
         JPasswordField delegate = new JPasswordField() {
+
+            public boolean hasFocus() {
+                return getTarget().hasFocus();
+            }
+
             public Point getLocationOnScreen() {
                 return getTarget().getLocationOnScreen();
             }

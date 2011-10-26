@@ -41,7 +41,6 @@ import java.awt.peer.ComponentPeer;
 import java.awt.peer.ContainerPeer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.beans.PropertyChangeListener;
 import java.beans.Transient;
 import java.lang.reflect.Field;
 
@@ -58,8 +57,6 @@ import sun.java2d.pipe.Region;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import javax.swing.RepaintManager;
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
 
 import sun.java2d.pipe.SpanIterator;
 import sun.lwawt.macosx.CDropTarget;
@@ -130,23 +127,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     private int fNumDropTargets = 0;
     private CDropTarget fDropTarget = null;
 
-    private static final Object APPLICATION_LAF_KEY = new Object();
-    private final LWDelegateKeyboardFocusManager delegateKFM = new LWDelegateKeyboardFocusManager();
-
-    private final static LookAndFeel systemLookAndFeel;
-
     private PlatformComponent platformComponent;
-            
-    static {
-        // System LaF is inited here to make it thread safe
-        String laf = UIManager.getSystemLookAndFeelClassName();
-        try {
-            Class<?> lafClass = Class.forName(laf);
-            systemLookAndFeel = (LookAndFeel) lafClass.newInstance();
-        } catch (Exception e) {
-            throw new InternalError(e.getCause().toString());
-        }
-    }
 
     private class DelegateContainer extends Container {
         {
@@ -322,17 +303,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         setVisible(target.isVisible());
         synchronized (getDelegateLock()) {
             if (getDelegate() != null) {
-                // it is important to update the UI here,
-                // updating in the paint method
-                // leads to reentrant painting and various NPE
-                LookAndFeel laf = UIManager.getLookAndFeel();
-                if (!laf.isNativeLookAndFeel()) {
-                    setLookAndFeel(getSystemLookAndFeel());
-                }
-                SwingUtilities.updateComponentTreeUI(getDelegate());
-                if (!laf.isNativeLookAndFeel()) {
-                    setLookAndFeel(laf);
-                }
                 resetColorsAndFont(delegate);
                 // we must explicitly set the font here
                 // see Component.getFont_NoClientCode() for details
@@ -340,12 +310,12 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             }
         }
     }
-    
+
     private void resetColorsAndFont(Container c) {
         c.setBackground(null);
         c.setForeground(null);
         c.setFont(null);
-        for(int i = 0; i < c.getComponentCount(); i ++) {
+        for (int i = 0; i < c.getComponentCount(); i++) {
             resetColorsAndFont((Container) c.getComponent(i));
         }
     }
@@ -493,7 +463,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     public Graphics getOffscreenGraphics() {
         return getOffscreenGraphics(getForeground(), getBackground(),
-                                    getFont());
+                getFont());
     }
 
     /**
@@ -593,7 +563,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
         Point locationInWindow = localToWindow(0, 0);
         platformComponent.setBounds(locationInWindow.x, locationInWindow.y,
-                                    bounds.width, bounds.height);
+                bounds.width, bounds.height);
     }
 
     public Rectangle getBounds() {
@@ -962,7 +932,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             final SpanIterator si = shape.getSpanIterator();
             while (si.nextSpan(span)) {
                 area.add(new Area(new Rectangle(span[0], span[1], span[2],
-                                                span[3])));
+                        span[3])));
             }
         }
         synchronized (getStateLock()) {
@@ -1144,25 +1114,20 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         sendEventToDelegate(e);
     }
 
-    private void sendEventToDelegate(final AWTEvent e){
+    private void sendEventToDelegate(final AWTEvent e) {
         synchronized (getDelegateLock()) {
             if (getDelegate() == null || !isShowing() || !isEnabled()) {
                 return;
             }
-            installDelegateLookAndFeel();
-            try {
-                AWTEvent delegateEvent = createDelegateEvent(e);
-                if (delegateEvent != null) {
-                    AWTAccessor.getComponentAccessor()
-                               .processEvent((Component) delegateEvent.getSource(),
-                                             delegateEvent);
-                    if (delegateEvent instanceof KeyEvent) {
-                        KeyEvent ke = (KeyEvent) delegateEvent;
-                        SwingUtilities.processKeyBindings(ke);
-                    }
+            AWTEvent delegateEvent = createDelegateEvent(e);
+            if (delegateEvent != null) {
+                AWTAccessor.getComponentAccessor()
+                        .processEvent((Component) delegateEvent.getSource(),
+                                delegateEvent);
+                if (delegateEvent instanceof KeyEvent) {
+                    KeyEvent ke = (KeyEvent) delegateEvent;
+                    SwingUtilities.processKeyBindings(ke);
                 }
-            } finally {
-                uninstallDelegateLookAndFeel();
             }
         }
     }
@@ -1233,33 +1198,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
     }
 
-    /**
-     * This method must be called under getDelegateLock() lock.
-     */
-    private void installDelegateLookAndFeel() {
-        if (AppContext.getAppContext().get(APPLICATION_LAF_KEY) != null) {
-            throw new InternalError("installDelegateLookAndFeel() method is not followed by uninstallDelegateLookAndFeel()");
-        }
-        LookAndFeel currentLookAndFeel = UIManager.getLookAndFeel();
-        AppContext.getAppContext().put(APPLICATION_LAF_KEY, currentLookAndFeel);
-        if (!currentLookAndFeel.isNativeLookAndFeel()) {
-            setLookAndFeel(getSystemLookAndFeel());
-        }
-    }
-
-    /**
-     * This method must be called under getDelegateLock() lock.
-     * <p/>
-     * Don't forget to call this method inside "finally" clause
-     */
-    private void uninstallDelegateLookAndFeel() {
-        LookAndFeel appLaf = (LookAndFeel) AppContext.getAppContext().get(APPLICATION_LAF_KEY);
-        if (!appLaf.isNativeLookAndFeel()) {
-            setLookAndFeel(appLaf);
-        }
-        AppContext.getAppContext().remove(APPLICATION_LAF_KEY);
-    }
-
     // ---- UTILITY METHODS ---- //
 
     /**
@@ -1270,8 +1208,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         final Rectangle r = getBounds();
         final Region sh = getShape();
         final boolean found = isVisible() && ((sh == null)
-                                              ? r.contains(x, y)
-                                              : sh.contains(x - r.x, y - r.y));
+                ? r.contains(x, y)
+                : sh.contains(x - r.x, y - r.y));
         return found ? this : null;
     }
 
@@ -1441,26 +1379,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 g.setColor(c);
             }
             synchronized (getDelegateLock()) {
-                // I am taking this lock to block any calls to the real KeyboardFocusManager
-                // during the delegate painting
-                synchronized (KeyboardFocusManager.class) {
-                    installDelegateLookAndFeel();
-                    KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-                    if (getTarget().hasFocus()) {
-                        delegateKFM.setFocusOwner(getDelegateFocusOwner());
-                        AppContext.getAppContext().put(KeyboardFocusManager.class, delegateKFM);
-                    }
-                    try {
-                        delegate.setBackground(getBackground());
-                        delegate.setForeground(getForeground());
-                        delegate.setFont(getFont());
-                        // JComponent.print() is guaranteed to not affect the double buffer
-                        delegate.print(g);
-                    } finally {
-                        AppContext.getAppContext().put(KeyboardFocusManager.class, kfm);
-                        uninstallDelegateLookAndFeel();
-                    }
-                }
+                // JComponent.print() is guaranteed to not affect the double buffer
+                delegate.print(g);
             }
         }
     }
@@ -1485,10 +1405,10 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             final Graphics g = getGraphics();
             if (g != null) {
                 try {
-                    Point p = localToWindow(new Point(0,0));
+                    Point p = localToWindow(new Point(0, 0));
                     g.drawImage(bb, x, y, x + width, y + height, p.x + x,
-                                p.y + y, p.x + x + width, p.y + y + height,
-                                null);
+                            p.y + y, p.x + x + width, p.y + y + height,
+                            null);
                 } finally {
                     g.dispose();
                 }
@@ -1496,27 +1416,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         }
     }
 
-    private static LookAndFeel getSystemLookAndFeel() {
-        return systemLookAndFeel;
-    }
-
-    private void setLookAndFeel(LookAndFeel laf) {
-        // We need to remove all PCL to hide the LAF changing from the users,
-        // we add them back after LAF is change
-        PropertyChangeListener[] listeners = UIManager.getPropertyChangeListeners();
-        for (PropertyChangeListener listener : listeners) {
-            UIManager.removePropertyChangeListener(listener);
-        }
-        try {
-            UIManager.setLookAndFeel(laf);
-        } catch (Exception e) {
-            throw new InternalError(e.getCause().toString());
-        } finally {
-            for (PropertyChangeListener listener : listeners) {
-                UIManager.addPropertyChangeListener(listener);
-            }
-        }
-    }
 
     /*
     * Used by ContainerPeer to skip all the paint events during layout.
