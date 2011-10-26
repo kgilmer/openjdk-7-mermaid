@@ -237,8 +237,6 @@ Java_sun_nio_fs_UnixNativeDispatcher_init(JNIEnv* env, jclass this)
         flags |= sun_nio_fs_UnixNativeDispatcher_HAS_AT_SYSCALLS;
     }
 
-    my_fdopendir_func = (fdopendir_func*) dlsym(RTLD_DEFAULT, "fdopendir");
-
     return flags;
 }
 
@@ -567,11 +565,17 @@ Java_sun_nio_fs_UnixNativeDispatcher_futimes(JNIEnv* env, jclass this, jint file
     times[1].tv_sec = modificationTime / 1000000;
     times[1].tv_usec = modificationTime % 1000000;
 
-    if (my_futimesat_func != NULL) {
-        RESTARTABLE((*my_futimesat_func)(filedes, NULL, &times[0]), err);
-        if (err == -1) {
-            throwUnixException(env, errno);
-        }
+#ifdef _ALLBSD_SOURCE
+    RESTARTABLE(futimes(filedes, &times[0]), err);
+#else
+    if (my_futimesat_func == NULL) {
+        JNU_ThrowInternalError(env, "should not reach here");
+        return;
+    }
+    RESTARTABLE((*my_futimesat_func)(filedes, NULL, &times[0]), err);
+#endif
+    if (err == -1) {
+        throwUnixException(env, errno);
     }
 }
 
