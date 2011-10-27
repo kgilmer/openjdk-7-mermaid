@@ -43,14 +43,17 @@ JNIEXPORT jlong JNICALL Java_sun_lwawt_macosx_CDragSourceContextPeer_createNativ
    jint jsourceactions, jlongArray jformats, jobject jformatmap)
 {
     id controlObj = (id) jlong_to_ptr(jnativepeer);
-    CDragSource* dragSource = nil;
+    __block CDragSource* dragSource = nil;
 
 JNF_COCOA_ENTER(env);
-    dragSource = [[CDragSource alloc] init:jthis component:jcomponent peer:jpeer control:controlObj transferable:jtransferable
-        triggerEvent:jtrigger dragPosX:jdragposx dragPosY:jdragposy modifiers:jextmodifiers clickCount:jclickcount timeStamp:jtimestamp
-        cursor:jcursor dragImage:jnsdragimage dragImageOffsetX:jdragimageoffsetx dragImageOffsetY:jdragimageoffsety
-        sourceActions:jsourceactions formats:jformats formatMap:jformatmap];
-
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        dragSource = [[CDragSource alloc] init:jthis component:jcomponent peer:jpeer control:controlObj
+            transferable:jtransferable triggerEvent:jtrigger dragPosX:jdragposx
+            dragPosY:jdragposy modifiers:jextmodifiers clickCount:jclickcount timeStamp:jtimestamp
+            cursor:jcursor dragImage:jnsdragimage dragImageOffsetX:jdragimageoffsetx
+            dragImageOffsetY:jdragimageoffsety sourceActions:jsourceactions
+            formats:jformats formatMap:jformatmap];
+    }];
 JNF_COCOA_EXIT(env);
 
     if (dragSource) {
