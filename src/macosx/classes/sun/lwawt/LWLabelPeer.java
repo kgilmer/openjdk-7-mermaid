@@ -32,10 +32,14 @@ import java.awt.peer.LabelPeer;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+/**
+ * Lightweight implementation of {@link LabelPeer}. Delegates most of the work
+ * to the {@link JLabel}.
+ */
 final class LWLabelPeer extends LWComponentPeer<Label, JLabel>
         implements LabelPeer {
 
-    LWLabelPeer(final Label target, PlatformComponent platformComponent) {
+    LWLabelPeer(final Label target, final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
@@ -68,6 +72,14 @@ final class LWLabelPeer extends LWComponentPeer<Label, JLabel>
         }
     }
 
+    /**
+     * Converts {@code Label} alignment constant to the {@code JLabel} constant.
+     * If wrong Label alignment provided returns default alignment.
+     *
+     * @param alignment {@code Label} constant.
+     *
+     * @return {@code JLabel} constant.
+     */
     private static int convertAlignment(final int alignment) {
         switch (alignment) {
             case Label.CENTER:

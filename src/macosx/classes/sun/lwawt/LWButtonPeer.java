@@ -26,12 +26,13 @@
 
 package sun.lwawt;
 
-import java.awt.*;
+import java.awt.Button;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.peer.ButtonPeer;
 
-import javax.swing.*;
+import javax.swing.JButton;
 
 final class LWButtonPeer extends LWComponentPeer<Button, JButton>
         implements ButtonPeer, ActionListener {
@@ -40,17 +41,14 @@ final class LWButtonPeer extends LWComponentPeer<Button, JButton>
     // since AquaButtonUI doesn't do it
     private Color background, foreground;
 
-    LWButtonPeer(final Button target, PlatformComponent platformComponent) {
+    LWButtonPeer(final Button target,
+                 final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
     @Override
     protected JButton createDelegate() {
-        return new JButton() {
-            public boolean hasFocus() {
-                return getTarget().hasFocus();
-            }
-        };
+        return new JButtonDelegate();
     }
 
     @Override
@@ -81,8 +79,8 @@ final class LWButtonPeer extends LWComponentPeer<Button, JButton>
     @Override
     public void actionPerformed(final ActionEvent e) {
         postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
-                getTarget().getActionCommand(), e.getWhen(),
-                e.getModifiers()));
+                                  getTarget().getActionCommand(), e.getWhen(),
+                                  e.getModifiers()));
     }
 
     @Override
@@ -95,5 +93,19 @@ final class LWButtonPeer extends LWComponentPeer<Button, JButton>
     @Override
     public boolean isFocusable() {
         return true;
+    }
+
+    private final class JButtonDelegate extends JButton {
+
+        // Empty non private constructor was added because access to this
+        // class shouldn't be emulated by a synthetic accessor method.
+        JButtonDelegate() {
+            super();
+        }
+
+        @Override
+        public boolean hasFocus() {
+            return getTarget().hasFocus();
+        }
     }
 }

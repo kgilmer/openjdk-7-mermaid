@@ -118,6 +118,7 @@ final class LWChoicePeer extends LWComponentPeer<Choice, JComboBox<String>>
             super();
         }
 
+        @Override
         public boolean hasFocus() {
             return getTarget().hasFocus();
         }

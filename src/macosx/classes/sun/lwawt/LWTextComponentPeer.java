@@ -26,29 +26,39 @@
 package sun.lwawt;
 
 import java.awt.FontMetrics;
+import java.awt.SystemColor;
 import java.awt.TextComponent;
-import javax.swing.JComponent;
-import javax.swing.text.Document;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.DocumentEvent;
 import java.awt.event.TextEvent;
+
+import javax.swing.JComponent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 
 abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent>
         extends LWComponentPeer<T, D> {
-    protected final static int MARGIN = 2;
-    protected final static int SPACE = 1;
+    protected static final int MARGIN = 2;
+    protected static final int SPACE = 1;
+    protected static final char WIDE_CHAR = 'W';
 
-    LWTextComponentPeer(T target, PlatformComponent platformComponent) {
+    LWTextComponentPeer(final T target,
+                        final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
-    /* Returns height of the line in textarea or textfield */
-    protected int getItemHeight(FontMetrics metrics) {
+    /**
+     * Returns height of the line in textarea or textfield.
+     */
+    protected static int getItemHeight(final FontMetrics metrics) {
         return (metrics.getHeight() - metrics.getLeading()) + (2 * SPACE);
     }
 
+    @Override
     public void initialize() {
         super.initialize();
+        if (!getTarget().isBackgroundSet()) {
+            getTarget().setBackground(SystemColor.text);
+        }
         synchronized (getDelegateLock()) {
             getDocument().addDocumentListener(new SwingTextComponentDocumentListener());
         }
@@ -56,23 +66,28 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
 
     abstract Document getDocument();
 
-    private class SwingTextComponentDocumentListener implements DocumentListener {
+    private final class SwingTextComponentDocumentListener
+            implements DocumentListener {
+
         void sendTextEvent(DocumentEvent de) {
-            LWTextComponentPeer.this.postEvent(
-                    new TextEvent(LWTextComponentPeer.this.getTarget(),
-                            TextEvent.TEXT_VALUE_CHANGED));
-            getDelegate().invalidate();
-            getDelegate().validate();
+            postEvent(new TextEvent(getTarget(), TextEvent.TEXT_VALUE_CHANGED));
+            synchronized (getDelegateLock()) {
+                getDelegate().invalidate();
+                getDelegate().validate();
+            }
         }
 
+        @Override
         public void changedUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }
 
+        @Override
         public void insertUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }
 
+        @Override
         public void removeUpdate(DocumentEvent de) {
             sendTextEvent(de);
         }

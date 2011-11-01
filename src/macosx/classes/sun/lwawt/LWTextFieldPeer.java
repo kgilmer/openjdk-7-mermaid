@@ -23,50 +23,46 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
-import javax.swing.*;
-import javax.swing.text.Document;
-
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.im.InputMethodRequests;
 import java.awt.peer.TextFieldPeer;
 
+import javax.swing.JPasswordField;
+import javax.swing.text.Document;
 
 final class LWTextFieldPeer
         extends LWTextComponentPeer<TextField, JPasswordField>
         implements TextFieldPeer, ActionListener {
-    private final static int DEFAULT_COLUMNS = 9;
 
-    LWTextFieldPeer(TextField target, PlatformComponent platformComponent) {
+    private static final int DEFAULT_COLUMNS = 1;
+
+    LWTextFieldPeer(final TextField target,
+                    final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
     protected JPasswordField createDelegate() {
-        JPasswordField delegate = new JPasswordField() {
-
-            public boolean hasFocus() {
-                return getTarget().hasFocus();
-            }
-
-            public Point getLocationOnScreen() {
-                return getTarget().getLocationOnScreen();
-            }
-        };
+        final JPasswordField delegate = new JTextAreaDelegate();
+        delegate.setOpaque(true);
         return delegate;
     }
 
+    @Override
     public void initialize() {
         super.initialize();
-        if (!getTarget().isBackgroundSet()) {
-            getTarget().setBackground(SystemColor.text);
-        }
+        setText(getTarget().getText());
+        setEchoChar(getTarget().getEchoChar());
         synchronized (getDelegateLock()) {
-            getDelegate().setText(getTarget().getText());
             getDelegate().addActionListener(this);
-            getDelegate().setEchoChar(getTarget().getEchoChar());
         }
     }
 
@@ -75,21 +71,24 @@ final class LWTextFieldPeer
         return getDelegate().getDocument();
     }
 
-
     @Override
-    public void setEchoChar(char echoChar) {
+    public void setEchoChar(final char echoChar) {
         synchronized (getDelegateLock()) {
             getDelegate().setEchoChar(echoChar);
         }
     }
 
     @Override
-    public Dimension getPreferredSize(int columns) {
+    public Dimension getPreferredSize(final int columns) {
         FontMetrics fm = getFontMetrics(getFont());
         Dimension d;
         if (fm != null) {
-            d = new Dimension(columns * fm.stringWidth("x"),
-                    getItemHeight(fm) + (2 * MARGIN));
+            final Insets insets;
+            synchronized (getDelegateLock()) {
+                insets = getDelegate().getInsets();
+            }
+            d = new Dimension(columns * fm.charWidth(WIDE_CHAR) + insets.left
+                              + insets.right, getItemHeight(fm) + (2 * MARGIN));
         } else {
             d = new Dimension(columns * 10, 10 + (2 * MARGIN));
         }
@@ -97,12 +96,17 @@ final class LWTextFieldPeer
     }
 
     @Override
-    public Dimension getMinimumSize(int columns) {
-        return getPreferredSize(DEFAULT_COLUMNS);
+    public Dimension getMinimumSize(final int columns) {
+        return getPreferredSize(columns);
     }
 
     @Override
-    public void setEditable(boolean editable) {
+    public Dimension getMinimumSize() {
+        return getMinimumSize(DEFAULT_COLUMNS);
+    }
+
+    @Override
+    public void setEditable(final boolean editable) {
         synchronized (getDelegateLock()) {
             getDelegate().setEditable(editable);
         }
@@ -116,7 +120,7 @@ final class LWTextFieldPeer
     }
 
     @Override
-    public void setText(String l) {
+    public void setText(final String l) {
         synchronized (getDelegateLock()) {
             getDelegate().setText(l);
         }
@@ -137,14 +141,14 @@ final class LWTextFieldPeer
     }
 
     @Override
-    public void select(int selStart, int selEnd) {
+    public void select(final int selStart, final int selEnd) {
         synchronized (getDelegateLock()) {
             getDelegate().select(selStart, selEnd);
         }
     }
 
     @Override
-    public void setCaretPosition(int pos) {
+    public void setCaretPosition(final int pos) {
         synchronized (getDelegateLock()) {
             getDelegate().setCaretPosition(pos);
         }
@@ -164,14 +168,31 @@ final class LWTextFieldPeer
 
     @Override
     public boolean isFocusable() {
-        synchronized (getDelegateLock()) {
-            return getTarget().isFocusable();
-        }
+        return getTarget().isFocusable();
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
-                "", e.getWhen(), e.getModifiers()));
+    public void actionPerformed(final ActionEvent e) {
+        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED, "",
+                                  e.getWhen(), e.getModifiers()));
+    }
+
+    private final class JTextAreaDelegate extends JPasswordField {
+
+        // Empty non private constructor was added because access to this
+        // class shouldn't be emulated by a synthetic accessor method.
+        JTextAreaDelegate() {
+            super();
+        }
+
+        @Override
+        public boolean hasFocus() {
+            return getTarget().hasFocus();
+        }
+
+        @Override
+        public Point getLocationOnScreen() {
+            return LWTextFieldPeer.this.getLocationOnScreen();
+        }
     }
 }

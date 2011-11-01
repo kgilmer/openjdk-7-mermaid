@@ -34,11 +34,13 @@ import java.awt.peer.TextAreaPeer;
 final class LWTextAreaPeer
         extends LWTextComponentPeer<TextArea, LWTextAreaPeer.ScrollableJTextArea>
         implements TextAreaPeer {
-    private final static int DEFAULT_COLUMNS = 9;
-    private final static int DEFAULT_ROWS = 3;
-    private final static int BORDERMARGIN = 5;
 
-    public LWTextAreaPeer(TextArea target, PlatformComponent platformComponent) {
+    private static final int DEFAULT_COLUMNS = 9;
+    private static final int DEFAULT_ROWS = 3;
+    private static final int BORDERMARGIN = 5;
+
+    LWTextAreaPeer(final TextArea target,
+                   final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
@@ -48,13 +50,11 @@ final class LWTextAreaPeer
         return delegate;
     }
 
+    @Override
     public void initialize() {
         super.initialize();
-        if (!getTarget().isBackgroundSet()) {
-            getTarget().setBackground(SystemColor.text);
-        }
+        setText(getTarget().getText());
         synchronized (getDelegateLock()) {
-            getDelegate().getView().setText(getTarget().getText());
             getDelegate().setBorder(BorderFactory.createLoweredBevelBorder());
         }
     }
@@ -75,11 +75,11 @@ final class LWTextAreaPeer
     }
 
     @Override
-    public Dimension getPreferredSize(int rows, int columns) {
+    public Dimension getPreferredSize(final int rows, final int columns) {
         FontMetrics fm = getFontMetrics(getFont());
         Dimension d;
         if (fm != null) {
-            d = new Dimension(columns * fm.stringWidth("W"),
+            d = new Dimension(columns * fm.charWidth(WIDE_CHAR),
                     (getItemHeight(fm) * rows + ((1 + rows) * MARGIN)) + 2 * BORDERMARGIN);
         } else {
             d = new Dimension(columns * 10, 12 * rows + ((rows + 1) * MARGIN) + 2 * BORDERMARGIN);
@@ -88,12 +88,12 @@ final class LWTextAreaPeer
     }
 
     @Override
-    public Dimension getMinimumSize(int rows, int columns) {
+    public Dimension getMinimumSize(final int rows, final int columns) {
         return getPreferredSize(DEFAULT_ROWS, DEFAULT_COLUMNS);
     }
 
     @Override
-    public void setText(String label) {
+    public void setText(final String label) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().setText(label);
         }
@@ -113,7 +113,7 @@ final class LWTextAreaPeer
     }
 
     @Override
-    public void insert(String text, int pos) {
+    public void insert(final String text, final int pos) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().insert(text, pos);
 
@@ -122,7 +122,8 @@ final class LWTextAreaPeer
     }
 
     @Override
-    public void replaceRange(String text, int start, int end) {
+    public void replaceRange(final String text, final int start,
+                             final int end) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().replaceRange(text, start, end);
         }
@@ -131,7 +132,7 @@ final class LWTextAreaPeer
 
 
     @Override
-    public void setEditable(boolean editable) {
+    public void setEditable(final boolean editable) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().setEditable(editable);
         }
@@ -152,14 +153,14 @@ final class LWTextAreaPeer
     }
 
     @Override
-    public void select(int selStart, int selEnd) {
+    public void select(final int selStart, final int selEnd) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().select(selStart, selEnd);
         }
     }
 
     @Override
-    public void setCaretPosition(int pos) {
+    public void setCaretPosition(final int pos) {
         synchronized (getDelegateLock()) {
             getDelegate().getView().setCaretPosition(pos);
         }
@@ -179,8 +180,9 @@ final class LWTextAreaPeer
 
 
     @SuppressWarnings("serial")
-    class ScrollableJTextArea extends JScrollPane {
-        public ScrollableJTextArea() {
+    final class ScrollableJTextArea extends JScrollPane {
+
+        ScrollableJTextArea() {
             getViewport().setView(new JTextAreaDelegate());
             setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
             setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -197,14 +199,16 @@ final class LWTextAreaPeer
         }
 
         @SuppressWarnings("serial")
-        class JTextAreaDelegate extends JTextArea {
+        final class JTextAreaDelegate extends JTextArea {
 
+            @Override
             public boolean hasFocus() {
                 return getTarget().hasFocus();
             }
 
+            @Override
             public Point getLocationOnScreen() {
-                return getTarget().getLocationOnScreen();
+                return LWTextAreaPeer.this.getLocationOnScreen();
             }
         }
     }
