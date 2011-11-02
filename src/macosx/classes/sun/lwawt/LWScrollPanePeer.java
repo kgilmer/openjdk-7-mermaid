@@ -26,18 +26,18 @@
 package sun.lwawt;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.peer.ScrollPanePeer;
 import java.util.List;
 
-public class LWScrollPanePeer
+final class LWScrollPanePeer
         extends LWContainerPeer<ScrollPane, JScrollPane>
         implements ScrollPanePeer, ChangeListener {
 
-
-    public LWScrollPanePeer(ScrollPane target, PlatformComponent platformComponent) {
+    LWScrollPanePeer(ScrollPane target, PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
@@ -46,10 +46,12 @@ public class LWScrollPanePeer
         JPanel panel = new JPanel();
         panel.setOpaque(false);
         sp.getViewport().setView(panel);
+        sp.setBorder(BorderFactory.createEmptyBorder());
         sp.getViewport().addChangeListener(this);
         return sp;
     }
 
+    @Override
     public void stateChanged(ChangeEvent e) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -63,12 +65,13 @@ public class LWScrollPanePeer
         });
     }
 
+    @Override
     public void initialize() {
         super.initialize();
         synchronized (getDelegateLock()) {
             getDelegate().getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
-            getDelegate().setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-            getDelegate().setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            getDelegate().setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            getDelegate().setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         }
     }
 
@@ -78,11 +81,13 @@ public class LWScrollPanePeer
     }
 
 
+    @Override
     protected Rectangle getContentSize() {
         Rectangle viewRect = getDelegate().getViewport().getViewRect();
         return new Rectangle(viewRect.width, viewRect.height);
     }
 
+    @Override
     public void layout() {
         super.layout();
         synchronized (getDelegateLock()) {
@@ -99,17 +104,21 @@ public class LWScrollPanePeer
         }
     }
 
+    @Override
     public void setScrollPosition(int x, int y) {
     }
 
+    @Override
     public int getHScrollbarHeight() {
         return 0;
     }
 
+    @Override
     public int getVScrollbarWidth() {
         return 0;
     }
 
+    @Override
     public void childResized(int w, int h) {
         synchronized (getDelegateLock()) {
             getDelegate().invalidate();
@@ -117,9 +126,11 @@ public class LWScrollPanePeer
         }
     }
 
+    @Override
     public void setUnitIncrement(Adjustable adj, int u) {
     }
 
+    @Override
     public void setValue(Adjustable adj, int v) {
     }
 }
