@@ -27,8 +27,6 @@
 package sun.lwawt;
 
 import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -80,19 +78,7 @@ final class LWTextFieldPeer
 
     @Override
     public Dimension getPreferredSize(final int columns) {
-        FontMetrics fm = getFontMetrics(getFont());
-        Dimension d;
-        if (fm != null) {
-            final Insets insets;
-            synchronized (getDelegateLock()) {
-                insets = getDelegate().getInsets();
-            }
-            d = new Dimension(columns * fm.charWidth(WIDE_CHAR) + insets.left
-                              + insets.right, getItemHeight(fm) + (2 * MARGIN));
-        } else {
-            d = new Dimension(columns * 10, 10 + (2 * MARGIN));
-        }
-        return d;
+        return getPreferredSize(1, columns);
     }
 
     @Override

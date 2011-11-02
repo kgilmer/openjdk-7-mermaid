@@ -35,9 +35,8 @@ final class LWTextAreaPeer
         extends LWTextComponentPeer<TextArea, LWTextAreaPeer.ScrollableJTextArea>
         implements TextAreaPeer {
 
-    private static final int DEFAULT_COLUMNS = 9;
-    private static final int DEFAULT_ROWS = 3;
-    private static final int BORDERMARGIN = 5;
+    private static final int DEFAULT_COLUMNS = 60;
+    private static final int DEFAULT_ROWS = 10;
 
     LWTextAreaPeer(final TextArea target,
                    final PlatformComponent platformComponent) {
@@ -46,17 +45,13 @@ final class LWTextAreaPeer
 
     @Override
     protected ScrollableJTextArea createDelegate() {
-        ScrollableJTextArea delegate = new ScrollableJTextArea();
-        return delegate;
+        return new ScrollableJTextArea();
     }
 
     @Override
     public void initialize() {
         super.initialize();
         setText(getTarget().getText());
-        synchronized (getDelegateLock()) {
-            getDelegate().setBorder(BorderFactory.createLoweredBevelBorder());
-        }
     }
 
     @Override
@@ -71,25 +66,23 @@ final class LWTextAreaPeer
 
     @Override
     public Dimension getMinimumSize() {
-        return getMinimumSize(10, 60);
-    }
-
-    @Override
-    public Dimension getPreferredSize(final int rows, final int columns) {
-        FontMetrics fm = getFontMetrics(getFont());
-        Dimension d;
-        if (fm != null) {
-            d = new Dimension(columns * fm.charWidth(WIDE_CHAR),
-                    (getItemHeight(fm) * rows + ((1 + rows) * MARGIN)) + 2 * BORDERMARGIN);
-        } else {
-            d = new Dimension(columns * 10, 12 * rows + ((rows + 1) * MARGIN) + 2 * BORDERMARGIN);
-        }
-        return d;
+        return getMinimumSize(DEFAULT_ROWS, DEFAULT_COLUMNS);
     }
 
     @Override
     public Dimension getMinimumSize(final int rows, final int columns) {
-        return getPreferredSize(DEFAULT_ROWS, DEFAULT_COLUMNS);
+        return getPreferredSize(rows, columns);
+    }
+
+    @Override
+    public Dimension getPreferredSize(final int rows, final int columns) {
+        final Dimension size = super.getPreferredSize(rows, columns);
+        synchronized (getDelegateLock()) {
+            int scrollbarW = getDelegate().getVerticalScrollBar().getWidth();
+            int scrollbarH = getDelegate().getHorizontalScrollBar().getHeight();
+            return new Dimension(size.width + scrollbarW,
+                                 size.height + scrollbarH);
+        }
     }
 
     @Override
@@ -199,7 +192,13 @@ final class LWTextAreaPeer
         }
 
         @SuppressWarnings("serial")
-        final class JTextAreaDelegate extends JTextArea {
+        private final class JTextAreaDelegate extends JTextArea {
+
+            // Empty non private constructor was added because access to this
+            // class shouldn't be emulated by a synthetic accessor method.
+            JTextAreaDelegate() {
+                super();
+            }
 
             @Override
             public boolean hasFocus() {

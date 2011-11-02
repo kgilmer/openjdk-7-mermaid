@@ -23,9 +23,12 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
+import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Insets;
 import java.awt.SystemColor;
 import java.awt.TextComponent;
 import java.awt.event.TextEvent;
@@ -36,10 +39,12 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
 abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent>
-        extends LWComponentPeer<T, D> {
-    protected static final int MARGIN = 2;
-    protected static final int SPACE = 1;
-    protected static final char WIDE_CHAR = 'W';
+        extends LWComponentPeer<T, D> implements DocumentListener {
+
+    /**
+     * Character with reasonable value between the minimum width and maximum.
+     */
+    protected static final char WIDE_CHAR = 'w';
 
     LWTextComponentPeer(final T target,
                         final PlatformComponent platformComponent) {
@@ -50,7 +55,7 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
      * Returns height of the line in textarea or textfield.
      */
     protected static int getItemHeight(final FontMetrics metrics) {
-        return (metrics.getHeight() - metrics.getLeading()) + (2 * SPACE);
+        return metrics.getHeight();
     }
 
     @Override
@@ -60,36 +65,46 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
             getTarget().setBackground(SystemColor.text);
         }
         synchronized (getDelegateLock()) {
-            getDocument().addDocumentListener(new SwingTextComponentDocumentListener());
+            getDocument().addDocumentListener(this);
         }
     }
 
     abstract Document getDocument();
 
-    private final class SwingTextComponentDocumentListener
-            implements DocumentListener {
-
-        void sendTextEvent(DocumentEvent de) {
-            postEvent(new TextEvent(getTarget(), TextEvent.TEXT_VALUE_CHANGED));
-            synchronized (getDelegateLock()) {
-                getDelegate().invalidate();
-                getDelegate().validate();
-            }
+    public Dimension getPreferredSize(final int rows, final int columns) {
+        final Insets insets;
+        synchronized (getDelegateLock()) {
+            insets = getDelegate().getInsets();
         }
+        final int borderHeight = insets.top + insets.bottom;
+        final int borderWidth = insets.left + insets.right;
+        final FontMetrics fm = getFontMetrics(getFont());
+        final int charWidth = (fm != null) ? fm.charWidth(WIDE_CHAR) : 10;
+        final int itemHeight = (fm != null) ? getItemHeight(fm) : 10;
+        return new Dimension(columns * charWidth + borderWidth,
+                             rows * itemHeight + borderHeight);
+    }
 
-        @Override
-        public void changedUpdate(DocumentEvent de) {
-            sendTextEvent(de);
+    private void sendTextEvent(final DocumentEvent de) {
+        postEvent(new TextEvent(getTarget(), TextEvent.TEXT_VALUE_CHANGED));
+        synchronized (getDelegateLock()) {
+            getDelegate().invalidate();
+            getDelegate().validate();
         }
+    }
 
-        @Override
-        public void insertUpdate(DocumentEvent de) {
-            sendTextEvent(de);
-        }
+    @Override
+    public final void changedUpdate(final DocumentEvent de) {
+        sendTextEvent(de);
+    }
 
-        @Override
-        public void removeUpdate(DocumentEvent de) {
-            sendTextEvent(de);
-        }
+    @Override
+    public final void insertUpdate(final DocumentEvent de) {
+        sendTextEvent(de);
+    }
+
+    @Override
+    public final void removeUpdate(final DocumentEvent de) {
+        sendTextEvent(de);
     }
 }
