@@ -405,12 +405,12 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public boolean isDesktopSupported() {
-        return false;
+        return true;
     }
 
     @Override
     protected DesktopPeer createDesktopPeer(Desktop target) {
-        throw new RuntimeException("not implemented");
+       return new CDesktopPeer();
     }
 
     @Override

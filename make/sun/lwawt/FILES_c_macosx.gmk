@@ -54,6 +54,7 @@ FILES_objc = \
         CDropTarget.m \
         CDropTargetContextPeer.m \
         CInputMethod.m \
+				CDesktopPeer.m \
         OSVersion.m \
         DnDUtilities.m \
         CFileDialog.m \

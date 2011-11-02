@@ -116,6 +116,7 @@ FILES_export = \
         sun/lwawt/macosx/CPrinterPageDialog.java \
         sun/lwawt/macosx/CPrinterSurfaceData.java \
         sun/lwawt/macosx/CTextPipe.java \
+        sun/lwawt/macosx/CDesktopPeer.java \
         sun/java2d/CRenderer.java \
         sun/lwawt/macosx/EventDispatchAccess.java \
         sun/lwawt/macosx/NSPrintInfo.java \
