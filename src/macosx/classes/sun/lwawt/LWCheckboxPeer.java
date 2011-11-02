@@ -69,12 +69,18 @@ class LWCheckboxPeer
                 boolean postEvent = true;
                 CheckboxGroup group = getTarget().getCheckboxGroup();
                 if (group != null) {
-                    if (e.getStateChange() == ItemEvent.SELECTED && group.getSelectedCheckbox() != getTarget()) {
-                        group.setSelectedCheckbox(getTarget());
-                    } else if (group.getSelectedCheckbox() == getTarget()) {
-                        // don't want to leave the group with no selected checkbox
-                        getTarget().setState(true);
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        if (group.getSelectedCheckbox() != getTarget()) {
+                            group.setSelectedCheckbox(getTarget());
+                        } else {
+                            postEvent = false;
+                        }
+                    } else {
                         postEvent = false;
+                        if (group.getSelectedCheckbox() == getTarget()) {
+                            // don't want to leave the group with no selected checkbox
+                            getTarget().setState(true);
+                        }
                     }
                 } else {
                     getTarget().setState(e.getStateChange() == ItemEvent.SELECTED);
