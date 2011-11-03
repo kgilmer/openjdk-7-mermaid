@@ -26,18 +26,17 @@
 package sun.lwawt;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.peer.ScrollPanePeer;
 import java.util.List;
 
-final class LWScrollPanePeer
-        extends LWContainerPeer<ScrollPane, JScrollPane>
+final class LWScrollPanePeer extends LWContainerPeer<ScrollPane, JScrollPane>
         implements ScrollPanePeer, ChangeListener {
 
-    LWScrollPanePeer(ScrollPane target, PlatformComponent platformComponent) {
+    LWScrollPanePeer(final ScrollPane target,
+                     final PlatformComponent platformComponent) {
         super(target, platformComponent);
     }
 
@@ -68,14 +67,15 @@ final class LWScrollPanePeer
     @Override
     public void initialize() {
         super.initialize();
+        final int policy = getTarget().getScrollbarDisplayPolicy();
         synchronized (getDelegateLock()) {
             getDelegate().getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
-            getDelegate().setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-            getDelegate().setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            getDelegate().setVerticalScrollBarPolicy(convertVPolicy(policy));
+            getDelegate().setHorizontalScrollBarPolicy(convertHPolicy(policy));
         }
     }
 
-    private LWComponentPeer getViewPeer() {
+    LWComponentPeer getViewPeer() {
         List<LWComponentPeer> peerList = getChildren();
         return peerList.isEmpty() ? null : peerList.get(0);
     }
@@ -110,12 +110,16 @@ final class LWScrollPanePeer
 
     @Override
     public int getHScrollbarHeight() {
-        return 0;
+        synchronized (getDelegateLock()) {
+            return getDelegate().getHorizontalScrollBar().getHeight();
+        }
     }
 
     @Override
     public int getVScrollbarWidth() {
-        return 0;
+        synchronized (getDelegateLock()) {
+            return getDelegate().getVerticalScrollBar().getWidth();
+        }
     }
 
     @Override
@@ -132,5 +136,27 @@ final class LWScrollPanePeer
 
     @Override
     public void setValue(Adjustable adj, int v) {
+    }
+
+    private static int convertHPolicy(final int policy) {
+        switch (policy) {
+            case ScrollPane.SCROLLBARS_NEVER:
+                return ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+            case ScrollPane.SCROLLBARS_ALWAYS:
+                return ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
+            default:
+                return ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
+        }
+    }
+
+    private static int convertVPolicy(final int policy) {
+        switch (policy) {
+            case ScrollPane.SCROLLBARS_NEVER:
+                return ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER;
+            case ScrollPane.SCROLLBARS_ALWAYS:
+                return ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+            default:
+                return ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED;
+        }
     }
 }
