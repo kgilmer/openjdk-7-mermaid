@@ -25,6 +25,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
 #import "sun_lwawt_macosx_CPlatformWindow.h"
 #import "com_apple_eawt_event_GestureHandler.h"
@@ -36,6 +37,7 @@
 #import "LWCToolkit.h"
 #import "GeomUtilities.h"
 #import "ThreadUtilities.h"
+#import "OSVersion.h"
 
 
 #define MASK(KEY) \
@@ -50,11 +52,28 @@
 
 static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
 
+@interface JavaResizeGrowBoxOverlayWindow : NSWindow { }
+
+@end
+
+@implementation JavaResizeGrowBoxOverlayWindow
+
+- (BOOL) accessibilityIsIgnored
+{
+    return YES;
+}
+
+- (NSArray *)accessibilityChildrenAttribute 
+{    
+    return nil;
+}
+@end
 
 @implementation AWTWindow
 
 @synthesize javaPlatformWindow;
 @synthesize javaMenuBar;
+@synthesize growBoxWindow;
 @synthesize javaMinSize;
 @synthesize javaMaxSize;
 @synthesize styleBits;
@@ -124,6 +143,24 @@ static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
     }
 }
 
+- (BOOL) shouldShowGrowBox {
+    return isSnowLeopardOrLower() && IS(self.styleBits, RESIZABLE);
+}
+
+- (NSImage *) createGrowBoxImage {
+    NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(12, 12)];
+    JRSUIControlRef growBoxWidget = JRSUIControlCreate(FALSE);
+    JRSUIControlSetWidget(growBoxWidget, kJRSUI_Widget_growBoxTextured);
+    JRSUIControlSetWindowType(growBoxWidget, kJRSUI_WindowType_utility);
+    JRSUIRendererRef renderer = JRSUIRendererCreate();
+    [image lockFocus]; // sets current graphics context to that of the image
+    JRSUIControlDraw(renderer, growBoxWidget, [[NSGraphicsContext currentContext] graphicsPort], CGRectMake(0, 1, 11, 11));
+    [image unlockFocus];
+    JRSUIRendererRelease(renderer);
+    JRSUIControlRelease(growBoxWidget);
+    return image;
+}
+
 - (id) initWithPlatformWindow:(JNFWeakJObjectWrapper *)platformWindow
                     styleBits:(jint)bits
                     frameRect:(NSRect)rect
@@ -157,6 +194,28 @@ AWT_ASSERT_APPKIT_THREAD;
     [self setReleasedWhenClosed:NO];
     [self setPreservesContentDuringLiveResize:YES];
     
+    if ([self shouldShowGrowBox]) {
+        NSImage *growBoxImage = [self createGrowBoxImage];
+        growBoxWindow = [[JavaResizeGrowBoxOverlayWindow alloc] initWithContentRect:NSMakeRect(0, 0, [growBoxImage size].width, [growBoxImage size].height) styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
+        [self.growBoxWindow setIgnoresMouseEvents:YES];
+        [self.growBoxWindow setOpaque:NO];
+        [self.growBoxWindow setBackgroundColor:[NSColor clearColor]];
+        [self.growBoxWindow setHasShadow:NO];
+        [self.growBoxWindow setReleasedWhenClosed:NO];
+        
+        NSImageView *imageView = [[NSImageView alloc] initWithFrame:[self.growBoxWindow frame]];
+        [imageView setEditable:NO];
+        [imageView setAnimates:NO];
+        [imageView setAllowsCutCopyPaste:NO];
+        [self.growBoxWindow setContentView:imageView];
+        [imageView setImage:growBoxImage];
+        [growBoxImage release];
+        [imageView release];
+        
+        [self addChildWindow:self.growBoxWindow ordered:NSWindowAbove];
+        [self adjustGrowBoxWindow];
+    } else growBoxWindow = nil;
+    
     return self;
 }
 
@@ -165,6 +224,7 @@ AWT_ASSERT_APPKIT_THREAD;
     
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     [self.javaPlatformWindow setJObject:nil withEnv:env];
+    self.growBoxWindow = nil;
     
     [super dealloc];
 }
@@ -249,6 +309,14 @@ AWT_ASSERT_APPKIT_THREAD;
 
 // NSWindowDelegate methods
 
+- (void) adjustGrowBoxWindow {
+    if (self.growBoxWindow != nil) {
+        NSRect parentRect = [self frame];
+        parentRect.origin.x += (parentRect.size.width - [self.growBoxWindow frame].size.width);
+        [self.growBoxWindow setFrameOrigin:parentRect.origin];
+    }
+}
+
 - (void) _deliverMoveResizeEvent {
 AWT_ASSERT_APPKIT_THREAD;
     
@@ -262,6 +330,8 @@ AWT_ASSERT_APPKIT_THREAD;
     if (platformWindow == NULL) {
         // TODO: create generic AWT assert
     }
+	
+    [self adjustGrowBoxWindow];
     
     NSRect frame = ConvertNSScreenRect(env, [self frame]);
     
@@ -655,6 +725,7 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
         AWT_ASSERT_APPKIT_THREAD;
         
         [window setAlphaValue:alpha];
+        [window.growBoxWindow setAlphaValue:alpha];
     }];
     
 JNF_COCOA_EXIT(env);
