@@ -5276,7 +5276,7 @@ public class JTable extends JComponent implements TableModelListener, Scrollable
                 // Don't start when just a modifier is pressed
                 int code = e.getKeyCode();
                 if (code == KeyEvent.VK_SHIFT || code == KeyEvent.VK_CONTROL ||
-                    code == KeyEvent.VK_ALT) {
+                    code == KeyEvent.VK_ALT || code == KeyEvent.VK_META) {
                     return false;
                 }
                 // Try to install the editor
