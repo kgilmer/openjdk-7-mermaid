@@ -109,7 +109,7 @@ static JNF_STATIC_MEMBER_CACHE(jm_systemColorsChanged, jc_LWCToolkit, "systemCol
         appleColors = (NSColor**)malloc(sizeof(NSColor*) * sun_lwawt_macosx_LWCToolkit_NUM_APPLE_COLORS);
     } else {
         for (i = 0; i < sun_lwawt_macosx_LWCToolkit_NUM_APPLE_COLORS; i++) {
-            if (sColors[i] != NULL) CFRelease(appleColors[i]); // GC
+            if (appleColors[i] != NULL) CFRelease(appleColors[i]); // GC
         }
     }
     
@@ -118,7 +118,7 @@ static JNF_STATIC_MEMBER_CACHE(jm_systemColorsChanged, jc_LWCToolkit, "systemCol
     appleColors[sun_lwawt_macosx_LWCToolkit_INACTIVE_SELECTION_FOREGROUND_COLOR] =    [NSColor controlDarkShadowColor];
     
     for (i = 0; i < sun_lwawt_macosx_LWCToolkit_NUM_APPLE_COLORS; i++) {
-        if (sColors[i] != NULL) CFRetain(appleColors[i]); // GC 
+        if (appleColors[i] != NULL) CFRetain(appleColors[i]); // GC 
     }
 }
 
