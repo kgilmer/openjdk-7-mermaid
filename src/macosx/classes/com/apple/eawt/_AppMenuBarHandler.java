@@ -36,140 +36,140 @@ import sun.lwawt.macosx.CMenuBar;
 import com.apple.laf.AquaMenuBarUI;
 
 class _AppMenuBarHandler {
-	private static final int MENU_ABOUT = 1;
-	private static final int MENU_PREFS = 2;
-	
-	private static native void nativeSetMenuState(final int menu, final boolean visible, final boolean enabled);
-	private static native void nativeSetDefaultMenuBar(final long menuBarPeer);
-	
-	static final _AppMenuBarHandler instance = new _AppMenuBarHandler();
-	static _AppMenuBarHandler getInstance() {
-		return instance;
-	}
-	
-	// callback from the native delegate -init function
-	private static void initMenuStates(final boolean aboutMenuItemVisible, final boolean aboutMenuItemEnabled, final boolean prefsMenuItemVisible, final boolean prefsMenuItemEnabled) {
-		synchronized (instance) {
-			instance.aboutMenuItemVisible = aboutMenuItemVisible;
-			instance.aboutMenuItemEnabled = aboutMenuItemEnabled;
-			instance.prefsMenuItemVisible = prefsMenuItemVisible;
-			instance.prefsMenuItemEnabled = prefsMenuItemEnabled;
-		}
-	}
-	
-	_AppMenuBarHandler() { }
-	
-	boolean aboutMenuItemVisible;
-	boolean aboutMenuItemEnabled;
-	
-	boolean prefsMenuItemVisible;
-	boolean prefsMenuItemEnabled;
-	boolean prefsMenuItemExplicitlySet;
-	
-	void setDefaultMenuBar(final JMenuBar menuBar) {
-		installDefaultMenuBar(menuBar);
+    private static final int MENU_ABOUT = 1;
+    private static final int MENU_PREFS = 2;
+    
+    private static native void nativeSetMenuState(final int menu, final boolean visible, final boolean enabled);
+    private static native void nativeSetDefaultMenuBar(final long menuBarPeer);
+    
+    static final _AppMenuBarHandler instance = new _AppMenuBarHandler();
+    static _AppMenuBarHandler getInstance() {
+        return instance;
+    }
+    
+    // callback from the native delegate -init function
+    private static void initMenuStates(final boolean aboutMenuItemVisible, final boolean aboutMenuItemEnabled, final boolean prefsMenuItemVisible, final boolean prefsMenuItemEnabled) {
+        synchronized (instance) {
+            instance.aboutMenuItemVisible = aboutMenuItemVisible;
+            instance.aboutMenuItemEnabled = aboutMenuItemEnabled;
+            instance.prefsMenuItemVisible = prefsMenuItemVisible;
+            instance.prefsMenuItemEnabled = prefsMenuItemEnabled;
+        }
+    }
+    
+    _AppMenuBarHandler() { }
+    
+    boolean aboutMenuItemVisible;
+    boolean aboutMenuItemEnabled;
+    
+    boolean prefsMenuItemVisible;
+    boolean prefsMenuItemEnabled;
+    boolean prefsMenuItemExplicitlySet;
+    
+    void setDefaultMenuBar(final JMenuBar menuBar) {
+        installDefaultMenuBar(menuBar);
 
-		// scan the current frames, and see if any are foreground
-		final Frame[] frames = Frame.getFrames();
-		for (final Frame frame : frames) {
-			if (frame.isVisible() && !isFrameMinimized(frame)) return;
-		}
+        // scan the current frames, and see if any are foreground
+        final Frame[] frames = Frame.getFrames();
+        for (final Frame frame : frames) {
+            if (frame.isVisible() && !isFrameMinimized(frame)) return;
+        }
 
-		// if we have no foreground frames, then we have to "kick" the menubar
-		final JFrame pingFrame = new JFrame();
-		pingFrame.getRootPane().putClientProperty("Window.alpha", new Float(0.0f));
-		pingFrame.setVisible(true);
-		pingFrame.toFront();
-		pingFrame.setVisible(false);
-		pingFrame.dispose();
-	}
+        // if we have no foreground frames, then we have to "kick" the menubar
+        final JFrame pingFrame = new JFrame();
+        pingFrame.getRootPane().putClientProperty("Window.alpha", new Float(0.0f));
+        pingFrame.setVisible(true);
+        pingFrame.toFront();
+        pingFrame.setVisible(false);
+        pingFrame.dispose();
+    }
 
-	static boolean isFrameMinimized(final Frame frame) {
-		return (frame.getExtendedState() & Frame.ICONIFIED) != 0;
-	}
+    static boolean isFrameMinimized(final Frame frame) {
+        return (frame.getExtendedState() & Frame.ICONIFIED) != 0;
+    }
 
-	@SuppressWarnings("deprecation")
-	static void installDefaultMenuBar(final JMenuBar menuBar) {
-		if (menuBar == null) {
-			// intentionally clearing the default menu
-			nativeSetDefaultMenuBar(0);
-			return;
-		}
+    @SuppressWarnings("deprecation")
+    static void installDefaultMenuBar(final JMenuBar menuBar) {
+        if (menuBar == null) {
+            // intentionally clearing the default menu
+            nativeSetDefaultMenuBar(0);
+            return;
+        }
 
-		final MenuBarUI ui = menuBar.getUI();
-		if (!(ui instanceof AquaMenuBarUI)) {
-			// Aqua was not installed
-			throw new IllegalStateException("Application.setDefaultMenuBar() only works with the Aqua Look and Feel");
-		}
+        final MenuBarUI ui = menuBar.getUI();
+        if (!(ui instanceof AquaMenuBarUI)) {
+            // Aqua was not installed
+            throw new IllegalStateException("Application.setDefaultMenuBar() only works with the Aqua Look and Feel");
+        }
 /* TODO: disabled until ScreenMenuBar is working
 
-		final AquaMenuBarUI aquaUI = (AquaMenuBarUI)ui;
-		final ScreenMenuBar screenMenuBar = aquaUI.getScreenMenuBar();
-		if (screenMenuBar == null) {
-			// Aqua is installed, but we aren't using the screen menu bar
-			throw new IllegalStateException("Application.setDefaultMenuBar() only works if apple.laf.useScreenMenuBar=true");
-		}
+        final AquaMenuBarUI aquaUI = (AquaMenuBarUI)ui;
+        final ScreenMenuBar screenMenuBar = aquaUI.getScreenMenuBar();
+        if (screenMenuBar == null) {
+            // Aqua is installed, but we aren't using the screen menu bar
+            throw new IllegalStateException("Application.setDefaultMenuBar() only works if apple.laf.useScreenMenuBar=true");
+        }
 
-		screenMenuBar.addNotify();
-		final MenuComponentPeer peer = screenMenuBar.getPeer();
-		if (!(peer instanceof CMenuBar)) {
-			// such a thing should not be possible
-			throw new IllegalStateException("Unable to determine native menu bar from provided JMenuBar");
-		}
+        screenMenuBar.addNotify();
+        final MenuComponentPeer peer = screenMenuBar.getPeer();
+        if (!(peer instanceof CMenuBar)) {
+            // such a thing should not be possible
+            throw new IllegalStateException("Unable to determine native menu bar from provided JMenuBar");
+        }
 
-		// grab the pointer to the CMenuBar, and retain it in native
-		nativeSetDefaultMenuBar(((CMenuBar)peer).getNativeMenuBarPeer());
+        // grab the pointer to the CMenuBar, and retain it in native
+        nativeSetDefaultMenuBar(((CMenuBar)peer).getNativeMenuBarPeer());
 */
-	}
-	
-	void setAboutMenuItemVisible(final boolean present) {
-		synchronized (this) {
-			if (aboutMenuItemVisible == present) return;
-			aboutMenuItemVisible = present;
-		}
-		
-		nativeSetMenuState(MENU_ABOUT, aboutMenuItemVisible, aboutMenuItemEnabled);
-	}
+    }
+    
+    void setAboutMenuItemVisible(final boolean present) {
+        synchronized (this) {
+            if (aboutMenuItemVisible == present) return;
+            aboutMenuItemVisible = present;
+        }
+        
+        nativeSetMenuState(MENU_ABOUT, aboutMenuItemVisible, aboutMenuItemEnabled);
+    }
 
-	void setPreferencesMenuItemVisible(final boolean present) {
-		synchronized (this) {
-			prefsMenuItemExplicitlySet = true;
-			if (prefsMenuItemVisible == present) return;
-			prefsMenuItemVisible = present;
-		}
-		nativeSetMenuState(MENU_PREFS, prefsMenuItemVisible, prefsMenuItemEnabled);
-	}
-	
-	void setAboutMenuItemEnabled(final boolean enable) {
-		synchronized (this) {
-			if (aboutMenuItemEnabled == enable) return;
-			aboutMenuItemEnabled = enable;
-		}
-		nativeSetMenuState(MENU_ABOUT, aboutMenuItemVisible, aboutMenuItemEnabled);
-	}
-	
-	void setPreferencesMenuItemEnabled(final boolean enable) {
-		synchronized (this) {
-			prefsMenuItemExplicitlySet = true;
-			if (prefsMenuItemEnabled == enable) return;
-			prefsMenuItemEnabled = enable;
-		}
-		nativeSetMenuState(MENU_PREFS, prefsMenuItemVisible, prefsMenuItemEnabled);
-	}
+    void setPreferencesMenuItemVisible(final boolean present) {
+        synchronized (this) {
+            prefsMenuItemExplicitlySet = true;
+            if (prefsMenuItemVisible == present) return;
+            prefsMenuItemVisible = present;
+        }
+        nativeSetMenuState(MENU_PREFS, prefsMenuItemVisible, prefsMenuItemEnabled);
+    }
+    
+    void setAboutMenuItemEnabled(final boolean enable) {
+        synchronized (this) {
+            if (aboutMenuItemEnabled == enable) return;
+            aboutMenuItemEnabled = enable;
+        }
+        nativeSetMenuState(MENU_ABOUT, aboutMenuItemVisible, aboutMenuItemEnabled);
+    }
+    
+    void setPreferencesMenuItemEnabled(final boolean enable) {
+        synchronized (this) {
+            prefsMenuItemExplicitlySet = true;
+            if (prefsMenuItemEnabled == enable) return;
+            prefsMenuItemEnabled = enable;
+        }
+        nativeSetMenuState(MENU_PREFS, prefsMenuItemVisible, prefsMenuItemEnabled);
+    }
 
-	boolean isAboutMenuItemVisible() {
-		return aboutMenuItemVisible;
-	}
-	
-	boolean isPreferencesMenuItemVisible() {
-		return prefsMenuItemVisible;
-	}
-	
-	boolean isAboutMenuItemEnabled() {
-		return aboutMenuItemEnabled;
-	}
+    boolean isAboutMenuItemVisible() {
+        return aboutMenuItemVisible;
+    }
+    
+    boolean isPreferencesMenuItemVisible() {
+        return prefsMenuItemVisible;
+    }
+    
+    boolean isAboutMenuItemEnabled() {
+        return aboutMenuItemEnabled;
+    }
 
-	boolean isPreferencesMenuItemEnabled() {
-		return prefsMenuItemEnabled;
-	}
+    boolean isPreferencesMenuItemEnabled() {
+        return prefsMenuItemEnabled;
+    }
 }

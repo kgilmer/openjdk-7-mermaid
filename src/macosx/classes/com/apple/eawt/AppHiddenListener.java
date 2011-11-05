@@ -37,15 +37,15 @@ import com.apple.eawt.AppEvent.AppHiddenEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface AppHiddenListener extends AppEventListener {
-	/**
-	 * Called the app is hidden.
-	 * @param e
-	 */
-	public void appHidden(final AppHiddenEvent e);
-	
-	/**
-	 * Called when the hidden app is shown again (but not necessarily brought to the foreground).
-	 * @param e
-	 */
-	public void appUnhidden(final AppHiddenEvent e);
+    /**
+     * Called the app is hidden.
+     * @param e
+     */
+    public void appHidden(final AppHiddenEvent e);
+    
+    /**
+     * Called when the hidden app is shown again (but not necessarily brought to the foreground).
+     * @param e
+     */
+    public void appUnhidden(final AppHiddenEvent e);
 }

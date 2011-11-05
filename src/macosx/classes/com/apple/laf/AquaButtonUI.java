@@ -561,7 +561,7 @@ public class AquaButtonUI extends BasicButtonUI implements Sizeable {
             }
             
             if ("componentOrientation".equals(propertyName)) {
-            	final Border border = b.getBorder();
+                final Border border = b.getBorder();
                 if (!(border instanceof AquaBorder)) return;
                 
                 Object buttonType = b.getClientProperty(BUTTON_TYPE);

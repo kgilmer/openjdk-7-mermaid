@@ -37,12 +37,12 @@ package com.apple.eawt.event;
  * @since Java for Mac OS X 10.5 Update 7, Java for Mac OS X 10.6 Update 2
  */
 public abstract class GestureAdapter implements GesturePhaseListener, MagnificationListener, RotationListener, SwipeListener {
-	public void gestureBegan(final GesturePhaseEvent e) { }
-	public void gestureEnded(final GesturePhaseEvent e) { }
-	public void magnify(final MagnificationEvent e) { }
-	public void rotate(final RotationEvent e) { }
-	public void swipedDown(final SwipeEvent e) { }
-	public void swipedLeft(final SwipeEvent e) { }
-	public void swipedRight(final SwipeEvent e) { }
-	public void swipedUp(final SwipeEvent e) { }	
+    public void gestureBegan(final GesturePhaseEvent e) { }
+    public void gestureEnded(final GesturePhaseEvent e) { }
+    public void magnify(final MagnificationEvent e) { }
+    public void rotate(final RotationEvent e) { }
+    public void swipedDown(final SwipeEvent e) { }
+    public void swipedLeft(final SwipeEvent e) { }
+    public void swipedRight(final SwipeEvent e) { }
+    public void swipedUp(final SwipeEvent e) { }
 }

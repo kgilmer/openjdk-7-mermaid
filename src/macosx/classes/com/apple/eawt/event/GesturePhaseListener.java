@@ -37,15 +37,15 @@ package com.apple.eawt.event;
  * @since Java for Mac OS X 10.5 Update 7, Java for Mac OS X 10.6 Update 2
  */
 public interface GesturePhaseListener extends GestureListener {
-	/**
-	 * Invoked when the user has started a continuous gesture.
-	 * @param event representing the start of a continuous gesture.
-	 */
-	public void gestureBegan(final GesturePhaseEvent e);
-	
-	/**
-	 * Invoked when the user has stopped a continuous gesture.
-	 * @param event representing the end of a continuous gesture.
-	 */
-	public void gestureEnded(final GesturePhaseEvent e);
+    /**
+     * Invoked when the user has started a continuous gesture.
+     * @param event representing the start of a continuous gesture.
+     */
+    public void gestureBegan(final GesturePhaseEvent e);
+    
+    /**
+     * Invoked when the user has stopped a continuous gesture.
+     * @param event representing the end of a continuous gesture.
+     */
+    public void gestureEnded(final GesturePhaseEvent e);
 }

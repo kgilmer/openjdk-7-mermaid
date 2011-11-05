@@ -36,9 +36,9 @@ import com.apple.eawt.AppEvent.AboutEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface AboutHandler {
-	/**
-	 * Called when the application is asked to show it's about dialog.
-	 * @param e the request to show the about dialog.
-	 */
-	public void handleAbout(final AboutEvent e);
+    /**
+     * Called when the application is asked to show it's about dialog.
+     * @param e the request to show the about dialog.
+     */
+    public void handleAbout(final AboutEvent e);
 }

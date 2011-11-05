@@ -36,9 +36,9 @@ import com.apple.eawt.AppEvent.PreferencesEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface PreferencesHandler {
-	/**
-	 * Called when the app is asked to show it's preferences UI.
-	 * @param e the request to show preferences.
-	 */
-	public void handlePreferences(final PreferencesEvent e);
+    /**
+     * Called when the app is asked to show it's preferences UI.
+     * @param e the request to show preferences.
+     */
+    public void handlePreferences(final PreferencesEvent e);
 }

@@ -119,13 +119,13 @@ public class CGraphicsConfig extends GraphicsConfiguration {
      */
     public long createBackBuffer(CPlatformView pView,
                                  int numBuffers, BufferCapabilities caps)
-	throws AWTException
+        throws AWTException
     {
         throw new UnsupportedOperationException("not implemented");
     }
 
     public void destroyBackBuffer(long backBuffer)
-	throws AWTException
+        throws AWTException
     {
         throw new UnsupportedOperationException("not implemented");
     }

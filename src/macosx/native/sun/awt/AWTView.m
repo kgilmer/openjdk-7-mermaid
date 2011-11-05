@@ -585,13 +585,13 @@ AWT_ASSERT_APPKIT_THREAD;
 
 
 -(void) setDragSource:(CDragSource *)source {
-	self._dragSource = source;
+    self._dragSource = source;
 }
-	
+    
 
 - (void) setDropTarget:(CDropTarget *)target {
-	self._dropTarget = target;
-	[ThreadUtilities performOnMainThread:@selector(controlModelControlValid) onObject:self._dropTarget withObject:nil waitUntilDone:YES awtMode:YES];
+    self._dropTarget = target;
+    [ThreadUtilities performOnMainThread:@selector(controlModelControlValid) onObject:self._dropTarget withObject:nil waitUntilDone:YES awtMode:YES];
 }
 
 /********************************  BEGIN NSDraggingSource Interface  ********************************/
@@ -601,12 +601,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
     NSDragOperation dragOp = NSDragOperationNone;
-	
+    
     if (dragSource != nil)
         dragOp = [dragSource draggingSourceOperationMaskForLocal:flag];
     else if ([super respondsToSelector:@selector(draggingSourceOperationMaskForLocal:)])
         dragOp = [super draggingSourceOperationMaskForLocal:flag];
-	
+    
     return dragOp;
 }
 
@@ -615,12 +615,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
     NSArray* array = nil;
-	
+    
     if (dragSource != nil)
         array = [dragSource namesOfPromisedFilesDroppedAtDestination:dropDestination];
     else if ([super respondsToSelector:@selector(namesOfPromisedFilesDroppedAtDestination:)])
         array = [super namesOfPromisedFilesDroppedAtDestination:dropDestination];
-	
+    
     return array;
 }
 
@@ -628,7 +628,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
-	
+    
     if (dragSource != nil)
         [dragSource draggedImage:image beganAt:screenPoint];
     else if ([super respondsToSelector:@selector(draggedImage::)])
@@ -639,7 +639,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
-	
+    
     if (dragSource != nil)
         [dragSource draggedImage:image endedAt:screenPoint operation:operation];
     else if ([super respondsToSelector:@selector(draggedImage:::)])
@@ -650,7 +650,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
-	
+    
     if (dragSource != nil)
         [dragSource draggedImage:image movedTo:screenPoint];
     else if ([super respondsToSelector:@selector(draggedImage::)])
@@ -662,12 +662,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingSource is nil route the message to the superclass (if responding to the selector):
     CDragSource *dragSource = self._dragSource;
     BOOL result = FALSE;
-	
+    
     if (dragSource != nil)
         result = [dragSource ignoreModifierKeysWhileDragging];
     else if ([super respondsToSelector:@selector(ignoreModifierKeysWhileDragging)])
         result = [super ignoreModifierKeysWhileDragging];
-	
+    
     return result;
 }
 
@@ -680,12 +680,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
     NSDragOperation dragOp = NSDragOperationNone;
-	
+    
     if (dropTarget != nil)
         dragOp = [dropTarget draggingEntered:sender];
     else if ([super respondsToSelector:@selector(draggingEntered:)])
         dragOp = [super draggingEntered:sender];
-	
+    
     return dragOp;
 }
 
@@ -694,12 +694,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
     NSDragOperation dragOp = NSDragOperationNone;
-	
+    
     if (dropTarget != nil)
         dragOp = [dropTarget draggingUpdated:sender];
     else if ([super respondsToSelector:@selector(draggingUpdated:)])
         dragOp = [super draggingUpdated:sender];
-	
+    
     return dragOp;
 }
 
@@ -707,7 +707,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
-	
+    
     if (dropTarget != nil)
         [dropTarget draggingExited:sender];
     else if ([super respondsToSelector:@selector(draggingExited:)])
@@ -719,12 +719,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
     BOOL result = FALSE;
-	
+    
     if (dropTarget != nil)
         result = [dropTarget prepareForDragOperation:sender];
     else if ([super respondsToSelector:@selector(prepareForDragOperation:)])
         result = [super prepareForDragOperation:sender];
-	
+    
     return result;
 }
 
@@ -733,12 +733,12 @@ AWT_ASSERT_APPKIT_THREAD;
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
     BOOL result = FALSE;
-	
+    
     if (dropTarget != nil)
         result = [dropTarget performDragOperation:sender];
     else if ([super respondsToSelector:@selector(performDragOperation:)])
         result = [super performDragOperation:sender];
-	
+    
     return result;
 }
 
@@ -746,7 +746,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
-	
+    
     if (dropTarget != nil)
         [dropTarget concludeDragOperation:sender];
     else if ([super respondsToSelector:@selector(concludeDragOperation:)])
@@ -757,7 +757,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     // If draggingDestination is nil route the message to the superclass:
     CDropTarget *dropTarget = self._dropTarget;
-	
+    
     if (dropTarget != nil)
         [dropTarget draggingEnded:sender];
     else if ([super respondsToSelector:@selector(draggingEnded:)])

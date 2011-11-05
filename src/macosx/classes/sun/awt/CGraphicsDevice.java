@@ -38,7 +38,7 @@ public class CGraphicsDevice extends GraphicsDevice {
 
     // CoreGraphics display ID
     private final int displayID;
-	
+
     // Array of all GraphicsConfig instances for this device
     private final CGraphicsConfig[] configs;
 
@@ -53,14 +53,14 @@ public class CGraphicsDevice extends GraphicsDevice {
             CGLGraphicsConfig.getConfig(this, 0) 
         };
     }
-	
+
     /**
      * @return CoreGraphics display id.
      */
     public int getCoreGraphicsScreen() {
         return displayID;
     }
-	
+
     /**
      * Return a list of all configurations.
      */
@@ -68,7 +68,7 @@ public class CGraphicsDevice extends GraphicsDevice {
     public GraphicsConfiguration[] getConfigurations() {
         return configs;
     }
-	
+
     /**
      * Return the default configuration.
      */
@@ -93,7 +93,7 @@ public class CGraphicsDevice extends GraphicsDevice {
      */
     @Override
     public int getType() {
-       	return TYPE_RASTER_SCREEN;
+        return TYPE_RASTER_SCREEN;
     }
 
     public double getXResolution() {

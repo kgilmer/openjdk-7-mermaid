@@ -170,8 +170,8 @@ Java_sun_java2d_opengl_CGLGraphicsConfig_initCGL
         return JNI_FALSE;
     }
 #ifdef REMOTELAYER
-	pthread_t jrsRemoteThread;
-	pthread_create(&jrsRemoteThread, NULL, JRSRemoteThreadFn, NULL);
+    pthread_t jrsRemoteThread;
+    pthread_create(&jrsRemoteThread, NULL, JRSRemoteThreadFn, NULL);
 #endif
     return JNI_TRUE;
 }

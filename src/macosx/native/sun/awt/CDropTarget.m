@@ -68,27 +68,27 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 - (id)init:(jobject)jdropTarget component:(jobject)jcomponent peer:(jobject)jpeer control:(id)control
 {
     self = [super init];
-    DLog2(@"[CDropTarget init]: %@\n", self);	
-	
-	fView = nil;
+    DLog2(@"[CDropTarget init]: %@\n", self);
+    
+    fView = nil;
     fComponent = nil;
     fDropTarget = nil;
     fDropTargetContextPeer = nil;
-	
-	
+    
+    
     if (control != nil) {
         JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
         fComponent = JNFNewGlobalRef(env, jcomponent);
         fDropTarget = JNFNewGlobalRef(env, jdropTarget);
-		
-		AWTView *awtView = [((NSWindow *) control) contentView];
-		fView = [awtView retain];
-		[awtView setDropTarget:self];
-		
-		
+        
+        AWTView *awtView = [((NSWindow *) control) contentView];
+        fView = [awtView retain];
+        [awtView setDropTarget:self];
+        
+        
     } else {
         // This would be an error.
-    	[self release];
+        [self release];
         self = nil;
     }
     return self;
@@ -124,7 +124,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 
     // Enable dragging events over this object:
     [fView registerForDraggedTypes:dataTypes];
-	
+    
     [dataTypes release];
 }
 
@@ -154,7 +154,7 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     DLog2(@"[CDropTarget removeFromView]: %@\n", self);
 
     // Remove this dragging destination from the view:
-	[((AWTView *) fView) setDropTarget:nil];
+    [((AWTView *) fView) setDropTarget:nil];
     
     // Clean up JNI refs
     if (fComponent != NULL) {
@@ -402,26 +402,26 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 - (void) calculateCurrentSourceActions:(jint *)actions dropAction:(jint *)dropAction
 {
     // Get the raw (unmodified by keys) source actions
-	id jrsDrag = objc_lookUpClass("JRSDrag");
-	if (jrsDrag != nil) {
-		NSDragOperation rawDragActions = (NSDragOperation) [jrsDrag performSelector:@selector(currentAllowableActions)];
-		if (rawDragActions != NSDragOperationNone) {
-			// Both actions and dropAction default to the rawActions
-			*actions = [DnDUtilities mapNSDragOperationMaskToJava:rawDragActions];
-			*dropAction = *actions;
-			
-			// Get the current key modifiers.
-			NSUInteger dragModifiers = (NSUInteger) [jrsDrag performSelector:@selector(currentModifiers)];
-			// Either the drop action is narrowed as per Java rules (MOVE, COPY, LINK, NONE) or by the drag modifiers
-			if (dragModifiers) {
-				// Get the user selected operation based on the drag modifiers, then return the intersection
-				NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:dragModifiers];
-				NSDragOperation allowedOp = rawDragActions & currentOp;
-				
-				*dropAction = [DnDUtilities mapNSDragOperationToJava:allowedOp];
-			}
-		}
-	}
+    id jrsDrag = objc_lookUpClass("JRSDrag");
+    if (jrsDrag != nil) {
+        NSDragOperation rawDragActions = (NSDragOperation) [jrsDrag performSelector:@selector(currentAllowableActions)];
+        if (rawDragActions != NSDragOperationNone) {
+            // Both actions and dropAction default to the rawActions
+            *actions = [DnDUtilities mapNSDragOperationMaskToJava:rawDragActions];
+            *dropAction = *actions;
+            
+            // Get the current key modifiers.
+            NSUInteger dragModifiers = (NSUInteger) [jrsDrag performSelector:@selector(currentModifiers)];
+            // Either the drop action is narrowed as per Java rules (MOVE, COPY, LINK, NONE) or by the drag modifiers
+            if (dragModifiers) {
+                // Get the user selected operation based on the drag modifiers, then return the intersection
+                NSDragOperation currentOp = [DnDUtilities nsDragOperationForModifiers:dragModifiers];
+                NSDragOperation allowedOp = rawDragActions & currentOp;
+                
+                *dropAction = [DnDUtilities mapNSDragOperationToJava:allowedOp];
+            }
+        }
+    }
     *dropAction = [DnDUtilities narrowJavaDropActions:*dropAction];
 }
 

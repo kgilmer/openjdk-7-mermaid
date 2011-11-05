@@ -330,7 +330,7 @@ AWT_ASSERT_APPKIT_THREAD;
     if (platformWindow == NULL) {
         // TODO: create generic AWT assert
     }
-	
+
     [self adjustGrowBoxWindow];
     
     NSRect frame = ConvertNSScreenRect(env, [self frame]);

@@ -428,8 +428,8 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
     }
 
     public void setCursor(Cursor c) throws InvalidDnDOperationException {
-    	// TODO : BG
-    	//AWTLockAccess.awtLock();
+        // TODO : BG
+        //AWTLockAccess.awtLock();
         super.setCursor(c);
         //AWTLockAccess.awtUnlock();
     }

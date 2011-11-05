@@ -143,7 +143,7 @@ JNF_COCOA_ENTER(env);
     // Send that to Java so we can test which item was hit.
     static JNF_MEMBER_CACHE(jm_ScreenMenu_updateSelectedItem, sjc_ScreenMenu, "handleItemTargeted", "(IIIII)V");
     JNFCallVoidMethod(env, [self.javaObjectWrapper jObject], jm_ScreenMenu_updateSelectedItem, menuIndex,
-					NSMinY(rect), NSMinX(rect), NSMaxY(rect), NSMaxX(rect)); // AWT_THREADING Safe (AWTRunLoopMode)            
+                    NSMinY(rect), NSMinX(rect), NSMaxY(rect), NSMaxX(rect)); // AWT_THREADING Safe (AWTRunLoopMode)            
     
 JNF_COCOA_EXIT(env);
 }
@@ -210,14 +210,14 @@ JNF_COCOA_ENTER(env);
     delegate = [[[NativeToJavaDelegate alloc] initFromMenu:menu javaObj:wrapper] autorelease];
     CFRetain(delegate); // GC
  
-	[JNFRunLoop performOnMainThreadWaiting:YES withBlock:^{
-		NSMenu *menu = delegate.nsmenu;
-		if ([menu isJavaMenu]) {
-			[menu setDelegate:delegate];
-			[menu setJavaMenuDelegate:delegate];
-		}
-	}];
-	    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^{
+        NSMenu *menu = delegate.nsmenu;
+        if ([menu isJavaMenu]) {
+            [menu setDelegate:delegate];
+            [menu setJavaMenuDelegate:delegate];
+        }
+    }];
+        
 JNF_COCOA_EXIT(env);
     
     return ptr_to_jlong(delegate);
@@ -236,15 +236,15 @@ JNIEXPORT void JNICALL Java_com_apple_laf_ScreenMenu_removeMenuListeners
 JNF_COCOA_ENTER(env);
     
     NativeToJavaDelegate *delegate = (NativeToJavaDelegate *)jlong_to_ptr(fModelPtr);
-	
-	[JNFRunLoop performOnMainThreadWaiting:YES withBlock:^{
-		NSMenu *menu = delegate.nsmenu;
-		[menu setJavaMenuDelegate:nil];
-		[menu setDelegate:nil];
-		delegate.nsmenu = nil;
-		delegate.javaObjectWrapper = nil;
-	}];
-	
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^{
+        NSMenu *menu = delegate.nsmenu;
+        [menu setJavaMenuDelegate:nil];
+        [menu setDelegate:nil];
+        delegate.nsmenu = nil;
+        delegate.javaObjectWrapper = nil;
+    }];
+    
     CFRelease(delegate); // GC
     
 JNF_COCOA_EXIT(env);

@@ -96,11 +96,11 @@ public class LWScrollBarPeer
         }
         this.currentValue = e.getValue();
 
-	// TODO: we always get event with the TRACK adj. type.
-	// Could we check if we are over the ArrowButton and send event there?        
+        // TODO: we always get event with the TRACK adj. type.
+        // Could we check if we are over the ArrowButton and send event there?        
         postEvent(new AdjustmentEvent(getTarget(), e.getID(),
-				      e.getAdjustmentType(), e.getValue(),
-				      e.getValueIsAdjusting()));
+                                      e.getAdjustmentType(), e.getValue(),
+                                      e.getValueIsAdjusting()));
     }
 
 }

@@ -395,7 +395,7 @@ JNF_COCOA_ENTER(env);
     
     // Max Advance for Font Direction (Strictly horizontal)
     mx = [awtfont->fFont maximumAdvancement].width;
-	
+
     /*
      * ascent:   no need to set ascentX - it will be zero.
      * descent:  no need to set descentX - it will be zero.

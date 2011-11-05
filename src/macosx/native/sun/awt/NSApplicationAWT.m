@@ -49,7 +49,7 @@ BOOL postEventDuringEventSynthesis = NO;
     // Embedded: NO
     // Multiple Calls: NO
     //  Caller: +[NSApplication sharedApplication]
-	
+
 AWT_ASSERT_APPKIT_THREAD;
     fApplicationName = nil;
     fUseDefaultIcon = NO;
@@ -73,7 +73,7 @@ AWT_ASSERT_APPKIT_THREAD;
 - (void)finishLaunching
 {
 AWT_ASSERT_APPKIT_THREAD;
-	
+
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     
     // Get default nib file location

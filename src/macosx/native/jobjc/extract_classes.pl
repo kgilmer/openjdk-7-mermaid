@@ -28,12 +28,12 @@ $file_dir = $ARGV[0];
 @file_list = qx("/usr/bin/find" "$file_dir");
 
 foreach $file (@file_list) {
-	if ($file =~ s/\.class//) {
-            if ($file !~ s/\$[0-9]//) {
-		$file =~ s/$file_dir\///g;
-		$file =~ s/\//\./g;
-		chomp($file);
-		print "$file,";
-            }
-	}
+    if ($file =~ s/\.class//) {
+        if ($file !~ s/\$[0-9]//) {
+            $file =~ s/$file_dir\///g;
+            $file =~ s/\//\./g;
+            chomp($file);
+            print "$file,";
+        }
+    }
 }

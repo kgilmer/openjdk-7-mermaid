@@ -52,24 +52,24 @@ package com.apple.eawt;
 @SuppressWarnings("deprecation")
 @Deprecated
 public class ApplicationAdapter implements ApplicationListener {
-	@Deprecated
-	public void handleAbout(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handleOpenApplication(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handleOpenFile(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handlePreferences(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handlePrintFile(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handleQuit(final ApplicationEvent event) { }
-	
-	@Deprecated
-	public void handleReOpenApplication(final ApplicationEvent event) { }
+    @Deprecated
+    public void handleAbout(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handleOpenApplication(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handleOpenFile(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handlePreferences(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handlePrintFile(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handleQuit(final ApplicationEvent event) { }
+    
+    @Deprecated
+    public void handleReOpenApplication(final ApplicationEvent event) { }
 }

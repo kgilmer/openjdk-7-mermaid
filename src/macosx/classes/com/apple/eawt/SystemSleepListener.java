@@ -38,16 +38,16 @@ import com.apple.eawt.AppEvent.SystemSleepEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface SystemSleepListener extends AppEventListener {
-	/**
-	 * Called when the system is about to sleep.
-	 * Note: This message may not be delivered prior to the actual system sleep, and may be processed after the corresponding wake has occurred.
-	 * @param e the system sleep event
-	 */
-	public void systemAboutToSleep(final SystemSleepEvent e);
+    /**
+     * Called when the system is about to sleep.
+     * Note: This message may not be delivered prior to the actual system sleep, and may be processed after the corresponding wake has occurred.
+     * @param e the system sleep event
+     */
+    public void systemAboutToSleep(final SystemSleepEvent e);
 
-	/**
-	 * Called after the system has awoke from sleeping.
-	 * @param e the system sleep event
-	 */
-	public void systemAwoke(final SystemSleepEvent e);
+    /**
+     * Called after the system has awoke from sleeping.
+     * @param e the system sleep event
+     */
+    public void systemAwoke(final SystemSleepEvent e);
 }

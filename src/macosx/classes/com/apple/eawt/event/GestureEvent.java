@@ -42,24 +42,24 @@ import java.awt.*;
  * @since Java for Mac OS X 10.5 Update 7, Java for Mac OS X 10.6 Update 2
  */
 public abstract class GestureEvent {
-	boolean consumed;
-	
-	GestureEvent() {
-		// package private
-	}
-	
-	/**
-	 * Consuming an event prevents listeners later in the chain or higher in the
-	 * component hierarchy from receiving the event.
-	 */
-	public void consume() {
-		consumed = true;
-	}
-	
-	/**
-	 * @return if the event has been consumed
-	 */
-	protected boolean isConsumed() {
-		return consumed;
-	}
+    boolean consumed;
+    
+    GestureEvent() {
+        // package private
+    }
+    
+    /**
+     * Consuming an event prevents listeners later in the chain or higher in the
+     * component hierarchy from receiving the event.
+     */
+    public void consume() {
+        consumed = true;
+    }
+    
+    /**
+     * @return if the event has been consumed
+     */
+    protected boolean isConsumed() {
+        return consumed;
+    }
 }

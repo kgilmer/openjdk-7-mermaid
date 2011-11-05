@@ -108,7 +108,7 @@ AWT_ASSERT_APPKIT_THREAD;
     glViewport(0, 0, textureWidth, textureHeight);
 
     [self _blitTexture];
-	
+    
     // Call super to finalize the drawing. By default all it does is call glFlush().
     [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:timeInterval displayTime:timeStamp];
     

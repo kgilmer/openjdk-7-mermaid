@@ -356,7 +356,7 @@ JNF_COCOA_ENTER(env);
     NSData *clipData = [[CClipboard sharedClipboard] javaGetDataForType:formatAsString];
     
     if (clipData == NULL) {
-		[JNFException raise:env as:"java/io/IOException" reason:"Font transform has NaN position"];
+        [JNFException raise:env as:"java/io/IOException" reason:"Font transform has NaN position"];
         return NULL;
     }
 

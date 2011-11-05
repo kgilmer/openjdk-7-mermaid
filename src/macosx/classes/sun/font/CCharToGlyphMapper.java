@@ -29,7 +29,7 @@ import java.util.HashMap;
 
 public class CCharToGlyphMapper extends CharToGlyphMapper {
     private static native int countGlyphs(final long nativeFontPtr);
-	
+
     private Cache cache = new Cache();
     CFont fFont;
     int numGlyphs = -1;
@@ -60,7 +60,7 @@ public class CCharToGlyphMapper extends CharToGlyphMapper {
                                                 char[] unicodes, int[] glyphs)
     {
         charsToGlyphs(count, unicodes, glyphs);
-	
+
         // The following shaping checks are from either
         // TrueTypeGlyphMapper or Type1GlyphMapper
         for (int i = 0; i < count; i++) {
@@ -112,20 +112,20 @@ public class CCharToGlyphMapper extends CharToGlyphMapper {
                 continue;
             }
         }
-	
+
         return false;
     }
     
     public synchronized int charToGlyph(char unicode) {
         final int glyph = cache.get(unicode);
         if (glyph != 0) return glyph;
-	
+
         final char[] unicodeArray = new char[] { unicode };
         final int[] glyphArray = new int[1];
-	
+
         nativeCharsToGlyphs(fFont.getNativeFontPtr(), 1, unicodeArray, glyphArray);
         cache.put(unicode, glyphArray[0]);
-	
+
         return glyphArray[0];
     }
     
@@ -160,7 +160,7 @@ public class CCharToGlyphMapper extends CharToGlyphMapper {
         private final int[] firstLayerCache = new int[FIRST_LAYER_SIZE];
         private SparseBitShiftingTwoLayerArray secondLayerCache;
         private HashMap<Integer, Integer> generalCache;
-	
+
         Cache() {
             // <rdar://problem/5331678> need to prevent getting '-1' stuck in the cache
             firstLayerCache[1] = 1;
@@ -236,7 +236,7 @@ public class CCharToGlyphMapper extends CharToGlyphMapper {
                 firstLayerRow[index - (firstIndex * (1 << shift))] = value;
             }
         }
-	
+
         public void get(int count, char[] indicies, int[] values){
             int missed = 0;
             for(int i = 0; i < count; i++){

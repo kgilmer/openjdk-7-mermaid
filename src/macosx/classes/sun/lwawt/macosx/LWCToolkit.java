@@ -81,7 +81,7 @@ public class LWCToolkit extends LWToolkit {
     }
 
     public LWCToolkit() {
-    	SunToolkit.setDataTransfererClassName("sun.lwawt.macosx.CDataTransferer");
+        SunToolkit.setDataTransfererClassName("sun.lwawt.macosx.CDataTransferer");
     }
     
     /*
@@ -135,7 +135,7 @@ public class LWCToolkit extends LWToolkit {
                             updateColorsMethod.setAccessible(true);
                             updateColorsMethod.invoke(null, new Object[0]);
                         } catch (final Throwable e) {
-                        	e.printStackTrace();
+                            e.printStackTrace();
                             // swallow this if something goes horribly wrong
                         }
                         return null;
@@ -200,8 +200,8 @@ public class LWCToolkit extends LWToolkit {
     @Override
     public SystemTrayPeer createSystemTray(SystemTray target) {
         SystemTrayPeer peer = new CSystemTray();
-    	targetCreatedPeer(target, peer);
-    	return peer;
+        targetCreatedPeer(target, peer);
+        return peer;
     }
 
     @Override
@@ -369,7 +369,7 @@ public class LWCToolkit extends LWToolkit {
 
     @Override
     public RobotPeer createRobot(Robot target, GraphicsDevice screen) {
-    	return new CRobot(target, (CGraphicsDevice)screen);
+        return new CRobot(target, (CGraphicsDevice)screen);
     }
 
     /*
@@ -396,7 +396,7 @@ public class LWCToolkit extends LWToolkit {
     public boolean isTraySupported() {
         return true;
     }
-	
+    
     @Override
     public boolean isAlwaysOnTopSupported() {
         return true;

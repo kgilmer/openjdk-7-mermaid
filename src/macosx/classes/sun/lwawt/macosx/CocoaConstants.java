@@ -48,20 +48,20 @@ public final class CocoaConstants {
     public final static int NSOtherMouseDragged  = 27;
 
     public final static int AllLeftMouseEventsMask =
-    	1 << NSLeftMouseDown |
-    	1 << NSLeftMouseUp |
-    	1 << NSLeftMouseDragged;
+        1 << NSLeftMouseDown |
+        1 << NSLeftMouseUp |
+        1 << NSLeftMouseDragged;
 
     public final static int AllRightMouseEventsMask =
-    	1 << NSRightMouseDown |
-    	1 << NSRightMouseUp |
-    	1 << NSRightMouseDragged;
+        1 << NSRightMouseDown |
+        1 << NSRightMouseUp |
+        1 << NSRightMouseDragged;
 
     public final static int AllOtherMouseEventsMask =
-    	1 << NSOtherMouseDown |
-    	1 << NSOtherMouseUp |
-    	1 << NSOtherMouseDragged;
-    	
+        1 << NSOtherMouseDown |
+        1 << NSOtherMouseUp |
+        1 << NSOtherMouseDragged;
+        
     /*
     NSAppKitDefined      = 13,
     NSSystemDefined      = 14,

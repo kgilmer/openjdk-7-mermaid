@@ -122,7 +122,7 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
     }
 
     public void setBounds() {
-	// Overridden in CGLWindowSurfaceData below
+        // Overridden in CGLWindowSurfaceData below
     }
     
     protected native void clearWindow();
@@ -140,9 +140,9 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         }
 
         @Override
-            public Rectangle getBounds() {
-	        Rectangle r = pView.getBounds();
-	        return new Rectangle(0, 0, r.width, r.height);
+        public Rectangle getBounds() {
+            Rectangle r = pView.getBounds();
+            return new Rectangle(0, 0, r.width, r.height);
         }
 
         /**
@@ -233,7 +233,7 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         @Override
         public Rectangle getBounds() {
             if (type == FLIP_BACKBUFFER) {
-		Rectangle r = pView.getBounds();
+                Rectangle r = pView.getBounds();
                 return new Rectangle(0, 0, r.width, r.height);
             } else {
                 return new Rectangle(width, height);

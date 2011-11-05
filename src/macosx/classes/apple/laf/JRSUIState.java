@@ -85,7 +85,7 @@ public class JRSUIState {
     }
     
     public boolean is(Property property) {
-    	return (byte)((derivedEncodedState & property.encoding.mask) >> property.encoding.shift) == property.ordinal;
+        return (byte)((derivedEncodedState & property.encoding.mask) >> property.encoding.shift) == property.ordinal;
     }
     
     @Override

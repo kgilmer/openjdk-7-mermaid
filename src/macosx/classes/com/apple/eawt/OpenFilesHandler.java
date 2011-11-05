@@ -37,9 +37,9 @@ import com.apple.eawt.AppEvent.OpenFilesEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface OpenFilesHandler {
-	/**
-	 * Called when the application is asked to open a list of files.
-	 * @param e the request to open a list of files, and the search term used to find them, if any.
-	 */
-	public void openFiles(final OpenFilesEvent e);
+    /**
+     * Called when the application is asked to open a list of files.
+     * @param e the request to open a list of files, and the search term used to find them, if any.
+     */
+    public void openFiles(final OpenFilesEvent e);
 }

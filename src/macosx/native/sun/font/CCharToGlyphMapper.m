@@ -47,13 +47,13 @@ JNF_COCOA_ENTER(env);
 JNF_COCOA_EXIT(env);
 
     return numGlyphs;
-}	
+}
 
 static inline void
 GetGlyphsFromUnicodes(JNIEnv *env, AWTFont *awtFont,
                       jint count, UniChar *unicodes,
                       CGGlyph *cgGlyphs, jintArray glyphs)
-{	    
+{
     jint *glyphCodeInts = (*env)->GetPrimitiveArrayCritical(env, glyphs, 0);
     
     CTS_GetGlyphsAsIntsForCharacters(awtFont, unicodes,
@@ -91,16 +91,16 @@ Java_sun_font_CCharToGlyphMapper_nativeCharsToGlyphs
 JNF_COCOA_ENTER(env);
 
     AWTFont *awtFont = (AWTFont *)jlong_to_ptr(awtFontPtr);
-	
+
     // check the array size
     jint len = (*env)->GetArrayLength(env, glyphs);
     if (len < count) {
         count = len;
     }
-	
+
     jchar *unicodesAsChars =
         (*env)->GetPrimitiveArrayCritical(env, unicodes, NULL);
-	
+
     AllocateGlyphBuffer(env, awtFont, count, (UniChar *)unicodesAsChars, glyphs);
     
     (*env)->ReleasePrimitiveArrayCritical(env, unicodes,

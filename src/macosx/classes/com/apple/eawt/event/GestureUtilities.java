@@ -45,27 +45,27 @@ import javax.swing.*;
  * @since Java for Mac OS X 10.5 Update 7, Java for Mac OS X 10.6 Update 2
  */
 public final class GestureUtilities {
-	GestureUtilities() {
-		// package private
-	}
-	
-	/**
-	 * Attaches a {@link GestureListener} to the specified {@link JComponent}.
-	 * @param component to attach the {@link GestureListener} to
-	 * @param listener to be notified when a gesture occurs
-	 */
-	public static void addGestureListenerTo(final JComponent component, final GestureListener listener) {
-		if (component == null || listener == null) throw new NullPointerException();
-		GestureHandler.addGestureListenerTo(component, listener);
-	}
-	
-	/**
-	 * Removes a {@link GestureListener} from the specified {@link JComponent}
-	 * @param component to remove the {@link GestureListener} from
-	 * @param listener to be removed
-	 */
-	public static void removeGestureListenerFrom(final JComponent component, final GestureListener listener) {
-		if (component == null || listener == null) throw new NullPointerException();
-		GestureHandler.removeGestureListenerFrom(component, listener);
-	}
+    GestureUtilities() {
+        // package private
+    }
+    
+    /**
+     * Attaches a {@link GestureListener} to the specified {@link JComponent}.
+     * @param component to attach the {@link GestureListener} to
+     * @param listener to be notified when a gesture occurs
+     */
+    public static void addGestureListenerTo(final JComponent component, final GestureListener listener) {
+        if (component == null || listener == null) throw new NullPointerException();
+        GestureHandler.addGestureListenerTo(component, listener);
+    }
+    
+    /**
+     * Removes a {@link GestureListener} from the specified {@link JComponent}
+     * @param component to remove the {@link GestureListener} from
+     * @param listener to be removed
+     */
+    public static void removeGestureListenerFrom(final JComponent component, final GestureListener listener) {
+        if (component == null || listener == null) throw new NullPointerException();
+        GestureHandler.removeGestureListenerFrom(component, listener);
+    }
 }

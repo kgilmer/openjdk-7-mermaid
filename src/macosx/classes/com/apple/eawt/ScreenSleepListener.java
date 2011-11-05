@@ -40,15 +40,15 @@ import com.apple.eawt.AppEvent.ScreenSleepEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface ScreenSleepListener extends AppEventListener {
-	/**
-	 * Called when the system displays have entered power save sleep.
-	 * @param e the screen sleep event
-	 */
-	public void screenAboutToSleep(final ScreenSleepEvent e);
-	
-	/**
-	 * Called when the system displays have awoke from power save sleep.
-	 * @param e the screen sleep event
-	 */
-	public void screenAwoke(final ScreenSleepEvent e);
+    /**
+     * Called when the system displays have entered power save sleep.
+     * @param e the screen sleep event
+     */
+    public void screenAboutToSleep(final ScreenSleepEvent e);
+    
+    /**
+     * Called when the system displays have awoke from power save sleep.
+     * @param e the screen sleep event
+     */
+    public void screenAwoke(final ScreenSleepEvent e);
 }

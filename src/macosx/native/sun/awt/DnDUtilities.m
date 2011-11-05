@@ -248,9 +248,9 @@ There are several problems with Drag and Drop - notably, the mismatch between Ja
 
 + (jint)currentJavaExtKeyModifiers
 {
-	NSUInteger modifiers = [NSEvent modifierFlags];
-	jint jmodifiers = 0;
-	
+    NSUInteger modifiers = [NSEvent modifierFlags];
+    jint jmodifiers = 0;
+    
     if(modifiers & NSShiftKeyMask) {
         jmodifiers |= java_awt_event_InputEvent_SHIFT_DOWN_MASK;
     }

@@ -61,7 +61,7 @@ public class CClipboard extends SunClipboard {
         // Get all of the target formats into which the Transferable can be
         // translated. Then, for each format, translate the data and post
         // it to the Clipboard.
-    	DataTransferer dataTransferer = DataTransferer.getInstance();
+        DataTransferer dataTransferer = DataTransferer.getInstance();
         long[] formatArray = dataTransferer.getFormatsForTransferableAsArray(contents, flavorMap);
         declareTypes(formatArray, this);
 

@@ -35,9 +35,9 @@ package com.apple.eawt.event;
  * @since Java for Mac OS X 10.5 Update 7, Java for Mac OS X 10.6 Update 2
  */
 public interface MagnificationListener extends GestureListener {
-	/**
-	 * Invoked when a magnification gesture is performed by the user.
-	 * @param event containing the scale of the magnification.
-	 */
-	public void magnify(final MagnificationEvent e);
+    /**
+     * Invoked when a magnification gesture is performed by the user.
+     * @param event containing the scale of the magnification.
+     */
+    public void magnify(final MagnificationEvent e);
 }

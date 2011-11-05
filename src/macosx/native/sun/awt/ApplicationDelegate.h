@@ -34,14 +34,14 @@
 //
 @interface ApplicationDelegate : NSObject<NSApplicationDelegate>
 {
-	NSMenuItem *fPreferencesMenu;
-	NSMenuItem *fAboutMenu;
-	
-	NSMenu *fDockMenu;
-	CMenuBar *fDefaultMenuBar;
-	
-	BOOL fHandlesDocumentTypes;
-	BOOL fHandlesURLTypes;
+    NSMenuItem *fPreferencesMenu;
+    NSMenuItem *fAboutMenu;
+    
+    NSMenu *fDockMenu;
+    CMenuBar *fDefaultMenuBar;
+    
+    BOOL fHandlesDocumentTypes;
+    BOOL fHandlesURLTypes;
 }
 
 @property (nonatomic, retain) NSMenuItem *fPreferencesMenu;

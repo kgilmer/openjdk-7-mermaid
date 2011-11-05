@@ -307,9 +307,9 @@ JNF_COCOA_ENTER(env);
 #ifndef USE_IOS
         j2d_glBindTexture(GL_TEXTURE_2D, 0);
 #else
-	GLenum target = GL_TEXTURE_RECTANGLE_ARB; 
-	j2d_glBindTexture(target, 0);
-	j2d_glDisable(target);
+    GLenum target = GL_TEXTURE_RECTANGLE_ARB; 
+    j2d_glBindTexture(target, 0);
+    j2d_glDisable(target);
 #endif
         j2d_glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, dstOps->fbobjectID);
 #else
@@ -422,7 +422,7 @@ static inline IOSurfaceRef createIoSurface(int width, int height)
     IOSurfaceRef surface = IOSurfaceCreate((CFDictionaryRef)properties);
     CFRetain(surface); // REMIND: do I need to do this ?
     [pool drain];
-	
+    
     if (surface == NULL) {
         NSLog(@"IOSurfaceCreate error, surface: %p", surface);
     } else {
@@ -443,22 +443,22 @@ jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     // destroy previous buffer first
     if (oglsdo->textureID != 0) {
         OGLSD_DestroyOGLSurface(env, oglsdo);
-		if (cglsdo->surfaceRef != NULL) {
+        if (cglsdo->surfaceRef != NULL) {
             CFRelease(cglsdo->surfaceRef);
             cglsdo->surfaceRef = NULL;
         }
     }
     
-	oglsdo->textureID = 0;
+    oglsdo->textureID = 0;
     cglsdo->surfaceRef = NULL;
     int width = oglsdo->width;
     int height = oglsdo->height;
     if (width <= 0) width = 1;
     if (height <= 0) height = 1;
     IOSurfaceRef _surfaceRef = createIoSurface(width, height);
-	if (_surfaceRef == NULL) {
-		return JNI_FALSE;
-	}
+    if (_surfaceRef == NULL) {
+        return JNI_FALSE;
+    }
     
     GLenum target = GL_TEXTURE_RECTANGLE_ARB;
     glEnable(target);
@@ -474,7 +474,7 @@ jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     CGLCtxInfo *ctxinfo = (CGLCtxInfo *)oglc->ctxInfo;
     CGLContextObj context = ctxinfo->context.CGLContextObj;
     
-	/* These parameters are documented only in the header file
+    /* These parameters are documented only in the header file
      * and apart from the requirement that it must be one of
      * the combinations listed there its not as clear as I'd like
      * what the choices mean.
@@ -482,7 +482,7 @@ jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
     GLenum format = GL_BGRA;
     GLenum internal_format = GL_RGB;
     GLenum type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	
+    
     CGLError err =
     CGLTexImageIOSurface2D(context, target, internal_format,
          width, height, format, type, _surfaceRef, 0);
@@ -491,7 +491,7 @@ jboolean RecreateIOSBuffer(JNIEnv *env, OGLSDOps *oglsdo)
         J2dRlsTraceLn(J2D_TRACE_ERROR,
                       "OGLSurfaceData_RecreateIOSBuffer: could not init texture");
         j2d_glDeleteTextures(1, &texture);
-		CFRelease(_surfaceRef);
+        CFRelease(_surfaceRef);
         return JNI_FALSE;
     }
     

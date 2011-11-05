@@ -65,59 +65,59 @@ public class CFontManager extends SunFontManager {
      */
     @Override
     public synchronized String[] getDefaultPlatformFont() {
-		if (defaultPlatformFont == null) {
-			defaultPlatformFont = new String[2];
-			defaultPlatformFont[0] = "Lucida Grande";
-			defaultPlatformFont[1] = "/System/Library/Fonts/LucidaGrande.ttc";
-		}
+        if (defaultPlatformFont == null) {
+            defaultPlatformFont = new String[2];
+            defaultPlatformFont[0] = "Lucida Grande";
+            defaultPlatformFont[1] = "/System/Library/Fonts/LucidaGrande.ttc";
+        }
         return defaultPlatformFont;
     }
     
     // This is a way to register any kind of Font2D, not just files and composites.
     public static Font2D[] getGenericFonts() {
-		return (Font2D[])genericFonts.values().toArray(new Font2D[0]);
+        return (Font2D[])genericFonts.values().toArray(new Font2D[0]);
     }
 
-	public Font2D registerGenericFont(Font2D f)
-	{
-		return registerGenericFont(f, false);
-	}
-	public Font2D registerGenericFont(Font2D f, boolean logicalFont)
-	{
-		int rank = 4;
-		
-		String fontName = f.fullName;
-		String familyName = f.familyName;
-		
-		if (fontName == null || "".equals(fontName)) {
-			return null;
-		}
-	
-		// logical fonts always need to be added to the family
-		// plus they never need to be added to the generic font list
-		// or the fullNameToFont table since they are covers for 
-		// already existing fonts in this list
-		if (logicalFont || !genericFonts.containsKey(fontName)) {
-			if (FontUtilities.debugFonts()) {
-				FontUtilities.getLogger().info("Add to Family "+familyName +
-					", Font " + fontName + " rank="+rank);
-			}
-			FontFamily family = FontFamily.getFamily(familyName);
-			if (family == null) {
-				family = new FontFamily(familyName, false, rank);
-				family.setFont(f, f.style);
-			} else if (family.getRank() >= rank) {
-				family.setFont(f, f.style);
-			}
-			if (!logicalFont)
-			{
-				genericFonts.put(fontName, f);
-				fullNameToFont.put(fontName.toLowerCase(Locale.ENGLISH), f);
-			}	
-			return f;
-		} else {
-			return (Font2D)genericFonts.get(fontName);
-		}
+    public Font2D registerGenericFont(Font2D f)
+    {
+        return registerGenericFont(f, false);
+    }
+    public Font2D registerGenericFont(Font2D f, boolean logicalFont)
+    {
+        int rank = 4;
+        
+        String fontName = f.fullName;
+        String familyName = f.familyName;
+        
+        if (fontName == null || "".equals(fontName)) {
+            return null;
+        }
+    
+        // logical fonts always need to be added to the family
+        // plus they never need to be added to the generic font list
+        // or the fullNameToFont table since they are covers for 
+        // already existing fonts in this list
+        if (logicalFont || !genericFonts.containsKey(fontName)) {
+            if (FontUtilities.debugFonts()) {
+                FontUtilities.getLogger().info("Add to Family "+familyName +
+                    ", Font " + fontName + " rank="+rank);
+            }
+            FontFamily family = FontFamily.getFamily(familyName);
+            if (family == null) {
+                family = new FontFamily(familyName, false, rank);
+                family.setFont(f, f.style);
+            } else if (family.getRank() >= rank) {
+                family.setFont(f, f.style);
+            }
+            if (!logicalFont)
+            {
+                genericFonts.put(fontName, f);
+                fullNameToFont.put(fontName.toLowerCase(Locale.ENGLISH), f);
+            }    
+            return f;
+        } else {
+            return (Font2D)genericFonts.get(fontName);
+        }
     }
     
     @Override
@@ -143,7 +143,7 @@ public class CFontManager extends SunFontManager {
             }
         }
     }
-	
+    
     @Override
     public Font2D createFont2D(File fontFile, int fontFormat, boolean isCopy, CreatedFontTracker tracker) throws FontFormatException {
 
@@ -152,90 +152,90 @@ public class CFontManager extends SunFontManager {
     final File fFile = fontFile;
     final CreatedFontTracker _tracker = tracker;
     try {
-    	switch (fontFormat) {    
-    		case Font.TRUETYPE_FONT:
+        switch (fontFormat) {    
+            case Font.TRUETYPE_FONT:
                         font2D = new TrueTypeFont(fontFilePath, null, 0, true);
-    			break;
-    		case Font.TYPE1_FONT:
+                break;
+            case Font.TYPE1_FONT:
                         font2D = new Type1Font(fontFilePath, null, isCopy);
-    			break;
-    		default:
-    			throw new FontFormatException("Unrecognised Font Format");
-    	}
+                break;
+            default:
+                throw new FontFormatException("Unrecognised Font Format");
+        }
     } catch (FontFormatException e) {
-    	if (isCopy) {
-    		java.security.AccessController.doPrivileged(
-    				new java.security.PrivilegedAction<Object>() {
-    					public Object run() {
-    						if (_tracker != null) {
-    							_tracker.subBytes((int)fFile.length());
-    						}
-    						fFile.delete();
-    						return null;
-    					}
-    				});
-    	}
-    	throw(e);
+        if (isCopy) {
+            java.security.AccessController.doPrivileged(
+                    new java.security.PrivilegedAction<Object>() {
+                        public Object run() {
+                            if (_tracker != null) {
+                                _tracker.subBytes((int)fFile.length());
+                            }
+                            fFile.delete();
+                            return null;
+                        }
+                    });
+        }
+        throw(e);
     }
     if (isCopy) {
-    	FileFont.setFileToRemove(font2D, fontFile, tracker);
-    	synchronized (FontManager.class) {
+        FileFont.setFileToRemove(font2D, fontFile, tracker);
+        synchronized (FontManager.class) {
 
-    		if (tmpFontFiles == null) {
-    			tmpFontFiles = new Vector<File>();
-    		}
-    		tmpFontFiles.add(fontFile);
+            if (tmpFontFiles == null) {
+                tmpFontFiles = new Vector<File>();
+            }
+            tmpFontFiles.add(fontFile);
 
-    		if (fileCloser == null) {
-    			final Runnable fileCloserRunnable = new Runnable() {
-    				public void run() {
-    					java.security.AccessController.doPrivileged(
-    							new java.security.PrivilegedAction<Object>() {
-    								public Object run() {
+            if (fileCloser == null) {
+                final Runnable fileCloserRunnable = new Runnable() {
+                    public void run() {
+                        java.security.AccessController.doPrivileged(
+                                new java.security.PrivilegedAction<Object>() {
+                                    public Object run() {
 
-    									for (int i=0;i<CHANNELPOOLSIZE;i++) {
-    										if (fontFileCache[i] != null) {
-    											try {
-    												fontFileCache[i].close();
-    											} catch (Exception e) {}
-    										}
-    									}
-    									if (tmpFontFiles != null) {
-    										File[] files = new File[tmpFontFiles.size()];
-    										files = tmpFontFiles.toArray(files);
-    										for (int f=0; f<files.length;f++) {
-    											try {
-    												files[f].delete();
-    											} catch (Exception e) {}
-    										}
-    									}
-    									return null;
-    								}
-    							});
-    				}
-    			};
-    			java.security.AccessController.doPrivileged(
-    					new java.security.PrivilegedAction<Object>() {
-    						public Object run() {
-    							/* The thread must be a member of a thread group
-    							 * which will not get GCed before VM exit.
-    							 * Make its parent the top-level thread group.
-    							 */
-    							ThreadGroup tg =
-    								Thread.currentThread().getThreadGroup();
-    							for (ThreadGroup tgn = tg;
-    							tgn != null;
-    							tg = tgn, tgn = tg.getParent());
-    							fileCloser = new Thread(tg, fileCloserRunnable);
-    							fileCloser.setContextClassLoader(null);
-    							Runtime.getRuntime().addShutdownHook(fileCloser);
-    							return null;
-    						}
-    					});
-    			}
-    		}
-		}
-    	return font2D;
+                                        for (int i=0;i<CHANNELPOOLSIZE;i++) {
+                                            if (fontFileCache[i] != null) {
+                                                try {
+                                                    fontFileCache[i].close();
+                                                } catch (Exception e) {}
+                                            }
+                                        }
+                                        if (tmpFontFiles != null) {
+                                            File[] files = new File[tmpFontFiles.size()];
+                                            files = tmpFontFiles.toArray(files);
+                                            for (int f=0; f<files.length;f++) {
+                                                try {
+                                                    files[f].delete();
+                                                } catch (Exception e) {}
+                                            }
+                                        }
+                                        return null;
+                                    }
+                                });
+                    }
+                };
+                java.security.AccessController.doPrivileged(
+                        new java.security.PrivilegedAction<Object>() {
+                            public Object run() {
+                                /* The thread must be a member of a thread group
+                                 * which will not get GCed before VM exit.
+                                 * Make its parent the top-level thread group.
+                                 */
+                                ThreadGroup tg =
+                                    Thread.currentThread().getThreadGroup();
+                                for (ThreadGroup tgn = tg;
+                                tgn != null;
+                                tg = tgn, tgn = tg.getParent());
+                                fileCloser = new Thread(tg, fileCloserRunnable);
+                                fileCloser.setContextClassLoader(null);
+                                Runtime.getRuntime().addShutdownHook(fileCloser);
+                                return null;
+                            }
+                        });
+                }
+            }
+        }
+        return font2D;
     }
     
     /*
@@ -248,96 +248,96 @@ public class CFontManager extends SunFontManager {
     */
     
     protected void registerFontsInDir(String dirName, boolean useJavaRasterizer, int fontRank, boolean defer, boolean resolveSymLinks) {
-    	loadNativeDirFonts(dirName);
-    	super.registerFontsInDir(dirName, useJavaRasterizer, fontRank, defer, resolveSymLinks);
+        loadNativeDirFonts(dirName);
+        super.registerFontsInDir(dirName, useJavaRasterizer, fontRank, defer, resolveSymLinks);
     }
 
     private native void loadNativeDirFonts(String dirName);
     private native void loadNativeFonts();
 
     void registerFont(String fontName, String fontFamilyName) {
-    	final CFont font = new CFont(fontName, fontFamilyName);
+        final CFont font = new CFont(fontName, fontFamilyName);
 
-    	registerGenericFont(font);
+        registerGenericFont(font);
 
-    	if ((font.getStyle() & Font.ITALIC) == 0) {
-    		registerGenericFont(font.createItalicVariant(), true);
-    	}
-	}
+        if ((font.getStyle() & Font.ITALIC) == 0) {
+            registerGenericFont(font.createItalicVariant(), true);
+        }
+    }
     
     Object waitForFontsToBeLoaded  = new Object();
-	public void loadFonts()
-	{
-		synchronized(waitForFontsToBeLoaded)
-		{
-			super.loadFonts();
-			java.security.AccessController.doPrivileged(
-				new java.security.PrivilegedAction<Object>() {
-					public Object run() {
-						loadNativeFonts();
-						return null;
-					}
-				}
-			);
+    public void loadFonts()
+    {
+        synchronized(waitForFontsToBeLoaded)
+        {
+            super.loadFonts();
+            java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction<Object>() {
+                    public Object run() {
+                        loadNativeFonts();
+                        return null;
+                    }
+                }
+            );
 
-			String defaultFont = "Lucida Grande";
-			String defaultFallback = "Lucida Sans";
-			
-			setupLogicalFonts("Dialog", defaultFont, defaultFallback);
-			setupLogicalFonts("Serif", "Times", "Lucida Bright");
-			setupLogicalFonts("SansSerif", defaultFont, defaultFallback);
-			setupLogicalFonts("Monospaced", "Menlo", "Lucida Sans Typewriter");
-			setupLogicalFonts("DialogInput", defaultFont, defaultFallback);
-		}
-	}
-	
-	protected void setupLogicalFonts(String logicalName, String realName, String fallbackName) {
-		FontFamily realFamily = getFontFamilyWithExtraTry(logicalName, realName, fallbackName);
-		
-		cloneStyledFont(realFamily, logicalName, Font.PLAIN);
-		cloneStyledFont(realFamily, logicalName, Font.BOLD);
-		cloneStyledFont(realFamily, logicalName, Font.ITALIC);
-		cloneStyledFont(realFamily, logicalName, Font.BOLD | Font.ITALIC);
-	}
-	
-	protected FontFamily getFontFamilyWithExtraTry(String logicalName, String realName, String fallbackName){
-		FontFamily family = getFontFamily(realName, fallbackName);
-		if (family != null) return family;
-		
-		// at this point, we recognize that we probably needed a fallback font
-		super.loadFonts();
-		
-		family = getFontFamily(realName, fallbackName);
-		if (family != null) return family;
-		
-		System.err.println("Warning: the fonts \"" + realName + "\" and \"" + fallbackName + "\" are not available for the Java logical font \"" + logicalName + "\", which may have unexpected appearance or behavior. Re-enable the \""+ realName +"\" font to remove this warning.");
-		return null;
-	}
-	
-	protected FontFamily getFontFamily(String realName, String fallbackName){
-		FontFamily family = FontFamily.getFamily(realName);
-		if (family != null) return family;
-		
-		family = FontFamily.getFamily(fallbackName);
-		if (family != null){
-			System.err.println("Warning: the font \"" + realName + "\" is not available, so \"" + fallbackName + "\" has been substituted, but may have unexpected appearance or behavor. Re-enable the \""+ realName +"\" font to remove this warning.");
-			return family;
-		}
-		
-		return null;
-	}
-	
-	protected boolean cloneStyledFont(FontFamily realFamily, String logicalFamilyName, int style) {
-		if (realFamily == null) return false;
+            String defaultFont = "Lucida Grande";
+            String defaultFallback = "Lucida Sans";
+            
+            setupLogicalFonts("Dialog", defaultFont, defaultFallback);
+            setupLogicalFonts("Serif", "Times", "Lucida Bright");
+            setupLogicalFonts("SansSerif", defaultFont, defaultFallback);
+            setupLogicalFonts("Monospaced", "Menlo", "Lucida Sans Typewriter");
+            setupLogicalFonts("DialogInput", defaultFont, defaultFallback);
+        }
+    }
+    
+    protected void setupLogicalFonts(String logicalName, String realName, String fallbackName) {
+        FontFamily realFamily = getFontFamilyWithExtraTry(logicalName, realName, fallbackName);
+        
+        cloneStyledFont(realFamily, logicalName, Font.PLAIN);
+        cloneStyledFont(realFamily, logicalName, Font.BOLD);
+        cloneStyledFont(realFamily, logicalName, Font.ITALIC);
+        cloneStyledFont(realFamily, logicalName, Font.BOLD | Font.ITALIC);
+    }
+    
+    protected FontFamily getFontFamilyWithExtraTry(String logicalName, String realName, String fallbackName){
+        FontFamily family = getFontFamily(realName, fallbackName);
+        if (family != null) return family;
+        
+        // at this point, we recognize that we probably needed a fallback font
+        super.loadFonts();
+        
+        family = getFontFamily(realName, fallbackName);
+        if (family != null) return family;
+        
+        System.err.println("Warning: the fonts \"" + realName + "\" and \"" + fallbackName + "\" are not available for the Java logical font \"" + logicalName + "\", which may have unexpected appearance or behavior. Re-enable the \""+ realName +"\" font to remove this warning.");
+        return null;
+    }
+    
+    protected FontFamily getFontFamily(String realName, String fallbackName){
+        FontFamily family = FontFamily.getFamily(realName);
+        if (family != null) return family;
+        
+        family = FontFamily.getFamily(fallbackName);
+        if (family != null){
+            System.err.println("Warning: the font \"" + realName + "\" is not available, so \"" + fallbackName + "\" has been substituted, but may have unexpected appearance or behavor. Re-enable the \""+ realName +"\" font to remove this warning.");
+            return family;
+        }
+        
+        return null;
+    }
+    
+    protected boolean cloneStyledFont(FontFamily realFamily, String logicalFamilyName, int style) {
+        if (realFamily == null) return false;
 
-		Font2D realFont = realFamily.getFontWithExactStyleMatch(style);
-		if (realFont == null || !(realFont instanceof CFont)) return false;
-		
-		CFont newFont = new CFont((CFont)realFont, logicalFamilyName);
-		registerGenericFont(newFont, true);
-		
-		return true;
-	}
+        Font2D realFont = realFamily.getFontWithExactStyleMatch(style);
+        if (realFont == null || !(realFont instanceof CFont)) return false;
+        
+        CFont newFont = new CFont((CFont)realFont, logicalFamilyName);
+        registerGenericFont(newFont, true);
+        
+        return true;
+    }
 
     @Override
     public String getFontPath(boolean noType1Fonts) {
@@ -363,5 +363,5 @@ public class CFontManager extends SunFontManager {
     // Only implemented on Windows
     @Override
     protected void populateFontFileNameMap(HashMap<String, String> fontToFileMap, HashMap<String, String> fontToFamilyNameMap,
-    		HashMap<String, ArrayList<String>> familyToFontListMap, Locale locale) {}
+            HashMap<String, ArrayList<String>> familyToFontListMap, Locale locale) {}
 }

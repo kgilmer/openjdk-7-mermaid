@@ -103,8 +103,8 @@ public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
 
             if (forceback) {
                 // peer must be non-null in this case
-		// TODO: modify parameter to delegate
-            	//                sData = CGLSurfaceData.createData(peer, vImg, FLIP_BACKBUFFER);
+                // TODO: modify parameter to delegate
+                //                sData = CGLSurfaceData.createData(peer, vImg, FLIP_BACKBUFFER);
             } else {
                 CGLGraphicsConfig gc =
                     (CGLGraphicsConfig)vImg.getGraphicsConfig();
@@ -117,8 +117,8 @@ public class CGLVolatileSurfaceManager extends VolatileSurfaceManager {
                         OGLSurfaceData.FBOBJECT : OGLSurfaceData.PBUFFER;
                 }
                 if (createVSynced) {
-                	// TODO: modify parameter to delegate
-//                	sData = CGLSurfaceData.createData(peer, vImg, type);
+                    // TODO: modify parameter to delegate
+//                  sData = CGLSurfaceData.createData(peer, vImg, type);
                 } else {
                     sData = CGLSurfaceData.createData(gc,
                                                       vImg.getWidth(),

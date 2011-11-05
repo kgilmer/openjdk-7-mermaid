@@ -482,7 +482,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
             security.checkSystemClipboardAccess();
         }
 
-    	synchronized (this) {
+        synchronized (this) {
             if (clipboard == null) {
                 clipboard = createPlatformClipboard();
             }

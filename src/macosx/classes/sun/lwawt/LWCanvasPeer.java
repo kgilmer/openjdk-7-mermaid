@@ -83,7 +83,7 @@ final class LWCanvasPeer
     }
 
     class JCanvasDelegate
-	extends JComponent
+        extends JComponent
     {
 
         @Override

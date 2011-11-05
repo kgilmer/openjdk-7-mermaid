@@ -118,6 +118,6 @@ public class JRSUIUtils {
     }
     
     public interface NineSliceMetricsProvider {
-    	public NineSliceMetrics getNineSliceMetricsForState(JRSUIState state);
+        public NineSliceMetrics getNineSliceMetricsForState(JRSUIState state);
     }
 }

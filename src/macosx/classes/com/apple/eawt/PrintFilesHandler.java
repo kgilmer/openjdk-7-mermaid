@@ -36,9 +36,9 @@ import com.apple.eawt.AppEvent.PrintFilesEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface PrintFilesHandler {
-	/**
-	 * Called when the application is asked to print a list of files.
-	 * @param e the request to print a list of files.
-	 */
-	public void printFiles(final PrintFilesEvent e);
+    /**
+     * Called when the application is asked to print a list of files.
+     * @param e the request to print a list of files.
+     */
+    public void printFiles(final PrintFilesEvent e);
 }

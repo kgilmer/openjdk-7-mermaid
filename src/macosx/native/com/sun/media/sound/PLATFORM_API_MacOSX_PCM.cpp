@@ -110,7 +110,7 @@ INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDevice
  */
 
 void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* creator) {
-	TRACE3("> DAUDIO_GetFormats mixer=%d deviceID=%#x isSource=%d\n", (int)mixerIndex, (int)deviceID, isSource);
+    TRACE3("> DAUDIO_GetFormats mixer=%d deviceID=%#x isSource=%d\n", (int)mixerIndex, (int)deviceID, isSource);
     AudioDeviceDescription description = {0};
     OSStatus err = noErr;
     Float64 sampleRate;
@@ -169,15 +169,15 @@ static AudioUnit CreateOutputUnit(AudioDeviceID deviceID, int isSource)
     AudioUnit unit;
     UInt32 size;
 
-	ComponentDescription desc;
-	desc.componentType         = kAudioUnitType_Output;
-	desc.componentSubType      = (deviceID == 0 && isSource) ? kAudioUnitSubType_DefaultOutput : kAudioUnitSubType_HALOutput;
-	desc.componentManufacturer = kAudioUnitManufacturer_Apple;
-	desc.componentFlags        = 0;
-	desc.componentFlagsMask    = 0;
+    ComponentDescription desc;
+    desc.componentType         = kAudioUnitType_Output;
+    desc.componentSubType      = (deviceID == 0 && isSource) ? kAudioUnitSubType_DefaultOutput : kAudioUnitSubType_HALOutput;
+    desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+    desc.componentFlags        = 0;
+    desc.componentFlagsMask    = 0;
 
     Component comp = FindNextComponent(NULL, &desc);
-	err = OpenAComponent(comp, &unit);
+    err = OpenAComponent(comp, &unit);
 
     if (err) {
         ERROR1("OpenComponent err %d\n", err);
@@ -227,10 +227,10 @@ static void ClearAudioBufferList(AudioBufferList *list, int start, int end, int 
 }
 
 static OSStatus AudioOutputCallback(void                    *inRefCon,
-                             AudioUnitRenderActionFlags 	*ioActionFlags,
+                             AudioUnitRenderActionFlags     *ioActionFlags,
                              const AudioTimeStamp           *inTimeStamp,
-                             UInt32 						inBusNumber,
-                             UInt32 						inNumberFrames,
+                             UInt32                         inBusNumber,
+                             UInt32                         inNumberFrames,
                              AudioBufferList                *ioData)
 {
     OSXDirectAudioDevice *device = (OSXDirectAudioDevice*)inRefCon;
@@ -315,7 +315,7 @@ void* DAUDIO_Open(INT32 mixerIndex, INT32 deviceID, int isSource,
                   int frameSize, int channels,
                   int isSigned, int isBigEndian, int bufferSizeInBytes)
 {
-	TRACE2("> DAUDIO_Open mixerIndex=%d deviceID=%#x\n", mixerIndex, deviceID);
+    TRACE2("> DAUDIO_Open mixerIndex=%d deviceID=%#x\n", mixerIndex, deviceID);
 
     AudioUnitScope scope = isSource ? kAudioUnitScope_Input : kAudioUnitScope_Output;
     int element = isSource ? 0 : 1;

@@ -37,15 +37,15 @@ import com.apple.eawt.AppEvent.AppForegroundEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface AppForegroundListener extends AppEventListener {
-	/**
-	 * Called when the app becomes the foreground app.
-	 * @param e the app became foreground notification.
-	 */
-	public void appRaisedToForeground(final AppForegroundEvent e);
-	
-	/**
-	 * Called when the app resigns to the background and another app becomes the foreground app.
-	 * @param e the app resigned foreground notification.
-	 */
-	public void appMovedToBackground(final AppForegroundEvent e);
+    /**
+     * Called when the app becomes the foreground app.
+     * @param e the app became foreground notification.
+     */
+    public void appRaisedToForeground(final AppForegroundEvent e);
+    
+    /**
+     * Called when the app resigns to the background and another app becomes the foreground app.
+     * @param e the app resigned foreground notification.
+     */
+    public void appMovedToBackground(final AppForegroundEvent e);
 }

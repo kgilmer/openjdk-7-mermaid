@@ -39,10 +39,10 @@ public class CStrike extends FontStrike {
                                                      double[] invDevTxMatrix,
                                                      int aaHint,
                                                      int fmHint);
-	
+
     // Disposes the native strike
     private static native void disposeNativeStrikePtr(long nativeStrikePtr);
-	
+
     // Creates a StrikeMetrics from the underlying native system fonts
     private static native StrikeMetrics getFontMetrics(long nativeStrikePtr);
 
@@ -67,7 +67,7 @@ public class CStrike extends FontStrike {
                                                          int glyphCode, 
                                                          Rectangle2D.Float result,
                                                          double x, double y);
-	
+
     private CFont nativeFont;
     private AffineTransform invDevTx;
     private GlyphInfoCache glyphInfoCache;
@@ -95,15 +95,15 @@ public class CStrike extends FontStrike {
             }
         }
     }
-	
+
     public long getNativeStrikePtr() {
         if (nativeStrikePtr != 0) {
             return nativeStrikePtr;
         }
-	
+
         final double[] glyphTx = new double[6];
         desc.glyphTx.getMatrix(glyphTx);
-		
+
         final double[] invDevTxMatrix = new double[6];
         if (invDevTx == null) {
             invDevTxMatrix[0] = 1;
@@ -111,10 +111,10 @@ public class CStrike extends FontStrike {
         } else {
             invDevTx.getMatrix(invDevTxMatrix);
         }
-		
+
         final int aaHint = desc.aaHint;
         final int fmHint = desc.fmHint;
-	
+
         synchronized (this) {
             if (nativeStrikePtr != 0) {
                 return nativeStrikePtr;
@@ -123,17 +123,17 @@ public class CStrike extends FontStrike {
                 createNativeStrikePtr(nativeFont.getNativeFontPtr(),
                                       glyphTx, invDevTxMatrix, aaHint, fmHint);
         }
-		
+
         return nativeStrikePtr;
     }
-	
+
     protected synchronized void finalize() throws Throwable {
         if (nativeStrikePtr != 0) {
             disposeNativeStrikePtr(nativeStrikePtr);
         }
         nativeStrikePtr = 0;
     }
-	
+
     // the fractional metrics default on our platform is OFF
     private boolean useFractionalMetrics() {
         return desc.fmHint == SunHints.INTVAL_FRACTIONALMETRICS_ON;
@@ -244,11 +244,11 @@ public class CStrike extends FontStrike {
     // pt, result in device space
     void getGlyphImageBounds(int glyphCode, Point2D.Float pt, Rectangle result) {
         Rectangle2D.Float floatRect = new Rectangle2D.Float();
-	
+
         if (invDevTx != null) {
             invDevTx.transform(pt, pt);
         }
-	
+
         getGlyphImageBounds(glyphCode, pt.x, pt.y, floatRect);
         
         if (floatRect.width == 0 && floatRect.height == 0) {
@@ -386,7 +386,7 @@ public class CStrike extends FontStrike {
     {
         getGlyphImagePtrsNative(getNativeStrikePtr(), glyphInfos, uniCodes, len);
     }
-	
+
     private float getCachedNativeGlyphAdvance(int glyphCode) {
         synchronized(glyphAdvanceCache) {
             float advance = glyphAdvanceCache.get(glyphCode);
@@ -436,7 +436,7 @@ public class CStrike extends FontStrike {
                     return firstLayerCache[index];
                 }
             }
-			
+
             if (generalCache == null) {
                 return 0L;
             }
@@ -508,7 +508,7 @@ public class CStrike extends FontStrike {
             // Finally, set the flag.
             disposed = true;
         }
-	
+
         private static void disposeLongArray(final long[] longArray) {
             for (int i = 0; i < longArray.length; i++) {
                 final long ptr = longArray[i];

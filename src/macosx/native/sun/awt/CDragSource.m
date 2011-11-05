@@ -98,7 +98,7 @@ static BOOL                sNeedsEnter;
 
     // Construct the object if we have a valid model for it:
     if (control != nil) {
-		JNIEnv *env = [ThreadUtilities getJNIEnv];
+        JNIEnv *env = [ThreadUtilities getJNIEnv];
         fComponent = JNFNewGlobalRef(env, jcomponent);
         fComponentPeer = JNFNewGlobalRef(env, jpeer);
         fDragSourceContextPeer = JNFNewGlobalRef(env, jdragsourcecontextpeer);
@@ -121,9 +121,9 @@ static BOOL                sNeedsEnter;
         fModifiers = extModifiers;
 
         // Set this object as a dragging source:
-		
-		AWTView *awtView = [((NSWindow *) control) contentView];
-		fView = [awtView retain];
+        
+        AWTView *awtView = [((NSWindow *) control) contentView];
+        fView = [awtView retain];
         [awtView setDragSource:self];
 
         // Let AWTEvent know Java drag is getting underway:
@@ -143,7 +143,7 @@ static BOOL                sNeedsEnter;
     DLog2(@"[CDragSource removeFromView]: %@\n", self);
 
     // Remove this dragging source from the view:
-	[((AWTView *) fView) setDragSource:nil];
+    [((AWTView *) fView) setDragSource:nil];
     
     // Clean up JNI refs
     if (fComponent != NULL) {
@@ -415,7 +415,7 @@ static BOOL                sNeedsEnter;
         // 9-30-02 Note: keep this around for debugging:
         fDragImage = [[NSImage alloc] initWithSize:NSMakeSize(21, 21)];
         NSSize imageSize = [fDragImage size];
-		
+        
         NSBitmapImageRep *imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
             pixelsWide:imageSize.width pixelsHigh:imageSize.height bitsPerSample:8 samplesPerPixel:4
             hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:32];
@@ -431,7 +431,7 @@ static BOOL                sNeedsEnter;
 {
     // Get NSView for the drag source:
     NSWindow* window = [fView window];
-					
+
     NSInteger windowNumber = [window windowNumber];
     NSGraphicsContext* graphicsContext = [NSGraphicsContext graphicsContextWithWindow:window];
 
@@ -698,7 +698,7 @@ JNF_COCOA_EXIT(env);
 - (void) postDragEnter {
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     sNeedsEnter = NO;
-	
+    
     jint targetActions = fSourceActions;
     if ([CDropTarget currentDropTarget]) targetActions = [[CDropTarget currentDropTarget] currentJavaActions];
 

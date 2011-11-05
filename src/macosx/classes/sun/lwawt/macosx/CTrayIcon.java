@@ -41,8 +41,8 @@ public class CTrayIcon implements TrayIconPeer {
         this.popup = target.getPopupMenu();
         
         //if no one else is creating the peer.
-    	checkAndCreatePopupPeer();
-    	updateImage();
+        checkAndCreatePopupPeer();
+        updateImage();
     }
 
     private CPopupMenu checkAndCreatePopupPeer() {
@@ -72,7 +72,7 @@ public class CTrayIcon implements TrayIconPeer {
         if(popup == null) {
             return 0L;
         }
-    	return checkAndCreatePopupPeer().getModel();
+        return checkAndCreatePopupPeer().getModel();
     }
     
     @Override
@@ -95,7 +95,7 @@ public class CTrayIcon implements TrayIconPeer {
     
     @Override
     public void showPopupMenu(int x, int y) {
-    	//Not used. The popupmenu is shown from the native code.
+        //Not used. The popupmenu is shown from the native code.
     }
 
     @Override

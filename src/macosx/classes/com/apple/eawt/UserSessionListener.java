@@ -38,15 +38,15 @@ import com.apple.eawt.AppEvent.UserSessionEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface UserSessionListener extends AppEventListener {
-	/**
-	 * Called when the user session has been switched away.
-	 * @param e the user session switch event
-	 */
-	public void userSessionDeactivated(final UserSessionEvent e);
-	
-	/**
-	 * Called when the user session has been switched to.
-	 * @param e the user session switch event
-	 */
-	public void userSessionActivated(final UserSessionEvent e);
+    /**
+     * Called when the user session has been switched away.
+     * @param e the user session switch event
+     */
+    public void userSessionDeactivated(final UserSessionEvent e);
+    
+    /**
+     * Called when the user session has been switched to.
+     * @param e the user session switch event
+     */
+    public void userSessionActivated(final UserSessionEvent e);
 }

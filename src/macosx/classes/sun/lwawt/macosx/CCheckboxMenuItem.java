@@ -33,10 +33,9 @@ import java.awt.peer.CheckboxMenuItemPeer;
 import sun.awt.SunToolkit;
 
 public class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer {
-	
     boolean fAutoToggle = true;
     boolean fIsIndeterminate = false;
-	
+
     private native void nativeSetState(long modelPtr, boolean state);
     private native void nativeSetIsCheckbox(long modelPtr);
     
@@ -56,7 +55,7 @@ public class CCheckboxMenuItem extends CMenuItem implements CheckboxMenuItemPeer
         final CheckboxMenuItem target = (CheckboxMenuItem)getTarget();
         EventQueue.invokeLater(new Runnable() {
             public void run() {
-                target.setState(state);				
+                target.setState(state);
             }
         });
         ItemEvent event = new ItemEvent(target, ItemEvent.ITEM_STATE_CHANGED, target.getLabel(), state ? ItemEvent.SELECTED : ItemEvent.DESELECTED);

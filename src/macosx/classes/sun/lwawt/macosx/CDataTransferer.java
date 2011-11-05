@@ -260,11 +260,11 @@ public class CDataTransferer extends DataTransferer {
 
     private native Image getImageForByteStream(byte[] bytes);
 
-	@Override
-	protected ByteArrayOutputStream convertFileListToBytes(ArrayList<String> fileList) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    protected ByteArrayOutputStream convertFileListToBytes(ArrayList<String> fileList) throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
 
 

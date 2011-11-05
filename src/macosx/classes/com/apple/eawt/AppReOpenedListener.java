@@ -40,9 +40,9 @@ import com.apple.eawt.AppEvent.AppReOpenedEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface AppReOpenedListener extends AppEventListener {
-	/**
-	 * Called when the app has been re-opened (it's Dock icon was clicked on, or was double-clicked in the Finder)
-	 * @param e the request to re-open the app
-	 */
-	public void appReOpened(final AppReOpenedEvent e);
+    /**
+     * Called when the app has been re-opened (it's Dock icon was clicked on, or was double-clicked in the Finder)
+     * @param e the request to re-open the app
+     */
+    public void appReOpened(final AppReOpenedEvent e);
 }

@@ -38,9 +38,9 @@ import com.apple.eawt.AppEvent.OpenURIEvent;
  * @since Java for Mac OS X 10.5 Update 8
  */
 public interface OpenURIHandler {
-	/**
-	 * Called when the application is asked to open a URI
-	 * @param e the request to open a URI
-	 */
-	public void openURI(final OpenURIEvent e);
+    /**
+     * Called when the application is asked to open a URI
+     * @param e the request to open a URI
+     */
+    public void openURI(final OpenURIEvent e);
 }

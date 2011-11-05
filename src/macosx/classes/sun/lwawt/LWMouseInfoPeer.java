@@ -42,7 +42,7 @@ public class LWMouseInfoPeer implements MouseInfoPeer {
         Point cursorPos = cursorManager.getCursorPosition();
         point.x = cursorPos.x;
         point.y = cursorPos.y;
-	// TODO: multiscreen
+        // TODO: multiscreen
         return 0;
     }
 

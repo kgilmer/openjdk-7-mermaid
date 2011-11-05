@@ -205,28 +205,28 @@ public class CGLGraphicsConfig extends CGraphicsConfig
     @Override
     public BufferedImage createCompatibleImage(int width, int height) {
         ColorModel model = new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
-	WritableRaster
+        WritableRaster
             raster = model.createCompatibleWritableRaster(width, height);
-	return new BufferedImage(model, raster, model.isAlphaPremultiplied(),
-				 null);
+        return new BufferedImage(model, raster, model.isAlphaPremultiplied(),
+                                 null);
     }
 
     @Override
     public ColorModel getColorModel(int transparency) {
-	switch (transparency) {
-	case Transparency.OPAQUE:
+        switch (transparency) {
+        case Transparency.OPAQUE:
             // REMIND: once the ColorModel spec is changed, this should be
             //         an opaque premultiplied DCM...
             return new DirectColorModel(24, 0xff0000, 0xff00, 0xff);
-	case Transparency.BITMASK:
+        case Transparency.BITMASK:
             return new DirectColorModel(25, 0xff0000, 0xff00, 0xff, 0x1000000);
-	case Transparency.TRANSLUCENT:
+        case Transparency.TRANSLUCENT:
             ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_sRGB);
             return new DirectColorModel(cs, 32,
                                         0xff0000, 0xff00, 0xff, 0xff000000,
                                         true, DataBuffer.TYPE_INT);
-	default:
-	    return null;
+        default:
+            return null;
         }
     }
 
@@ -251,7 +251,7 @@ public class CGLGraphicsConfig extends CGraphicsConfig
     //@Override
     public synchronized void displayChanged() {
         //super.displayChanged();
-		
+
         // the context could hold a reference to a CGLSurfaceData, which in
         // turn has a reference back to this CGLGraphicsConfig, so in order
         // for this instance to be disposed we need to break the connection

@@ -40,19 +40,19 @@ NSMutableDictionary *getMappingTable() {
     if (sStandardMappings == nil) {
         sStandardMappings = [[NSMutableDictionary alloc] init];
         [sStandardMappings setObject:NSStringPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_STRING]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_STRING]];
         [sStandardMappings setObject:NSFilenamesPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_FILE]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_FILE]];
         [sStandardMappings setObject:NSTIFFPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_TIFF]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_TIFF]];
         [sStandardMappings setObject:NSRTFPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_RICH_TEXT]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_RICH_TEXT]];
         [sStandardMappings setObject:NSHTMLPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_HTML]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_HTML]];
         [sStandardMappings setObject:NSPDFPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_PDF]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_PDF]];
         [sStandardMappings setObject:NSURLPboardType 
-							  forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_URL]];
+                              forKey:[NSNumber numberWithLong:sun_lwawt_macosx_CDataTransferer_CF_URL]];
     }
     return sStandardMappings;
 }
@@ -84,7 +84,7 @@ jlong indexForFormat(NSString *format) {
  * Inverse of above -- given a long int index, get the matching data format NSString.
  */
 NSString *formatForIndex(jlong inFormatCode) {
-	return [getMappingTable() objectForKey:[NSNumber numberWithLong:inFormatCode]];
+    return [getMappingTable() objectForKey:[NSNumber numberWithLong:inFormatCode]];
 }
 
 jlong registerFormatWithPasteboard(NSString *format) {

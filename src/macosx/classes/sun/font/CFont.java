@@ -80,16 +80,16 @@ public final class CFont extends PhysicalFont {
                                                 final int style,
                                                 final boolean isFakeItalic);
     private static native void disposeNativeFont(final long nativeFontPtr);
-	
+
     private boolean isFakeItalic;
     private String nativeFontName;
     private long nativeFontPtr;
-	
+
     // this constructor is called from CFontWrapper.m
     public CFont(String name) {
         this(name, name);
     }
-	
+
     public CFont(String name, String inFamilyName) {
         handle = new Font2DHandle(this);
         fullName = name;
@@ -106,7 +106,7 @@ public final class CFont extends PhysicalFont {
         style = other.style;
         isFakeItalic = other.isFakeItalic;
     }
-	
+
     public CFont createItalicVariant() {
         CFont font = new CFont(this, familyName);
         font.fullName =
@@ -115,11 +115,11 @@ public final class CFont extends PhysicalFont {
         font.isFakeItalic = true;
         return font;
     }
-	
+
     protected synchronized long getNativeFontPtr() {
         if (nativeFontPtr == 0L) {
             nativeFontPtr = createNativeFont(nativeFontName, style, isFakeItalic);
-	}
+}
         return nativeFontPtr;
     }
     
@@ -136,7 +136,7 @@ public final class CFont extends PhysicalFont {
         }
         return mapper;
     }
-	
+
     protected FontStrike createStrike(FontStrikeDesc desc) {
         if (isFakeItalic) {
             desc = new FontStrikeDesc(desc);
@@ -144,7 +144,7 @@ public final class CFont extends PhysicalFont {
         }
         return new CStrike(this, desc);
     }
-	
+
     // <rdar://problem/5321707> sun.font.Font2D caches the last used strike,
     // but does not check if the properties of the strike match the properties
     // of the incoming java.awt.Font object (size, style, etc).
