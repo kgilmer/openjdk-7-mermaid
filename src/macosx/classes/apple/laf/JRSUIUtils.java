@@ -105,6 +105,12 @@ public class JRSUIUtils {
         }
     }
     
+    public static class Images {
+        public static boolean shouldUseLegacySecurityUIPath() {
+            return isSnowLeopardOrBelow;
+        }
+    }
+    
     public static class HitDetection {
         public static Hit getHitForPoint(final JRSUIControl control, final double x, final double y, final double w, final double h, final double hitX, final double hitY) {
             return control.getHitForPoint(x, y, w, h, hitX, hitY);

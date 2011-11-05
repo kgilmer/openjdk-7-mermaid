@@ -26,19 +26,24 @@
 package com.apple.laf;
 
 import java.awt.*;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 import java.security.PrivilegedAction;
 
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-import apple.laf.JRSUIState;
-import apple.laf.JRSUIConstants.*;
-
 import sun.lwawt.macosx.LWCToolkit;
+import apple.laf.JRSUIConstants.AlignmentHorizontal;
+import apple.laf.JRSUIConstants.AlignmentVertical;
+import apple.laf.JRSUIConstants.Direction;
+import apple.laf.JRSUIConstants.State;
+import apple.laf.JRSUIConstants.Widget;
+import apple.laf.*;
 
 import com.apple.eio.FileManager;
-import com.apple.laf.AquaIcon.*;
+import com.apple.laf.AquaIcon.InvertableIcon;
+import com.apple.laf.AquaIcon.JRSUIControlSpec;
+import com.apple.laf.AquaIcon.SystemIcon;
 import com.apple.laf.AquaUtils.RecyclableObject;
 import com.apple.laf.AquaUtils.RecyclableSingleton;
 
@@ -65,7 +70,12 @@ public class AquaImageFactory {
     
     public static IconUIResource getLockImageIcon() {
         // public, because UIDefaults.ProxyLazyValue uses reflection to get this value
-        final Image lockIcon = AquaUtils.getCImageCreator().createImageFromFile("/System/Library/CoreServices/SecurityAgent.app/Contents/Resources/Security.icns", kAlertIconSize, kAlertIconSize);
+        if (JRSUIUtils.Images.shouldUseLegacySecurityUIPath()) {
+            final Image lockIcon = AquaUtils.getCImageCreator().createImageFromFile("/System/Library/CoreServices/SecurityAgent.app/Contents/Resources/Security.icns", kAlertIconSize, kAlertIconSize);
+            return getAppIconCompositedOn(lockIcon);
+        }
+        
+        final Image lockIcon = Toolkit.getDefaultToolkit().getImage("NSImage://NSSecurity");
         return getAppIconCompositedOn(lockIcon);
     }
     
@@ -109,19 +119,25 @@ public class AquaImageFactory {
     }
     
     private static final int kAlertIconSize = 64;
-    static IconUIResource getAppIconCompositedOn(final Image image) {
-        final int kAlertSubIconSize = (int)(kAlertIconSize * 0.5);
-        final int kAlertSubIconInset = kAlertIconSize - kAlertSubIconSize;
+    static IconUIResource getAppIconCompositedOn(final Image background) {
+        final double scaleFactor = 1.0; // revise for HiDPI
+        
+        final int kAlertSubIconSize = (int)(kAlertIconSize * 0.5 * scaleFactor);
+        final int kAlertSubIconInset = (int)(kAlertIconSize * scaleFactor) - kAlertSubIconSize;
         final Icon smallAppIconScaled = new AquaIcon.CachingScalingIcon(kAlertSubIconSize, kAlertSubIconSize) {
             Image createImage() {
                 return getThisApplicationsIcon(kAlertSubIconSize, kAlertSubIconSize);
             }
         };
+        
+        final BufferedImage image = new BufferedImage(kAlertIconSize, kAlertIconSize, BufferedImage.TYPE_INT_ARGB);
         final Graphics g = image.getGraphics();
+        g.drawImage(background, 0, 0, (int)(kAlertIconSize * scaleFactor), (int)(kAlertIconSize * scaleFactor), null);
         if (g instanceof Graphics2D) {
             // improves icon rendering quality in Quartz
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         }
+        
         smallAppIconScaled.paintIcon(null, g, kAlertSubIconInset, kAlertSubIconInset);
         g.dispose();
         
