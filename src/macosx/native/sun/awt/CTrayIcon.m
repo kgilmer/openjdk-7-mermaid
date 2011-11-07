@@ -50,6 +50,9 @@
 }
 
 -(void) dealloc {
+    JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
+    JNFDeleteGlobalRef(env, peer); 
+
     [button release];    
     [theItem release];
     
