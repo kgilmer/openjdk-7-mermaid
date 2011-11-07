@@ -30,15 +30,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.peer.TrayIconPeer;
 
-public class CTrayIcon implements TrayIconPeer {
+public class CTrayIcon extends CFRetainedResource implements TrayIconPeer {
     private TrayIcon target;
     private PopupMenu popup;
-    private long modelPtr;
     
     CTrayIcon(TrayIcon target) {
+        super(0, true);
+
         this.target = target;
-        this.modelPtr = createModel();
         this.popup = target.getPopupMenu();
+        setPtr(createModel());
         
         //if no one else is creating the peer.
         checkAndCreatePopupPeer();
@@ -64,9 +65,12 @@ public class CTrayIcon implements TrayIconPeer {
 //        final NSStatusBarClass statusBarClass = JObjC.getInstance().AppKit().NSStatusBar();
         return nativeCreate();
     }
+
+    private long getModel() {
+        return ptr;
+    }
     
     private native long nativeCreate();
-    private native void nativeDispose(long modelPtr);
         
     //invocation from the AWTTrayIcon.m
     public long getPopupMenuModel(){
@@ -84,13 +88,14 @@ public class CTrayIcon implements TrayIconPeer {
     @Override
     public void dispose() {
         LWCToolkit.targetDisposedPeer(target, this);
-        nativeDispose(modelPtr);
         target = null;
+
+        super.dispose();
     }
 
     @Override
     public void setToolTip(String tooltip) {
-        nativeSetToolTip(modelPtr, tooltip);
+        nativeSetToolTip(getModel(), tooltip);
     }
 
     //adds tooltip to the NSStatusBar's NSButton.
@@ -119,7 +124,7 @@ public class CTrayIcon implements TrayIconPeer {
         }
 
         CImage cimage = CImage.getCreator().createFromImage(image);
-        setNativeImage(modelPtr, cimage.ptr, target.isImageAutoSize());
+        setNativeImage(getModel(), cimage.ptr, target.isImageAutoSize());
     }
 
     private native void setNativeImage(final long model, final long nsimage, final boolean autosize);

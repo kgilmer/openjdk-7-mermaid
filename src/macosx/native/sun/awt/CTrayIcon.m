@@ -49,14 +49,6 @@
     return self;
 }
 
--(void) disposer {
-    JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
-    JNFDeleteGlobalRef(env, peer);
-    peer = NULL;
-    
-    CFRelease(self); // GC
-}
-
 -(void) dealloc {
     [button release];    
     [theItem release];
@@ -224,20 +216,3 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
-/*
- * Class:     sun_lwawt_macosx_CTrayIcon
- * Method:    nativeDispose
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CTrayIcon_nativeDispose
-(JNIEnv *env, jobject self, jlong model) {
-JNF_COCOA_ENTER(env);
-AWT_ASSERT_NOT_APPKIT_THREAD;
-    
-    [JNFRunLoop performOnMainThread:@selector(disposer)
-                                 on:((id)jlong_to_ptr(model))
-                         withObject:nil
-                      waitUntilDone:NO];
-    
-JNF_COCOA_EXIT(env);
-}
