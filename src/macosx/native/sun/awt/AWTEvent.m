@@ -706,9 +706,16 @@ NsMouseModifiersToJavaModifiers(NSEvent *event)
 
 jint GetJavaMouseModifiers(NSEvent *event)
 {
+    static NSInteger sMaxMouseButton = 2;
+    
+    NSInteger button = [event buttonNumber];
+    if (button > sMaxMouseButton) {
+        sMaxMouseButton = button;
+    }
+    
     // Mousing needs the key modifiers
     jint modifiers = NsKeyModifiersToJavaModifiers([event modifierFlags]);
-    
+      
     
     /* 
      * Ask Quartz about mouse buttons state
@@ -727,8 +734,17 @@ jint GetJavaMouseModifiers(NSEvent *event)
     if (CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, 
                                  kCGMouseButtonCenter)) {
         modifiers |= java_awt_event_InputEvent_BUTTON2_DOWN_MASK;        
-    }    
+    } 
     
+    // like JDK 1.6, we pretend that additional buttons are BUTTON2
+    NSInteger otherButton = 3;
+    for (; otherButton <= sMaxMouseButton; otherButton++) {
+        if (CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, 
+                                 otherButton)) {
+            modifiers |= java_awt_event_InputEvent_BUTTON2_DOWN_MASK;        
+        }
+    }
+        
     return modifiers;
 }
 
