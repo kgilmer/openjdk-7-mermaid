@@ -40,17 +40,14 @@ extern "C" {
  * AWTTrayIcon
  */
 @interface AWTTrayIcon : NSObject {
-    NSStatusBar * nsStatusBar;
     jobject peer;
     NSButton *button;
     // May still be required for representation of the button
     NSStatusItem *theItem;
-    NSMenu *menu;
 }
 
 - (id) initWithPeer:(jobject)thePeer;
 - (void) setTooltip:(NSString *)tooltip;
-- (NSMenu *) menu;
 - (NSStatusItem *)theItem;
 - (jobject) peer;
 - (NSButton *) button;

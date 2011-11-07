@@ -37,18 +37,31 @@
     
     peer = thePeer;
     
-    nsStatusBar = [NSStatusBar systemStatusBar];
-    theItem = [nsStatusBar statusItemWithLength:30.0];
+    theItem = [[NSStatusBar systemStatusBar] statusItemWithLength:30.0];  
+    [theItem retain];    
     
-    [theItem retain];
-    
-    [theItem setTitle: NSLocalizedString(@"123", @"")];
-    
+    [theItem setTitle: NSLocalizedString(@"123", @"")];    
     [theItem setHighlightMode:YES];
     
     button = [[AWTNSButton alloc] initWithTrayIcon:self];
     [theItem setView:button];
+    
     return self;
+}
+
+-(void) disposer {
+    JNIEnv *env = [ThreadUtilities getJNIEnvUncached];
+    JNFDeleteGlobalRef(env, peer);
+    peer = NULL;
+    
+    CFRelease(self); // GC
+}
+
+-(void) dealloc {
+    [button release];    
+    [theItem release];
+    
+    [super dealloc];
 }
 
 - (void) setTooltip:(NSString *) tooltip{
@@ -56,11 +69,6 @@
 }
 
 - (void) menuDidClose:(NSMenu *)menu {
-}
-
-
--(NSMenu *)menu{
-    return menu;
 }
 
 -(NSStatusItem *) theItem{
@@ -212,6 +220,24 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
     [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
         [icon setImage:jlong_to_ptr(imagePtr) sizing:autosize];
     }];
+    
+JNF_COCOA_EXIT(env);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_CTrayIcon
+ * Method:    nativeDispose
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CTrayIcon_nativeDispose
+(JNIEnv *env, jobject self, jlong model) {
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+    
+    [JNFRunLoop performOnMainThread:@selector(disposer)
+                                 on:((id)jlong_to_ptr(model))
+                         withObject:nil
+                      waitUntilDone:NO];
     
 JNF_COCOA_EXIT(env);
 }

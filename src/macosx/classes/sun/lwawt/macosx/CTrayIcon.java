@@ -33,11 +33,11 @@ import java.awt.peer.TrayIconPeer;
 public class CTrayIcon implements TrayIconPeer {
     private TrayIcon target;
     private PopupMenu popup;
-    private long model;
+    private long modelPtr;
     
     CTrayIcon(TrayIcon target) {
         this.target = target;
-        this.model = createModel();
+        this.modelPtr = createModel();
         this.popup = target.getPopupMenu();
         
         //if no one else is creating the peer.
@@ -66,6 +66,7 @@ public class CTrayIcon implements TrayIconPeer {
     }
     
     private native long nativeCreate();
+    private native void nativeDispose(long modelPtr);
         
     //invocation from the AWTTrayIcon.m
     public long getPopupMenuModel(){
@@ -82,12 +83,14 @@ public class CTrayIcon implements TrayIconPeer {
 
     @Override
     public void dispose() {
-        throw new UnsupportedOperationException("MacOS TODO. TrayIcon.dispose()");
+        LWCToolkit.targetDisposedPeer(target, this);
+        nativeDispose(modelPtr);
+        target = null;
     }
 
     @Override
     public void setToolTip(String tooltip) {
-        nativeSetToolTip(model, tooltip);
+        nativeSetToolTip(modelPtr, tooltip);
     }
 
     //adds tooltip to the NSStatusBar's NSButton.
@@ -116,7 +119,7 @@ public class CTrayIcon implements TrayIconPeer {
         }
 
         CImage cimage = CImage.getCreator().createFromImage(image);
-        setNativeImage(model, cimage.ptr, target.isImageAutoSize());
+        setNativeImage(modelPtr, cimage.ptr, target.isImageAutoSize());
     }
 
     private native void setNativeImage(final long model, final long nsimage, final boolean autosize);
