@@ -107,7 +107,7 @@ class _AppDockIconHandler {
         if (cImage == null) return 0;
 
         try {
-            final Field cImagePtrField = CImage.class.getDeclaredField("ptr");
+            final Field cImagePtrField = CFRetainedResource.class.getDeclaredField("ptr");
             cImagePtrField.setAccessible(true);
             return cImagePtrField.getLong(cImage);
         } catch (final Throwable e) {
