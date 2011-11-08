@@ -34,7 +34,8 @@ import sun.lwawt.macosx.CPlatformView;
 
 public class CGraphicsConfig extends GraphicsConfiguration {
     private final CGraphicsDevice device;
-        
+    private ColorModel colorModel;
+
     public CGraphicsConfig(CGraphicsDevice device) {
         this.device = device;
     }
@@ -54,7 +55,10 @@ public class CGraphicsConfig extends GraphicsConfiguration {
 
     @Override
     public ColorModel getColorModel() {
-        return getColorModel(Transparency.OPAQUE);
+        if (colorModel == null) {
+            colorModel = getColorModel(Transparency.OPAQUE);
+        }
+        return colorModel;
     }
 
     @Override
