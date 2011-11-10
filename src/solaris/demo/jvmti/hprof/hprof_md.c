@@ -300,10 +300,13 @@ md_get_prelude_path(char *path, int path_len, char *filename)
         if ( lastSlash != NULL ) {
             *lastSlash = '\0';
         }
+#ifndef __APPLE__
+	// not sure why other platforms have to go up two levels, but on macos we only need up one
         lastSlash = strrchr(libdir, '/');
         if ( lastSlash != NULL ) {
             *lastSlash = '\0';
         }
+#endif /* __APPLE__ */
     }
     (void)snprintf(path, path_len, "%s/%s", libdir, filename);
 }
