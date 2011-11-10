@@ -214,7 +214,17 @@ ifeq ($(PLATFORM), macosx)
 THREADLIBS = -pthread
 # Needed for linking the various launchers
 LDFLAGS += -framework Cocoa -framework Security -framework ApplicationServices
+
+# Default Info.plist file for the command line tools. This gets overridden by
+# some of the jvmstat tools so that they have task_for_pid() privileges
+ifndef INFO_PLIST_FILE
+    INFO_PLIST_FILE=Info-cmdline.plist
 endif
+
+LDFLAGS += -sectcreate __TEXT __info_plist $(LAUNCHER_PLATFORM_SRC)/lib/$(INFO_PLIST_FILE)
+else # macosx
+INFO_PLIST_FILE=
+endif # macosx
 
 #
 # This rule only applies on unix.  It supports quantify and its ilk.
@@ -226,6 +236,9 @@ $(ACTUAL_PROGRAM):: $(FILES_o)
 	@$(MKDIR) -p $(TEMPDIR)
 	$(LINK_PRE_CMD) $(CC) $(CC_OBJECT_OUTPUT_FLAG)$@ $(LDFLAGS) \
 	    $(FILES_o) $(THREADLIBS) $(LDLIBS)
+ifeq ($(findstring privileged, $(INFO_PLIST_FILE)), privileged)
+	-codesign -s openjdk_codesign $@
+endif
 	@$(call binary_file_verification,$@)
 
 endif # PLATFORM
