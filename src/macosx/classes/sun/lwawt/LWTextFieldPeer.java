@@ -31,11 +31,10 @@ import java.awt.Point;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.im.InputMethodRequests;
 import java.awt.peer.TextFieldPeer;
 
 import javax.swing.JPasswordField;
-import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 final class LWTextFieldPeer
         extends LWTextComponentPeer<TextField, JPasswordField>
@@ -48,6 +47,7 @@ final class LWTextFieldPeer
         super(target, platformComponent);
     }
 
+    @Override
     protected JPasswordField createDelegate() {
         final JPasswordField delegate = new JTextAreaDelegate();
         delegate.setOpaque(true);
@@ -57,7 +57,6 @@ final class LWTextFieldPeer
     @Override
     public void initialize() {
         super.initialize();
-        setText(getTarget().getText());
         setEchoChar(getTarget().getEchoChar());
         synchronized (getDelegateLock()) {
             getDelegate().addActionListener(this);
@@ -65,14 +64,17 @@ final class LWTextFieldPeer
     }
 
     @Override
-    public Document getDocument() {
-        return getDelegate().getDocument();
+    public JTextComponent getTextComponent() {
+        return getDelegate();
     }
 
     @Override
     public void setEchoChar(final char echoChar) {
         synchronized (getDelegateLock()) {
             getDelegate().setEchoChar(echoChar);
+            getDelegate().putClientProperty("JPasswordField.cutCopyAllowed",
+                                            getDelegate().echoCharIsSet()
+                                            ? Boolean.FALSE : Boolean.TRUE);
         }
     }
 
@@ -92,75 +94,9 @@ final class LWTextFieldPeer
     }
 
     @Override
-    public void setEditable(final boolean editable) {
-        synchronized (getDelegateLock()) {
-            getDelegate().setEditable(editable);
-        }
-    }
-
-    @Override
-    public String getText() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getText();
-        }
-    }
-
-    @Override
-    public void setText(final String l) {
-        synchronized (getDelegateLock()) {
-            getDelegate().setText(l);
-        }
-    }
-
-    @Override
-    public int getSelectionStart() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getSelectionStart();
-        }
-    }
-
-    @Override
-    public int getSelectionEnd() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getSelectionEnd();
-        }
-    }
-
-    @Override
-    public void select(final int selStart, final int selEnd) {
-        synchronized (getDelegateLock()) {
-            getDelegate().select(selStart, selEnd);
-        }
-    }
-
-    @Override
-    public void setCaretPosition(final int pos) {
-        synchronized (getDelegateLock()) {
-            getDelegate().setCaretPosition(pos);
-        }
-    }
-
-    @Override
-    public int getCaretPosition() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getCaretPosition();
-        }
-    }
-
-    @Override
-    public InputMethodRequests getInputMethodRequests() {
-        return null;
-    }
-
-    @Override
-    public boolean isFocusable() {
-        return getTarget().isFocusable();
-    }
-
-    @Override
     public void actionPerformed(final ActionEvent e) {
-        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED, "",
-                                  e.getWhen(), e.getModifiers()));
+        postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
+                                  getText(), e.getWhen(), e.getModifiers()));
     }
 
     private final class JTextAreaDelegate extends JPasswordField {

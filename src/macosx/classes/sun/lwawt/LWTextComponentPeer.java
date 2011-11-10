@@ -32,19 +32,25 @@ import java.awt.Insets;
 import java.awt.SystemColor;
 import java.awt.TextComponent;
 import java.awt.event.TextEvent;
+import java.awt.im.InputMethodRequests;
+import java.awt.peer.TextComponentPeer;
 
 import javax.swing.JComponent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent>
-        extends LWComponentPeer<T, D> implements DocumentListener {
+        extends LWComponentPeer<T, D>
+        implements DocumentListener, TextComponentPeer {
 
     /**
      * Character with reasonable value between the minimum width and maximum.
      */
     protected static final char WIDE_CHAR = 'w';
+
+    private volatile boolean firstChangeSkipped;
 
     LWTextComponentPeer(final T target,
                         final PlatformComponent platformComponent) {
@@ -65,11 +71,21 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
             getTarget().setBackground(SystemColor.text);
         }
         synchronized (getDelegateLock()) {
-            getDocument().addDocumentListener(this);
+            // This listener should be added before setText().
+            getTextComponent().getDocument().addDocumentListener(this);
         }
+        setEditable(getTarget().isEditable());
+        setText(getTarget().getText());
+        final int start = getTarget().getSelectionStart();
+        final int end = getTarget().getSelectionEnd();
+        if (end > start) {
+            select(start, end);
+        }
+        setCaretPosition(getTarget().getCaretPosition());
+        firstChangeSkipped = true;
     }
 
-    abstract Document getDocument();
+    abstract JTextComponent getTextComponent();
 
     public Dimension getPreferredSize(final int rows, final int columns) {
         final Insets insets;
@@ -85,7 +101,87 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
                              rows * itemHeight + borderHeight);
     }
 
-    private void sendTextEvent(final DocumentEvent de) {
+    @Override
+    public final void setEditable(final boolean editable) {
+        synchronized (getDelegateLock()) {
+            getTextComponent().setEditable(editable);
+        }
+    }
+
+    @Override
+    public final String getText() {
+        synchronized (getDelegateLock()) {
+            return getTextComponent().getText();
+        }
+    }
+
+    @Override
+    public void setText(final String l) {
+        synchronized (getDelegateLock()) {
+            // JTextArea.setText() posts two different events (remove & insert).
+            // Since we make no differences between text events,
+            // the document listener has to be disabled while
+            // JTextArea.setText() is called.
+            final Document document = getTextComponent().getDocument();
+            document.removeDocumentListener(this);
+            getTextComponent().setText(l);
+            if (firstChangeSkipped) {
+                postEvent(new TextEvent(getTarget(),
+                                        TextEvent.TEXT_VALUE_CHANGED));
+            }
+            document.addDocumentListener(this);
+        }
+        repaintPeer();
+    }
+
+    @Override
+    public final int getSelectionStart() {
+        synchronized (getDelegateLock()) {
+            return getTextComponent().getSelectionStart();
+        }
+    }
+
+    @Override
+    public final int getSelectionEnd() {
+        synchronized (getDelegateLock()) {
+            return getTextComponent().getSelectionEnd();
+        }
+    }
+
+    @Override
+    public final void select(final int selStart, final int selEnd) {
+        synchronized (getDelegateLock()) {
+            getTextComponent().select(selStart, selEnd);
+        }
+        repaintPeer();
+    }
+
+    @Override
+    public final void setCaretPosition(final int pos) {
+        synchronized (getDelegateLock()) {
+            getTextComponent().setCaretPosition(pos);
+        }
+        repaintPeer();
+    }
+
+    @Override
+    public final int getCaretPosition() {
+        synchronized (getDelegateLock()) {
+            return getTextComponent().getCaretPosition();
+        }
+    }
+
+    @Override
+    public final InputMethodRequests getInputMethodRequests() {
+        return null;
+    }
+
+    @Override
+    public final boolean isFocusable() {
+        return getTarget().isFocusable();
+    }
+
+    private void sendTextEvent(final DocumentEvent e) {
         postEvent(new TextEvent(getTarget(), TextEvent.TEXT_VALUE_CHANGED));
         synchronized (getDelegateLock()) {
             getDelegate().invalidate();
@@ -94,17 +190,17 @@ abstract class LWTextComponentPeer<T extends TextComponent, D extends JComponent
     }
 
     @Override
-    public final void changedUpdate(final DocumentEvent de) {
-        sendTextEvent(de);
+    public final void changedUpdate(final DocumentEvent e) {
+        sendTextEvent(e);
     }
 
     @Override
-    public final void insertUpdate(final DocumentEvent de) {
-        sendTextEvent(de);
+    public final void insertUpdate(final DocumentEvent e) {
+        sendTextEvent(e);
     }
 
     @Override
-    public final void removeUpdate(final DocumentEvent de) {
-        sendTextEvent(de);
+    public final void removeUpdate(final DocumentEvent e) {
+        sendTextEvent(e);
     }
 }

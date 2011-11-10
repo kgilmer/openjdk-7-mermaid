@@ -23,13 +23,22 @@
  * questions.
  */
 
+
 package sun.lwawt;
 
-import javax.swing.*;
-import javax.swing.text.Document;
-import java.awt.*;
-import java.awt.im.InputMethodRequests;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.TextArea;
+import java.awt.event.TextEvent;
 import java.awt.peer.TextAreaPeer;
+
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 final class LWTextAreaPeer
         extends LWTextComponentPeer<TextArea, LWTextAreaPeer.ScrollableJTextArea>
@@ -51,17 +60,20 @@ final class LWTextAreaPeer
     @Override
     public void initialize() {
         super.initialize();
-        setText(getTarget().getText());
+        final int visibility = getTarget().getScrollbarVisibility();
+        synchronized (getDelegateLock()) {
+            setScrollBarVisibility(visibility);
+        }
     }
 
     @Override
-    public Document getDocument() {
-        return getDelegate().getView().getDocument();
+    JTextComponent getTextComponent() {
+        return getDelegate().getView();
     }
 
     @Override
     protected Component getDelegateFocusOwner() {
-        return getDelegate().getView();
+        return getTextComponent();
     }
 
     @Override
@@ -78,107 +90,92 @@ final class LWTextAreaPeer
     public Dimension getPreferredSize(final int rows, final int columns) {
         final Dimension size = super.getPreferredSize(rows, columns);
         synchronized (getDelegateLock()) {
-            int scrollbarW = getDelegate().getVerticalScrollBar().getWidth();
-            int scrollbarH = getDelegate().getHorizontalScrollBar().getHeight();
+            final JScrollBar vbar = getDelegate().getVerticalScrollBar();
+            final JScrollBar hbar = getDelegate().getHorizontalScrollBar();
+            final int scrollbarW = vbar != null ? vbar.getWidth() : 0;
+            final int scrollbarH = hbar != null ? hbar.getHeight() : 0;
             return new Dimension(size.width + scrollbarW,
                                  size.height + scrollbarH);
         }
     }
 
     @Override
-    public void setText(final String label) {
-        synchronized (getDelegateLock()) {
-            getDelegate().getView().setText(label);
-        }
-        repaintPeer();
-    }
-
-    @Override
-    public String getText() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getView().getText();
-        }
-    }
-
-    @Override
-    public boolean isFocusable() {
-        return getTarget().isFocusable();
-    }
-
-    @Override
     public void insert(final String text, final int pos) {
         synchronized (getDelegateLock()) {
-            getDelegate().getView().insert(text, pos);
-
+            final JTextArea area = getDelegate().getView();
+            final boolean doScroll = pos >= area.getDocument().getLength()
+                                     && area.getDocument().getLength() != 0;
+            area.insert(text, pos);
+            if (doScroll) {
+                final JScrollBar bar = getDelegate().getVerticalScrollBar();
+                if (bar != null) {
+                    bar.setValue(bar.getMaximum() - bar.getVisibleAmount());
+                }
+            }
         }
         repaintPeer();
+    }
+
+    @Override
+    public void setText(final String l) {
+        // Please note that we do not want to post an event
+        // if TextArea.setText() replaces an empty text by an empty text,
+        // that is, if component's text remains unchanged.
+        if (!l.isEmpty() || getTextComponent().getDocument().getLength() != 0) {
+            super.setText(l);
+        }
     }
 
     @Override
     public void replaceRange(final String text, final int start,
                              final int end) {
         synchronized (getDelegateLock()) {
+            // JTextArea.replaceRange() posts two different events.
+            // Since we make no differences between text events,
+            // the document listener has to be disabled while
+            // JTextArea.replaceRange() is called.
+            final Document document = getTextComponent().getDocument();
+            document.removeDocumentListener(this);
             getDelegate().getView().replaceRange(text, start, end);
+            postEvent(new TextEvent(getTarget(), TextEvent.TEXT_VALUE_CHANGED));
+            document.addDocumentListener(this);
         }
         repaintPeer();
     }
 
+    private void setScrollBarVisibility(final int visibility) {
+        final ScrollableJTextArea pane = getDelegate();
+        final JTextArea view = pane.getView();
+        view.setLineWrap(false);
 
-    @Override
-    public void setEditable(final boolean editable) {
-        synchronized (getDelegateLock()) {
-            getDelegate().getView().setEditable(editable);
+        switch (visibility) {
+            case TextArea.SCROLLBARS_NONE:
+                pane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                pane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+                view.setLineWrap(true);
+                break;
+            case TextArea.SCROLLBARS_VERTICAL_ONLY:
+                pane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                pane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+                view.setLineWrap(true);
+                break;
+            case TextArea.SCROLLBARS_HORIZONTAL_ONLY:
+                pane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+                pane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+                break;
+            default:
+                pane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+                pane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+                break;
         }
     }
-
-    @Override
-    public int getSelectionStart() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getView().getSelectionStart();
-        }
-    }
-
-    @Override
-    public int getSelectionEnd() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getView().getSelectionEnd();
-        }
-    }
-
-    @Override
-    public void select(final int selStart, final int selEnd) {
-        synchronized (getDelegateLock()) {
-            getDelegate().getView().select(selStart, selEnd);
-        }
-    }
-
-    @Override
-    public void setCaretPosition(final int pos) {
-        synchronized (getDelegateLock()) {
-            getDelegate().getView().setCaretPosition(pos);
-        }
-    }
-
-    @Override
-    public int getCaretPosition() {
-        synchronized (getDelegateLock()) {
-            return getDelegate().getView().getCaretPosition();
-        }
-    }
-
-    @Override
-    public InputMethodRequests getInputMethodRequests() {
-        return null;
-    }
-
 
     @SuppressWarnings("serial")
     final class ScrollableJTextArea extends JScrollPane {
 
         ScrollableJTextArea() {
+            super();
             getViewport().setView(new JTextAreaDelegate());
-            setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-            setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         }
 
         public JTextArea getView() {
