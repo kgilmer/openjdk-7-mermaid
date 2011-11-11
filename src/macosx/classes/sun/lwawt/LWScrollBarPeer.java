@@ -25,8 +25,7 @@
 
 package sun.lwawt;
 
-import java.awt.AWTEvent;
-import java.awt.Scrollbar;
+import java.awt.*;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.peer.ScrollbarPeer;
@@ -85,6 +84,12 @@ public class LWScrollBarPeer
     public void setPageIncrement(int l) {
         synchronized (getDelegateLock()) {
             getDelegate().setBlockIncrement(l);
+        }
+    }
+
+    public Dimension getPreferredSize() {
+        synchronized (getDelegateLock()) {
+            return getDelegate().getPreferredSize();
         }
     }
 
