@@ -58,7 +58,7 @@ final class LWListPeer
 
     public void add(String item, int index) {
         synchronized (getDelegateLock()) {
-            getDelegate().getModel().addElement(item);
+            getDelegate().getModel().add(index, item);
         }
     }
 
