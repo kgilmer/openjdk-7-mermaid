@@ -33,7 +33,10 @@ FILES_export = \
         com/apple/eawt/_AppMenuBarHandler.java \
         com/apple/eawt/_AppMiscHandlers.java \
         com/apple/eawt/event/GestureHandler.java \
-        \
+        com/apple/eawt/FullScreenAdapter.java \
+        com/apple/eawt/FullScreenHandler.java \
+        com/apple/eawt/FullScreenListener.java \
+        com/apple/eawt/FullScreenUtilities.java \
         sun/font/FontManager.java \
         sun/awt/image/ImageRepresentation.java \
         sun/awt/image/GifImageDecoder.java \

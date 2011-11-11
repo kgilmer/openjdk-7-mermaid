@@ -28,6 +28,7 @@ package com.apple.eawt;
 import java.io.File;
 import java.net.URI;
 import java.util.*;
+import java.awt.Window;
 
 /**
  * AppEvents are sent to listeners and handlers installed on the {@link Application}.
@@ -179,4 +180,26 @@ public abstract class AppEvent extends EventObject {
      * @see SystemSleepListener#systemAwoke(SystemSleepEvent)
      */
     public static class SystemSleepEvent extends AppEvent { SystemSleepEvent() { } }
+    
+    /**
+     * Event sent when a window is entering/exiting or has entered/exited full screen state.
+     * 
+     * @see FullScreenUtilities
+     * 
+     * @since Java for Mac OS X 10.7 Update 1
+     */
+    public static class FullScreenEvent extends AppEvent {
+        final Window window;
+        
+        FullScreenEvent(final Window window) {
+            this.window = window;
+        }
+        
+        /**
+         * @return window transitioning between full screen states
+         */
+        public Window getWindow() {
+            return window;
+        }
+    }
 }

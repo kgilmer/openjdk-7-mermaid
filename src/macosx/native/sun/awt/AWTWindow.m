@@ -29,6 +29,7 @@
 
 #import "sun_lwawt_macosx_CPlatformWindow.h"
 #import "com_apple_eawt_event_GestureHandler.h"
+#import "com_apple_eawt_FullScreenHandler.h"
 
 #import "AWTWindow.h"
 #import "AWTView.h"
@@ -141,6 +142,11 @@ static JNF_CLASS_CACHE(jc_CPlatformWindow, "sun/lwawt/macosx/CPlatformWindow");
     if (IS(mask, DOCUMENT_MODIFIED)) {
         [self setDocumentEdited:IS(bits, DOCUMENT_MODIFIED)];
     }
+        
+    if ([self respondsToSelector:@selector(toggleFullScreen:)] && IS(mask, FULLSCREENABLE)) {
+        [self setCollectionBehavior:(1 << 7) /*NSWindowCollectionBehaviorFullScreenPrimary*/];
+    }
+    
 }
 
 - (BOOL) shouldShowGrowBox {
@@ -231,7 +237,6 @@ AWT_ASSERT_APPKIT_THREAD;
 
 
 // NSWindow overrides
-
 - (BOOL) canBecomeKeyWindow {
 AWT_ASSERT_APPKIT_THREAD;
     return IS(self.styleBits, SHOULD_BECOME_KEY);
@@ -323,7 +328,6 @@ AWT_ASSERT_APPKIT_THREAD;
     // deliver the event if this is a user-initiated live resize or as a side-effect
     // of a Java initiated resize, because AppKit can override the bounds and force
     // the bounds of the window to avoid the Dock or remain on screen.
-    
     [AWTToolkit eventCountPlusPlus];
     JNIEnv *env = [ThreadUtilities getJNIEnv];
     jobject platformWindow = [self.javaPlatformWindow jObjectWithEnv:env];
@@ -406,6 +410,7 @@ AWT_ASSERT_APPKIT_THREAD;
     JNFCallVoidMethod(env, platformWindow, jm_deliverWindowFocusEvent, (jboolean)focused);
 }
 
+
 - (void) windowDidBecomeKey: (NSNotification *) notification {
 AWT_ASSERT_APPKIT_THREAD;
     [AWTToolkit eventCountPlusPlus];
@@ -443,6 +448,49 @@ AWT_ASSERT_APPKIT_THREAD;
     return NO;
 }
 
+
+- (void)_notifyFullScreenOp:(jint)op withEnv:(JNIEnv *)env {
+	static JNF_CLASS_CACHE(jc_FullScreenHandler, "com/apple/eawt/FullScreenHandler");
+    static JNF_STATIC_MEMBER_CACHE(jm_notifyFullScreenOperation, jc_FullScreenHandler, "handleFullScreenEventFromNative", "(Ljava/awt/Window;I)V");
+    static JNF_MEMBER_CACHE(jf_target, jc_CPlatformWindow, "target", "Ljava/awt/Window;");
+    jobject awtWindow = JNFGetObjectField(env, [self.javaPlatformWindow jObjectWithEnv:env], jf_target);
+    if (awtWindow == NULL) return; // shouldn't occur
+
+    JNFCallStaticVoidMethod(env, jm_notifyFullScreenOperation, awtWindow, op);
+}
+
+
+- (void)windowWillEnterFullScreen:(NSNotification *)notification {
+	static JNF_MEMBER_CACHE(jm_windowWillEnterFullScreen, jc_CPlatformWindow, "windowWillEnterFullScreen", "()V");    
+	JNIEnv *env = [ThreadUtilities getJNIEnv];
+    JNFCallVoidMethod(env, [self.javaPlatformWindow jObjectWithEnv:env], jm_windowWillEnterFullScreen);
+    
+	[self _notifyFullScreenOp:com_apple_eawt_FullScreenHandler_FULLSCREEN_WILL_ENTER withEnv:env];
+}
+
+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
+	static JNF_MEMBER_CACHE(jm_windowDidEnterFullScreen, jc_CPlatformWindow, "windowDidEnterFullScreen", "()V");
+	JNIEnv *env = [ThreadUtilities getJNIEnv];
+	JNFCallVoidMethod(env, [self.javaPlatformWindow jObjectWithEnv:env], jm_windowDidEnterFullScreen);
+    
+	[self _notifyFullScreenOp:com_apple_eawt_FullScreenHandler_FULLSCREEN_DID_ENTER withEnv:env];
+}
+
+- (void)windowWillExitFullScreen:(NSNotification *)notification {
+	static JNF_MEMBER_CACHE(jm_windowWillExitFullScreen, jc_CPlatformWindow, "windowWillExitFullScreen", "()V");
+	JNIEnv *env = [ThreadUtilities getJNIEnv];
+	JNFCallVoidMethod(env, [self.javaPlatformWindow jObjectWithEnv:env], jm_windowWillExitFullScreen);
+    
+	[self _notifyFullScreenOp:com_apple_eawt_FullScreenHandler_FULLSCREEN_WILL_EXIT withEnv:env];
+}
+
+- (void)windowDidExitFullScreen:(NSNotification *)notification {
+	static JNF_MEMBER_CACHE(jm_windowDidExitFullScreen, jc_CPlatformWindow, "windowDidExitFullScreen", "()V");
+	JNIEnv *env = [ThreadUtilities getJNIEnv];
+	JNFCallVoidMethod(env, [self.javaPlatformWindow jObjectWithEnv:env], jm_windowDidExitFullScreen);
+    
+	[self _notifyFullScreenOp:com_apple_eawt_FullScreenHandler_FULLSCREEN_DID_EXIT withEnv:env];
+}
 @end // AWTWindow
 
 
@@ -842,19 +890,54 @@ JNF_COCOA_EXIT(env);
 JNIEXPORT jint JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeGetScreenNSWindowIsOn_1AppKitThread
 (JNIEnv *env, jclass clazz, jlong windowPtr)
 {
-    __block jboolean underMouse = JNI_FALSE;
+    jint index = -1;
     
 JNF_COCOA_ENTER(env);
 AWT_ASSERT_APPKIT_THREAD;
     
     AWTWindow *window = OBJC(windowPtr);
-    NSPoint pt = [window mouseLocationOutsideOfEventStream];
-    underMouse = [[window contentView] hitTest:pt] != nil;
+    NSScreen* screen = [window screen];
+    
+    //+++gdb NOTE: This is using a linear search of the screens. If it should
+    //  prove to be a bottleneck, this can definitely be improved. However, 
+    //  many screens should prove to be the exception, rather than the rule.
+    NSArray* screens = [NSScreen screens];
+    NSUInteger i;
+    for (i = 0; i < [screens count]; i++)
+    {
+        if ([[screens objectAtIndex:i] isEqualTo:screen])
+        {
+            index = i;
+            break;
+        }
+    }
+
+JNF_COCOA_EXIT(env);
+    return 1;
+}
+
+
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    _toggleFullScreenMode
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_lwawt_macosx_CPlatformWindow__1toggleFullScreenMode
+(JNIEnv *env, jobject peer, jlong windowPtr)
+{
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *window = OBJC(windowPtr);
+    if (![window respondsToSelector:@selector(toggleFullScreen:)]) return;
+    
+	[JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+		[window toggleFullScreen:nil];
+	}];
     
 JNF_COCOA_EXIT(env);
-    
-    return underMouse;
 }
+
+
 
 JNIEXPORT jboolean JNICALL Java_sun_lwawt_macosx_CMouseInfoPeer_nativeIsWindowUnderMouse
 (JNIEnv *env, jclass clazz, jlong windowPtr)

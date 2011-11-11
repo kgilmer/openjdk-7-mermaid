@@ -28,12 +28,13 @@ package sun.lwawt.macosx;
 import java.awt.BufferCapabilities.FlipContents;
 import java.awt.*;
 import java.awt.Dialog.ModalityType;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.beans.*;
 import java.util.List;
 
 import javax.swing.*;
 
+import sun.awt.*;
 import sun.java2d.SurfaceData;
 import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
@@ -86,6 +87,8 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     public static final String WINDOW_FADE_DELEGATE = "apple.awt._windowFadeDelegate";
     public static final String WINDOW_FADE_IN = "apple.awt._windowFadeIn";
     public static final String WINDOW_FADE_OUT = "apple.awt._windowFadeOut";
+    public static final String WINDOW_FULLSCREENABLE = "apple.awt.fullscreenable";
+    
     
     // Yeah, I know. But it's easier to deal with ints from JNI
     static final int MODELESS = 0;
@@ -119,8 +122,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     static final int HIDES_ON_DEACTIVATE = 1 << 17;
     static final int DRAGGABLE_BACKGROUND = 1 << 19;
     static final int DOCUMENT_MODIFIED = 1 << 21;
+    static final int FULLSCREENABLE = 1 << 23;
     
-    static final int _METHOD_PROP_BITMASK = RESIZABLE | HAS_SHADOW | ZOOMABLE | ALWAYS_ON_TOP | HIDES_ON_DEACTIVATE | DRAGGABLE_BACKGROUND | DOCUMENT_MODIFIED;
+    static final int _METHOD_PROP_BITMASK = RESIZABLE | HAS_SHADOW | ZOOMABLE | ALWAYS_ON_TOP | HIDES_ON_DEACTIVATE | DRAGGABLE_BACKGROUND | DOCUMENT_MODIFIED | FULLSCREENABLE;
     
     // not sure
     static final int POPUP = 1 << 14;
@@ -373,6 +377,11 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
                 styleBits = SET(styleBits, ZOOMABLE, Boolean.parseBoolean(prop.toString()));
             }
             
+            prop = rootpane.getClientProperty(WINDOW_FULLSCREENABLE);
+            if (prop != null) {
+                styleBits = SET(styleBits, FULLSCREENABLE, Boolean.parseBoolean(prop.toString()));
+            }
+            
             prop = rootpane.getClientProperty(WINDOW_SHADOW);
             if (prop != null) {
                 styleBits = SET(styleBits, HAS_SHADOW, Boolean.parseBoolean(prop.toString()));
@@ -392,6 +401,12 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         nativeSetNSWindowStyleBits(getNSWindowPtr(), mask, value ? mask : 0);
     }
 
+    private native void _toggleFullScreenMode(final long model);
+    
+    public void toggleFullScreen() {
+        _toggleFullScreenMode(getNSWindowPtr());
+    }
+    
     @Override // PlatformWindow
     public void setMenuBar(MenuBar mb) {
         final long nsWindowPtr = getNSWindowPtr();
@@ -811,4 +826,28 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         // If it's not blocked, make sure it's above its siblings
         orderAboveSiblings();
     }
+
+    private void updateDisplay() {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                validateSurface();
+            }
+        });
+    }
+    
+    private void updateWindowContent() {
+        ComponentEvent resizeEvent = new ComponentEvent(target, ComponentEvent.COMPONENT_RESIZED);
+        SunToolkit.postEvent(SunToolkit.targetToAppContext(target), resizeEvent);
+    }
+    
+    private void windowWillEnterFullScreen() {
+        updateWindowContent();
+    }
+    private void windowDidEnterFullScreen() {
+        updateDisplay();
+    }
+    private void windowWillExitFullScreen() {
+        updateWindowContent();
+    }
+    private void windowDidExitFullScreen() {}
 }

@@ -26,10 +26,14 @@
 package com.apple.eawt;
 
 import java.awt.*;
+import java.awt.peer.*;
 import java.beans.Beans;
 import java.security.PrivilegedAction;
 
 import javax.swing.JMenuBar;
+
+import sun.lwawt.*;
+import sun.lwawt.macosx.*;
 
 /**
  * The <code>Application</code> class allows you to integrate your Java application with the native Mac OS X environment.
@@ -375,6 +379,24 @@ public class Application {
         menuBarHandler.setDefaultMenuBar(menuBar);
     }
     
+    /**
+     * Requests that a {@link Window} should animate into or out of full screen mode.
+     * Only {@link Window}s marked as full screenable by {@link FullScreenUtilities#setWindowCanFullScreen(Window, boolean)} can be toggled.
+     * 
+     * @param window to animate into or out of full screen mode
+     * 
+     * @since Java for Mac OS X 10.7 Update 1
+     */
+    @SuppressWarnings("deprecation")
+    public void requestToggleFullScreen(final Window window) {
+        final ComponentPeer peer = window.getPeer();
+        
+        if (!(peer instanceof LWWindowPeer)) return;
+        Object platformWindow = ((LWWindowPeer) peer).getPlatformWindow();
+        if (!(platformWindow instanceof CPlatformWindow)) return;
+        ((CPlatformWindow)platformWindow).toggleFullScreen();
+    }
+
     
     // -- DEPRECATED API --
     
