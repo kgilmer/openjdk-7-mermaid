@@ -199,7 +199,11 @@ public class AquaSpinnerUI extends SpinnerUI {
         if (!(editor instanceof DefaultEditor)) return;
         
         editor.setOpaque(false);
-        
+
+        if (editor.getFont() instanceof UIResource) {
+            editor.setFont(spinner.getFont());
+        }
+
         final JFormattedTextField editorTextField = ((DefaultEditor)editor).getTextField();
         final InputMap spinnerInputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         final InputMap editorInputMap = editorTextField.getInputMap();
@@ -606,6 +610,17 @@ public class AquaSpinnerUI extends SpinnerUI {
                     ui.updateEnabledState();
                 } else if (JComponent.TOOL_TIP_TEXT_KEY.equals(propertyName)) {
                     ui.updateToolTipTextForChildren(spinner);
+                } else if ("font".equals(propertyName)) {
+                    JComponent editor = spinner.getEditor();
+                    if (editor != null && editor instanceof JSpinner.DefaultEditor) {
+                        JTextField tf =
+                                ((JSpinner.DefaultEditor) editor).getTextField();
+                        if (tf != null) {
+                            if (tf.getFont() instanceof UIResource) {
+                                tf.setFont(spinner.getFont());
+                            }
+                        }
+                    }
                 }
             }
         }
