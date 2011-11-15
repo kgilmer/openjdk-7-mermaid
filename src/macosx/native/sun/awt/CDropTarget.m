@@ -320,7 +320,11 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 
 - (jobject) copyDraggingDataForFormat:(jlong)format
 {
-    JNIEnv*      env = [ThreadUtilities getJNIEnv]; // Can be called from threads other than the native event thread!
+    __block JNIEnv*      env;
+	
+	[JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+		env = [ThreadUtilities getJNIEnv]; // Can be called from threads other than the native event thread!
+	}];
     NSData*      data = nil;
 
     // Convert the Java format (datatransferer int index) to a pasteboard format (NSString):
@@ -361,8 +365,10 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     (*env)->ReleaseByteArrayElements(env, gbyteArray, jbytes, JNI_COMMIT);
 
     // In case of an error make sure to return nil:
-    if (!(*env)->ExceptionOccurred(env))
+    if ((*env)->ExceptionOccurred(env)) {
+		(*env)->ExceptionDescribe(env);
         gbyteArray = nil;
+	}
 
     return gbyteArray;
 }
