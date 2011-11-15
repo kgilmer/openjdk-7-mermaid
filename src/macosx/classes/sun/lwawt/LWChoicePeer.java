@@ -98,7 +98,10 @@ final class LWChoicePeer extends LWComponentPeer<Choice, JComboBox<String>>
     @Override
     public void remove(final int index) {
         synchronized (getDelegateLock()) {
+            // We shouldn't post event, if selected item was removed.
+            skipPostMessage = true;
             getDelegate().removeItemAt(index);
+            skipPostMessage = false;
         }
     }
 
