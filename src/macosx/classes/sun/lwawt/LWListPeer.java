@@ -25,10 +25,12 @@
 
 package sun.lwawt;
 
-import java.awt.*;
-import java.awt.peer.ListPeer;
-
 import javax.swing.*;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.peer.ListPeer;
+import java.util.Arrays;
 
 final class LWListPeer
         extends LWComponentPeer<List, LWListPeer.ScrollableJList>
@@ -114,12 +116,13 @@ final class LWListPeer
             FontMetrics fm = getFontMetrics(getFont());
             int itemHeight = (fm.getHeight() - fm.getLeading()) + (2 * space);
 
-            return new Dimension(20 + (fm == null ? 10*15 : fm.stringWidth("0123456789abcde")),
+            return new Dimension(20 + (fm == null ? 10 * 15 : fm.stringWidth("0123456789abcde")),
                     (fm == null ? 10 : itemHeight) * rows + (2 * margin));
         }
     }
 
-    final class ScrollableJList extends JScrollPane {
+
+    final class ScrollableJList extends JScrollPane implements ListSelectionListener {
 
         private DefaultListModel<Object> model =
                 new DefaultListModel<Object>() {
@@ -132,19 +135,63 @@ final class LWListPeer
                     }
                 };
 
+        private int[] oldSelectedIndices = new int[0];
+
         ScrollableJList() {
             getViewport().setScrollMode(JViewport.SIMPLE_SCROLL_MODE);
             JList<Object> list = new JList<Object>(model) {
                 public boolean hasFocus() {
                     return getTarget().hasFocus();
                 }
+
+                protected void processMouseEvent(MouseEvent e) {
+                    super.processMouseEvent(e);
+                    if (e.getID() == MouseEvent.MOUSE_CLICKED && e.getClickCount() == 2) {
+                        int index = locationToIndex(e.getPoint());
+                        LWListPeer.this.postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
+                                getModel().getElementAt(index).toString(), e.getWhen(), e.getModifiers()));
+                    }
+                }
+
+                protected void processKeyEvent(KeyEvent e) {
+                    super.processKeyEvent(e);
+                    if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        int index = getSelectedIndex();
+                        LWListPeer.this.postEvent(new ActionEvent(getTarget(), ActionEvent.ACTION_PERFORMED,
+                                getModel().getElementAt(index).toString(), e.getWhen(), e.getModifiers()));
+                    }
+                }
+
             };
+            list.addListSelectionListener(this);
+
             getViewport().setView(list);
 
             // Pull the items from the target.
             String[] items = getTarget().getItems();
             for (int i = 0; i < items.length; i++) {
                 model.add(i, items[i]);
+            }
+        }
+
+        public void valueChanged(ListSelectionEvent e) {
+            if (!e.getValueIsAdjusting()) {
+                final JList source = (JList) e.getSource();
+                for(int i = 0 ; i < source.getModel().getSize(); i++) {
+
+                    boolean wasSelected = Arrays.binarySearch(oldSelectedIndices, i) >= 0;
+                    boolean isSelected = source.isSelectedIndex(i);
+
+                    if (wasSelected == isSelected) {
+                        continue;
+                    }
+
+                    int state = !wasSelected && isSelected ? ItemEvent.SELECTED: ItemEvent.DESELECTED;
+
+                    LWListPeer.this.postEvent(new ItemEvent(getTarget(), ItemEvent.ITEM_STATE_CHANGED,
+                            i, state));
+                }
+                oldSelectedIndices = source.getSelectedIndices();
             }
         }
 
