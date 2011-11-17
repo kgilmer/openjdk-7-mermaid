@@ -396,13 +396,6 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
         return GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().getColorModel();
     }
 
-    //Used by a delegate to check if it ought to bring the 
-    //content out of the backbuffer to the screen or not.
-    //false by default. Known to be true on MacOSX.
-    public boolean isNativeDoubleBufferingEnabled() {
-        return false;
-    }
-
     @Override
     public boolean isDesktopSupported() {
         return true;
@@ -550,4 +543,10 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
     public static void postEvent(AWTEvent event) {
         postEvent(targetToAppContext(event.getSource()), event);    
     }
+    
+    // use peer's back buffer to implement non-opaque windows.
+    @Override
+    public boolean needUpdateWindow() {
+        return true;
+    }    
 }

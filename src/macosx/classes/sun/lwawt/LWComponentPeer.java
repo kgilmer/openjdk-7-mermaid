@@ -228,7 +228,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                                 Rectangle res = SwingUtilities.convertRectangle(
                                         c, new Rectangle(x, y, w, h), getDelegate());
                                 LWComponentPeer.this.repaintPeer(
-                                        res.x, res.y, res.width, res.height);
+                                        res.x, res.y, res.width, res.height);                                
                             }
                         }
                     });
@@ -1206,6 +1206,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         if (!isLayouting) {
             targetPaintArea.paint(getTarget(), false);
         }
+        if (!getWindowPeerOrSelf().isOpaque() && !(e instanceof IgnorePaintEvent)) {
+            flushOffscreenGraphics();
+        }
     }
 
     // ---- UTILITY METHODS ---- //
@@ -1305,7 +1308,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         } else {
             Runnable r = new Runnable() {
                 public void run() {
-                    paintPeerDirtyRect(dirty);
+                    paintPeerDirtyRect(dirty);                    
                 }
             };
             // TODO: high-priority invocation event
@@ -1412,13 +1415,18 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         Image bb = getWindowPeerOrSelf().getBackBuffer();
         if (bb != null) {
             // g is a screen Graphics from the delegate
-            final Graphics g = getGraphics();
-            if (g != null) {
+            final Graphics g = getWindowPeerOrSelf().getOnscreenGraphics();
+            
+            if (g != null && g instanceof Graphics2D) {
                 try {
+                    Graphics2D g2d = (Graphics2D)g;
                     Point p = localToWindow(new Point(0, 0));
+                    Composite composite = g2d.getComposite();
+                    g2d.setComposite(AlphaComposite.Src);
                     g.drawImage(bb, x, y, x + width, y + height, p.x + x,
                             p.y + y, p.x + x + width, p.y + y + height,
                             null);
+                    g2d.setComposite(composite);
                 } finally {
                     g.dispose();
                 }

@@ -573,7 +573,10 @@ OGLSD_InitOGLWindow(JNIEnv *env, OGLSDOps *oglsdo)
 JNF_COCOA_ENTER(env);
     NSRect surfaceBounds = [v bounds];
     oglsdo->drawableType = OGLSD_WINDOW;
+#ifndef USE_INTERMEDIATE_BUFFER
     oglsdo->isOpaque = JNI_TRUE;
+#endif
+
     oglsdo->width = surfaceBounds.size.width;
     oglsdo->height = surfaceBounds.size.height;
 JNF_COCOA_EXIT(env);    
@@ -647,7 +650,7 @@ extern DisposeFunc     OGLSD_Dispose;
 JNIEXPORT void JNICALL
 Java_sun_java2d_opengl_CGLSurfaceData_initOps
     (JNIEnv *env, jobject cglsd,
-     jlong pConfigInfo, jlong pPeerData, jint xoff, jint yoff)
+     jlong pConfigInfo, jlong pPeerData, jint xoff, jint yoff, jboolean isOpaque)
 {
     J2dTraceLn(J2D_TRACE_INFO, "CGLSurfaceData_initOps");
     J2dTraceLn1(J2D_TRACE_INFO, "  pPeerData=%p", jlong_to_ptr(pPeerData));
@@ -673,6 +676,7 @@ Java_sun_java2d_opengl_CGLSurfaceData_initOps
     oglsdo->needsInit = JNI_TRUE;
     oglsdo->xOffset = xoff;
     oglsdo->yOffset = yoff;
+    oglsdo->isOpaque = isOpaque;
     
     cglsdo->peerData = (AWTView *)jlong_to_ptr(pPeerData);
     cglsdo->configInfo = (CGLGraphicsConfigInfo *)jlong_to_ptr(pConfigInfo);
@@ -799,11 +803,11 @@ JNF_COCOA_EXIT(env);
 
 // Must be called on the QFT...
 JNIEXPORT void JNICALL
-Java_sun_java2d_opengl_CGLSurfaceData_resize
+Java_sun_java2d_opengl_CGLSurfaceData_validate
     (JNIEnv *env, jobject jsurfacedata,
-     jint xoff, jint yoff, jint width, jint height)
+     jint xoff, jint yoff, jint width, jint height, jboolean isOpaque)
 {
-    J2dTraceLn2(J2D_TRACE_INFO, "CGLSurfaceData_resize: w=%d h=%d", width, height);
+    J2dTraceLn2(J2D_TRACE_INFO, "CGLSurfaceData_validate: w=%d h=%d", width, height);
 
     OGLSDOps *oglsdo = (OGLSDOps*)SurfaceData_GetOps(env, jsurfacedata);
     oglsdo->needsInit = JNI_TRUE;
@@ -811,13 +815,16 @@ Java_sun_java2d_opengl_CGLSurfaceData_resize
     oglsdo->yOffset = yoff;
     
     BOOL newSize = (oglsdo->width != width || oglsdo->height != height);
+    BOOL newOpaque = (oglsdo->isOpaque != isOpaque);
+
     oglsdo->width = width;
     oglsdo->height = height;
+    oglsdo->isOpaque = isOpaque;
 
     if (oglsdo->drawableType == OGLSD_WINDOW) {
 JNF_COCOA_ENTER(env);
 #ifdef USE_INTERMEDIATE_BUFFER
-        if (newSize) {
+        if (newSize || newOpaque) {
 #ifdef USE_IOS
             RecreateIOSBuffer(env, oglsdo);
 #else

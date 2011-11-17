@@ -35,6 +35,7 @@ import sun.lwawt.macosx.event.NSEvent;
 
 import sun.java2d.SurfaceData;
 import sun.java2d.opengl.CGLLayer;
+import sun.java2d.opengl.CGLSurfaceData;
 
 public class CPlatformView extends CFRetainedResource {
     private native long nativeCreateView(int x, int y, int width, int height, long windowLayerPtr);
@@ -55,6 +56,10 @@ public class CPlatformView extends CFRetainedResource {
     
     public long getAWTView() {
         return ptr;
+    }
+    
+    public boolean isOpaque() {
+        return peer.isOpaque();
     }
     
     /*
@@ -120,7 +125,8 @@ public class CPlatformView extends CFRetainedResource {
         Rectangle r = peer.getBounds();
         Image im = null;
         if (!r.isEmpty()) {
-            im = peer.getGraphicsConfiguration().createCompatibleImage(r.width, r.height);
+            int transparency = (isOpaque() ? Transparency.OPAQUE : Transparency.TRANSLUCENT);
+            im = peer.getGraphicsConfiguration().createCompatibleImage(r.width, r.height, transparency);
         }
         return im;
     }
@@ -136,12 +142,8 @@ public class CPlatformView extends CFRetainedResource {
     }
     
     private void validateSurface() {
-        // on other platforms we create a new SurfaceData for every
-        // live resize step, but on Mac OS X we just resize the onscreen
-        // surface directly
-        // TODO: by the time we come here first time we don't have surface yet
         if (surfaceData != null) {
-            ((sun.java2d.opengl.CGLSurfaceData)surfaceData).setBounds();
+            ((CGLSurfaceData)surfaceData).validate();
         }
     }
     

@@ -51,6 +51,8 @@ public final class CWrapper {
         public static native void setFrame(long window, int x, int y, int w, int h, boolean display);
         
         public static native void setAlphaValue(long window, float alpha);        
+        public static native void setOpaque(long window, boolean opaque);
+        public static native void setBackgroundColor(long window, long color);
         
         public static native void miniaturize(long window);
         public static native void deminiaturize(long window);
@@ -81,5 +83,9 @@ public final class CWrapper {
         public static native Rectangle2D frame(long screen);
         public static native Rectangle2D visibleFrame(long screen);
         public static native long screenByDisplayId(int displayID);
+    }
+    
+    public static final class NSColor {
+        public static native long clearColor();
     }
 }

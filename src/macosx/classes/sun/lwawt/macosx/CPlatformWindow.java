@@ -36,6 +36,7 @@ import javax.swing.*;
 
 import sun.awt.*;
 import sun.java2d.SurfaceData;
+import sun.java2d.opengl.CGLSurfaceData;
 import sun.lwawt.*;
 import sun.lwawt.LWWindowPeer.PeerType;
 import sun.util.logging.PlatformLogger;
@@ -605,6 +606,15 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     }
 
     @Override
+    public void setOpaque(boolean isOpaque) {
+        CWrapper.NSWindow.setOpaque(getNSWindowPtr(), isOpaque);
+        if (!isOpaque) {
+            long clearColor = CWrapper.NSColor.clearColor();
+            CWrapper.NSWindow.setBackgroundColor(getNSWindowPtr(), clearColor);
+        }
+    }
+
+    @Override
     public void enterFullScreenMode() {
         isFullScreenMode = true;
         contentView.enterFullScreenMode(getNSWindowPtr());
@@ -720,13 +730,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
     }
 
     private void validateSurface() {
-        // on other platforms we create a new SurfaceData for every
-        // live resize step, but on Mac OS X we just resize the onscreen
-        // surface directly
-        //TODO: by the time we come here first time we don't have surface yet
         SurfaceData surfaceData = getSurfaceData();
         if (surfaceData != null) {
-            ((sun.java2d.opengl.CGLSurfaceData)surfaceData).setBounds();
+            ((CGLSurfaceData)surfaceData).validate();
         }
     }
     

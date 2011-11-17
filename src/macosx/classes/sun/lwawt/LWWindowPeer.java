@@ -104,6 +104,8 @@ public class LWWindowPeer
     private Color background;
     private Color foreground;
     private Font font;
+    
+    private volatile boolean isOpaque = true;
 
     /**
      * Current modal blocker or null.
@@ -152,6 +154,7 @@ public class LWWindowPeer
         cachedFocusableWindow = getTarget().isFocusableWindow();
 
         setOpacity(getTarget().getOpacity());
+        setOpaque(getTarget().isOpaque());
 
         // Create surface data and back buffer
         replaceSurfaceData(1, null);
@@ -279,6 +282,14 @@ public class LWWindowPeer
 
     @Override
     protected Graphics getGraphics(Color fg, Color bg, Font f) {
+        if (isOpaque()) {
+            return getOnscreenGraphics(fg, bg, f);            
+        } else {
+            return getOffscreenGraphics(fg, bg, f);
+        }
+    }
+    
+    private Graphics getOnscreenGraphics(Color fg, Color bg, Font f) {
         if (fg == null) {
             fg = SystemColor.windowText;
         }
@@ -291,10 +302,13 @@ public class LWWindowPeer
         if (surfaceData == null) {
             replaceSurfaceData();
         }
-
         return platformWindow.transformGraphics(new SunGraphics2D(surfaceData, fg, bg, f));
     }
 
+    public final Graphics getOnscreenGraphics() {
+        return getOnscreenGraphics(getForeground(), getBackground(), getFont());
+    }
+    
     @Override
     public void createBuffers(int numBuffers, BufferCapabilities caps)
         throws AWTException
@@ -435,15 +449,22 @@ public class LWWindowPeer
 
     @Override
     public void setOpaque(boolean isOpaque) {
-        // TODO: not implemented
-//        throw new RuntimeException("not implemented");
+        if (this.isOpaque != isOpaque) {
+            this.isOpaque = isOpaque;
+            getPlatformWindow().setOpaque(isOpaque);
+            replaceSurfaceData();
+        }
     }
 
+    public boolean isOpaque() {
+        return isOpaque;
+    }
+    
     @Override
     public void updateWindow() {
-        throw new RuntimeException("not implemented");
+        flushOffscreenGraphics();
     }
-
+    
     @Override
     public void repositionSecurityWarning() {
         throw new RuntimeException("not implemented");
@@ -929,14 +950,7 @@ public class LWWindowPeer
         }
         return g;
     }
-
-    /*
-    private boolean checkBackBufferingEnabled() {
-        LWToolkit tk = (LWToolkit)Toolkit.getDefaultToolkit();
-        return tk.isNativeDoubleBufferingEnabled();
-    }
-    */
-
+    
     /*
      * May be called by delegate to provide SD to Java2D code.
      */
@@ -966,7 +980,7 @@ public class LWWindowPeer
             oldData.flush();
         }
         // TODO: volatile image
-//        backBuffer = (VolatileImage)delegate.createBackBuffer();
+//        backBuffer = (VolatileImage)delegate.createBackBuffer();        
         backBuffer = (BufferedImage)platformWindow.createBackBuffer();
         if (backBuffer != null) {
             Graphics g = backBuffer.getGraphics();
@@ -1091,5 +1105,5 @@ public class LWWindowPeer
     
     public void exitFullScreenMode() {
         platformWindow.exitFullScreenMode();
-    }
+    }    
 }

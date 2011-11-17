@@ -144,7 +144,7 @@ public class LWCToolkit extends LWToolkit {
             }
            });
     }
-    
+
     @Override
     protected PlatformWindow createPlatformWindow(PeerType peerType) {
         // TODO: window type
@@ -387,11 +387,6 @@ public class LWCToolkit extends LWToolkit {
         return false;
     }
 
-    @Override
-    public boolean isNativeDoubleBufferingEnabled() {
-        return true;
-    }
-    
     @Override
     public boolean isTraySupported() {
         return true;
@@ -681,4 +676,13 @@ public class LWCToolkit extends LWToolkit {
             (modalityType == Dialog.ModalityType.TOOLKIT_MODAL);
     }
 
+    @Override
+    public boolean isWindowTranslucencySupported() {
+        return true;
+    }
+
+    @Override
+    public boolean isTranslucencyCapable(GraphicsConfiguration gc) {
+        return true;
+    }
 }

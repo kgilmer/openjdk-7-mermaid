@@ -279,6 +279,45 @@ JNF_COCOA_EXIT(env);
 
 /*
  * Class:     sun_lwawt_macosx_CWrapper$NSWindow
+ * Method:    setOpaque
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL
+Java_sun_lwawt_macosx_CWrapper_00024NSWindow_setOpaque
+(JNIEnv *env, jclass cls, jlong windowPtr, jboolean opaque)
+{
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [window setOpaque:(BOOL)opaque];
+    }];
+
+JNF_COCOA_EXIT(env);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_CWrapper$NSWindow
+ * Method:    setBackgroundColor
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL
+Java_sun_lwawt_macosx_CWrapper_00024NSWindow_setBackgroundColor
+(JNIEnv *env, jclass cls, jlong windowPtr, jlong colorPtr)
+{
+JNF_COCOA_ENTER(env);
+    
+    AWTWindow *window = (AWTWindow *)jlong_to_ptr(windowPtr);
+    NSColor *color = (NSColor *)jlong_to_ptr(colorPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+        [window setBackgroundColor:color];
+    }];
+    
+JNF_COCOA_EXIT(env);
+}
+
+/*
+ * Class:     sun_lwawt_macosx_CWrapper$NSWindow
  * Method:    screen
  * Signature: (J)J
  */
@@ -615,3 +654,26 @@ JNF_COCOA_EXIT(env);
 
     return screenPtr;
 }
+
+/*
+ * Class:     sun_lwawt_macosx_CWrapper$NSColor
+ * Method:    clearColor
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL
+Java_sun_lwawt_macosx_CWrapper_00024NSColor_clearColor
+(JNIEnv *env, jclass cls)
+{
+    __block jlong clearColorPtr = 0L;
+    
+JNF_COCOA_ENTER(env);
+    
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        clearColorPtr = ptr_to_jlong([NSColor clearColor]);
+    }];
+    
+JNF_COCOA_EXIT(env);
+    
+    return clearColorPtr;
+}
+

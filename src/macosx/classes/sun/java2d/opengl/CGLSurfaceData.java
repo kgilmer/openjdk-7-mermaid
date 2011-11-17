@@ -44,10 +44,10 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
     protected CPlatformView pView;
     private CGLGraphicsConfig graphicsConfig;
 
-    // Mac OS X specific - we never recreate surfaces, just resize them
-    native void resize(int xoff, int yoff, int width, int height);
+    native void validate(int xoff, int yoff, int width, int height, boolean isOpaque);
 
-    private native void initOps(long pConfigInfo, long pPeerData, int xoff, int yoff);
+    private native void initOps(long pConfigInfo, long pPeerData, int xoff, int yoff,
+                                boolean isOpaque);
 
     protected native boolean initPbuffer(long pData, long pConfigInfo,
             boolean isOpaque, int width, int height);
@@ -61,10 +61,12 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
 
         long pConfigInfo = gc.getNativeConfigInfo();
         long pPeerData = 0L;
+        boolean isOpaque = true;
         if (pView != null) {
             pPeerData = pView.getAWTView();
+            isOpaque = pView.isOpaque();
         }
-        initOps(pConfigInfo, pPeerData, 0, 0);
+        initOps(pConfigInfo, pPeerData, 0, 0, isOpaque);
     }
     
     @Override //SurfaceData
@@ -121,8 +123,8 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
         }
     }
 
-    public void setBounds() {
-        // Overridden in CGLWindowSurfaceData below
+    public void validate() {
+	// Overridden in CGLWindowSurfaceData below
     }
     
     protected native void clearWindow();
@@ -153,16 +155,14 @@ public abstract class CGLSurfaceData extends OGLSurfaceData {
             return pView.getDestination();
         }
 
-        // Mac OS X specific - we never recreate surfaces, just resize them
-        public void setBounds() {
+        public void validate() {
             OGLRenderQueue rq = OGLRenderQueue.getInstance();
             rq.lock();
             try {
                 rq.flushAndInvokeNow(new Runnable() {
                     public void run() {
-                        // Component c = peer.getTarget();
                         Rectangle peerBounds = pView.getBounds();
-                        resize(0, 0, peerBounds.width, peerBounds.height);
+                        validate(0, 0, peerBounds.width, peerBounds.height, pView.isOpaque());
                     }
                 });
             } finally {
