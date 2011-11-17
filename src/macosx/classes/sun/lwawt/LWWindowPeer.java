@@ -281,15 +281,7 @@ public class LWWindowPeer
     }
 
     @Override
-    protected Graphics getGraphics(Color fg, Color bg, Font f) {
-        if (isOpaque()) {
-            return getOnscreenGraphics(fg, bg, f);            
-        } else {
-            return getOffscreenGraphics(fg, bg, f);
-        }
-    }
-    
-    private Graphics getOnscreenGraphics(Color fg, Color bg, Font f) {
+    protected Graphics getOnscreenGraphics(Color fg, Color bg, Font f) {
         if (fg == null) {
             fg = SystemColor.windowText;
         }
@@ -305,10 +297,6 @@ public class LWWindowPeer
         return platformWindow.transformGraphics(new SunGraphics2D(surfaceData, fg, bg, f));
     }
 
-    public final Graphics getOnscreenGraphics() {
-        return getOnscreenGraphics(getForeground(), getBackground(), getFont());
-    }
-    
     @Override
     public void createBuffers(int numBuffers, BufferCapabilities caps)
         throws AWTException

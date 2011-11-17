@@ -437,28 +437,36 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         return false;
     }
 
+    @Override
+    public Graphics getGraphics() {
+        if (getWindowPeerOrSelf().isOpaque()) {
+            return getOnscreenGraphics();
+        } else {
+            return getOffscreenGraphics();
+        }
+    }
+
     /*
      * Peer Graphics is borrowed from the parent peer, while
      * foreground and background colors and font are specific to
      * this peer.
      */
-    @Override
-    public Graphics getGraphics() {
+    public Graphics getOnscreenGraphics() {
         // getGraphics() is executed outside of the synchronized block
         // as the state lock should be the last one in the chain
-        return getGraphics(getForeground(), getBackground(), getFont());
+        return getOnscreenGraphics(getForeground(), getBackground(), getFont());
     }
 
     /*
      * To be overridden in LWWindowPeer to get a Graphics from
      * the delegate.
      */
-    protected Graphics getGraphics(Color fg, Color bg, Font f) {
+    protected Graphics getOnscreenGraphics(Color fg, Color bg, Font f) {
         LWContainerPeer cp = getContainerPeer();
         // Don't check containerPeer for null as it can only happen
         // for windows, but this method is overridden in
         // LWWindowPeer and doesn't call super()
-        SunGraphics2D g = (SunGraphics2D) cp.getGraphics(fg, bg, f);
+        SunGraphics2D g = (SunGraphics2D) cp.getOnscreenGraphics(fg, bg, f);
         if (g != null) {
             final Rectangle r = getBounds();
             final Rectangle constr = r.intersection(cp.getContentSize());
@@ -1415,7 +1423,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         Image bb = getWindowPeerOrSelf().getBackBuffer();
         if (bb != null) {
             // g is a screen Graphics from the delegate
-            final Graphics g = getWindowPeerOrSelf().getOnscreenGraphics();
+            final Graphics g = getOnscreenGraphics();
             
             if (g != null && g instanceof Graphics2D) {
                 try {
