@@ -44,6 +44,15 @@ final class LWListPeer
         return new ScrollableJList();
     }
 
+    public void initialize() {
+        super.initialize();
+        setMultipleMode(getTarget().isMultipleMode());
+        final int[] selectedIndices = getTarget().getSelectedIndexes();
+        synchronized (getDelegateLock()) {
+            getDelegate().getView().setSelectedIndices(selectedIndices);
+        }
+    }
+
     public boolean isFocusable() {
         return true;
     }
