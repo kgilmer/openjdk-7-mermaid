@@ -131,9 +131,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     private PlatformComponent platformComponent;
 
-    private class DelegateContainer extends Container {
+    private final class DelegateContainer extends Container {
         {
             enableEvents(0xFFFFFFFF);
+        }
+
+        DelegateContainer() {
+            super();
         }
 
         @Override
@@ -141,37 +145,43 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
             return false;
         }
 
+        @Override
         public Point getLocation() {
             return getLocationOnScreen();
         }
 
+        @Override
         public Point getLocationOnScreen() {
             return LWComponentPeer.this.getLocationOnScreen();
         }
 
+        @Override
         public int getX() {
             return getLocation().x;
         }
 
+        @Override
         public int getY() {
             return getLocation().y;
         }
 
+        @Override
         @Transient
         public Color getBackground() {
             return getTarget().getBackground();
         }
 
+        @Override
         @Transient
         public Color getForeground() {
             return getTarget().getForeground();
         }
 
+        @Override
         @Transient
         public Font getFont() {
             return getTarget().getFont();
         }
-
     }
 
     public LWComponentPeer(T target, PlatformComponent platformComponent) {
@@ -228,7 +238,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                                 Rectangle res = SwingUtilities.convertRectangle(
                                         c, new Rectangle(x, y, w, h), getDelegate());
                                 LWComponentPeer.this.repaintPeer(
-                                        res.x, res.y, res.width, res.height);                                
+                                        res.x, res.y, res.width, res.height);
                             }
                         }
                     });
@@ -299,6 +309,15 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     public void initialize() {
         platformComponent.initialize(target, this, getPlatformWindow());
         targetPaintArea = new RepaintArea();
+        synchronized (getDelegateLock()) {
+            if (getDelegate() != null) {
+                getDelegate().setOpaque(true);
+                resetColorsAndFont(delegate);
+                // we must explicitly set the font here
+                // see Component.getFont_NoClientCode() for details
+                delegateContainer.setFont(target.getFont());
+            }
+        }
         if (target.isBackgroundSet()) {
             setBackground(target.getBackground());
         }
@@ -311,17 +330,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         setBounds(target.getBounds());
         setEnabled(target.isEnabled());
         setVisible(target.isVisible());
-        synchronized (getDelegateLock()) {
-            if (getDelegate() != null) {
-                resetColorsAndFont(delegate);
-                // we must explicitly set the font here
-                // see Component.getFont_NoClientCode() for details
-                delegateContainer.setFont(target.getFont());
-            }
-        }
     }
 
-    private void resetColorsAndFont(Container c) {
+    private static void resetColorsAndFont(final Container c) {
         c.setBackground(null);
         c.setForeground(null);
         c.setFont(null);
@@ -367,7 +378,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     }
 
     // Just a helper method
-    // Overriden in LWWindowPeer to skip containerPeer initialization
+    // Overridden in LWWindowPeer to skip containerPeer initialization
     protected void initializeContainerPeer() {
         Container parent = LWToolkit.getNativeContainer(target);
         if (parent != null) {
@@ -817,8 +828,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         return false;
     }
 
-    /*
-     * Should be overriden in subclasses to forward the request
+    /**
+     * Should be overridden in subclasses to forward the request
      * to the Swing helper component, if required.
      */
     @Override
@@ -1194,9 +1205,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         return delegateEvent;
     }
 
-    /*
-    * Handler for FocusEvents.
-    */
+    /**
+     * Handler for FocusEvents.
+     */
     protected void handleJavaFocusEvent(FocusEvent e) {
         // Note that the peer receives all the FocusEvents from
         // its lightweight children as well
@@ -1204,7 +1215,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 setFocusOwner(e.getID() == FocusEvent.FOCUS_GAINED ? this : null);
     }
 
-    /*
+    /**
      * Handler for PAINT and UPDATE PaintEvents.
      */
     protected void handleJavaPaintEvent(PaintEvent e) {
@@ -1316,7 +1327,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         } else {
             Runnable r = new Runnable() {
                 public void run() {
-                    paintPeerDirtyRect(dirty);                    
+                    paintPeerDirtyRect(dirty);
                 }
             };
             // TODO: high-priority invocation event
@@ -1376,8 +1387,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         peerPaintSelf(g, r);
     }
 
-    /*
-     * Paints the peer. Overriden in subclasses to delegate the actual
+    /**
+     * Paints the peer. Overridden in subclasses to delegate the actual
      * painting to Swing components.
      */
     protected void peerPaintSelf(Graphics g, Rectangle r) {
@@ -1390,14 +1401,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         } else {
             if (!SwingUtilities.isEventDispatchThread()) {
                 throw new InternalError("Painting must be done on EDT");
-            }
-            //LW delegates does not fill whole bounds.
-            LWComponentPeer cp = getContainerPeer();
-            if (cp != null) {
-                Color c = g.getColor();
-                g.setColor(cp.getBackground());
-                g.fillRect(r.x, r.y, r.width, r.height);
-                g.setColor(c);
             }
             synchronized (getDelegateLock()) {
                 // JComponent.print() is guaranteed to not affect the double buffer

@@ -99,7 +99,7 @@ public class LWWindowPeer
 
     private volatile boolean cachedFocusableWindow;
 
-    private final static Font DEFAULT_FONT = new Font(Font.DIALOG, Font.PLAIN, 12);
+    private static final Font DEFAULT_FONT = new Font(Font.DIALOG, Font.PLAIN, 12);
 
     private Color background;
     private Color foreground;
@@ -252,10 +252,10 @@ public class LWWindowPeer
         // TODO: don't notify the delegate if our visibility is unchanged
 
         // it is important to call this method on EDT
-        // to prevent the deadlocks duruing the painting of the lightweight delegates
+        // to prevent the deadlocks during the painting of the lightweight delegates
         //TODO: WHY? This is a native-system related call. Perhaps NOT calling
-        // the painiting procedure right from the setVisible(), but rather relying
-        // on the native Expose event (or, scheduling the repainiting asynchronously)
+        // the painting procedure right from the setVisible(), but rather relying
+        // on the native Expose event (or, scheduling the repainting asynchronously)
         // is better?
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -835,7 +835,7 @@ public class LWWindowPeer
             AWTAccessor.getFrameAccessor().setExtendedState(
                     (Frame)getTarget(), newWindowState);
         }
-        WindowEvent stateChangedEvent = new WindowEvent((Window)getTarget(), 
+        WindowEvent stateChangedEvent = new WindowEvent(getTarget(),
                 WindowEvent.WINDOW_STATE_CHANGED, 
                 windowState, newWindowState);
         postEvent(stateChangedEvent);
@@ -1093,5 +1093,5 @@ public class LWWindowPeer
     
     public void exitFullScreenMode() {
         platformWindow.exitFullScreenMode();
-    }    
+    }
 }
