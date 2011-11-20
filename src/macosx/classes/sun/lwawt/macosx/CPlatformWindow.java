@@ -169,6 +169,9 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         new Property<CPlatformWindow>(WINDOW_ZOOMABLE) { public void applyProperty(final CPlatformWindow c, final Object value) {
             c.setStyleBits(ZOOMABLE, Boolean.parseBoolean(value.toString()));
         }},
+        new Property<CPlatformWindow>(WINDOW_FULLSCREENABLE) { public void applyProperty(final CPlatformWindow c, final Object value) {
+            c.setStyleBits(FULLSCREENABLE, Boolean.parseBoolean(value.toString()));
+        }},
         new Property<CPlatformWindow>(WINDOW_SHADOW_REVALIDATE_NOW) { public void applyProperty(final CPlatformWindow c, final Object value) {
             nativeRevalidateNSWindowShadow(c.getNSWindowPtr());
         }},
