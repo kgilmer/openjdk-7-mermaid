@@ -149,6 +149,7 @@ public class AquaSpinnerUI extends SpinnerUI {
         final TransparentButton b = new TransparentButton();
         b.addActionListener(getPreviousButtonHandler());
         b.addMouseListener(getPreviousButtonHandler());
+        b.setInheritsPopupMenu(true);
         return b;
     }
     
@@ -156,6 +157,7 @@ public class AquaSpinnerUI extends SpinnerUI {
         final TransparentButton b = new TransparentButton();
         b.addActionListener(getNextButtonHandler());
         b.addMouseListener(getNextButtonHandler());
+        b.setInheritsPopupMenu(true);
         return b;
     }
     
@@ -199,6 +201,7 @@ public class AquaSpinnerUI extends SpinnerUI {
         if (!(editor instanceof DefaultEditor)) return;
         
         editor.setOpaque(false);
+        editor.setInheritsPopupMenu(true);
 
         if (editor.getFont() instanceof UIResource) {
             editor.setFont(spinner.getFont());
