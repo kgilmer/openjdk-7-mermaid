@@ -341,20 +341,12 @@ public class LWWindowPeer
             op |= SET_SIZE;
         }
 
-        Rectangle oldBounds = getBounds();
-
         // Don't post ComponentMoved/Resized and Paint events
         // until we've got a notification from the delegate
         setBounds(x, y, w, h, op, false);
         // Get updated bounds, so we don't have to handle 'op' here manually
         Rectangle r = getBounds();
         platformWindow.setBounds(r.x, r.y, r.width, r.height);
-
-        // TODO: this replaceSurfaceData should be called upon
-        // the notification about the top-level size from the underlying system
-        if (oldBounds.height != r.height || oldBounds.width != r.width) {
-               replaceSurfaceData();
-        }
     }
 
     @Override
@@ -577,7 +569,7 @@ public class LWWindowPeer
      * There's no notifyReshape() in LWComponentPeer as the only
      * components which could be resized by user are top-level windows.
      */
-    public void notifyReshape(int x, int y, int w, int h) {
+    public final void notifyReshape(int x, int y, int w, int h) {
         boolean moved = false;
         boolean resized = false;
         synchronized (getStateLock()) {
@@ -602,18 +594,16 @@ public class LWWindowPeer
             replaceSurfaceData();
             flushOffscreenGraphics(new Rectangle(0, 0, w, h));
         }
-        
+
         // Third, update target's bounds
-        AWTAccessor.getComponentAccessor().setLocation(getTarget(), x, y);
-        AWTAccessor.getComponentAccessor().setSize(getTarget(), w, h);
-        
-        // Fourth, post COMPONENT_MOVED/COMPONENT_RESIZED events
-        // TODO: is it worth reusing handleMove/handleResize methods here?
+        // and post COMPONENT_MOVED/COMPONENT_RESIZED events
         if (moved) {
-            postEvent(new ComponentEvent(getTarget(), ComponentEvent.COMPONENT_MOVED));
+            AWTAccessor.getComponentAccessor().setLocation(getTarget(), x, y);
+            handleMove();
         }
         if (resized) {
-            postEvent(new ComponentEvent(getTarget(), ComponentEvent.COMPONENT_RESIZED));
+            AWTAccessor.getComponentAccessor().setSize(getTarget(), w, h);
+            handleResize();
         }
     }
 

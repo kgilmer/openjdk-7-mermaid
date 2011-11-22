@@ -558,15 +558,16 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         setBounds(r.x, r.y, r.width, r.height, SET_BOUNDS);
     }
 
-    /*
-    * This method could be called on the toolkit thread.
-    */
+    /**
+     * This method could be called on the toolkit thread.
+     */
     @Override
     public void setBounds(int x, int y, int w, int h, int op) {
         setBounds(x, y, w, h, op, true);
     }
 
-    protected void setBounds(int x, int y, int w, int h, int op, boolean notify) {
+    protected void setBounds(int x, int y, int w, int h, int op,
+                             boolean notify) {
         Rectangle oldBounds;
         synchronized (getStateLock()) {
             oldBounds = new Rectangle(bounds);
@@ -579,23 +580,37 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 bounds.height = h;
             }
         }
-        if (notify) {
-            boolean moved = (oldBounds.x != x) || (oldBounds.y != y);
-            boolean resized = (oldBounds.width != w) || (oldBounds.height != h);
-//            paintPending = !resized;
-            if (moved) {
-                handleMove(oldBounds.x, oldBounds.y, x, y);
-            }
-            if (resized) {
-                handleResize(oldBounds.width, oldBounds.height, w, h);
+        boolean moved = (oldBounds.x != x) || (oldBounds.y != y);
+        boolean resized = (oldBounds.width != w) || (oldBounds.height != h);
+        if (!moved && !resized) {
+            return;
+        }
+        final D delegate = getDelegate();
+        if (delegate != null) {
+            synchronized (getDelegateLock()) {
+                delegateContainer.setBounds(0, 0, w, h);
+                delegate.setBounds(delegateContainer.getBounds());
+                // TODO: the following means that the delegateContainer NEVER gets validated. That's WRONG!
+                delegate.validate();
             }
         }
-        Point locationInWindow = localToWindow(0, 0);
+
+        final Rectangle newBounds = getBounds();
+        final Point locationInWindow = localToWindow(0, 0);
         platformComponent.setBounds(locationInWindow.x, locationInWindow.y,
-                bounds.width, bounds.height);
+                                    newBounds.width, newBounds.height);
+        if (notify) {
+            repaintOldNewBounds(oldBounds, newBounds);
+            if (resized) {
+                handleResize();
+            }
+            if (moved) {
+                handleMove();
+            }
+        }
     }
 
-    public Rectangle getBounds() {
+    public final Rectangle getBounds() {
         synchronized (getStateLock()) {
             // Return a copy to prevent subsequent modifications
             return new Rectangle(bounds);
@@ -1019,7 +1034,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // ---- PEER NOTIFICATIONS ---- //
 
-    /*
+    /**
      * Called when this peer's location has been changed either as a result
      * of target.setLocation() or as a result of user actions (window is
      * dragged with mouse).
@@ -1028,19 +1043,11 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      *
      * This method could be called on the toolkit thread.
      */
-
-    protected void handleMove(int oldX, int oldY, int newX, int newY) {
+    protected void handleMove() {
         postEvent(new ComponentEvent(getTarget(), ComponentEvent.COMPONENT_MOVED));
-        LWContainerPeer cp = getContainerPeer();
-        if (cp != null) {
-            // Repaint unobscured part of the parent
-            Rectangle r = getBounds();
-            cp.repaintPeer(oldX, oldY, r.width, r.height);
-            cp.repaintPeer(newX, newY, r.width, r.height);
-        }
     }
 
-    /*
+    /**
      * Called when this peer's size has been changed either as a result of
      * target.setSize() or as a result of user actions (window is resized).
      *
@@ -1049,29 +1056,22 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      *
      * This method could be called on the toolkit thread.
      */
-    protected void handleResize(int oldW, int oldH, int newW, int newH) {
+    protected void handleResize() {
         postEvent(new ComponentEvent(getTarget(), ComponentEvent.COMPONENT_RESIZED));
-        LWContainerPeer cp = getContainerPeer();
-        if (cp != null) {
-            // Repaint unobscured part of the parent
-            Rectangle r = getBounds();
-            cp.repaintPeer(r.x, r.y, oldW, oldH);
-            cp.repaintPeer(r.x, r.y, newW, newH);
-        }
-        repaintPeer(0, 0, newW, newH);
-
-        D delegate = getDelegate();
-        if (delegate != null) {
-            synchronized (getDelegateLock()) {
-                delegateContainer.setBounds(0, 0, newW, newH);
-                delegate.setBounds(delegateContainer.getBounds());
-                // TODO: the following means that the delegateContainer NEVER gets validated. That's WRONG!
-                delegate.validate();
-            }
-        }
     }
 
-    /*
+    protected final void repaintOldNewBounds(final Rectangle oldB,
+                                             final Rectangle newB) {
+        final LWContainerPeer cp = getContainerPeer();
+        if (cp != null) {
+            // Repaint unobscured part of the parent
+            cp.repaintPeer(oldB.x, oldB.y, oldB.width, oldB.height);
+            cp.repaintPeer(newB.x, newB.y, newB.width, newB.height);
+        }
+        repaintPeer(0, 0, newB.width, newB.height);
+    }
+
+    /**
      * Called by the container when any part of this peer or child
      * peers should be repainted.
      *
@@ -1083,10 +1083,9 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
 
     // ---- EVENTS ---- //
 
-    /*
+    /**
      * Post an event to the proper Java EDT.
      */
-
     public void postEvent(AWTEvent event) {
         SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
     }
