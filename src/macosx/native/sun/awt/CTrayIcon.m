@@ -28,6 +28,7 @@
 
 #import "CTrayIcon.h"
 #import "ThreadUtilities.h"
+#include "GeomUtilities.h"
 
 
 @implementation AWTTrayIcon
@@ -219,3 +220,27 @@ AWT_ASSERT_NOT_APPKIT_THREAD;
 JNF_COCOA_EXIT(env);
 }
 
+JNIEXPORT jobject JNICALL
+Java_sun_lwawt_macosx_CTrayIcon_nativeGetIconLocation
+(JNIEnv *env, jobject self, jlong model) {
+    jobject jpt = NULL;
+
+JNF_COCOA_ENTER(env);
+AWT_ASSERT_NOT_APPKIT_THREAD;
+  
+    __block NSPoint pt = NSZeroPoint;
+    AWTTrayIcon *icon = jlong_to_ptr(model);
+    [JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
+        AWT_ASSERT_APPKIT_THREAD;
+    
+        NSView* view = [[icon theItem] view];
+        NSPoint loc = [[view window] convertBaseToScreen: NSZeroPoint];        
+        pt = ConvertNSScreenPoint(env, loc);
+    }];
+
+    jpt = NSToJavaPoint(env, pt);
+   
+JNF_COCOA_EXIT(env);
+    
+    return jpt;
+}
