@@ -214,6 +214,17 @@ static void AWT_NSUncaughtExceptionHandler(NSException *exception) {
     return YES;
 }
 
++ (BOOL) isRemoteSession {
+    SecuritySessionId session_id;
+    SessionAttributeBits session_info;
+    OSStatus status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
+    if (status != noErr) return NO;
+    if (session_info & sessionIsRemote) return YES; //Remote session
+    if ((session_info & sessionWasInitialized)
+         && (session_info & sessionHasTTY)) return YES; //Daemon-initiated session
+    return NO;
+}
+
 + (BOOL) markAppAsDaemon {
     id jrsAppKitAWTClass = objc_getClass("JRSAppKitAWT");
     SEL markAppSel = @selector(markAppIsDaemon);
@@ -418,7 +429,7 @@ JNF_COCOA_ENTER(env);
         [NSThread detachNewThreadSelector:nil toTarget:nil withObject:nil];
     }
 
-    if (swt_compatible_mode || headless || [AWTStarter isConnectedToWindowServer]) {
+    if (swt_compatible_mode || headless || [AWTStarter isConnectedToWindowServer] || [AWTStarter isRemoteSession]) {
         AWTLoadFailure = NO;
         [AWTStarter start:headless swtMode:swt_compatible_mode swtModeForWebStart:swt_in_webstart];
     }
