@@ -320,11 +320,8 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
 
 - (jobject) copyDraggingDataForFormat:(jlong)format
 {
-    __block JNIEnv*      env;
-	
-	[JNFRunLoop performOnMainThreadWaiting:YES withBlock:^(){
-		env = [ThreadUtilities getJNIEnv]; // Can be called from threads other than the native event thread!
-	}];
+    JNIEnv*      env = [ThreadUtilities getJNIEnvUncached]; // Join the main thread by requesting uncached environment
+
     NSData*      data = nil;
 
     // Convert the Java format (datatransferer int index) to a pasteboard format (NSString):
@@ -573,6 +570,8 @@ extern JNFClassInfo jc_CDropTargetContextPeer;
     // Should we notify Java things have changed?
     if (sDraggingError == FALSE && notifyJava) {
         NSPoint javaLocation = [fView convertPoint:sDraggingLocation fromView:nil];
+		// For some reason even after the convertPoint drag events come with the y coordinate reverted
+		javaLocation.y = fView.frame.size.height - javaLocation.y;
         //DLog5(@"  : dragMoved: loc native %f, %f, java %f, %f\n", sDraggingLocation.x, sDraggingLocation.y, javaLocation.x, javaLocation.y);
 
         jlongArray formats = sDraggingFormats;

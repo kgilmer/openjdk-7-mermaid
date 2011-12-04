@@ -49,6 +49,8 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
     private Image  fDragImage;
     private CImage fDragCImage;
     private Point  fDragImageOffset;
+
+    private static Component hoveringComponent = null;
     
     private static double fMaxImageSize = 128.0;
 
@@ -425,6 +427,47 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
         }
         
         fDragImageOffset = dragImageOffset;
+    }
+
+    /**
+     * upcall from native code
+     */
+    private void dragMouseMoved(final int targetActions,
+                                final int modifiers,
+                                final int x, final int y) {
+        Component rootComponent = SwingUtilities.getRoot(getComponent());
+        if(rootComponent != null) {
+            Point componentPoint = new Point(x, y);
+            SwingUtilities.convertPointFromScreen(componentPoint, rootComponent);
+            Component componentAt = SwingUtilities.getDeepestComponentAt(rootComponent, componentPoint.x, componentPoint.y);
+            if(componentAt != hoveringComponent) {
+                if(hoveringComponent != null) {
+                    dragExit(x, y);
+                }
+                if(componentAt != null) {
+                    dragEnter(targetActions, modifiers, x, y);
+                }
+                hoveringComponent = componentAt;
+            }
+        }
+        postDragSourceDragEvent(targetActions, modifiers, x, y,
+                                DISPATCH_MOUSE_MOVED);
+    }
+
+    /**
+     * upcall from native code
+     */
+    private void dragEnter(final int targetActions,
+                           final int modifiers,
+                           final int x, final int y) {
+        postDragSourceDragEvent(targetActions, modifiers, x, y, DISPATCH_ENTER);
+    }
+
+    /**
+     * upcall from native code - reset hovering component
+     */
+    private void resetHovering() {
+        hoveringComponent = null;
     }
 
     public void setCursor(Cursor c) throws InvalidDnDOperationException {
