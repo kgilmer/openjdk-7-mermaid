@@ -214,17 +214,6 @@ static void AWT_NSUncaughtExceptionHandler(NSException *exception) {
     return YES;
 }
 
-+ (BOOL) isRemoteSession {
-    SecuritySessionId session_id;
-    SessionAttributeBits session_info;
-    OSStatus status = SessionGetInfo(callerSecuritySession, &session_id, &session_info);
-    if (status != noErr) return NO;
-    if (session_info & sessionIsRemote) return YES; //Remote session
-    if ((session_info & sessionWasInitialized)
-         && (session_info & sessionHasTTY)) return YES; //Daemon-initiated session
-    return NO;
-}
-
 + (BOOL) markAppAsDaemon {
     id jrsAppKitAWTClass = objc_getClass("JRSAppKitAWT");
     SEL markAppSel = @selector(markAppIsDaemon);
@@ -399,7 +388,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 
     // The following is true when AWT is attempting to connect to the window server
     // when it isn't set up properly to do so.
-    BOOL AWTLoadFailure = YES;    
+    // BOOL AWTLoadFailure = YES;    For now we are skipping this check so i'm commenting out this variable as unused
 JNF_COCOA_ENTER(env);
     
     // If -XstartOnFirstThread was used at invocation time, an environment variable will be set.
@@ -429,14 +418,17 @@ JNF_COCOA_ENTER(env);
         [NSThread detachNewThreadSelector:nil toTarget:nil withObject:nil];
     }
 
-    if (swt_compatible_mode || headless || [AWTStarter isConnectedToWindowServer] || [AWTStarter isRemoteSession]) {
-        AWTLoadFailure = NO;
-        [AWTStarter start:headless swtMode:swt_compatible_mode swtModeForWebStart:swt_in_webstart];
-    }
+//    if (swt_compatible_mode || headless || [AWTStarter isConnectedToWindowServer] || [AWTStarter isRemoteSession]) {
+// No need in this check - we will try to launch AWTStarter anyways - to be able to run GUI application remotely
+//        AWTLoadFailure = NO;
 
-    if (AWTLoadFailure) {
+    [AWTStarter start:headless swtMode:swt_compatible_mode swtModeForWebStart:swt_in_webstart];
+
+//    }
+
+/*    if (AWTLoadFailure) { // We will not reach this code anyways
         [JNFException raise:env as:kInternalError reason:"Can't connect to window server - not enough permissions."];
-    }
+    } */
     
 JNF_COCOA_EXIT(env);
     
