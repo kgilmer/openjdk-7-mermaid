@@ -25,11 +25,9 @@
 
 package sun.lwawt.macosx;
 
-import com.apple.laf.*;
-import com.sun.jdi.InternalException;
+import sun.awt.SunToolkit;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicOptionPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
@@ -37,8 +35,6 @@ import java.awt.image.BufferedImage;
 import java.awt.peer.TrayIconPeer;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-
-import static javax.swing.GroupLayout.DEFAULT_SIZE;
 
 public class CTrayIcon extends CFRetainedResource implements TrayIconPeer {
     private TrayIcon target;
@@ -76,7 +72,6 @@ public class CTrayIcon extends CFRetainedResource implements TrayIconPeer {
     }
 
     private long createModel() {
-//        final NSStatusBarClass statusBarClass = JObjC.getInstance().AppKit().NSStatusBar();
         return nativeCreate();
     }
 
@@ -168,10 +163,13 @@ public class CTrayIcon extends CFRetainedResource implements TrayIconPeer {
 
     //invocation from the AWTTrayIcon.m
     public void performAction() {
-        ActionEvent evt = new ActionEvent(target, 0, "ACTION_TRIGGERED_BY_PEER");
-        for(ActionListener listener:target.getActionListeners()) {
-            listener.actionPerformed(evt);
-        }
+        SunToolkit.executeOnEventHandlerThread(target, new Runnable() {
+            public void run() {
+                final String cmd = target.getActionCommand();
+                final ActionEvent event = new ActionEvent(target, ActionEvent.ACTION_PERFORMED, cmd);
+                SunToolkit.postEvent(SunToolkit.targetToAppContext(target), event);
+            }
+        });
     }
 
     private native Point2D nativeGetIconLocation(long trayIconModel);
