@@ -24,7 +24,9 @@
  */
 
 #include <CoreAudio/CoreAudio.h>
-#include "SoundDefs.h"
+extern "C" {
+#include "Utilities.h"
+}
 
 typedef struct AudioDeviceDescription {
     int strLen;

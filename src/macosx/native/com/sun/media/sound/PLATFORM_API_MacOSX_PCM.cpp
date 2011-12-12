@@ -38,10 +38,11 @@
 #endif
 */
 
+#include "PLATFORM_API_MacOSX_Utils.h"
+
 extern "C" {
 #include "Utilities.h"
 #include "DirectAudio.h"
-#include "PLATFORM_API_MacOSX_Utils.h"
 }
 
 #if USE_DAUDIO == TRUE
