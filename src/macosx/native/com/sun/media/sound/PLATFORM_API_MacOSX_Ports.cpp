@@ -28,8 +28,12 @@
 
 #include <CoreAudio/CoreAudio.h>
 #include <IOKit/audio/IOAudioTypes.h>
-#include "Ports.h"
+
 #include "PLATFORM_API_MacOSX_Utils.h"
+
+extern "C" {
+#include "Ports.h"
+}
 
 #if USE_PORTS == TRUE
 
@@ -41,11 +45,13 @@
  Implement virtual controls (balance, pan, master volume).
  */
 
-typedef struct {
-    struct PortMixer *mixer;
+struct PortMixer;
+
+struct PortControl {
+    PortMixer *mixer;
 
     AudioObjectID control;
-    AudioClassID class; // kAudioVolumeControlClassID etc.
+    AudioClassID classID; // kAudioVolumeControlClassID etc.
     UInt32 scope; // input, output
 
     void *jcontrol;
@@ -54,9 +60,9 @@ typedef struct {
     int channel; // master = 0, channels = 1 2 ...
 
     AudioValueRange range;
-} PortControl;
+};
 
-typedef struct {
+struct PortMixer {
     AudioDeviceID deviceID;
 
     // = # of ports on the mixer
@@ -72,7 +78,7 @@ typedef struct {
 
     int *numStreamControls;
     PortControl **streamControls;
-} PortMixer;
+};
 
 INT32 PORT_GetPortMixerCount() {
     int count = GetAudioDeviceCount();
@@ -98,7 +104,7 @@ INT32 PORT_GetPortMixerDescription(INT32 mixerIndex, PortMixerDescription* mixer
 
 void* PORT_Open(INT32 mixerIndex) {
     AudioDeviceDescription description = {0};
-    PortMixer *mixer = calloc(1, sizeof(PortMixer));
+    PortMixer *mixer = (PortMixer *)calloc(1, sizeof(PortMixer));
 
     GetAudioDeviceDescription(mixerIndex, &description);
     mixer->deviceID = description.deviceID;
@@ -106,7 +112,7 @@ void* PORT_Open(INT32 mixerIndex) {
     mixer->numOutputStreams = description.numOutputStreams;
 
     if (mixer->numInputStreams || mixer->numOutputStreams) {
-        mixer->streams = calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(AudioStreamID));
+        mixer->streams = (AudioStreamID *)calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(AudioStreamID));
 
         GetAudioObjectProperty(mixer->deviceID, kAudioDevicePropertyScopeInput, kAudioDevicePropertyStreams,
                                mixer->numInputStreams * sizeof(AudioStreamID), mixer->streams, 0);
@@ -121,17 +127,17 @@ void* PORT_Open(INT32 mixerIndex) {
 }
 
 void PORT_Close(void* id) {
+    PortMixer *mixer = (PortMixer *)id;
     TRACE1("> PORT_Close %p\n", id);
 
-    if (id) {
-        PortMixer *mixer = id;
+    if (mixer) {
         free(mixer->streams);
         free(mixer);
     }
 }
 
 INT32 PORT_GetPortCount(void* id) {
-    PortMixer *mixer = id;
+    PortMixer *mixer = (PortMixer *)id;
     int numStreams = mixer->numInputStreams + mixer->numOutputStreams;
 
     TRACE1("< PORT_GetPortCount = %d\n", numStreams);
@@ -139,7 +145,7 @@ INT32 PORT_GetPortCount(void* id) {
 }
 
 INT32 PORT_GetPortType(void* id, INT32 portIndex) {
-    PortMixer *mixer = id;
+    PortMixer *mixer = (PortMixer *)id;
 
     AudioStreamID streamID = mixer->streams[portIndex];
     UInt32 direction;
@@ -220,7 +226,7 @@ exit:
 }
 
 INT32 PORT_GetPortName(void* id, INT32 portIndex, char* name, INT32 len) {
-    PortMixer *mixer = id;
+    PortMixer *mixer = (PortMixer *)id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
     CFStringRef cfname = NULL;
@@ -270,7 +276,7 @@ static void CreateMuteControl(PortControlCreator *creator, PortControl *control)
 }
 
 void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
-    PortMixer *mixer = id;
+    PortMixer *mixer = (PortMixer *)id;
     AudioStreamID streamID = mixer->streams[portIndex];
 
     UInt32 size;
@@ -294,8 +300,8 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
         mixer->numDeviceControls = size / sizeof(AudioObjectID);
 
         if (mixer->numDeviceControls) {
-            AudioObjectID *controlIDs = calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
-            mixer->deviceControls     = calloc(mixer->numDeviceControls, sizeof(PortControl));
+            AudioObjectID *controlIDs = (AudioObjectID *)calloc(mixer->numDeviceControls, sizeof(AudioObjectID));
+            mixer->deviceControls     = (PortControl *)calloc(mixer->numDeviceControls, sizeof(PortControl));
 
             err = GetAudioObjectProperty(mixer->deviceID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
                                          mixer->numDeviceControls * sizeof(AudioObjectID), controlIDs, 1);
@@ -308,19 +314,19 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
                 control->mixer = mixer;
 
                 GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyClass,
-                                       sizeof(control->class), &control->class, 1);
+                                       sizeof(control->classID), &control->classID, 1);
                 err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyElement,
                                        sizeof(control->channel), &control->channel, 1);
 
                 if (err) { // not a control
-                    control->class = 0;
+                    control->classID = 0;
                     continue;
                 }
 
                 GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal, kAudioControlPropertyScope,
                                        sizeof(control->scope), &control->scope, 1);
 
-                TRACE3("%.4s control, channel %d scope %.4s\n", &control->class, control->channel, &control->scope);
+                TRACE3("%.4s control, channel %d scope %.4s\n", &control->classID, control->channel, &control->scope);
             }
         }
     }
@@ -333,7 +339,7 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
             if (control->scope != wantedScope)
                 continue;
 
-            switch (control->class) {
+            switch (control->classID) {
                 case kAudioVolumeControlClassID:
                     if (control->channel == 0)
                         masterVolume = control;
@@ -370,12 +376,12 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     }
 
     if (numVolumeControls) {
-        void **jControls = calloc(numVolumeControls, sizeof(void*));
+        void **jControls = (void **)calloc(numVolumeControls, sizeof(void*));
         int j = 0;
         for (i = 0; i < mixer->numDeviceControls && j < numVolumeControls; i++) {
             PortControl *control = &mixer->deviceControls[i];
 
-            if (control->class != kAudioVolumeControlClassID || control->channel == 0 || control->scope != wantedScope)
+            if (control->classID != kAudioVolumeControlClassID || control->channel == 0 || control->scope != wantedScope)
                 continue;
 
             if (!control->jcontrol)
@@ -389,12 +395,12 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     }
 
     if (numMuteControls) {
-        void **jControls = calloc(numMuteControls, sizeof(void*));
+        void **jControls = (void **)calloc(numMuteControls, sizeof(void*));
         int j = 0;
         for (i = 0; i < mixer->numDeviceControls && j < numMuteControls; i++) {
             PortControl *control = &mixer->deviceControls[i];
 
-            if (control->class != kAudioMuteControlClassID || control->channel == 0 || control->scope != wantedScope)
+            if (control->classID != kAudioMuteControlClassID || control->channel == 0 || control->scope != wantedScope)
                 continue;
 
             if (!control->jcontrol)
@@ -408,7 +414,7 @@ void PORT_GetControls(void* id, INT32 portIndex, PortControlCreator* creator) {
     }
 
     if (!mixer->numStreamControls)
-        mixer->numStreamControls = calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(int));
+    	mixer->numStreamControls = (int *)calloc(mixer->numInputStreams + mixer->numOutputStreams, sizeof(int));
 
     err = GetAudioObjectPropertySize(streamID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyOwnedObjects,
                                      &size);
@@ -428,12 +434,12 @@ exit:
 }
 
 INT32 PORT_GetIntValue(void* controlIDV) {
-    PortControl *control = controlIDV;
+    PortControl *control = (PortControl *)controlIDV;
     UInt32 value = 0;
     OSStatus err = 0;
     UInt32 size;
 
-    switch (control->class) {
+    switch (control->classID) {
         case kAudioMuteControlClassID:
         {
             err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal,
@@ -459,10 +465,10 @@ exit:
 
 void PORT_SetIntValue(void* controlIDV, INT32 value) {
     TRACE1("> PORT_SetIntValue = %d\n", value);
-    PortControl *control = controlIDV;
+    PortControl *control = (PortControl *)controlIDV;
     OSStatus err = 0;
 
-    switch (control->class) {
+    switch (control->classID) {
         case kAudioMuteControlClassID:
         {
             const AudioObjectPropertyAddress address =
@@ -485,12 +491,12 @@ exit:
 }
 
 float PORT_GetFloatValue(void* controlIDV) {
-    PortControl *control = controlIDV;
+    PortControl *control = (PortControl *)controlIDV;
     Float32 value = 0;
     OSStatus err = 0;
     UInt32 size;
 
-    switch (control->class) {
+    switch (control->classID) {
         case kAudioVolumeControlClassID:
         {
             err = GetAudioObjectProperty(control->control, kAudioObjectPropertyScopeGlobal,
@@ -519,10 +525,10 @@ exit:
 
 void PORT_SetFloatValue(void* controlIDV, float value) {
     TRACE1("> PORT_SetFloatValue = %f\n", value);
-    PortControl *control = controlIDV;
+    PortControl *control = (PortControl *)controlIDV;
     OSStatus err = 0;
 
-    switch (control->class) {
+    switch (control->classID) {
         case kAudioVolumeControlClassID:
         {
             const AudioObjectPropertyAddress address =

@@ -44,7 +44,7 @@
 
 #if (USE_PLATFORM_MIDI_IN == TRUE) || (USE_PLATFORM_MIDI_OUT == TRUE)
 
-#include "PLATFORM_API_MacOS_MidiUtils.h"
+#include "PLATFORM_API_MacOSX_MidiUtils.h"
 #include <pthread.h>
 #include <assert.h>
 

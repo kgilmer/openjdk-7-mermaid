@@ -27,7 +27,6 @@
 //#define USE_ERROR
 
 #include "PLATFORM_API_MacOSX_Utils.h"
-#include "Ports.h"
 
 typedef struct OSXAudioDevice {
     AudioDeviceID deviceID;
@@ -126,7 +125,7 @@ int GetAudioDeviceCount()
 
         if (deviceCtx.numDevices) {
             AudioDeviceID deviceIDs[deviceCtx.numDevices];
-            deviceCtx.devices = calloc(deviceCtx.numDevices, sizeof(OSXAudioDevice));
+            deviceCtx.devices = (OSXAudioDevice*)calloc(deviceCtx.numDevices, sizeof(OSXAudioDevice));
 
             size = deviceCtx.numDevices * sizeof(AudioDeviceID);
             AudioObjectGetPropertyData(kAudioObjectSystemObject, &devicesAddress, 0, NULL, &size, deviceIDs);
