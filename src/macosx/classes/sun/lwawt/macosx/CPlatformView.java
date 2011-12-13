@@ -178,7 +178,7 @@ public class CPlatformView extends CFRetainedResource {
         int jY = getBounds().height - event.getY();
         int jAbsX = event.getAbsX();
         int jAbsY = event.getAbsY();
-        int jButton = NSEvent.nsButtonToJavaButton(event.getButton());
+        int jButton = NSEvent.nsButtonToJavaButton(event);
         int jClickCount = event.getClickCount();
         double wheelDeltaY = event.getScrollDeltaY();
         double wheelDeltaX = event.getScrollDeltaX();
