@@ -36,6 +36,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <Cocoa/Cocoa.h>
 
 typedef uint32_t rgbquad_t;
 typedef uint16_t word_t;
