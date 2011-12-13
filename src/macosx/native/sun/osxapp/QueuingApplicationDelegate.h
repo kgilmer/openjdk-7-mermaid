@@ -24,24 +24,21 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import <JavaNativeFoundation/JavaNativeFoundation.h>
 
+@interface QueuingApplicationDelegate : NSObject<NSApplicationDelegate>
+{
+    BOOL fHandlesDocumentTypes;
+    BOOL fHandlesURLTypes;
 
-@interface NSApplicationAWT : NSApplication {
-    NSString *fApplicationName;
-    BOOL fUseDefaultIcon;
-    NSWindow *eventTransparentWindow;
+    NSMutableArray* queue;
 }
 
-- (void) finishLaunching;
-- (void) registerWithProcessManager;
-- (void) setDockIconWithEnv:(JNIEnv *)env;
++ (QueuingApplicationDelegate*) sharedDelegate;
+
+- (id) init;
+- (void) dealloc;
+
+- (void)processQueuedEventsWithTargetDelegate:(id <NSApplicationDelegate>)delegate;
 
 @end
 
-@interface NSApplication (CustomNIBAdditions)
-
-// Returns whether or not application is using its default NIB
-- (BOOL)usingDefaultNib;
-
-@end

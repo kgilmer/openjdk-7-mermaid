@@ -28,18 +28,18 @@
 #import <objc/runtime.h>
 #import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
-#import "ApplicationDelegate.h"
-#import "AWTWindow.h"
 #import "PropertiesUtilities.h"
 #import "ThreadUtilities.h"
+#import "QueuingApplicationDelegate.h"
 
 
 static BOOL sUsingDefaultNIB = YES;
 static NSString *SHARED_FRAMEWORK_BUNDLE = @"/System/Library/Frameworks/JavaVM.framework";
+static id <NSApplicationDelegate> applicationDelegate = nil;
+static QueuingApplicationDelegate * qad = nil;
 
 // Flag used to indicate to the Plugin2 event synthesis code to do a postEvent instead of sendEvent
 BOOL postEventDuringEventSynthesis = NO;
-
 
 @implementation NSApplicationAWT
 
@@ -65,7 +65,7 @@ AWT_ASSERT_APPKIT_THREAD;
 {
     [fApplicationName release];
     fApplicationName = nil;
-    
+
     [super dealloc];
 }
 //- (void)finalize { [super finalize]; }
@@ -116,9 +116,12 @@ AWT_ASSERT_APPKIT_THREAD;
         }
     }
     
-    // Don't set the delegate until the NSApplication has been created.
-    //  ApplicationDelegate is the support code for com.apple.eawt.
-    [self setDelegate:[ApplicationDelegate sharedDelegate]];
+    if (applicationDelegate) {
+        [self setDelegate:applicationDelegate];
+    } else {
+        qad = [QueuingApplicationDelegate sharedDelegate];
+        [self setDelegate:qad];
+    }
     
     [super finishLaunching];
     
@@ -281,6 +284,26 @@ AWT_ASSERT_APPKIT_THREAD;
     }
 }
 
++ (void) runAWTLoopWithApp:(NSApplication*)app {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+
+    // Make sure that when we run in AWTRunLoopMode we don't exit randomly
+    [[NSRunLoop currentRunLoop] addPort:[NSPort port] forMode:[JNFRunLoop javaRunLoopMode]];
+
+    do {
+        @try {
+            [app run];
+        } @catch (NSException* e) {
+            NSLog(@"Apple AWT Startup Exception: %@", [e description]);
+            NSLog(@"Apple AWT Restarting Native Event Thread");
+
+            [app stop:app];
+        }
+    } while (YES);
+
+    [pool drain];
+}
+
 - (BOOL)usingDefaultNib {
     return sUsingDefaultNIB;
 }
@@ -311,3 +334,20 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 @end
+
+
+void OSXAPP_SetApplicationDelegate(id <NSApplicationDelegate> delegate)
+{
+AWT_ASSERT_APPKIT_THREAD;
+    applicationDelegate = delegate;
+    
+    if (NSApp != nil) {
+        [NSApp setDelegate: applicationDelegate];
+
+        if (applicationDelegate && qad) {
+            [qad processQueuedEventsWithTargetDelegate: applicationDelegate];
+            qad = nil;
+        }
+    }
+}
+

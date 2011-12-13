@@ -30,7 +30,8 @@
 #import "ThreadUtilities.h"
 
 
-extern JavaVM *jvm;
+// The following must be named "jvm", as there are extern references to it in AWT
+JavaVM *jvm = NULL;
 static JNIEnv *appKitEnv = NULL;
 
 static NSArray *sPerformModes = nil;
@@ -245,3 +246,10 @@ AWT_ASSERT_APPKIT_THREAD;
 }
 
 @end
+
+
+void OSXAPP_SetJavaVM(JavaVM *vm)
+{
+    jvm = vm;
+}
+
