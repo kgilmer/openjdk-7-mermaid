@@ -29,6 +29,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.dnd.*;
 import java.awt.dnd.peer.DragSourceContextPeer;
+import java.awt.event.InputEvent;
 import java.awt.event.InvocationEvent;
 import java.awt.im.InputMethodHighlight;
 import java.awt.peer.*;
@@ -613,6 +614,13 @@ public class LWCToolkit extends LWToolkit {
         return CInputMethod.mapInputMethodHighlight(highlight);
     }
     
+    /**
+     * Returns key modifiers used by Swing to set up a focus accelerator key stroke.
+     */
+    @Override
+    public int getFocusAcceleratorKeyMask() {
+        return InputEvent.CTRL_MASK | InputEvent.ALT_MASK;
+    }
     
     // Extends PeerEvent because we want to pass long an ObjC mediator object and because we want these events to be posted early
     // Typically, rather than relying on the notifier to call notifyAll(), we use the mediator to stop the runloop
