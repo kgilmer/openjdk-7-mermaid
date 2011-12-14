@@ -74,9 +74,11 @@ public class CDataTransferer extends DataTransferer {
     public static final int CF_HTML        = 5;
     public static final int CF_PDF         = 6;
     public static final int CF_URL         = 7;
+    public static final int CF_PNG         = 10;
+    public static final int CF_JPEG        = 11;
 
     public static final Long L_CF_TIFF = predefinedClipboardNameMap.get(predefinedClipboardNames[CF_TIFF]);
-
+    
     // Image file formats with java.awt.Image representation:
     private static final Long[] imageFormats = new Long[] {
         L_CF_TIFF
@@ -108,7 +110,16 @@ public class CDataTransferer extends DataTransferer {
     }
 
     public boolean isImageFormat(long format) {
-        return format == CF_TIFF || format == CF_PDF;
+        int ifmt = (int)format;
+        switch(ifmt) {
+            case CF_TIFF:
+            case CF_PDF:
+            case CF_PNG:
+            case CF_JPEG:
+                return true;
+            default:
+                return false;
+        }
     }
 
     protected Long[] getImageFormatsAsLongArray() {
@@ -118,6 +129,8 @@ public class CDataTransferer extends DataTransferer {
     public byte[] translateTransferable(Transferable contents, DataFlavor flavor, long format) throws IOException
         {
             byte[] bytes = super.translateTransferable(contents, flavor, format);
+            
+           
 
             // 9-12-02 VL: we may need to do something like Windows here.
             //if (format == CF_HTML) {

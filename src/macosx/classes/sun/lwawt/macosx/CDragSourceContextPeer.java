@@ -176,6 +176,10 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
                 throw new InvalidDnDOperationException("");
 
             setNativeContext(nativeDragSource);
+            
+            CCursorManager.getInstance().startDrag(
+                    (int) (dragOrigin.getX() + componentOffset.x),
+                    (int) (dragOrigin.getY() + componentOffset.y));
         }
 
         catch (Exception e) {
@@ -197,6 +201,8 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
+                        CCursorManager.getInstance().stopDrag();
+                        
                         releaseNativeDragSource(nativeDragSource);
                         fDragImage = null;
                         if (fDragCImage != null) {
@@ -211,6 +217,8 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
         }
 
         catch (Exception e) {
+            CCursorManager.getInstance().stopDrag();
+        
             final long nativeDragSource = getNativeContext();
             setNativeContext(0);
             releaseNativeDragSource(nativeDragSource);
@@ -435,6 +443,9 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
     private void dragMouseMoved(final int targetActions,
                                 final int modifiers,
                                 final int x, final int y) {
+        
+        CCursorManager.getInstance().updateDragPosition(x, y);
+        
         Component rootComponent = SwingUtilities.getRoot(getComponent());
         if(rootComponent != null) {
             Point componentPoint = new Point(x, y);
@@ -460,6 +471,8 @@ public final class CDragSourceContextPeer extends SunDragSourceContextPeer {
     private void dragEnter(final int targetActions,
                            final int modifiers,
                            final int x, final int y) {
+        CCursorManager.getInstance().updateDragPosition(x, y);
+        
         postDragSourceDragEvent(targetActions, modifiers, x, y, DISPATCH_ENTER);
     }
 
