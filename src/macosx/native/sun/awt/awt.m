@@ -264,8 +264,6 @@ AWT_ASSERT_APPKIT_THREAD;
     
     if (!headless)
     {
-AWT_ASSERT_NOT_APPKIT_THREAD;
-
         // Listen for the NSApp to start. This indicates that JNI_OnLoad can proceed.
         //  It must wait because there is a chance that another java thread will grab
         //  the AppKit lock before the +[NSApplication sharedApplication] returns.
