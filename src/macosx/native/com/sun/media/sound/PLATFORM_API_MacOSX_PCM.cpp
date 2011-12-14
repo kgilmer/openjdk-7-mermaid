@@ -47,28 +47,6 @@ extern "C" {
 
 #if USE_DAUDIO == TRUE
 
-#ifdef USE_ERROR
-// buffer must contain at least 32 chars
-void sprintf_UInt32_chars(char* buffer, UInt32 value) {
-    snprintf(buffer, 32, "%d('%c%c%c%c')>", (int)value, (char)(value >> 24), (char)(value >> 16), (char)(value >> 8), (char)value);
-}
-#define OS_ERROR_END(err) {                     \
-    char errStr[32];                            \
-    sprintf_UInt32_chars(errStr, (UInt32)err);  \
-    ERROR1(" ERROR %s\n", errStr);              \
-}
-#define OS_ERROR0(err, string)                  { ERROR0(string); OS_ERROR_END(err); }
-#define OS_ERROR1(err, string, p1)              { ERROR1(string, p1); OS_ERROR_END(err); }
-#define OS_ERROR2(err, string, p1, p2)          { ERROR2(string, p1, p2); OS_ERROR_END(err); }
-#define OS_ERROR3(err, string, p1, p2, p3)      { ERROR3(string, p1, p2, p3); OS_ERROR_END(err); }
-#define OS_ERROR4(err, string, p1, p2, p3, p4)  { ERROR4(string, p1, p2, p3, p4); OS_ERROR_END(err); }
-#else
-#define OS_ERROR0(err, string)
-#define OS_ERROR1(err, string, p1)
-#define OS_ERROR2(err, string, p1, p2)
-#define OS_ERROR3(err, string, p1, p2, p3)
-#define OS_ERROR4(err, string, p1, p2, p3, p4)
-#endif
 
 #ifdef USE_TRACE
 static void PrintStreamDesc(AudioStreamBasicDescription *inDesc) {
@@ -81,86 +59,79 @@ static void PrintStreamDesc(AudioStreamBasicDescription *inDesc) {
 static inline void PrintStreamDesc(AudioStreamBasicDescription *inDesc) { }
 #endif
 
+
 #define MAX(x, y)   ((x) >= (y) ? (x) : (y))
 #define MIN(x, y)   ((x) <= (y) ? (x) : (y))
-
-// TODO: move to Utils.h/Utils.c
-AudioDeviceID GetDefaultDevice(int isSource) {
-    AudioDeviceID deviceID;
-    OSStatus err = GetAudioObjectProperty(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal,
-        isSource ? kAudioHardwarePropertyDefaultOutputDevice : kAudioHardwarePropertyDefaultInputDevice,
-        sizeof(deviceID), &deviceID, 1);
-    if (err) {
-        OS_ERROR1(err, "GetDefaultDevice(isSource=%d)", isSource);
-        return 0;
-    }
-    return deviceID;
-}
 
 
 // =======================================
 // MixerProvider functions implementation
 
+static DeviceList deviceCache;
+
 INT32 DAUDIO_GetDirectAudioDeviceCount() {
-    int count = 1 + GetAudioDeviceCount();
-    TRACE1("DAUDIO_GetDirectAudioDeviceCount returns %d\n", count);
+    deviceCache.Refresh();
+    int count = deviceCache.GetCount();
+    if (count > 0) {
+        // add "default" device
+        count++;
+        TRACE1("DAUDIO_GetDirectAudioDeviceCount: returns %d devices\n", count);
+    } else {
+        TRACE0("DAUDIO_GetDirectAudioDeviceCount: no devices found\n");
+    }
     return count;
 }
 
 INT32 DAUDIO_GetDirectAudioDeviceDescription(INT32 mixerIndex, DirectAudioDeviceDescription *desc) {
-    AudioDeviceDescription description;
-    description.strLen = DAUDIO_STRING_LENGTH;
-    description.name   = desc->name;
-    description.vendor = desc->vendor;
-    description.description = desc->description;
-
-    // We can't fill out the version field.
-
-    int err = GetAudioDeviceDescription(mixerIndex - 1, &description);
-
-    desc->deviceID = description.deviceID;
-    desc->maxSimulLines = description.numInputStreams + description.numOutputStreams;
-
-    TRACE2("DAUDIO_GetDirectAudioDeviceDescription (mixerIndex = %d), returns %d lines\n", (int)mixerIndex, (int)desc->maxSimulLines);
-
-    return err == noErr ? TRUE : FALSE;
+    bool result = true;
+    desc->deviceID = 0;
+    if (mixerIndex == 0) {
+        // default device
+        strncpy(desc->name, "Default Audio Device", DAUDIO_STRING_LENGTH);
+        strncpy(desc->description, "Default Audio Device", DAUDIO_STRING_LENGTH);
+        desc->maxSimulLines = -1;
+    } else {
+        AudioDeviceID deviceID;
+        result = deviceCache.GetDeviceInfo(mixerIndex-1, &deviceID, DAUDIO_STRING_LENGTH,
+            desc->name, desc->vendor, desc->description, desc->version);
+        if (result) {
+            desc->deviceID = (INT32)deviceID;
+            desc->maxSimulLines = -1;
+        }
+    }
+    return result ? TRUE : FALSE;
 }
 
-/*
-Philosophical differences here -
-
-Sample rate -
-Audio Output Unit has a current sample rate, but will accept any sample rate for output.
-For input, the sample rate of the unit must be the current hardware sample rate.
-It is possible for the user to change this, but there is no way to notify Java of it
-happening, so this is not handled.
-
-Integer format -
-Core Audio uses floats. Audio Output Unit will accept anything.
-The best Direct Audio can do is 16-bit signed.
-*/
 
 void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* creator) {
     TRACE3(">>DAUDIO_GetFormats mixerIndex=%d deviceID=0x%x isSource=%d\n", (int)mixerIndex, (int)deviceID, isSource);
 
-    AudioDeviceDescription description;
-    description.strLen = 0; // don't fill name/vendor/description
+    AudioDeviceID audioDeviceID = deviceID == 0 ? GetDefaultDevice(isSource) : (AudioDeviceID)deviceID;
 
-    GetAudioDeviceDescription(mixerIndex - 1, &description);
+    if (audioDeviceID == 0) {
+        return;
+    }
 
-    int numStreams = isSource ? description.numOutputStreams : description.numInputStreams;
-    if (numStreams == 0) {
+    int totalChannels = GetChannelCount(audioDeviceID, isSource);
+
+    if (totalChannels == 0) {
         TRACE0("<<DAUDIO_GetFormats, no streams!\n");
         return;
     }
 
-    int numChannels = isSource ? MAX(description.numOutputChannels, 2) : description.numInputChannels;
+    if (isSource && totalChannels < 2) {
+        // report 2 channels even if only mono is supported
+        totalChannels = 2;
+    }
 
-    int channels[] = {1, 2, numChannels};
-    int channelsCount = MIN(numChannels, 3);
+    int channels[] = {1, 2, totalChannels};
+    int channelsCount = MIN(totalChannels, 3);
+
+    float hardwareSampleRate = GetSampleRate(audioDeviceID, isSource);
+    TRACE2("  DAUDIO_GetFormats: got %d channels, sampleRate == %f\n", totalChannels, hardwareSampleRate);
 
     // target lines support only current sample rate!
-    float sampleRate = isSource ? -1 : description.inputSampleRate;
+    float sampleRate = isSource ? -1 : hardwareSampleRate;
 
     static int sampleBits[] = {8, 16, 24};
     static int sampleBitsCount = sizeof(sampleBits)/sizeof(sampleBits[0]);
@@ -169,19 +140,18 @@ void DAUDIO_GetFormats(INT32 mixerIndex, INT32 deviceID, int isSource, void* cre
     // consider as default 16bit PCM stereo (mono is stereo is not supported) with the current sample rate
     int defBits = 16;
     int defChannels = MIN(2, channelsCount);
-    float defSampleRate = sampleRate;   // TODO: for output we need nominal sample rate
+    float defSampleRate = hardwareSampleRate;
     // don't add default format is sample rate is not specified
     bool addDefault = defSampleRate > 0;
 
     // TODO: CoreAudio can handle signed/unsigned, little-endian/big-endian
     // TODO: register the formats (to prevent DirectAudio software conversion) - need to fix DirectAudioDevice.createDataLineInfo
     // to avoid software conversions if both signed/unsigned or big-/little-endian are supported
-
     for (int channelIndex = 0; channelIndex < channelsCount; channelIndex++) {
         for (int bitIndex = 0; bitIndex < sampleBitsCount; bitIndex++) {
             int bits = sampleBits[bitIndex];
             if (addDefault && bits == defBits && channels[channelIndex] != defChannels && sampleRate == defSampleRate) {
-                // the format is default, don't add it now
+                // the format is the default one, don't add it now
                 continue;
             }
             DAUDIO_AddAudioFormat(creator,
@@ -487,11 +457,8 @@ static AudioUnit CreateOutputUnit(AudioDeviceID deviceID, int isSource)
 
         if (!deviceID) {
             // get real AudioDeviceID for default input device (macosx current input device)
-            err = GetAudioObjectProperty(kAudioObjectSystemObject, kAudioObjectPropertyScopeGlobal,
-                                        kAudioHardwarePropertyDefaultInputDevice,
-                                        sizeof(deviceID), &deviceID, 1);
-            if (err) {
-                OS_ERROR0(err, "Get default input device");
+            deviceID = GetDefaultDevice(isSource);
+            if (!deviceID) {
                 CloseComponent(unit);
                 return NULL;
             }
