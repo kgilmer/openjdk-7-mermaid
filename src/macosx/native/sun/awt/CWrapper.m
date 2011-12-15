@@ -95,6 +95,29 @@ JNF_COCOA_EXIT(env);
 
 /*
  * Class:     sun_lwawt_macosx_CWrapper$NSWindow
+ * Method:    canBecomeMainWindow
+ * Signature: (J)V
+ */
+JNIEXPORT jboolean JNICALL
+Java_sun_lwawt_macosx_CWrapper_00024NSWindow_canBecomeMainWindow
+(JNIEnv *env, jclass cls, jlong windowPtr)
+{
+    __block jboolean canBecomeMainWindow = JNI_FALSE;
+
+JNF_COCOA_ENTER(env);
+    
+    NSWindow *window = (NSWindow *)jlong_to_ptr(windowPtr);
+    [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+	canBecomeMainWindow = [window canBecomeMainWindow];
+    }];
+
+JNF_COCOA_EXIT(env);
+
+    return canBecomeMainWindow;
+}
+
+/*
+ * Class:     sun_lwawt_macosx_CWrapper$NSWindow
  * Method:    isKeyWindow
  * Signature: (J)Z
  */

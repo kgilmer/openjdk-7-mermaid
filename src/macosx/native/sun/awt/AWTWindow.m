@@ -942,7 +942,20 @@ JNF_COCOA_ENTER(env);
 JNF_COCOA_EXIT(env);
 }
 
+/*
+ * Class:     sun_lwawt_macosx_CPlatformWindow
+ * Method:    isApplicationActive
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_sun_lwawt_macosx_CPlatformWindow_nativeIsApplicationActive
+(JNIEnv *env, jclass clazz)
+{
+JNF_COCOA_ENTER(env);
 
+    return (jboolean)[NSRunningApplication currentApplication].active;
+
+JNF_COCOA_EXIT(env);
+}
 
 JNIEXPORT jboolean JNICALL Java_sun_lwawt_macosx_CMouseInfoPeer_nativeIsWindowUnderMouse
 (JNIEnv *env, jclass clazz, jlong windowPtr)
