@@ -390,6 +390,10 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
         LWWindowPeer windowPeer = getWindowPeer();
         return windowPeer.getPlatformWindow();
     }
+    
+    protected AppContext getAppContext() {
+        return SunToolkit.targetToAppContext(getTarget());
+    }
 
     // ---- PEER METHODS ---- //
 
@@ -886,13 +890,13 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     public boolean requestFocus(Component lightweightChild, boolean temporary,
                                 boolean focusedWindowChangeAllowed, long time,
                                 CausedFocusEvent.Cause cause) {
-        if (getLWToolkit().getKeyboardFocusManagerPeer().
+        if (LWKeyboardFocusManagerPeer.getInstance(getAppContext()).
                 processSynchronousLightweightTransfer(getTarget(), lightweightChild, temporary,
                         focusedWindowChangeAllowed, time)) {
             return true;
         }
 
-        int result = getLWToolkit().getKeyboardFocusManagerPeer().
+        int result = LWKeyboardFocusManagerPeer.getInstance(getAppContext()).
                 shouldNativelyFocusHeavyweight(getTarget(), lightweightChild, temporary,
                         focusedWindowChangeAllowed, time, cause);
         switch (result) {
@@ -919,7 +923,8 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
                 }
 
                 LWComponentPeer focusOwnerPeer =
-                        getLWToolkit().getKeyboardFocusManagerPeer().getFocusOwner();
+                    LWKeyboardFocusManagerPeer.getInstance(getAppContext()).
+                        getFocusOwner();
                 Component focusOwner = (focusOwnerPeer != null) ? focusOwnerPeer.getTarget() : null;
                 return LWKeyboardFocusManagerPeer.deliverFocus(lightweightChild,
                         getTarget(), temporary,
@@ -1087,7 +1092,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
      * Post an event to the proper Java EDT.
      */
     public void postEvent(AWTEvent event) {
-        SunToolkit.postEvent(SunToolkit.targetToAppContext(getTarget()), event);
+        SunToolkit.postEvent(getAppContext(), event);
     }
 
     // Just a helper method
@@ -1210,7 +1215,7 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     protected void handleJavaFocusEvent(FocusEvent e) {
         // Note that the peer receives all the FocusEvents from
         // its lightweight children as well
-        getLWToolkit().getKeyboardFocusManagerPeer().
+        LWKeyboardFocusManagerPeer.getInstance(getAppContext()).
                 setFocusOwner(e.getID() == FocusEvent.FOCUS_GAINED ? this : null);
     }
 

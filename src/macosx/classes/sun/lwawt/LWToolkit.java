@@ -415,7 +415,7 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
 
     @Override
     public KeyboardFocusManagerPeer createKeyboardFocusManagerPeer(KeyboardFocusManager manager) {
-        return getKeyboardFocusManagerPeer(manager);
+        return LWKeyboardFocusManagerPeer.getInstance(manager);
     }
 
     @Override
@@ -524,21 +524,6 @@ public abstract class LWToolkit extends SunToolkit implements Runnable {
      * Returns the current cursor manager.
      */
     public abstract LWCursorManager getCursorManager();
-
-    //TODO: We've got these getXXX, and there's also createXXX above. Why so many variants?
-    /*
-     * Returns the current keyboard focus manager.
-     */
-    public LWKeyboardFocusManagerPeer getKeyboardFocusManagerPeer() {
-        return getKeyboardFocusManagerPeer(KeyboardFocusManager.getCurrentKeyboardFocusManager());
-    }
-
-    /*
-     * Returns the keyboard focus manager.
-     */
-    public LWKeyboardFocusManagerPeer getKeyboardFocusManagerPeer(KeyboardFocusManager manager) {
-        return LWKeyboardFocusManagerPeer.getInstance(manager);
-    }
         
     public static void postEvent(AWTEvent event) {
         postEvent(targetToAppContext(event.getSource()), event);    

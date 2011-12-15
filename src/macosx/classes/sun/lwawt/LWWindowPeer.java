@@ -803,7 +803,8 @@ public class LWWindowPeer
                                  int keyCode, char keyChar, int keyLocation)
     {
         LWComponentPeer focusOwner =
-            getLWToolkit().getKeyboardFocusManagerPeer().getFocusOwner();
+            LWKeyboardFocusManagerPeer.getInstance(getAppContext()).
+                getFocusOwner();
         
         // Null focus owner may receive key event when
         // application hides the focused window upon ESC press
@@ -815,7 +816,7 @@ public class LWWindowPeer
                              keyCode, keyChar, keyLocation);
             focusOwner.postEvent(event);
         }
-    }
+    }    
 
 
     // ---- UTILITY METHODS ---- //
@@ -1048,7 +1049,8 @@ public class LWWindowPeer
             }
         }
 
-        LWKeyboardFocusManagerPeer manager = getLWToolkit().getKeyboardFocusManagerPeer();
+        LWKeyboardFocusManagerPeer manager = LWKeyboardFocusManagerPeer.
+            getInstance(getAppContext());
 
         Window oppositeWindow = becomesFocused ? manager.getCurrentFocusedWindow() : null;
         // TODO: ungrab
