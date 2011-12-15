@@ -78,6 +78,7 @@ FILES_export = \
 	sun/lwawt/LWListPeer.java \
 	sun/lwawt/LWMouseInfoPeer.java \
 	sun/lwawt/LWPanelPeer.java \
+	sun/lwawt/LWRepaintArea.java \
 	sun/lwawt/LWScrollBarPeer.java \
 	sun/lwawt/LWScrollPanePeer.java \
 	sun/lwawt/LWTextComponentPeer.java \

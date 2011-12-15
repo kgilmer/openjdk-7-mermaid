@@ -577,6 +577,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
 
     @Override
     public void setMinimumSize(int width, int height) {
+        //TODO width, height should be used
         final long nsWindowPtr = getNSWindowPtr();
         final Dimension min = target.getMinimumSize();
         final Dimension max = target.getMaximumSize();
@@ -767,6 +768,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
         
         nativeBounds = new Rectangle(x, y, width, height);
         peer.notifyReshape(x, y, width, height);
+        //TODO validateSurface already called from notifyReshape
         validateSurface();
     }
     
