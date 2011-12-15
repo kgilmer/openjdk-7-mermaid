@@ -1077,7 +1077,6 @@ public abstract class LWComponentPeer<T extends Component, D extends JComponent>
     public void postEvent(AWTEvent event) {
         SunToolkit.postEvent(getAppContext(), event);
     }
-    }
 
     protected void postPaintEvent(int x, int y, int w, int h) {
         // TODO: call getIgnoreRepaint() directly with the right ACC
