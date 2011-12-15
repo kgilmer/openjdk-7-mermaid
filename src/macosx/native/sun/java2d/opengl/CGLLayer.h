@@ -29,8 +29,11 @@
 #import "AWTView.h"
 
 @interface CGLLayer : CAOpenGLLayer
-{    
-    // intermediate buffer
+{
+@private
+    jobject javaLayer;
+
+    // intermediate buffer, used the RQ lock to synchronize
     GLuint textureID; 
     GLenum target;
     float textureWidth;
@@ -39,7 +42,7 @@
     CGLLayer *parentLayer;
     CGLLayer *remoteLayer;
     NSObject<JRSRemoteLayer> *jrsRemoteLayer;
-#endif /* REMOTELAYER */
+#endif /* REMOTELAYER */    
 }
 
 @property (readwrite, assign) GLuint textureID;
@@ -53,8 +56,8 @@
 @property (nonatomic, retain) NSObject<JRSRemoteLayer> *jrsRemoteLayer;
 #endif
 
-
-- (void) _blitTexture;
+- (id) initWithJavaLayer:(jobject)javaLayer;
+- (void) blitTexture;
 @end
 
 #endif /* CGLLayer_h_Included */

@@ -50,8 +50,11 @@ public class CPlatformView extends CFRetainedResource {
     
     public void initialize(LWWindowPeer peer) {
         this.peer = peer;
-        this.windowLayer = new CGLLayer();
-        setPtr(nativeCreateView(0, 0, 0, 0, windowLayer.getPointer()));
+        
+        if (!LWCToolkit.getSunAwtDisableCALayers()) {
+            this.windowLayer = new CGLLayer(peer);
+        }
+        setPtr(nativeCreateView(0, 0, 0, 0, getWindowLayerPtr()));
     }
     
     public long getAWTView() {
@@ -130,13 +133,17 @@ public class CPlatformView extends CFRetainedResource {
         }
         return im;
     }
-    
+
     public SurfaceData replaceSurfaceData() {
-        if (surfaceData == null) {
-            CGraphicsConfig graphicsConfig = (CGraphicsConfig)peer.getGraphicsConfiguration();
-            surfaceData = graphicsConfig.createSurfaceData(this);
+        if (!LWCToolkit.getSunAwtDisableCALayers()) {
+            surfaceData = windowLayer.replaceSurfaceData();
         } else {
-            validateSurface();
+            if (surfaceData == null) {
+                CGraphicsConfig graphicsConfig = (CGraphicsConfig)peer.getGraphicsConfiguration();
+                surfaceData = graphicsConfig.createSurfaceData(this);
+            } else {
+                validateSurface();
+            }
         }
         return surfaceData;
     }
@@ -146,7 +153,7 @@ public class CPlatformView extends CFRetainedResource {
             ((CGLSurfaceData)surfaceData).validate();
         }
     }
-    
+
     public GraphicsConfiguration getGraphicsConfiguration() {
         return peer.getGraphicsConfiguration();
     }
@@ -157,14 +164,20 @@ public class CPlatformView extends CFRetainedResource {
     
     @Override
     public void dispose() {
-        windowLayer.dispose();
+        if (!LWCToolkit.getSunAwtDisableCALayers()) {
+            windowLayer.dispose();
+        }
         super.dispose();
     }
     
-    public long getWindowLayer() {
-        return windowLayer.getPointer();
+    public long getWindowLayerPtr() {
+        if (!LWCToolkit.getSunAwtDisableCALayers()) {
+            return windowLayer.getPointer();
+        } else {
+            return 0;
+        }
     }
-    
+        
     // ----------------------------------------------------------------------
     // NATIVE CALLBACKS
     // ----------------------------------------------------------------------

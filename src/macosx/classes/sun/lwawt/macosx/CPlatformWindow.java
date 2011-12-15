@@ -734,7 +734,7 @@ public class CPlatformWindow extends CFRetainedResource implements PlatformWindo
 
     private void validateSurface() {
         SurfaceData surfaceData = getSurfaceData();
-        if (surfaceData != null) {
+        if (surfaceData instanceof CGLSurfaceData) {
             ((CGLSurfaceData)surfaceData).validate();
         }
     }

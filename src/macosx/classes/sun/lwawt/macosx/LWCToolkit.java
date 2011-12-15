@@ -646,7 +646,21 @@ public class LWCToolkit extends LWToolkit {
     // Call through to native methods
     public static void doAWTRunLoop(long mediator, boolean awtMode) { doAWTRunLoop(mediator, awtMode, true); }
     public static void doAWTRunLoop(long mediator) { doAWTRunLoop(mediator, true); }
+
+    private static Boolean sunAwtDisableCALayers = null;
     
+    /**
+     * Returns the value of "sun.awt.disableCALayers" property. Default
+     * value is {@code false}.
+     */
+    public synchronized static boolean getSunAwtDisableCALayers() {
+        if (sunAwtDisableCALayers == null) {
+            sunAwtDisableCALayers =
+            getBooleanSystemProperty("sun.awt.disableCALayers");
+        }
+        return sunAwtDisableCALayers.booleanValue();
+    }
+
     /************************
      * Native methods section
      ************************/

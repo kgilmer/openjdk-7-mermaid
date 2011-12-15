@@ -609,6 +609,17 @@ JNF_COCOA_EXIT(env);
 void
 OGLSD_Flush(JNIEnv *env)
 {
+    OGLSDOps *dstOps = OGLRenderQueue_GetCurrentDestination();
+    if (dstOps != NULL) {
+        CGLSDOps *dstCGLOps = (CGLSDOps *)dstOps->privOps;
+        CGLLayer *layer = (CGLLayer*)dstCGLOps->layer;
+        if (layer != NULL) {
+            [JNFRunLoop performOnMainThreadWaiting:NO withBlock:^(){
+                AWT_ASSERT_APPKIT_THREAD;
+                [layer setNeedsDisplay];
+            }];
+        }
+    }
 #if USE_INTERMEDIATE_BUFFER
     OGLSDOps *dstOps = OGLRenderQueue_GetCurrentDestination();
     if (dstOps != NULL) {
@@ -650,7 +661,8 @@ extern DisposeFunc     OGLSD_Dispose;
 JNIEXPORT void JNICALL
 Java_sun_java2d_opengl_CGLSurfaceData_initOps
     (JNIEnv *env, jobject cglsd,
-     jlong pConfigInfo, jlong pPeerData, jint xoff, jint yoff, jboolean isOpaque)
+     jlong pConfigInfo, jlong pPeerData, jlong layerPtr,
+     jint xoff, jint yoff, jboolean isOpaque)
 {
     J2dTraceLn(J2D_TRACE_INFO, "CGLSurfaceData_initOps");
     J2dTraceLn1(J2D_TRACE_INFO, "  pPeerData=%p", jlong_to_ptr(pPeerData));
@@ -679,8 +691,9 @@ Java_sun_java2d_opengl_CGLSurfaceData_initOps
     oglsdo->isOpaque = isOpaque;
     
     cglsdo->peerData = (AWTView *)jlong_to_ptr(pPeerData);
+    cglsdo->layer = (CGLLayer *)jlong_to_ptr(layerPtr);    
     cglsdo->configInfo = (CGLGraphicsConfigInfo *)jlong_to_ptr(pConfigInfo);
-
+    
     if (cglsdo->configInfo == NULL) {
         free(cglsdo);
         JNU_ThrowNullPointerException(env, "Config info is null in initOps");
@@ -697,6 +710,7 @@ Java_sun_java2d_opengl_CGLSurfaceData_clearWindow
     CGLSDOps *cglsdo = (CGLSDOps*) oglsdo->privOps;
 
     cglsdo->peerData = NULL;
+    cglsdo->layer = NULL;
 }
 
 JNIEXPORT jboolean JNICALL

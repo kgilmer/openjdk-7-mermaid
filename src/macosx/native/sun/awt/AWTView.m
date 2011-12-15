@@ -81,6 +81,15 @@ AWT_ASSERT_APPKIT_THREAD;
     fInPressAndHold = NO;
     fPAHNeedsToSelect = NO;
 
+    if (windowLayer != nil) { 
+        self.cglLayer = windowLayer;
+        [self setWantsLayer: YES];
+        [self.layer addSublayer: (CALayer *)cglLayer];
+        [self setLayerContentsRedrawPolicy: NSViewLayerContentsRedrawDuringViewResize];
+        [self setLayerContentsPlacement: NSViewLayerContentsPlacementTopLeft];
+        [self setAutoresizingMask: NSViewHeightSizable | NSViewWidthSizable];    
+    }
+    
 #if USE_INTERMEDIATE_BUFFER
     self.cglLayer = windowLayer;
     [self setWantsLayer: YES];
@@ -114,7 +123,8 @@ AWT_ASSERT_APPKIT_THREAD;
 
 - (void) dealloc {
 AWT_ASSERT_APPKIT_THREAD;
-    
+
+    self.cglLayer = nil;
 #if USE_INTERMEDIATE_BUFFER
     self.cglLayer = nil;
 #endif
